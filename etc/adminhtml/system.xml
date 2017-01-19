@@ -133,6 +133,18 @@
               <comment><![CDATA[Choose Yes to use secure base url from Store &gt; Cofiguration &gt; Store view &gt; General &gt; Secure &gt; Base URL.&lt;/br&gt;Please make sure to resynchronize products by clicking on the "Sync Data for This Store" under the "Data Sync Settings".]]></comment>
             </field>
       </group>
+	    <group id="image_setting" translate="label comment" sortOrder="106" showInDefault="1" showInStore="1">
+            <label>Product Image Settings</label>
+            <field id="info_enabled" translate="label comment" sortOrder="100" type="label" showInDefault="1">
+              <label>Use Configurable Product's Image in Search</label>
+              <comment><![CDATA[Switch to store view scope to set]]></comment>
+            </field>
+            <field id="enabled" translate="label comment" sortOrder="100" type="select" showInStore="1">
+              <label>Use Configurable Product's Image in Search.</label>
+              <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+              <comment><![CDATA[Choose Yes to use configurable product's image in search.Please make sure to resynchronize products by clicking on the "Sync Data for This Store" under the "Data Sync Settings."]]></comment>
+            </field>
+      </group>
       <group id="developer" translate="label comment" sortOrder="900" showInDefault="1">
         <label>Developer Settings</label>
 		<field id="collection_method" translate="label comment" sortOrder="300" type="select" showInDefault="1">
@@ -148,6 +160,9 @@
         <field id="log_level" translate="label" sortOrder="310" type="select" showInDefault="1">
           <label>Log level</label>
           <source_model>Klevu\Search\Model\System\Config\Source\Log\Level</source_model>
+        </field>
+		<field id="log_button" type="button" sortOrder="400" showInDefault="1" showInWebsite="1" showInStore="1">
+            <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Image\Log</frontend_model>
         </field>
       </group>
     </section>

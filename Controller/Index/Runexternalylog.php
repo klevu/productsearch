@@ -2,9 +2,9 @@
 
 namespace Klevu\Search\Controller\Index;
 
-class Index extends  \Magento\Framework\App\Action\Action
+class Runexternalylog extends  \Magento\Framework\App\Action\Action
 {
-    /**
+        /**
      * @var \Magento\Framework\UrlInterface
      */
     protected $_magentoFrameworkUrlInterface;
@@ -23,12 +23,9 @@ class Index extends  \Magento\Framework\App\Action\Action
         $this->resultPageFactory = $resultPageFactory;
 
     }
-	
 
     public function execute() {
-		$query = $this->getRequest()->getParam('q');		
         $this->_view->loadLayout();
-		$this->_view->getPage()->getConfig()->getTitle()->set(__("Search results for: '%1'",$query));
         $this->_view->renderLayout();
-    }
+    }    
 }

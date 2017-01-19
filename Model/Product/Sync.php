@@ -34,7 +34,10 @@ use \Magento\Eav\Model\Entity\Attribute;
 use \Magento\Catalog\Model\Product\Action;
 use \Magento\CatalogUrlRewrite\Model\ProductUrlPathGenerator;
 use \Magento\CatalogRule\Model\Rule;
+use Magento\Catalog\Model\Product\Gallery\ReadHandler as GalleryReadHandler;
 class Sync extends \Klevu\Search\Model\Sync {
+	
+	
     /**
      * @var \Magento\Framework\Model\Resource
      */
@@ -225,6 +228,8 @@ class Sync extends \Klevu\Search\Model\Sync {
      * @var \Klevu\Search\Model\Api\Action\Features
      */
     protected $_apiActionFeatures;
+	
+	protected $galleryReadHandler;
 
     public function __construct(\Magento\Framework\App\ResourceConnection $frameworkModelResource, 
         \Magento\Framework\Event\ManagerInterface $frameworkEventManagerInterface, 
@@ -265,7 +270,8 @@ class Sync extends \Klevu\Search\Model\Sync {
         \Magento\Framework\App\RequestInterface $frameworkAppRequestInterface,
         \Magento\Store\Model\Store $frameworkModelStore,
         \Klevu\Search\Model\Api\Action\Features $apiActionFeatures,
-		\Magento\Framework\App\ProductMetadataInterface $productMetadataInterface
+		\Magento\Framework\App\ProductMetadataInterface $productMetadataInterface,
+		GalleryReadHandler $galleryReadHandler
         )
     {
         $this->_apiActionFeatures = $apiActionFeatures;
@@ -308,6 +314,7 @@ class Sync extends \Klevu\Search\Model\Sync {
         $this->localeDate = $localeDate;
         $this->_catalogModelCategory = $catalogModelCategory;
 		$this->_ProductMetadataInterface = $productMetadataInterface;
+		$this->_galleryReadHandler = $galleryReadHandler;
 		if($this->_ProductMetadataInterface->getEdition() == "Enterprise" && version_compare($this->_ProductMetadataInterface->getVersion(), '2.0.8', '>')===true) {
 			$this->_entity_value = "row_id";
 		} else {
@@ -1435,6 +1442,8 @@ class Sync extends \Klevu\Search\Model\Sync {
 		}
 		
 		$check_root_magento = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Backend\Block\Page\RequireJs')->getViewFileUrl('requirejs/require.js');
+		
+
 		$check_pub = explode('/',$check_root_magento);
 		
 		
@@ -1464,6 +1473,10 @@ class Sync extends \Klevu\Search\Model\Sync {
 		if(!in_array('pub',$check_pub)){
 			$media_url = str_replace('/pub','/',$media_url);
 		}
+		/*$backend = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Catalog\Model\ResourceModel\Product\Gallery');
+		$container =  new \Magento\Framework\DataObject(array(
+			'attribute' => new \Magento\Framework\DataObject(array('id' => $this->_searchHelperData->getIsMediaGalleryAttributeId()))
+		));*/
 		
         $rc = 0; 
         foreach ($products as $index => &$product) {
@@ -1482,6 +1495,10 @@ class Sync extends \Klevu\Search\Model\Sync {
 				} else {
 					$item = \Magento\Framework\App\ObjectManager::getInstance()->create('\Magento\Catalog\Model\Product')->load($product['product_id']);
 					$item->setCustomerGroupId(\Magento\Customer\Model\Group::NOT_LOGGED_IN_ID);
+					
+					//foreach ($item->getMediaGalleryImages() as $image) {
+					//	echo $image->getFile();
+					//}
 					
 					$parent = ($product['parent_id'] != 0) ?  \Magento\Framework\App\ObjectManager::getInstance()->create('\Magento\Catalog\Model\Product')->load($product['parent_id'])->setCustomerGroupId(\Magento\Customer\Model\Group::NOT_LOGGED_IN_ID): null;
 				}
@@ -1564,12 +1581,60 @@ class Sync extends \Klevu\Search\Model\Sync {
 							break;
 						case "image":
 							foreach ($attributes as $attribute) {
-								if ($item->getData($attribute) && $item->getData($attribute) != "no_selection") {
-									$product[$key] = $item->getData($attribute);
-									break;
-								} else if ($parent && $parent->getData($attribute) && $parent->getData($attribute) != "no_selection") {
-									$product[$key] = $parent->getData($attribute);
-									break;
+								if($config->isUseConfigImage($this->getStore()->getId())) {
+									if ($parent && $parent->getData($attribute) && !empty($parent->getData($attribute))) {
+										$product[$key] = $parent->getData($attribute);
+										break;
+									} else if ($item->getData($attribute) && !empty($item->getData($attribute))) {
+										$product[$key] = $item->getData($attribute);
+										break;
+									}
+									if ($parent && empty($parent->getData($attribute))) {
+										$product[$key] = $parent->getData('small_image');
+										if(empty($product[$key])){
+											$this->_galleryReadHandler->execute($parent);
+											$images = $item->getMediaGallery('images');
+											$product[$key] = $images[1]['file'];
+										}
+										break;
+									} else if($item->getData($attribute)){
+										$product[$key] = $item->getData('small_image');
+										if(empty($product[$key])){
+											$this->_galleryReadHandler->execute($item);
+											$images = $item->getMediaGallery('images');
+											$product[$key] = $images[1]['file'];
+										}
+										break;
+									}
+									
+								} else {
+									
+									if($item->getData($attribute) && empty($item->getData($attribute))) {
+										$product[$key] = $item->getData($attribute);
+										break;
+									}else if ($parent && $parent->getData($attribute) && empty($parent->getData($attribute))) {
+										$product[$key] = $parent->getData($attribute);
+										break;
+									}
+									
+									if ($parent && empty($parent->getData($attribute))) {
+										$product[$key] = $parent->getData('small_image');
+										if(empty($product[$key])){
+											$this->_galleryReadHandler->execute($parent);
+											$images = $item->getMediaGallery('images');
+											$product[$key] = $images[1]['file'];
+										}
+										break;
+									} else if($item->getData($attribute)){
+										$product[$key] = $item->getData('small_image');
+										if(empty($product[$key])){
+											$this->_galleryReadHandler->execute($parent);
+											$images = $item->getMediaGallery('images');
+											$product[$key] = $images[1]['file'];
+										}
+										break;
+									}
+									
 								}
 							}
 							if ($product[$key] != "" && strpos($product[$key], "http") !== 0) {
@@ -1730,20 +1795,45 @@ class Sync extends \Klevu\Search\Model\Sync {
 				// use a URL rewrite if one exists, falling back to catalog/product/view
 				
 				if($parent) {
-					 $product['url'] = $base_url . (
-						  (isset($url_rewrite_data[$product['parent_id']])) ?
+					 
+					if(isset($url_rewrite_data[$product['parent_id']])) {
+						if($url_rewrite_data[$product['parent_id']][0] == "/") {
+						    $product['url'] = $base_url . (
+							(isset($url_rewrite_data[$product['parent_id']])) ?
+							  substr($url_rewrite_data[$product['parent_id']], 1) :
+							  "catalog/product/view/id/" . $product['parent_id']
+							); 
+						} else {
+							$product['url'] = $base_url . (
+							(isset($url_rewrite_data[$product['parent_id']])) ?
 							  $url_rewrite_data[$product['parent_id']] :
 							  "catalog/product/view/id/" . $product['parent_id']
-						  );                
+							); 
+						}
+					}
+					
+					           
 				} else {
-					 $product['url'] = $base_url . (
-						(isset($url_rewrite_data[$product['product_id']])) ?
-							$url_rewrite_data[$product['product_id']] :
-							"catalog/product/view/id/" . $product['product_id']
-					);
+					
+					if(isset($url_rewrite_data[$product['product_id']])) {
+						if($url_rewrite_data[$product['product_id']][0] == "/") {
+						    $product['url'] = $base_url . (
+							(isset($url_rewrite_data[$product['product_id']])) ?
+							  substr($url_rewrite_data[$product['product_id']], 1) :
+							  "catalog/product/view/id/" . $product['product_id']
+							); 
+						} else {
+							$product['url'] = $base_url . (
+							(isset($url_rewrite_data[$product['product_id']])) ?
+							  $url_rewrite_data[$product['product_id']] :
+							  "catalog/product/view/id/" . $product['product_id']
+							); 
+						}
+					}
+					
 				}
 				
-
+				
 				// Add stock data
 				   if(isset($stock_data[$product['product_id']])) {
 					$product['inStock'] = ($stock_data[$product['product_id']]) ? "yes" : "no";
@@ -1756,8 +1846,6 @@ class Sync extends \Klevu\Search\Model\Sync {
 
 				// Set ID data
 				$product['id'] = $this->_searchHelperData->getKlevuProductId($product['product_id'], $product['parent_id']);
-				unset($product['product_id']);
-				unset($product['parent_id']);
 				
 				if($item) {
 					$item->clearInstance();
@@ -1774,24 +1862,28 @@ class Sync extends \Klevu\Search\Model\Sync {
 			} catch(\Exception $e) {
 				$this->_searchHelperData->log(\Zend\Log\Logger::CRIT, sprintf("Exception thrown in %s::%s - %s", __CLASS__, __METHOD__, $e->getMessage()));
 				$markAsSync = array();
-				$markAsSync[] = array($product['product_id'],$product['parent_id'],$this->getStore()->getId(),0,$this->_searchHelperCompat->now(),"products");
-				$write =  $this->_frameworkModelResource->getConnection("core_write");
-				$query = "replace into ".$this->_frameworkModelResource->getTableName('klevu_product_sync')
-					   . "(product_id, parent_id, store_id, test_mode, last_synced_at, type,error_flag) values "
-					   . "(:product_id, :parent_id, :store_id, :test_mode, :last_synced_at, :type,:error_flag)";
-				$binds = array(
-					'product_id' => $markAsSync[0][0],
-					'parent_id' => $markAsSync[0][1],
-					'store_id' => $markAsSync[0][2],
-					'test_mode' => $markAsSync[0][3],
-					'last_synced_at'  => $markAsSync[0][4],
-					'type' => $markAsSync[0][5],
-					'error_flag' => 1
-				);
-				$write->query($query, $binds);
+				if(!empty($product['parent_id']) && !empty($product['product_id'])) {
+					$markAsSync[] = array($product['product_id'],$product['parent_id'],$this->getStore()->getId(),0,$this->_searchHelperCompat->now(),"products");
+					$write =  $this->_frameworkModelResource->getConnection("core_write");
+					$query = "replace into ".$this->_frameworkModelResource->getTableName('klevu_product_sync')
+						   . "(product_id, parent_id, store_id, test_mode, last_synced_at, type,error_flag) values "
+						   . "(:product_id, :parent_id, :store_id, :test_mode, :last_synced_at, :type,:error_flag)";
+					$binds = array(
+						'product_id' => $markAsSync[0][0],
+						'parent_id' => $markAsSync[0][1],
+						'store_id' => $markAsSync[0][2],
+						'test_mode' => $markAsSync[0][3],
+						'last_synced_at'  => $markAsSync[0][4],
+						'type' => $markAsSync[0][5],
+						'error_flag' => 1
+					);
+					$write->query($query, $binds);
+				}
 				//unset($products[$index]);
 				continue;
 			}
+			unset($product['product_id']);
+			unset($product['parent_id']);
         }
    
         return $this;
@@ -2204,7 +2296,7 @@ class Sync extends \Klevu\Search\Model\Sync {
                             if (is_array($option['value'])) {
                                 foreach ($option['value'] as $sub_option) {
                                     if(count($sub_option) > 0) {
-                                        $attribute_data[$attr->getAttributeCode()]['values'][$sub_option['value']] = $sub_option['label'];
+                                        $attribute_data[$attr->getAttributeCode()]['values'][$sub_option['value']] =$sub_option['label'];
                                     }
                                 }
                             } else {
@@ -2634,6 +2726,7 @@ class Sync extends \Klevu\Search\Model\Sync {
     public function runCategory($store)
     {
             $isActiveAttributeId =  $this->_searchHelperData->getIsActiveAttributeId();
+			$isExcludeAttributeId =  $this->_searchHelperData->getIsExcludeAttributeId();
             $this->log(\Zend\Log\Logger::INFO, sprintf("Starting sync for category %s (%s).", $store->getWebsite()->getName() , $store->getName()));
             $rootId = $this->getStore()->getRootCategoryId();
             $rootStoreCategory = "1/$rootId/";
@@ -2666,7 +2759,17 @@ class Sync extends \Klevu\Search\Model\Sync {
                                     "cs.row_id = ci.row_id AND cs.attribute_id = :is_active AND cs.store_id = :store_id",
                                     ""
                                 )
-                        ->where("(CASE WHEN cs.value_id > 0 THEN cs.value ELSE ci.value END = 0 OR k.product_id NOT IN ?)",
+						->joinLeft(
+                                    array('cie' => $this->_frameworkModelResource->getTableName("catalog_category_entity_int")),
+                                    "cie.row_id = ce.row_id AND cie.attribute_id = :is_exclude AND cie.store_id = 0",
+                                    ""
+                                )
+						->joinLeft(
+                                    array('cse' => $this->_frameworkModelResource->getTableName("catalog_category_entity_int")),
+                                    "cse.row_id = cie.row_id AND cse.attribute_id = :is_exclude AND cse.store_id = :store_id",
+                                    ""
+                                )
+                        ->where("(CASE WHEN cs.value_id > 0 THEN cs.value ELSE ci.value END = 0 OR CASE WHEN cse.value_id > 0 THEN cse.value ELSE cie.value END = 1 OR k.product_id NOT IN ?)",
                                 $this->_frameworkModelResource->getConnection()
                                 ->select()
                                 ->from(
@@ -2678,6 +2781,7 @@ class Sync extends \Klevu\Search\Model\Sync {
                         ->bind(array(
                             'type'=>"categories",
                             'is_active' => $isActiveAttributeId,
+							'is_exclude' => $isExcludeAttributeId,
 							'store_id' => $store->getId()
                         )),
                     'update' => 
@@ -2723,18 +2827,30 @@ class Sync extends \Klevu\Search\Model\Sync {
                                     "cs.row_id = c.row_id AND cs.attribute_id = :is_active AND cs.store_id = :store_id",
                                     ""
                                 )
+								->joinLeft(
+                                    array('cie' => $this->_frameworkModelResource->getTableName("catalog_category_entity_int")),
+                                    "cie.row_id = c.row_id AND cie.attribute_id = :is_exclude AND cie.store_id = 0",
+                                    ""
+                                )
+								->joinLeft(
+                                    array('cse' => $this->_frameworkModelResource->getTableName("catalog_category_entity_int")),
+                                    "cse.row_id = c.row_id AND cse.attribute_id = :is_exclude AND cse.store_id = :store_id",
+                                    ""
+                                )
                                 ->joinLeft(
                                     array('k' => $this->_frameworkModelResource->getTableName("klevu_product_sync")),
                                     "k.product_id = c.entity_id AND k.test_mode = :test_mode AND k.type = :type AND k.store_id = :store_id AND k.parent_id=0",
                                     ""
                                 )
 								->where("CASE WHEN cs.value_id > 0 THEN cs.value ELSE ci.value END = 1")
+								->where("CASE WHEN cse.value_id > 0 THEN cse.value ELSE cie.value END = 0 OR CASE WHEN cse.value_id > 0 THEN cse.value ELSE cie.value END IS NULL")
                                 ->where("k.product_id IS NULL")
                                 ->where("c.path LIKE ?","{$rootStoreCategory}%")
                         ->bind(array(
                             'type' => "categories",
                             'store_id' => $store->getId(),
                             'is_active' => $isActiveAttributeId,
+							'is_exclude' => $isExcludeAttributeId,
                             'test_mode' => $this->isTestModeEnabled(),
                         )),
                 );
@@ -2767,7 +2883,18 @@ class Sync extends \Klevu\Search\Model\Sync {
                                     "cs.entity_id = ci.entity_id AND cs.attribute_id = :is_active AND cs.store_id = :store_id",
                                     ""
                                 )
-                        ->where("(CASE WHEN cs.value_id > 0 THEN cs.value ELSE ci.value END = 0 OR k.product_id NOT IN ?)",
+						 ->joinLeft(
+                                    array('cie' => $this->_frameworkModelResource->getTableName("catalog_category_entity_int")),
+                                    "cie.entity_id = ce.entity_id AND cie.attribute_id = :is_exclude AND cie.store_id = 0",
+                                    ""
+                                )
+						->joinLeft(
+                                    array('cse' => $this->_frameworkModelResource->getTableName("catalog_category_entity_int")),
+                                    "cse.entity_id = cie.entity_id AND cse.attribute_id = :is_exclude AND cse.store_id = :store_id",
+                                    ""
+                                )
+                        ->where("(CASE WHEN cs.value_id > 0 THEN cs.value ELSE ci.value END = 0 OR 
+						CASE WHEN cse.value_id > 0 THEN cse.value ELSE cie.value END = 1 OR k.product_id NOT IN ?)",
                                 $this->_frameworkModelResource->getConnection()
                                 ->select()
                                 ->from(
@@ -2779,6 +2906,7 @@ class Sync extends \Klevu\Search\Model\Sync {
                         ->bind(array(
                             'type'=>"categories",
                             'is_active' => $isActiveAttributeId,
+							'is_exclude' => $isExcludeAttributeId,
 							'store_id' => $store->getId()
                         )),
                     'update' => 
@@ -2824,18 +2952,30 @@ class Sync extends \Klevu\Search\Model\Sync {
                                     "cs.entity_id = c.entity_id AND cs.attribute_id = :is_active AND cs.store_id = :store_id",
                                     ""
                                 )
+								->joinLeft(
+                                    array('cie' => $this->_frameworkModelResource->getTableName("catalog_category_entity_int")),
+                                    "cie.entity_id = c.entity_id AND cie.attribute_id = :is_exclude AND cie.store_id = 0",
+                                    ""
+                                )
+								->joinLeft(
+                                    array('cse' => $this->_frameworkModelResource->getTableName("catalog_category_entity_int")),
+                                    "cse.entity_id = c.entity_id AND cse.attribute_id = :is_exclude AND cse.store_id = :store_id",
+                                    ""
+                                )
                                 ->joinLeft(
                                     array('k' => $this->_frameworkModelResource->getTableName("klevu_product_sync")),
                                     "k.product_id = c.entity_id AND k.test_mode = :test_mode AND k.type = :type AND k.store_id = :store_id AND k.parent_id=0",
                                     ""
                                 )
 								->where("CASE WHEN cs.value_id > 0 THEN cs.value ELSE ci.value END = 1")
+								->where("CASE WHEN cse.value_id > 0 THEN cse.value ELSE cie.value END = 0 OR CASE WHEN cse.value_id > 0 THEN cse.value ELSE cie.value END IS NULL")
                                 ->where("k.product_id IS NULL")
                                 ->where("c.path LIKE ?","{$rootStoreCategory}%")
                         ->bind(array(
                             'type' => "categories",
                             'store_id' => $store->getId(),
                             'is_active' => $isActiveAttributeId,
+							'is_exclude' => $isExcludeAttributeId,
                             'test_mode' => $this->isTestModeEnabled(),
                         )),
                 );
@@ -2846,6 +2986,7 @@ class Sync extends \Klevu\Search\Model\Sync {
                 if ($this->rescheduleIfOutOfMemory()) {
                     return;
                 }
+				
                 $method = $action . "Category";
                 $category_pages = $this->_frameworkModelResource->getConnection()->fetchAll($statement, $statement->getBind());
                 $total = count($category_pages);
@@ -3210,6 +3351,5 @@ class Sync extends \Klevu\Search\Model\Sync {
 
         return $data;
     }
-    
 
 }

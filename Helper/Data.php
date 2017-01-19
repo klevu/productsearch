@@ -374,6 +374,34 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
         $attribute = $attributecollection->getFirstItem();
         return $attribute->getAttributeId();
     }
+	
+	
+	/**
+     * Get the attribute id for media gallery
+     *
+     * @return string
+     */
+    public function getIsMediaGalleryAttributeId(){
+        $entity_type = $this->_modelEntityType->loadByCode("catalog_product");
+        $entity_typeid = $entity_type->getId();
+        $attributecollection = $this->_modelEntityAttribute->getCollection()->addFieldToFilter("entity_type_id", $entity_typeid)->addFieldToFilter("attribute_code", "media_gallery");
+        $attribute = $attributecollection->getFirstItem();
+        return $attribute->getAttributeId();
+    }
+	
+	
+	/**
+     * Get the is active attribute id
+     *
+     * @return string
+     */
+    public function getIsExcludeAttributeId(){
+        $entity_type = $this->_modelEntityType->loadByCode("catalog_category");
+        $entity_typeid = $entity_type->getId();
+        $attributecollection = $this->_modelEntityAttribute->getCollection()->addFieldToFilter("entity_type_id", $entity_typeid)->addFieldToFilter("attribute_code", "is_exclude_cat");
+        $attribute = $attributecollection->getFirstItem();
+        return $attribute->getAttributeId();
+    }
     
     /**
      * Get the client ip

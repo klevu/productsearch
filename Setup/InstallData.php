@@ -9,12 +9,28 @@ namespace Klevu\Search\Setup;
 use Magento\Framework\Setup\InstallDataInterface;
 use Magento\Framework\Setup\ModuleContextInterface;
 use Magento\Framework\Setup\ModuleDataSetupInterface;
+use Magento\Eav\Setup\EavSetup;
+use Magento\Eav\Setup\EavSetupFactory;
 /**
  * @codeCoverageIgnore
  */
 class InstallData implements InstallDataInterface
 {
 
+    /**
+     * @var \Magento\Eav\Setup\EavSetupFactory
+     */
+    private $eavSetupFactory;
+	
+   /**
+     * Constructor
+     *
+     * @param \Magento\Eav\Setup\EavSetupFactory $eavSetupFactory
+     */
+    public function __construct(EavSetupFactory $eavSetupFactory)
+    {
+        $this->eavSetupFactory = $eavSetupFactory;
+    }
 
     /**
      * {@inheritdoc}
@@ -75,6 +91,5 @@ class InstallData implements InstallDataInterface
 				}
 			}
 			\Magento\Framework\App\ObjectManager::getInstance()->get('\Klevu\Search\Helper\Config')->saveRatingUpgradeFlag(0);
-	
     }
 }
