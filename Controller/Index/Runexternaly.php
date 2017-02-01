@@ -15,13 +15,11 @@ class Runexternaly extends  \Magento\Framework\App\Action\Action
         \Magento\Framework\Filesystem $magentoFrameworkFilesystem, 
         \Klevu\Search\Model\Api\Action\Debuginfo $apiActionDebuginfo, 
         \Klevu\Search\Model\Session $frameworkModelSession,
-		\Klevu\Search\Helper\Data $searchHelperData,
-		\Magento\Framework\Message\ManagerInterface $messageManager 
+		\Klevu\Search\Helper\Data $searchHelperData
 		)
     {
 
         parent::__construct($context);
-		$this->_messageManager = $messageManager;
         $this->_cacheTypeList = $cacheTypeList;
         $this->_cacheState = $cacheState;
         $this->_cacheFrontendPool = $cacheFrontendPool;
@@ -30,7 +28,6 @@ class Runexternaly extends  \Magento\Framework\App\Action\Action
         $this->_magentoFrameworkFilesystem = $magentoFrameworkFilesystem;
         $this->_apiActionDebuginfo = $apiActionDebuginfo;
         $this->_frameworkModelSession = $frameworkModelSession;
-        //$this->_indexModelIndexer = $indexModelIndexer;
         $this->_searchHelperData = $searchHelperData;
 		
 
@@ -64,7 +61,7 @@ class Runexternaly extends  \Magento\Framework\App\Action\Action
 		}
 		
 		$response = $this->_apiActionDebuginfo->debugKlevu(array('apiKey'=>$debugapi,'klevuLog'=>$content,'type'=>'index'));
-		$this->messageManager->addSuccess( __('klevu debug data was sent to klevu server successfully.'));
+		
         $this->_view->loadLayout();
 		$this->_view->getLayout()->initMessages();
         $this->_view->renderLayout();
