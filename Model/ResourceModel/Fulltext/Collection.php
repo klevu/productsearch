@@ -18,7 +18,7 @@ class Collection
      * @var \Magento\Framework\App\RequestInterface
      */
     protected $request;
-	
+
 	/**
      * @param RequestInterface $request
      */
@@ -35,15 +35,15 @@ class Collection
 			$collection_order = $this->request->getParam('product_list_order');
 			$module_name = $this->request->getModuleName();
 			if(empty($collection_order) && !empty($session->getData('ids')) && $module_name == "catalogsearch") {
-				$collection->getSelect()->order(sprintf('FIELD(`e`.`entity_id`, %s) ASC', implode(',', $session->getData('ids'))));
+				$collection->getSelect()->order(new \Zend_Db_Expr(sprintf('FIELD(`e`.`entity_id`, %s) ASC', implode(',', $session->getData('ids')))));
 			} else {
 				if($collection_order == 'relevance' && !empty($session->getData('ids')) && $module_name == "catalogsearch"){
-					$collection->getSelect()->order(sprintf('FIELD(`e`.`entity_id`, %s) ASC', implode(',', $session->getData('ids'))));
+					$collection->getSelect()->order(new \Zend_Db_Expr(sprintf('FIELD(`e`.`entity_id`, %s) ASC', implode(',', $session->getData('ids')))));
 				}
 			}
 			return $collection;
 		}
-		
-       
+
+
     }
 }
