@@ -358,7 +358,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
         if($config->isTaxEnabled($store->getId())) {
                 return $item->getPriceModel()->getTotalPrices($item, null, true, false);
         } else {
-                return $item->getPriceModel()->getTotalPrices($item, null, null, false);
+                return $item->getPriceModel()->getTotalPrices($item, null, false, false);
         }
     }
     

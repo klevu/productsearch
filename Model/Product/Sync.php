@@ -34,7 +34,6 @@ use \Magento\Eav\Model\Entity\Attribute;
 use \Magento\Catalog\Model\Product\Action;
 use \Magento\CatalogUrlRewrite\Model\ProductUrlPathGenerator;
 use \Magento\CatalogRule\Model\Rule;
-use Magento\Catalog\Model\Product\Gallery\ReadHandler as GalleryReadHandler;
 class Sync extends \Klevu\Search\Model\Sync {
 	
 	
@@ -229,7 +228,6 @@ class Sync extends \Klevu\Search\Model\Sync {
      */
     protected $_apiActionFeatures;
 	
-	protected $galleryReadHandler;
 
     public function __construct(\Magento\Framework\App\ResourceConnection $frameworkModelResource, 
         \Magento\Framework\Event\ManagerInterface $frameworkEventManagerInterface, 
@@ -270,8 +268,7 @@ class Sync extends \Klevu\Search\Model\Sync {
         \Magento\Framework\App\RequestInterface $frameworkAppRequestInterface,
         \Magento\Store\Model\Store $frameworkModelStore,
         \Klevu\Search\Model\Api\Action\Features $apiActionFeatures,
-		\Magento\Framework\App\ProductMetadataInterface $productMetadataInterface,
-		GalleryReadHandler $galleryReadHandler
+		\Magento\Framework\App\ProductMetadataInterface $productMetadataInterface
         )
     {
         $this->_apiActionFeatures = $apiActionFeatures;
@@ -314,7 +311,14 @@ class Sync extends \Klevu\Search\Model\Sync {
         $this->localeDate = $localeDate;
         $this->_catalogModelCategory = $catalogModelCategory;
 		$this->_ProductMetadataInterface = $productMetadataInterface;
-		$this->_galleryReadHandler = $galleryReadHandler;
+		
+		if(version_compare($this->_ProductMetadataInterface->getVersion(), '2.0.13', '>')===true){
+			// you're on 2.0.13 later version
+			$this->_galleryReadHandler = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Catalog\Model\Product\Gallery\ReadHandler');
+		} else {
+			$this->_galleryReadHandler = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Catalog\Model\Product\Gallery\GalleryManagement');
+		}
+		
 		if($this->_ProductMetadataInterface->getEdition() == "Enterprise" && version_compare($this->_ProductMetadataInterface->getVersion(), '2.0.8', '>')===true) {
 			$this->_entity_value = "row_id";
 		} else {
@@ -1435,11 +1439,13 @@ class Sync extends \Klevu\Search\Model\Sync {
 				->addIdFilter($product_ids)
 				->setStore($this->_storeModelStoreManagerInterface->getStore())
 				->addStoreFilter()
+				->addFinalPrice()
 				->addAttributeToSelect($this->getUsedMagentoAttributes());
 		 
 			$data->load()
 				->addCategoryIds();
 		}
+		
 		
 		$check_root_magento = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Backend\Block\Page\RequireJs')->getViewFileUrl('requirejs/require.js');
 		
@@ -1473,10 +1479,7 @@ class Sync extends \Klevu\Search\Model\Sync {
 		if(!in_array('pub',$check_pub)){
 			$media_url = str_replace('/pub','/',$media_url);
 		}
-		/*$backend = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Catalog\Model\ResourceModel\Product\Gallery');
-		$container =  new \Magento\Framework\DataObject(array(
-			'attribute' => new \Magento\Framework\DataObject(array('id' => $this->_searchHelperData->getIsMediaGalleryAttributeId()))
-		));*/
+		
 		
         $rc = 0; 
         foreach ($products as $index => &$product) {
@@ -1490,16 +1493,11 @@ class Sync extends \Klevu\Search\Model\Sync {
 				if($config->isCollectionMethodEnabled()) {
 					$item = $data->getItemById($product['product_id']);
 					$parent = ($product['parent_id'] != 0) ?  $data->getItemById($product['parent_id']) : null;
-					
 					$this->log(\Zend\Log\Logger::DEBUG, sprintf("Load by collection method for product ID %d", $product['product_id']));
 				} else {
 					$item = \Magento\Framework\App\ObjectManager::getInstance()->create('\Magento\Catalog\Model\Product')->load($product['product_id']);
 					$item->setCustomerGroupId(\Magento\Customer\Model\Group::NOT_LOGGED_IN_ID);
-					
-					//foreach ($item->getMediaGalleryImages() as $image) {
-					//	echo $image->getFile();
-					//}
-					
+
 					$parent = ($product['parent_id'] != 0) ?  \Magento\Framework\App\ObjectManager::getInstance()->create('\Magento\Catalog\Model\Product')->load($product['parent_id'])->setCustomerGroupId(\Magento\Customer\Model\Group::NOT_LOGGED_IN_ID): null;
 				}
 				
@@ -1591,49 +1589,115 @@ class Sync extends \Klevu\Search\Model\Sync {
 									}
 									if ($parent && empty($parent->getData($attribute))) {
 										$product[$key] = $parent->getData('small_image');
+										$images = array();
 										if(empty($product[$key])){
-											$this->_galleryReadHandler->execute($parent);
-											$images = $item->getMediaGallery('images');
-											$product[$key] = $images[1]['file'];
+											if(version_compare($this->_ProductMetadataInterface->getVersion(), '2.0.13', '>')===true){
+												$this->_galleryReadHandler->execute($parent);
+												$images = $parent->getMediaGallery('images');
+											} else {
+												if(!$config->isCollectionMethodEnabled()) {
+													foreach ($parent->getMediaGalleryEntries() as $image) {
+														$images = $image->getData();
+													}
+												}
+											}
+											if(!empty($images)){
+												$img = 0;
+												foreach ($images as $imagkey => $imgvalue) {
+													if($img == 0) {
+														$product[$key] = $imgvalue['file'];
+														$img++;
+													}
+												}
+											}
 										}
 										break;
 									} else if($item->getData($attribute)){
 										$product[$key] = $item->getData('small_image');
+										$images = array();
 										if(empty($product[$key])){
-											$this->_galleryReadHandler->execute($item);
-											$images = $item->getMediaGallery('images');
-											$product[$key] = $images[1]['file'];
+											if(version_compare($this->_ProductMetadataInterface->getVersion(), '2.0.13', '>')===true){
+												$this->_galleryReadHandler->execute($item);
+												$images = $item->getMediaGallery('images');
+											} else {
+												if(!$config->isCollectionMethodEnabled()) {
+													foreach ($item->getMediaGalleryEntries() as $image) {
+														$images = $image->getData();
+													}
+												}
+											}
+											if(!empty($images)){
+												$img = 0;
+												foreach ($images as $imagkey => $imgvalue) {
+													if($img == 0) {
+														$product[$key] = $imgvalue['file'];
+														$img++;
+													}
+												}
+											}
 										}
 										break;
 									}
-									
 								} else {
-									
-									if($item->getData($attribute) && empty($item->getData($attribute))) {
+									if($item->getData($attribute) && !empty($item->getData($attribute)) && $item->getData($attribute) != "no_selection") {
 										$product[$key] = $item->getData($attribute);
 										break;
-									}else if ($parent && $parent->getData($attribute) && empty($parent->getData($attribute))) {
+									}else if ($parent && $parent->getData($attribute) && !empty($parent->getData($attribute)) && $parent->getData($attribute) != "no_selection" ) {
 										$product[$key] = $parent->getData($attribute);
 										break;
 									}
-									
-									if ($parent && empty($parent->getData($attribute))) {
-										$product[$key] = $parent->getData('small_image');
-										if(empty($product[$key])){
-											$this->_galleryReadHandler->execute($parent);
-											$images = $item->getMediaGallery('images');
-											$product[$key] = $images[1]['file'];
+									if(empty($product[$key]) || $product[$key] == "no_selection" ){
+										$product[$key] = $item->getData('small_image');
+										$images = array();
+										if(empty($product[$key]) || $product[$key] == "no_selection" ){
+											if(version_compare($this->_ProductMetadataInterface->getVersion(), '2.0.13', '>')===true){
+												$this->_galleryReadHandler->execute($item);
+												$images = $item->getMediaGallery('images');
+											} else {
+												if(!$config->isCollectionMethodEnabled()) {
+													foreach ($item->getMediaGalleryEntries() as $image) {
+														$images = $image->getData();
+													}
+												}
+											}
+											if(!empty($images)){
+												$img = 0;
+												foreach ($images as $imagkey => $imgvalue) {
+													if($img == 0) {
+														$product[$key] = $imgvalue['file'];
+														$img++;
+													}
+												}
+											}
 										}
 										break;
-									} else if($item->getData($attribute)){
-										$product[$key] = $item->getData('small_image');
-										if(empty($product[$key])){
-											$this->_galleryReadHandler->execute($parent);
-											$images = $item->getMediaGallery('images');
-											$product[$key] = $images[1]['file'];
+									} else if ($parent && ($product[$key] == "no_selection" || empty($product[$key]))) {
+										$product[$key] = $parent->getData('small_image');
+										$images = array();
+										if(empty($product[$key]) || $product[$key] == "no_selection"){
+											if(version_compare($this->_ProductMetadataInterface->getVersion(), '2.0.13', '>')===true){
+												$this->_galleryReadHandler->execute($parent);
+												$images = $parent->getMediaGallery('images');
+											} else {
+												if(!$config->isCollectionMethodEnabled()) {
+													foreach ($parent->getMediaGalleryEntries() as $image) {
+														$images = $image->getData();
+													}
+												}
+											}
+											if(!empty($images)){
+												$img = 0;
+												foreach ($images as $imagkey => $imgvalue) {
+													if($img == 0) {
+														$product[$key] = $imgvalue['file'];
+														$img++;
+													}
+												}
+											}
 										}
 										break;
 									}
+									
 									
 								}
 							}
@@ -1651,66 +1715,144 @@ class Sync extends \Klevu\Search\Model\Sync {
 							}
 							break;
 						case "salePrice":
-
-							// Default to 0 if price can't be determined
-							$product['salePrice'] = 0;
-
-							if ($parent && $parent->getData("type_id") == \Magento\ConfigurableProduct\Model\Product\Type\Configurable::TYPE_CODE) {
-								// Calculate configurable product price based on option values
-								$ruleprice = $this->calculateFinalPriceFront($parent,\Magento\Customer\Model\Group::NOT_LOGGED_IN_ID,$parent->getId(),$this->_storeModelStoreManagerInterface->getStore());
-								if(!empty($ruleprice)){
-									$fprice = min($ruleprice,$parent->getPriceInfo()->getPrice('final_price')->getAmount()->getValue());    
-								} else {
-									$fprice = $parent->getPriceInfo()->getPrice('final_price')->getAmount()->getValue();
-								}
-
-								$price = (isset($fprice)) ? $fprice: $parent->getPriceInfo()->getPrice('final_price')->getAmount()->getValue();
-
-								// show low price for config products
-								$product['startPrice'] = $this->processPrice($price , $parent);
+						
+						    if($config->isCollectionMethodEnabled()) {
 								
-								// also send sale price for sorting and filters for klevu 
-								$product['salePrice'] = $this->processPrice($price , $parent);
-							} else {
-								// Use price index prices to set the product price and start/end prices if available
-								// Falling back to product price attribute if not
-								if ($item) {
-									$ruleprice = $this->calculateFinalPriceFront($item,\Magento\Customer\Model\Group::NOT_LOGGED_IN_ID,$item->getId(),$this->_storeModelStoreManagerInterface->getStore());
-									if ($item->getData('type_id') == "grouped") {
-										$this->_searchHelperData->getGroupProductMinPrice($item,$this->_storeModelStoreManagerInterface->getStore());
-										if(!empty($ruleprice)){
-											$sPrice = min($ruleprice,$item->getFinalPrice());    
-										}else{
-											$sPrice = $item->getFinalPrice();    
-										}
-										$product['startPrice'] = $this->processPrice($sPrice,$item);
-										$product["salePrice"] = $this->processPrice($sPrice,$item);
-									}else if ($item->getData('type_id') == \Magento\Catalog\Model\Product\Type::TYPE_BUNDLE) {
-										list($minimalPrice, $maximalPrice) = $this->_searchHelperData->getBundleProductPrices($item,$this->_storeModelStoreManagerInterface->getStore());
-										
-										$minPrice = $this->processPrice($this->convertPrice($minimalPrice,$this->_storeModelStoreManagerInterface->getStore()), $item);
-										
-										$maxPrice = $this->processPrice($this->convertPrice($maximalPrice,$this->_storeModelStoreManagerInterface->getStore()), $item);
-										
-										$product["salePrice"] = $minPrice;
-										$product['startPrice'] = $minPrice;
-										$product['toPrice'] = $maxPrice;
-									}else{
-										// Always use minimum price as the sale price as it's the most accurate
-										if(!empty($ruleprice)){
-											$sPrice = min($ruleprice,$item->getPriceInfo()->getPrice('final_price')->getAmount()->getValue());    
-										} else{
-											$sPrice = $item->getPriceInfo()->getPrice('final_price')->getAmount()->getValue();
-										}
-										$product['salePrice'] = $this->processPrice($sPrice , $item);
-									}
+								// Default to 0 if price can't be determined
+								$product['salePrice'] = 0;
+
+								if ($parent && $parent->getData("type_id") == \Magento\ConfigurableProduct\Model\Product\Type\Configurable::TYPE_CODE) {
 									
+									// Calculate configurable product price based on option values
+									$ruleprice = $this->calculateFinalPriceFront($parent,\Magento\Customer\Model\Group::NOT_LOGGED_IN_ID,$parent->getId(),$this->_storeModelStoreManagerInterface->getStore());
+									if(!empty($ruleprice)){
+										$fprice = min($ruleprice,$parent->getData('final_price'));    
+									} else {
+										$fprice = $parent->getData('final_price');
+									}
+
+									$price = (isset($fprice)) ? $fprice: $parent->getData('final_price');
+
+									// show low price for config products
+									$product['startPrice'] = $this->processPrice($price , $parent);
+									
+									// also send sale price for sorting and filters for klevu 
+									$product['salePrice'] = $this->processPrice($price , $parent);
 								} else {
-									if ($item->getData("price") !== null) {
-										$product["salePrice"] = $this->processPrice($item->getPriceInfo()->getPrice('regular_price')->getAmount()->getValue(), $item);
+									// Use price index prices to set the product price and start/end prices if available
+									// Falling back to product price attribute if not
+									if ($item) {
+										$ruleprice = $this->calculateFinalPriceFront($item,\Magento\Customer\Model\Group::NOT_LOGGED_IN_ID,$item->getId(),$this->_storeModelStoreManagerInterface->getStore());
+										if ($item->getData('type_id') == "grouped") {
+											$this->_searchHelperData->getGroupProductMinPrice($item,$this->_storeModelStoreManagerInterface->getStore());
+											if(!empty($ruleprice)){
+												$sPrice = min($ruleprice,$item->getFinalPrice());    
+											}else{
+												$sPrice = $item->getFinalPrice();    
+											}
+											
+											$product['startPrice'] = $this->convertPrice($sPrice,$this->_storeModelStoreManagerInterface->getStore());
+											$product["salePrice"] = $this->convertPrice($sPrice,$this->_storeModelStoreManagerInterface->getStore());
+											
+										}else if ($item->getData('type_id') == \Magento\Catalog\Model\Product\Type::TYPE_BUNDLE) {
+											list($minimalPrice, $maximalPrice) = $this->_searchHelperData->getBundleProductPrices($item,$this->_storeModelStoreManagerInterface->getStore());
+											
+											$minPrice = $this->convertPrice($minimalPrice,$this->_storeModelStoreManagerInterface->getStore());
+											
+											$maxPrice = $this->convertPrice($maximalPrice,$this->_storeModelStoreManagerInterface->getStore());
+											
+											$product["salePrice"] = $minPrice;
+											$product['startPrice'] = $minPrice;
+											$product['toPrice'] = $maxPrice;
+										}else{
+											
+											// Always use minimum price as the sale price as it's the most accurate
+											if(!empty($ruleprice)){
+												$sPrice = min($ruleprice,$item->getData('final_price'));    
+											} else{
+												$sPrice = $item->getData('final_price');
+											}
+											$product['salePrice'] = $this->processPrice($sPrice , $item);
+										}
+										
+									} else {
+										if ($item->getData("price") !== null) {
+											$product["salePrice"] = $this->processPrice($item->getPriceInfo()->getPrice('regular_price')->getAmount()->getValue(\Magento\Tax\Pricing\Adjustment::ADJUSTMENT_CODE), $item);
+										}
 									}
 								}
+								
+								
+							} else {
+								
+								// Default to 0 if price can't be determined
+								$product['salePrice'] = 0;
+
+								if ($parent && $parent->getData("type_id") == \Magento\ConfigurableProduct\Model\Product\Type\Configurable::TYPE_CODE) {
+									
+									// Calculate configurable product price based on option values
+									$ruleprice = $this->calculateFinalPriceFront($parent,\Magento\Customer\Model\Group::NOT_LOGGED_IN_ID,$parent->getId(),$this->_storeModelStoreManagerInterface->getStore());
+									if(!empty($ruleprice)){
+										$fprice = min($ruleprice,$parent->getPriceInfo()->getPrice('final_price')->getAmount()->getValue(\Magento\Tax\Pricing\Adjustment::ADJUSTMENT_CODE));    
+									} else {
+										$fprice = $parent->getPriceInfo()->getPrice('final_price')->getAmount()->getValue(\Magento\Tax\Pricing\Adjustment::ADJUSTMENT_CODE);
+									}
+
+									$price = (isset($fprice)) ? $fprice: $parent->getPriceInfo()->getPrice('final_price')->getAmount()->getValue(\Magento\Tax\Pricing\Adjustment::ADJUSTMENT_CODE);
+
+									// show low price for config products
+									$product['startPrice'] = $this->processPrice($price , $parent);
+									
+									// also send sale price for sorting and filters for klevu 
+									$product['salePrice'] = $this->processPrice($price , $parent);
+								} else {
+									// Use price index prices to set the product price and start/end prices if available
+									// Falling back to product price attribute if not
+									if ($item) {
+										$ruleprice = $this->calculateFinalPriceFront($item,\Magento\Customer\Model\Group::NOT_LOGGED_IN_ID,$item->getId(),$this->_storeModelStoreManagerInterface->getStore());
+										if ($item->getData('type_id') == "grouped") {
+											$this->_searchHelperData->getGroupProductMinPrice($item,$this->_storeModelStoreManagerInterface->getStore());
+											if(!empty($ruleprice)){
+												$sPrice = min($ruleprice,$item->getFinalPrice());    
+											}else{
+												$sPrice = $item->getFinalPrice();    
+											}
+											
+											$product['startPrice'] = $this->convertPrice($sPrice,$this->_storeModelStoreManagerInterface->getStore());
+											$product["salePrice"] = $this->convertPrice($sPrice,$this->_storeModelStoreManagerInterface->getStore());
+											
+										}else if ($item->getData('type_id') == \Magento\Catalog\Model\Product\Type::TYPE_BUNDLE) {
+											list($minimalPrice, $maximalPrice) = $this->_searchHelperData->getBundleProductPrices($item,$this->_storeModelStoreManagerInterface->getStore());
+											
+											$minPrice = $this->convertPrice($minimalPrice,$this->_storeModelStoreManagerInterface->getStore());
+											
+											$maxPrice = $this->convertPrice($maximalPrice,$this->_storeModelStoreManagerInterface->getStore());
+											
+											$product["salePrice"] = $minPrice;
+											$product['startPrice'] = $minPrice;
+											$product['toPrice'] = $maxPrice;
+										}else{
+											
+											// Always use minimum price as the sale price as it's the most accurate
+											if(!empty($ruleprice)){
+												$sPrice = min($ruleprice,$item->getPriceInfo()->getPrice('final_price')->getAmount()->getValue(\Magento\Tax\Pricing\Adjustment::ADJUSTMENT_CODE));    
+											} else{
+												$sPrice = $item->getPriceInfo()->getPrice('final_price')->getAmount()->getValue(\Magento\Tax\Pricing\Adjustment::ADJUSTMENT_CODE);
+											}
+											$product['salePrice'] = $this->processPrice($sPrice , $item);
+										}
+										
+									} else {
+										if ($item->getData("price") !== null) {
+											$product["salePrice"] = $this->processPrice($item->getPriceInfo()->getPrice('regular_price')->getAmount()->getValue(\Magento\Tax\Pricing\Adjustment::ADJUSTMENT_CODE), $item);
+										}
+									}
+								}
+								
+								
 							}
+
+							
 							break;
 						case "price":
 								// Default to 0 if price can't be determined
@@ -1718,7 +1860,7 @@ class Sync extends \Klevu\Search\Model\Sync {
 								if ($parent && $parent->getData("type_id") == \Magento\ConfigurableProduct\Model\Product\Type\Configurable::TYPE_CODE) {
 									 
 									// Calculate configurable product price based on option values
-									$orgPrice = $parent->getPriceInfo()->getPrice('regular_price')->getAmount()->getValue();
+									$orgPrice = $parent->getPriceInfo()->getPrice('regular_price')->getAmount()->getValue(\Magento\Tax\Pricing\Adjustment::ADJUSTMENT_CODE);
 									$price = (isset($orgPrice)) ? $orgPrice: $this->convertPrice($parent->getData("price"),$this->_storeModelStoreManagerInterface->getStore());
 
 									// also send sale price for sorting and filters for klevu 
@@ -1732,21 +1874,22 @@ class Sync extends \Klevu\Search\Model\Sync {
 											// Get the group product original price 
 											$this->_searchHelperData->getGroupProductOriginalPrice($item,$this->getStore());
 											$sPrice = $item->getPrice();
-											$product["price"] = $this->processPrice($sPrice,$item);
+											$product["price"] = $this->convertPrice($sPrice,$this->_storeModelStoreManagerInterface->getStore());
 										}else if ($item->getData('type_id') == \Magento\Catalog\Model\Product\Type::TYPE_BUNDLE) {
 											// product detail page always shows final price as price so we also taken final price as original price only for bundle product 
 											list($minimalPrice, $maximalPrice) = $this->_searchHelperData->getBundleProductPrices($item,$this->getStore());
 											
-											$product["price"] = $this->processPrice($this->convertPrice($minimalPrice,$this->_storeModelStoreManagerInterface->getStore()), $item);
+											$product["price"] = $this->convertPrice($minimalPrice,$this->_storeModelStoreManagerInterface->getStore());
+											
 											
 										}else {
 											// Always use minimum price as the sale price as it's the most accurate
-											$product['price'] = $this->processPrice($item->getPriceInfo()->getPrice('regular_price')->getAmount()->getValue(), $item);
+											$product['price'] = $this->processPrice($item->getPriceInfo()->getPrice('regular_price')->getAmount()->getValue(\Magento\Tax\Pricing\Adjustment::ADJUSTMENT_CODE), $item);
 										}
 									  
 									} else {
 										if ($item->getData("price") !== null) {
-											$product["price"] = $this->processPrice($item->getPriceInfo()->getPrice('regular_price')->getAmount()->getValue(),$item);
+											$product["price"] = $this->processPrice($item->getPriceInfo()->getPrice('regular_price')->getAmount()->getValue(\Magento\Tax\Pricing\Adjustment::ADJUSTMENT_CODE),$item);
 										} 
 									}
 								}
@@ -1791,9 +1934,6 @@ class Sync extends \Klevu\Search\Model\Sync {
 				
 				
 
-				// Use the parent URL if the product is invisible (and has a parent) and
-				// use a URL rewrite if one exists, falling back to catalog/product/view
-				
 				if($parent) {
 					 
 					if(isset($url_rewrite_data[$product['parent_id']])) {
@@ -1810,6 +1950,8 @@ class Sync extends \Klevu\Search\Model\Sync {
 							  "catalog/product/view/id/" . $product['parent_id']
 							); 
 						}
+					} else {
+						$product['url'] = $base_url."catalog/product/view/id/".$product['parent_id'];
 					}
 					
 					           
@@ -1829,14 +1971,18 @@ class Sync extends \Klevu\Search\Model\Sync {
 							  "catalog/product/view/id/" . $product['product_id']
 							); 
 						}
+					} else {
+						$product['url'] = $base_url."catalog/product/view/id/".$product['product_id'];
 					}
 					
 				}
 				
 				
 				// Add stock data
-				   if(isset($stock_data[$product['product_id']])) {
+				if(isset($stock_data[$product['product_id']])) {
 					$product['inStock'] = ($stock_data[$product['product_id']]) ? "yes" : "no";
+				} else {
+					$product['inStock'] = "yes";
 				}
 
 				// Configurable product relation
@@ -1978,7 +2124,6 @@ class Sync extends \Klevu\Search\Model\Sync {
                     )
                 )
                 ->where("s.product_id IN (?)", $product_ids)
-                ->where("s.website_id = ?",$this->_storeModelStoreManagerInterface->getStore()->getWebsiteId())
         );
 
         $data = array();
@@ -2362,7 +2507,7 @@ class Sync extends \Klevu\Search\Model\Sync {
      */
     protected function convertPrice($price,$store) {
         $convertPrice = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Framework\Pricing\PriceCurrencyInterface');
-        return $convertPrice->convert($price,false);
+        return $convertPrice->convert($price,$store);
     }
 
     /**

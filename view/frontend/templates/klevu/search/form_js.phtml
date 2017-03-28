@@ -1,18 +1,12 @@
-<?php /** @var \Magento\Framework\View\Element\Template $this */ ?>
-<?php $config = \Magento\Framework\App\ObjectManager::getInstance()->get('Klevu\Search\Helper\Config'); ?>
-<?php $helper = \Magento\Framework\App\ObjectManager::getInstance()->get('Klevu\Search\Helper\Data'); ?>
-<?php $moduleInfo =  \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Framework\Module\ModuleList')->getOne('Klevu_Search');?>
-<?php if ($config->isExtensionConfigured()): 
+<?php /** @var \Klevu\Search\Block\Search\Index $this */ ?>
+<?php if ($block->isExtensionConfigured()): 
 $url = $block->getUrl('search', ['_secure' => $block->getRequest()->isSecure()]);?>
 <script type="text/javascript">
-var klevu_sessionId = '<?php echo session_id();?>';
 // add in cms template
-var klevu_current_version = '<?php echo $moduleInfo['setup_version']; ?>';
-require(["prototype"], function(){
-    var allInputs = document.getElementsByTagName( 'input' );
+var klevu_current_version = '<?php echo $block->getModuleInfo(); ?>';
+var allInputs = document.getElementsByTagName( 'input' );
 <?php 
-	
-    if ($config->isLandingEnabled()==0){ ?>
+    if ($block->isLandingEnabled()== $block::DISABLE){ ?>
     var klevu_showQuickSearchOnEnter=true;
     (function () {
         // Remove Magento event observers from the search box
@@ -21,20 +15,16 @@ require(["prototype"], function(){
             if( allInputs[i].type === "text" || allInputs[i].type === "search" ){
                 if( allInputs[i].name === "q" ||  allInputs[i].id === "search" ){
                     var search_input = allInputs[i];
-                    search_input.stopObserving('click');
-                    search_input.stopObserving('keydown');
-                    search_input.form.stopObserving('submit');
-                    search_input.form.observe('submit', function (e) {
-                        Event.stop(e);
-                        klevu_autoSuggest(search_input.value, e);
-                        return false;
-                    });
+					search_input.removeAttribute("data-mage-init");
+					search_input.form.onsubmit = function() {
+						return false;
+					};
                }
             }
         }
         
     })(); 
-    <?php } else if($config->isLandingEnabled()==2) { ?>
+    <?php } else if($block->isLandingEnabled()== $block::KlEVUTEMPLATE) { ?>
     (function () {
         // Remove Magento event observers from the search box
         // Redirect to klevu js page
@@ -42,15 +32,8 @@ require(["prototype"], function(){
             if( allInputs[i].type === "text" || allInputs[i].type === "search" ){
                 if( allInputs[i].name === "q" ||  allInputs[i].id === "search" ){
                     var search_input = allInputs[i];
-                    search_input.stopObserving('click');
-                    search_input.stopObserving('keydown');
+					search_input.removeAttribute("data-mage-init");
                     search_input.form.action='<?php echo $url; ?>' ;//?q="+search_input.value;
-                    search_input.form.observe('submit', function (e) {
-                        //if(search_input.value.length!= 0){
-                            //Event.stop(e);
-                            //return false;
-                        //}
-                    });
                 }
             }
         }
@@ -58,7 +41,7 @@ require(["prototype"], function(){
     })();
      var klevu_storeLandingPageUrl = '<?php echo $url; ?>';
      var klevu_showQuickSearchOnEnter=false;
-    <?php } else if($config->isLandingEnabled()==1) { ?>
+    <?php } else if($block->isLandingEnabled()== $block::KlEVUPRESERVELAYOUT) { ?>
     (function () {
         // Remove Magento event observers from the search box
         // default magetno layout landing page 
@@ -66,8 +49,7 @@ require(["prototype"], function(){
             if( allInputs[i].type === "text" || allInputs[i].type === "search" ){
                 if( allInputs[i].name === "q" ||  allInputs[i].id === "search" ){
                     var search_input = allInputs[i];
-                    search_input.stopObserving('click');
-                    search_input.stopObserving('keydown');
+					search_input.removeAttribute("data-mage-init");
                 }
             }
         }
@@ -75,47 +57,30 @@ require(["prototype"], function(){
     
     var klevu_showQuickSearchOnEnter=false;
     <?php } ?>
-});
     <?php 
-	if($config->isLandingEnabled()==1) {?>
+	if($block->isLandingEnabled()== $block::KlEVUPRESERVELAYOUT) {?>
 		var klevu_storeLandingPageUrl = '<?php echo $block->getUrl('catalogsearch/result',['_secure' => $block->getRequest()->isSecure()]);?>'; 
 		var klevu_showQuickSearchOnEnter=false;
-	<?php } else if($config->isLandingEnabled()==2){ ?>
+	<?php } else if($block->isLandingEnabled()== $block::KlEVUTEMPLATE ){ ?>
 		var klevu_storeLandingPageUrl = '<?php echo $url;?>'; 
 		var klevu_showQuickSearchOnEnter=false;
 	<?php } ?>
     
     // call store js
-    var klevu_apiKey = '<?php echo $config->getJsApiKey() ?>',
+    var klevu_apiKey = '<?php echo $block->getJsApiKey() ?>',
         searchTextBoxName = 'search',
-        klevu_lang = '<?php echo $helper->getStoreLanguage() ?>',
+        klevu_lang = '<?php echo $block->getStoreLanguage() ?>',
         klevu_result_top_margin = '',
         klevu_result_left_margin = '';
-    (function () { var ws = document.createElement('script'),kl_protocol =("https:"===document.location.protocol?"https://":"http://"); ws.type = 'text/javascript'; ws.async = true; ws.src = kl_protocol+'<?php echo $config->getJsUrl() ?>/klevu-js-v1/js/klevu-webstore.js'; var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ws, s); })();
+    (function () { var ws = document.createElement('script'),kl_protocol =("https:"===document.location.protocol?"https://":"http://"); ws.type = 'text/javascript'; ws.async = true; ws.src = kl_protocol+'<?php echo $block->getJsUrl() ?>/klevu-js-v1/js/klevu-webstore.js'; var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ws, s); })();
 
 </script>
 <?php endif; ?>
-
 <?php 
-	// show group price based on logged in customer group
-	$customerSession = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Customer\Model\Session');
-    //Check if User is Logged In
-    if($customerSession->isLoggedIn()) { ?>
-	<script type="text/javascript">
-		var klevu_loginCustomerGroup = "<?php echo $customerSession->getCustomer()->getCustomerGroupId(); ?>";
-		var klevu_loginCustomerEmail = "<?php echo $customerSession->getCustomer()->getEmail();?>";
-	</script>
-<?php } ?>
-
-
-<?php 
-   
-	$storeObj = \Magento\Framework\App\ObjectManager::getInstance();
-	$store = $storeObj->get('Magento\Store\Model\StoreManagerInterface')->getStore();
-	$currency = $helper->getCurrencyData($store);
+	$currency = $block->getCurrencyData();
 	if(!empty($currency)){ ?>
 	<script type="text/javascript">
-	    var klevu_currentCurrencyCode = "<?php echo $store->getCurrentCurrencyCode(); ?>";
+	    var klevu_currentCurrencyCode = "<?php echo $block->getCurrentCurrencyCode(); ?>";
 	    var klevu_currentCurrencyRates = {<?php echo $currency;?>};
 	</script>
 <?php 	

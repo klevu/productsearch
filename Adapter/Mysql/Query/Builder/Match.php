@@ -105,10 +105,14 @@ class Match extends \Magento\Framework\Search\Adapter\Mysql\Query\Builder\Match 
 				$this->_session->setData('ids', $this->_getProductIds($q));
 				$this->_session->setData('queryterm', $q);
 			}
-			if(!empty($this->_session->getData('ids'))) {
-				$matchQuery = sprintf('(search_index.entity_id IN (%s))', implode(',', $this->_session->getData('ids')));
-				$select->where($matchQuery);
+			
+			if($this->_session->getData('ids')){
+				$ids = implode(',', $this->_session->getData('ids'));
+			}else{
+				$ids = "";
 			}
+			$matchQuery = sprintf('(search_index.entity_id IN (%s))', $ids);
+			$select->where($matchQuery);
 			return $select;
 		} else {
 			/** @var $query \Magento\Framework\Search\Request\Query\Match */
@@ -203,7 +207,7 @@ class Match extends \Magento\Framework\Search\Adapter\Mysql\Query\Builder\Match 
                 return array();
             }
 
-            foreach($this->getKlevuResponse($query)->getData('result') as $result) {
+			foreach($this->getKlevuResponse($query)->getData('result') as $key=>$result) {
 				if(isset($result['id'])){
 					$item_id = $this->_searchHelperData->getMagentoProductId((string)$result['id']);
 					$this->_klevu_parent_child_ids[] = $item_id;
@@ -213,13 +217,15 @@ class Match extends \Magento\Framework\Search\Adapter\Mysql\Query\Builder\Match 
 
 					$this->_klevu_product_ids[$item_id['product_id']] = $item_id['product_id'];
 				}else {
-					$item_id = $this->_searchHelperData->getMagentoProductId((string)$result);
-					$this->_klevu_parent_child_ids[] = $item_id;
-					if ($item_id['parent_id'] != 0) {
-						$this->_klevu_product_ids[$item_id['parent_id']] = $item_id['parent_id'];
-					}
+					if($key == "id"){
+						$item_id = $this->_searchHelperData->getMagentoProductId((string)$result);
+						$this->_klevu_parent_child_ids[] = $item_id;
+						if ($item_id['parent_id'] != 0) {
+							$this->_klevu_product_ids[$item_id['parent_id']] = $item_id['parent_id'];
+						}
 
-					$this->_klevu_product_ids[$item_id['product_id']] = $item_id['product_id'];
+						$this->_klevu_product_ids[$item_id['product_id']] = $item_id['product_id'];
+					}
 				}
                 
             }

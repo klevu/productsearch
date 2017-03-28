@@ -1,0 +1,14 @@
+<span data-bind="scope: 'personalData'" style="display:none;">
+    <!-- ko if: personalData().klevuSessionId -->
+    <span id="klevu_sessionId" data-bind="text: personalData().klevuSessionId"></span>
+    <!-- /ko -->
+	<!-- ko if: personalData().klevuLoginCustomerGroup -->
+    <span id="klevu_loginCustomerGroup" data-bind="text: personalData().klevuLoginCustomerGroup"></span>
+    <!-- /ko -->
+	<!-- ko if: personalData().klevuLoginCustomerEmail -->
+    <span id="klevu_loginCustomerEmail" data-bind="text: personalData().klevuLoginCustomerEmail"></span>
+    <!-- /ko -->
+</span>
+<script type="text/x-magento-init">
+{"*": {"Magento_Ui/js/core/app": <?php /* @escapeNotVerified */ echo $block->getJsLayout();?>}}
+</script>
