@@ -59,5 +59,16 @@ class Index extends \Magento\Framework\View\Element\Template
 		return \Magento\Framework\App\ObjectManager::getInstance()->get('Klevu\Search\Helper\Data')->getCurrencyData($store);
 		
 	}
+	
+	public function isPubInUse() {
+	    $check_pub = explode('/',$_SERVER["DOCUMENT_ROOT"]);
+		$filter = array_filter($check_pub);
+		$folder_name = end($filter);
+		if($folder_name == "pub"){
+			return true;
+		} 
+		return false;
+	}
+
 
 }

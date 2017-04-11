@@ -44,6 +44,15 @@ class UpgradeData implements UpgradeDataInterface
     public function upgrade(ModuleDataSetupInterface $setup, ModuleContextInterface $context)
     {
         $setup->startSetup();
+		
+		
+		if (version_compare($context->getVersion(), '2.1.1') < 0) {
+		  //fix for content and addtocart module version if the current version less then 2.1.1
+		  $setup_module = $setup->getTable('setup_module');
+		  $product_search_version = "2.1.7";
+		  $setup->run("UPDATE `setup_module` SET `schema_version` = '{$product_search_version}', data_version = '{$product_search_version}' WHERE (`{$setup_module}`.`module` = 'Klevu_Content' OR `{$setup_module}`.`module` = 'Klevu_Addtocart' ) AND data_version = '10.0.4'");
+		}
+		
         $eavSetup = $this->eavSetupFactory->create(['setup' => $setup]);
 		if (version_compare($context->getVersion(), '2.1.0') < 0) {
 			$eavSetup->addAttribute(

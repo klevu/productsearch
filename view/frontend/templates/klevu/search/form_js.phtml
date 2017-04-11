@@ -15,7 +15,6 @@ var allInputs = document.getElementsByTagName( 'input' );
             if( allInputs[i].type === "text" || allInputs[i].type === "search" ){
                 if( allInputs[i].name === "q" ||  allInputs[i].id === "search" ){
                     var search_input = allInputs[i];
-					search_input.removeAttribute("data-mage-init");
 					search_input.form.onsubmit = function() {
 						return false;
 					};
@@ -32,7 +31,6 @@ var allInputs = document.getElementsByTagName( 'input' );
             if( allInputs[i].type === "text" || allInputs[i].type === "search" ){
                 if( allInputs[i].name === "q" ||  allInputs[i].id === "search" ){
                     var search_input = allInputs[i];
-					search_input.removeAttribute("data-mage-init");
                     search_input.form.action='<?php echo $url; ?>' ;//?q="+search_input.value;
                 }
             }
@@ -49,7 +47,6 @@ var allInputs = document.getElementsByTagName( 'input' );
             if( allInputs[i].type === "text" || allInputs[i].type === "search" ){
                 if( allInputs[i].name === "q" ||  allInputs[i].id === "search" ){
                     var search_input = allInputs[i];
-					search_input.removeAttribute("data-mage-init");
                 }
             }
         }
@@ -73,7 +70,6 @@ var allInputs = document.getElementsByTagName( 'input' );
         klevu_result_top_margin = '',
         klevu_result_left_margin = '';
     (function () { var ws = document.createElement('script'),kl_protocol =("https:"===document.location.protocol?"https://":"http://"); ws.type = 'text/javascript'; ws.async = true; ws.src = kl_protocol+'<?php echo $block->getJsUrl() ?>/klevu-js-v1/js/klevu-webstore.js'; var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ws, s); })();
-
 </script>
 <?php endif; ?>
 <?php 
@@ -86,5 +82,13 @@ var allInputs = document.getElementsByTagName( 'input' );
 <?php 	
     }
 ?>
+<?php 
 
-
+if($block->isPubInUse()){ ?>
+<script type="text/javascript">
+	function klevu_uc_productCustomizations( product ){
+		product.productImage = product.productImage.replace( 'pub/', '');
+		return product;
+	}
+</script>
+<?php } ?>	

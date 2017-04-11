@@ -1456,9 +1456,9 @@ class Sync extends \Klevu\Search\Model\Sync {
 		$dir = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Framework\App\Filesystem\DirectoryList');  
 		$mediadir = $dir->getPath(\Magento\Framework\App\Filesystem\DirectoryList::MEDIA);
 		
-		if(!in_array('pub',$check_pub)){
+		/*if(!in_array('pub',$check_pub)){
 			$mediadir = str_replace('/pub/','/',$mediadir);
-		}
+		}*/
 		
 		// Get the stock,url,visibity of product from database
         $url_rewrite_data = $this->getUrlRewriteData($product_ids);
@@ -2380,7 +2380,7 @@ class Sync extends \Klevu\Search\Model\Sync {
      */
     protected function getGroupPrices($proData) {
 
-        $groupPrices = $proData->getData('tier_price');
+			$groupPrices = $proData->getData('tier_price');
 
             if (is_null($groupPrices)) {
 
@@ -2391,8 +2391,9 @@ class Sync extends \Klevu\Search\Model\Sync {
                     
                 }
             }
-
+			
             if (!empty($groupPrices) && is_array($groupPrices)) {
+				$priceGroupData = array();
                 foreach ($groupPrices as $groupPrice) {
                     if($this->_storeModelStoreManagerInterface->getStore()->getWebsiteId()== $groupPrice['website_id'] || $groupPrice['website_id']==0) {
                         if($groupPrice['price_qty'] == 1) {
@@ -3247,11 +3248,8 @@ class Sync extends \Klevu\Search\Model\Sync {
 		$category_url_rewrite_data = $this->getCategoryUrlRewriteData($category_ids);
 		if($config->isSecureUrlEnabled($this->_storeModelStoreManagerInterface->getStore()->getId())) {
             $base_url = $this->_storeModelStoreManagerInterface->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_LINK,true);
-            $media_url = $this->_storeModelStoreManagerInterface->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_MEDIA,true);
-          
        }else {
             $base_url = $this->_storeModelStoreManagerInterface->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_LINK);
-            $media_url = $this->_storeModelStoreManagerInterface->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_MEDIA);
         }
 		
 		

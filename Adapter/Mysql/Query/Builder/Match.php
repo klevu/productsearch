@@ -109,7 +109,7 @@ class Match extends \Magento\Framework\Search\Adapter\Mysql\Query\Builder\Match 
 			if($this->_session->getData('ids')){
 				$ids = implode(',', $this->_session->getData('ids'));
 			}else{
-				$ids = "";
+				$ids = "NULL";
 			}
 			$matchQuery = sprintf('(search_index.entity_id IN (%s))', $ids);
 			$select->where($matchQuery);

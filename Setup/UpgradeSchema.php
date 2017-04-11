@@ -33,6 +33,7 @@ class UpgradeSchema implements UpgradeSchemaInterface
             //be careful, since everything below is true for installation !
         }
 		
+		
 		if (version_compare($context->getVersion(), '2.0.2') < 0) {
             //code to upgrade to 2.0.2
 			$order_sync_table = $installer->getTable('klevu_order_sync');
