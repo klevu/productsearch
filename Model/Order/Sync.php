@@ -157,16 +157,16 @@ class Sync extends \Klevu\Search\Model\Sync {
                                             $this->removeItemFromQueue($value['klevu_session_id']);
                                             $items_synced++;
                                         } else {
-                                            $this->log(\Zend\Log\Logger::INFO, sprintf("Skipped order item %d: %s", $item_id, $result));
+                                            $this->log(\Zend\Log\Logger::INFO, sprintf("Skipped order item %d: %s", $value['order_item_id'], $result));
                                             $errors++;
                                         }
                             } else {
-                                $this->log(\Zend\Log\Logger::ERR, sprintf("Skipped item %d: Order Sync is not enabled for this store.", $item_id));
-                                $this->removeItemFromQueue($item_id);
+                                $this->log(\Zend\Log\Logger::ERR, sprintf("Skipped item %d: Order Sync is not enabled for this store.", $value['order_item_id']));
+                                $this->removeItemFromQueue($value['order_item_id']);
                             }
                         } else {
                             $this->log(\Zend\Log\Logger::ERR, sprintf("Order item %d does not exist: Removed from sync!", $item_id));
-                            $this->removeItemFromQueue($item_id);
+                            $this->removeItemFromQueue($value['order_item_id']);
                             $errors++;
                         }
                     }
