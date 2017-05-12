@@ -1597,8 +1597,11 @@ class Sync extends \Klevu\Search\Model\Sync {
 												$images = $parent->getMediaGallery('images');
 											} else {
 												if(!$config->isCollectionMethodEnabled()) {
-													foreach ($parent->getMediaGalleryEntries() as $image) {
-														$images = $image->getData();
+													$m_images = $parent->getMediaGalleryEntries();
+													if(!empty($m_images)) {
+														foreach ($m_images as $image) {
+															$images = $image->getData();
+														}
 													}
 												}
 											}
@@ -1626,8 +1629,11 @@ class Sync extends \Klevu\Search\Model\Sync {
 													$images = $item->getMediaGallery('images');
 												} else {
 													if(!$config->isCollectionMethodEnabled()) {
-														foreach ($item->getMediaGalleryEntries() as $image) {
-															$images = $image->getData();
+														$m_images = $item->getMediaGalleryEntries();
+														if(!empty($m_images)) {
+															foreach ($m_images as $image) {
+																$images = $image->getData();
+															}
 														}
 													}
 												}
@@ -1659,8 +1665,11 @@ class Sync extends \Klevu\Search\Model\Sync {
 												$images = $item->getMediaGallery('images');
 											} else {
 												if(!$config->isCollectionMethodEnabled()) {
-													foreach ($item->getMediaGalleryEntries() as $image) {
-														$images = $image->getData();
+													$m_images = $item->getMediaGalleryEntries();
+													if($m_images) {
+														foreach ($item->getMediaGalleryEntries() as $image) {
+															$images = $image->getData();
+														}
 													}
 												}
 											}
@@ -1687,8 +1696,11 @@ class Sync extends \Klevu\Search\Model\Sync {
 													$images = $parent->getMediaGallery('images');
 												} else {
 													if(!$config->isCollectionMethodEnabled()) {
-														foreach ($parent->getMediaGalleryEntries() as $image) {
-															$images = $image->getData();
+														$m_images = $parent->getMediaGalleryEntries();
+														if(!empty($m_images)) {
+															foreach ($parent->getMediaGalleryEntries() as $image) {
+																$images = $image->getData();
+															}
 														}
 													}
 												}
@@ -2045,44 +2057,24 @@ class Sync extends \Klevu\Search\Model\Sync {
                     array('s' => $this->_frameworkModelResource->getTableName("cataloginventory_stock_status")),
                     array(
                         'product_id'   => "s.product_id",
-                        'in_stock'     => "s.stock_status"
+                        "parent_id" =>"ks.parent_id",
+                        'in_stock' => new \Zend_Db_Expr("(case when `ks`.`parent_id` > 0 then (select (case when `ss`.`stock_status` > 0 then `s`.`stock_status` else '0' End) FROM `cataloginventory_stock_status` AS `ss`  where `ss`.`product_id` = `ks`.`parent_id` group by `ss`.`product_id`) else `s`.`stock_status` end)")
                     )
                 )
+                ->joinLeft(
+                    array('ks' => 'klevu_product_sync'),
+                    "s.product_id = ks.product_id",
+                    ""
+                )
                 ->where("s.product_id IN (?)", $product_stock_id_keys)
+                ->where("ks.type = 'products'")
+                ->group('ks.product_id')
         );
         $data = array();
         
         while ($row = $stmt->fetch()) {
-            if($product_stock_ids[$row['product_id']])
-            {
-                $parentId = $product_stock_ids[$row['product_id']];
-                $stmtParent = $this->_frameworkModelResource->getConnection("core_write")->query(
-                        $this->_frameworkModelResource->getConnection("core_write")
-                        ->select()
-                        ->from(
-                        array('s' => $this->_frameworkModelResource->getTableName("cataloginventory_stock_status")),
-                        array(
-                            'product_id'   => "s.product_id",
-                            'in_stock'     => "s.stock_status"
-                        )
-                    )
-                    ->where("s.product_id = (?)", $parentId)
-                    );
-                $stmtParentArray = $stmtParent->fetch();
-                $parentStatus = $stmtParentArray['in_stock'];
-                $parentId = $stmtParentArray['product_id'];
-                if($parentStatus && $parentId){
-                    $data[$row['product_id']] = ($row['in_stock']) ? true : false;
-                }else if($parentId && !$parentStatus){
-                   $data[$row['product_id']] = false;
-                }else{
-                    $data[$row['product_id']] = ($row['in_stock']) ? true : false;
-                }
-            }
-            else
-            {
-                $data[$row['product_id']] = ($row['in_stock']) ? true : false;
-            }
+            
+            $data[$row['product_id']] = ($row['in_stock']) ? true : false;
         }
         return $data;
     }
@@ -2254,7 +2246,8 @@ class Sync extends \Klevu\Search\Model\Sync {
         if (!$category_paths = $this->getData('category_paths')) {
             $category_paths = array();
             $rootId = $this->_storeModelStoreManagerInterface->getStore()->getRootCategoryId();  
-            $collection = $this->_resourceCategoryCollection
+            $collection = \Magento\Framework\App\ObjectManager::getInstance()
+				->create('\Magento\Catalog\Model\ResourceModel\Category\Collection')
                 ->setStoreId($this->_storeModelStoreManagerInterface->getStore()->getId())
                 ->addFieldToFilter('level', array('gt' => 1))
                 ->addFieldToFilter('path', array('like'=> "1/$rootId/%"))

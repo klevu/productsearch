@@ -20,12 +20,13 @@ class Producttracking extends \Klevu\Search\Model\Api\Actionall {
 
     public function __construct(\Klevu\Search\Model\Api\Response\Invalid $apiResponseInvalid, 
         \Klevu\Search\Helper\Api $searchHelperApi, 
+		\Magento\Store\Model\StoreManagerInterface $storeModelStoreManagerInterface,		
         \Klevu\Search\Helper\Config $searchHelperConfig)
     {
         $this->_apiResponseInvalid = $apiResponseInvalid;
         $this->_searchHelperApi = $searchHelperApi;
         $this->_searchHelperConfig = $searchHelperConfig;
-
+		$this->_storeModelStoreManagerInterface = $storeModelStoreManagerInterface;
         //parent::__construct();
     }
 

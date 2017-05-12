@@ -164,7 +164,7 @@ class Match extends \Magento\Framework\Search\Adapter\Mysql\Query\Builder\Match 
         if (empty($this->_klevu_parameters)) {
             $this->_klevu_parameters = array(
                 'ticket' => $this->_searchHelperConfig->getJsApiKey() ,
-                'noOfResults' => 1000,
+                'noOfResults' => 2000,
                 'term' => $query,
                 'paginationStartsFrom' => 0,
                 'enableFilters' => 'false',
@@ -213,18 +213,18 @@ class Match extends \Magento\Framework\Search\Adapter\Mysql\Query\Builder\Match 
 					$this->_klevu_parent_child_ids[] = $item_id;
 					if ($item_id['parent_id'] != 0) {
 						$this->_klevu_product_ids[$item_id['parent_id']] = $item_id['parent_id'];
+					} else {
+						$this->_klevu_product_ids[$item_id['product_id']] = $item_id['product_id'];
 					}
-
-					$this->_klevu_product_ids[$item_id['product_id']] = $item_id['product_id'];
 				}else {
 					if($key == "id"){
 						$item_id = $this->_searchHelperData->getMagentoProductId((string)$result);
 						$this->_klevu_parent_child_ids[] = $item_id;
 						if ($item_id['parent_id'] != 0) {
 							$this->_klevu_product_ids[$item_id['parent_id']] = $item_id['parent_id'];
+						} else {
+							$this->_klevu_product_ids[$item_id['product_id']] = $item_id['product_id'];
 						}
-
-						$this->_klevu_product_ids[$item_id['product_id']] = $item_id['product_id'];
 					}
 				}
                 
@@ -232,11 +232,33 @@ class Match extends \Magento\Framework\Search\Adapter\Mysql\Query\Builder\Match 
 
             $this->_klevu_product_ids = array_unique($this->_klevu_product_ids);
             $this->_searchHelperData->log(\Zend\Log\Logger::DEBUG, sprintf("Products count returned: %s", count($this->_klevu_product_ids)));
-            /*$response_meta = $this->getKlevuResponse($query)->getData('meta');
-            $this->_apiActionSearchtermtracking->execute($this->getSearchTracking(count($this->_klevu_product_ids),$response_meta['typeOfQuery']));
-            */
+            $response_meta = $this->getKlevuResponse($query)->getData('meta');
+            $this->_apiActionSearchtermtracking->execute($this->getSearchTracking(count($this->_klevu_product_ids),$query,$response_meta['typeOfQuery']));
+            
         }
 
         return $this->_klevu_product_ids;
     }
+	
+	
+	
+	/**
+     * Return the Klevu api search filters
+     * @return array
+     */
+    public function getSearchTracking($noOfTrackingResults,$query,$queryType) {
+
+        $this->_klevu_tracking_parameters = array(
+            'klevu_apiKey' => $this->_searchHelperConfig->getJsApiKey(),
+            'klevu_term' => $query,
+            'klevu_totalResults' => $noOfTrackingResults,
+            'klevu_shopperIP' => $this->_searchHelperData->getIp(),
+            'klevu_typeOfQuery' => $queryType,
+			'klevu_sessionId' => session_id(),
+            'Klevu_typeOfRecord' => 'KLEVU_PRODUCT'
+        );
+        $this->_searchHelperData->log(\Zend\Log\Logger::DEBUG, sprintf("Search tracking for term: %s", $query));
+        return $this->_klevu_tracking_parameters;
+    }
+
 }

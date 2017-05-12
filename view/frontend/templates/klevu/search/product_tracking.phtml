@@ -1,0 +1,33 @@
+<?php /** @var \Klevu\Search\Block\Catalog\Product\Tracking $this */ ?>
+<?php $config = \Magento\Framework\App\ObjectManager::getInstance()->get('Klevu\Search\Helper\Config'); ?>
+<?php if ($config->isExtensionConfigured()): ?>
+<script type="text/javascript">
+require(['jquery'], function(){
+		var referrer, search_term, klevu_search_product_tracking;
+		referrer = document.referrer;
+		var getQueryString = function ( field, url ) {
+			var href = url ? url : window.location.href;
+			var reg = new RegExp( '[?&]' + field + '=([^&#]*)', 'i' );
+			var string = reg.exec(href);
+				return string ? string[1] : null;
+		};
+        search_term = getQueryString('q',referrer);
+        if (referrer.indexOf('catalogsearch/result') > -1 && search_term) {
+			klevu_search_product_tracking = <?php echo $block->getJsonTrackingData() ?>;
+            klevu_search_product_tracking.klevu_term = search_term;
+			var param = jQuery.param(klevu_search_product_tracking);
+			jQuery.ajax({
+                url:'//<?php echo $config->getAnalyticsUrl() ?>/analytics/productTracking',
+				type: 'GET',
+				data: param,
+                dataType: 'json',
+                statusCode: {
+					200: function(data) {
+					}
+				},
+				crossDomain: true
+            });
+		}
+});
+</script>
+<?php endif; ?>

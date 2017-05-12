@@ -9,6 +9,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Exception;
 use Klevu\Search\Model\Product\Sync;
+use Klevu\Search\Model\Order\Sync as Order;
 use Klevu\Content\Model\Content;
 
 class SyncCommand extends Command
@@ -44,9 +45,14 @@ class SyncCommand extends Command
             }
 
 		    $sync->run();
-
+			
+			// sync cms data
             $sync = ObjectManager::getInstance()->get(Content::class);
-			$sync->run();
+            $sync->run();
+			
+			// sync order data
+			$syncOrder = ObjectManager::getInstance()->get(Order::class);
+			$syncOrder->run();
 			
 			if($input->hasParameterOption('--alldata')){
                 $output->writeln('<info>Data updates have been sent to Klevu</info>');

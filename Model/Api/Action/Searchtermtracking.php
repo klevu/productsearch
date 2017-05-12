@@ -20,12 +20,13 @@ class Searchtermtracking extends \Klevu\Search\Model\Api\Actionall {
 
     public function __construct(\Klevu\Search\Model\Api\Response\Invalid $apiResponseInvalid, 
         \Klevu\Search\Helper\Api $searchHelperApi, 
+		\Magento\Store\Model\StoreManagerInterface $storeModelStoreManagerInterface,		
         \Klevu\Search\Helper\Config $searchHelperConfig)
     {
         $this->_apiResponseInvalid = $apiResponseInvalid;
         $this->_searchHelperApi = $searchHelperApi;
         $this->_searchHelperConfig = $searchHelperConfig;
-
+		$this->_storeModelStoreManagerInterface = $storeModelStoreManagerInterface;
     }
 
 
@@ -79,9 +80,9 @@ class Searchtermtracking extends \Klevu\Search\Model\Api\Actionall {
 
         $request = $this->getRequest();
 
-        $endpoint = $this->_searchHelperApi->buildEndpoint(
+        $endpoint = $this->buildEndpoint(
             static::ENDPOINT,
-            $this->getStore(),
+            $this->_storeModelStoreManagerInterface->getStore(),
             $this->_searchHelperConfig->getAnalyticsUrl()
         );
 
@@ -92,5 +93,9 @@ class Searchtermtracking extends \Klevu\Search\Model\Api\Actionall {
             ->setData($parameters);
 
         return $request->send();
+    }
+	
+	public function buildEndpoint($endpoint, $store = null, $hostname = null) {
+        return static::ENDPOINT_PROTOCOL . (($hostname) ? $hostname : $this->_searchHelperConfig->getHostname($store)) . $endpoint;
     }
 }
