@@ -3185,7 +3185,7 @@ class Sync extends \Klevu\Search\Model\Sync {
             $category_ids[] = $value["category_id"];
         }
         $category_data = $this->_catalogModelCategory->getCollection()
-		->setStore($this->_storeModelStoreManagerInterface->getStore())
+		->setStoreId($this->_storeModelStoreManagerInterface->getStore()->getId())
 		->addAttributeToSelect("*")->addFieldToFilter('entity_id', array(
             'in' => $category_ids
         ));
