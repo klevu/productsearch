@@ -18,7 +18,7 @@ class Collection
      * @var \Magento\Framework\App\RequestInterface
      */
     protected $request;
-	
+
 	/**
      * @param RequestInterface $request
      */
@@ -44,8 +44,8 @@ class Collection
 			}
 			return $collection;
 		}
-		
-       
+
+
     }
 	
 	
