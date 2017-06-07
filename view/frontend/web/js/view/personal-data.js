@@ -13,5 +13,4 @@ define([
                 this.personalData = customerData.get('personal-data');
             }
         });
-    }
-);
+    });

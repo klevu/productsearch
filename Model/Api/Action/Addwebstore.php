@@ -2,28 +2,21 @@
 
 namespace Klevu\Search\Model\Api\Action;
 
-class Addwebstore extends \Klevu\Search\Model\Api\Actionall {
+class Addwebstore extends \Klevu\Search\Model\Api\Actionall
+{
 
     const ENDPOINT = "/n-search/addWebstore";
     const METHOD   = "POST";
 
-
     const DEFAULT_REQUEST_MODEL = "Klevu\Search\Model\Api\Request\Post";
     const DEFAULT_RESPONSE_MODEL = "Klevu\Search\Model\Api\Response\Data";
 
-    protected function validate($parameters) {
-        $errors = array();
+    protected function validate($parameters)
+    {
+        $errors = [];
 
         if (!isset($parameters['customerId']) || empty($parameters['customerId'])) {
             $errors['customerId'] = "Missing customer id.";
-        }
-
-        if (!isset($parameters['testMode']) || empty($parameters['testMode'])) {
-            $errors['testMode'] = "Missing test mode.";
-        } else {
-            if (!in_array($parameters['testMode'], array("true", "false"))) {
-                $errors['testMode'] = "Test mode must contain the text true or false.";
-            }
         }
 
         if (!isset($parameters['storeName']) || empty($parameters['storeName'])) {

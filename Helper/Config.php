@@ -1,6 +1,7 @@
 <?php
 
 namespace Klevu\Search\Helper;
+
 use \Magento\Framework\App\Config\ScopeConfigInterface;
 use \Magento\Framework\UrlInterface;
 use \Magento\Store\Model\StoreManagerInterface;
@@ -8,7 +9,8 @@ use \Klevu\Search\Model\Product\Sync;
 use \Magento\Framework\Model\Store;
 use \Klevu\Search\Model\Api\Action\Features;
 
-class Config extends \Magento\Framework\App\Helper\AbstractHelper {
+class Config extends \Magento\Framework\App\Helper\AbstractHelper
+{
     
     /**
      * @var \Magento\Framework\App\RequestInterface
@@ -35,12 +37,10 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper {
      */
     protected $_storeModelStoreManagerInterface;
     
-
     /**
      * @var \Magento\Store\Model\Store
      */
     protected $_frameworkModelStore;
-
 
     /**
      * @var \Klevu\Search\Model\Api\Action\Features
@@ -55,23 +55,23 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper {
     protected $_modelConfigData;
 
     public function __construct(
-        \Magento\Framework\App\Config\ScopeConfigInterface $appConfigScopeConfigInterface, 
-        \Magento\Framework\UrlInterface $magentoFrameworkUrlInterface, 
+        \Magento\Framework\App\Config\ScopeConfigInterface $appConfigScopeConfigInterface,
+        \Magento\Framework\UrlInterface $magentoFrameworkUrlInterface,
         \Magento\Store\Model\StoreManagerInterface $storeModelStoreManagerInterface,
         \Magento\Framework\App\RequestInterface $frameworkAppRequestInterface,
         \Magento\Store\Model\Store $frameworkModelStore,
-        \Magento\Framework\App\Config\Value  $modelConfigData
-       )
-    {
+        \Magento\Framework\App\Config\Value $modelConfigData,
+        \Magento\Framework\App\ResourceConnection $frameworkModelResource
+    ) {
+    
         $this->_appConfigScopeConfigInterface = $appConfigScopeConfigInterface;
         $this->_magentoFrameworkUrlInterface = $magentoFrameworkUrlInterface;
         $this->_storeModelStoreManagerInterface = $storeModelStoreManagerInterface;
         $this->_frameworkAppRequestInterface = $frameworkAppRequestInterface;
         $this->_frameworkModelStore = $frameworkModelStore;
         $this->_modelConfigData = $modelConfigData;
-
+        $this->_frameworkModelResource = $frameworkModelResource;
     }
-
 
     const XML_PATH_EXTENSION_ENABLED = "klevu_search/general/enabled";
     const XML_PATH_TAX_ENABLED       = "klevu_search/tax_setting/enabled";
@@ -103,8 +103,8 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper {
     const XML_PATH_RATING = "klevu_search/general/rating_flag";
     const XML_PATH_UPGRADE_FEATURES = "klevu_search/general/upgrade_features";
     const XML_PATH_UPGRADE_TIRES_URL = "klevu_search/general/tiers_url";
-	const XML_PATH_COLLECTION_METHOD = "klevu_search/developer/collection_method";
-	const XML_PATH_CONFIG_IMAGE_FLAG = "klevu_search/image_setting/enabled";
+    const XML_PATH_COLLECTION_METHOD = "klevu_search/developer/collection_method";
+    const XML_PATH_CONFIG_IMAGE_FLAG = "klevu_search/image_setting/enabled";
 
     const DATETIME_FORMAT = "Y-m-d H:i:s T";
 
@@ -116,9 +116,10 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper {
      *
      * @return $this
      */
-    public function setExtensionEnabledFlag($flag, $store = null) {
+    public function setExtensionEnabledFlag($flag, $store = null)
+    {
         $flag = ($flag) ? 1 : 0;
-        $this->setStoreConfig(static::XML_PATH_EXTENSION_ENABLED, $flag,$store);
+        $this->setStoreConfig(static::XML_PATH_EXTENSION_ENABLED, $flag, $store);
         return $this;
     }
 
@@ -129,8 +130,9 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper {
      *
      * @return bool
      */
-    public function isExtensionEnabled($store_id = null) {
-        return $this->_appConfigScopeConfigInterface->isSetFlag(static::XML_PATH_EXTENSION_ENABLED,\Magento\Store\Model\ScopeInterface::SCOPE_STORE,$store_id);
+    public function isExtensionEnabled($store_id = null)
+    {
+        return $this->_appConfigScopeConfigInterface->isSetFlag(static::XML_PATH_EXTENSION_ENABLED, \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $store_id);
     }
     
     /**
@@ -140,11 +142,12 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper {
      *
      * @return bool
      */
-    public function isTaxEnabled($store_id = null) {
-            $flag = $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_TAX_ENABLED,\Magento\Store\Model\ScopeInterface::SCOPE_STORE,$store_id);
-            return in_array($flag, array(
+    public function isTaxEnabled($store_id = null)
+    {
+            $flag = $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_TAX_ENABLED, \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $store_id);
+            return in_array($flag, [
                 \Klevu\Search\Model\System\Config\Source\Taxoptions::YES,
-            ));
+            ]);
     }
     
     /**
@@ -154,20 +157,22 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper {
      *
      * @return bool
      */
-    public function isSecureUrlEnabled($store_id = null) {
-        return $this->_appConfigScopeConfigInterface->isSetFlag(static::XML_PATH_SECUREURL_ENABLED,\Magento\Store\Model\ScopeInterface::SCOPE_STORE,$store_id);
+    public function isSecureUrlEnabled($store_id = null)
+    {
+        return $this->_appConfigScopeConfigInterface->isSetFlag(static::XML_PATH_SECUREURL_ENABLED, \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $store_id);
     }
-	
-	/**
+    
+    /**
      * Return the configuration flag for sending config image.
      *
      * @param Mage_Core_Model_Store|int $store
      *
      * @return bool
      */
-	public function isUseConfigImage($store_id=null){
-		return $this->_appConfigScopeConfigInterface->isSetFlag(static::XML_PATH_CONFIG_IMAGE_FLAG,\Magento\Store\Model\ScopeInterface::SCOPE_STORE,$store_id);
-	}
+    public function isUseConfigImage($store_id = null)
+    {
+        return $this->_appConfigScopeConfigInterface->isSetFlag(static::XML_PATH_CONFIG_IMAGE_FLAG, \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $store_id);
+    }
     /**
      * Check if the Landing is enabled in the system configuration for the current store.
      *
@@ -175,8 +180,9 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper {
      *
      * @return bool
      */
-    public function isLandingEnabled($store = null) {
-        return intval($this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_LANDING_ENABLED,\Magento\Store\Model\ScopeInterface::SCOPE_STORE,$this->_storeModelStoreManagerInterface->getStore()));
+    public function isLandingEnabled()
+    {
+        return (int)$this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_LANDING_ENABLED, \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $this->_storeModelStoreManagerInterface->getStore());
     }
     
     /**
@@ -187,7 +193,8 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper {
      *
      * @return $this
      */
-    public function setTaxEnabledFlag($flag, $store = null) {
+    public function setTaxEnabledFlag($flag, $store = null)
+    {
     
         $this->setStoreConfig(static::XML_PATH_TAX_ENABLED, $flag, $store);
         return $this;
@@ -201,7 +208,8 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper {
      *
      * @return $this
      */
-    public function setSecureUrlEnabledFlag($flag, $store = null) {
+    public function setSecureUrlEnabledFlag($flag, $store = null)
+    {
     
         $flag = ($flag) ? 1 : 0;
         $this->setStoreConfig(static::XML_PATH_SECUREURL_ENABLED, $flag, $store);
@@ -213,11 +221,11 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper {
      *
      * @param string                    $key
      * @param \Magento\Framework\Model\Store|int $store     Store to use. If not specified, will use the current store.
-     * @param bool                      $test_mode Set the key to be used in Test Mode.
      *
      * @return $this
      */
-    public function setJsApiKey($key, $store = null, $test_mode = false) {
+    public function setJsApiKey($key, $store = null)
+    {
         $path = static::XML_PATH_JS_API_KEY;
         $this->setStoreConfig($path, $key, $store);
         return $this;
@@ -230,8 +238,9 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper {
      *
      * @return string
      */
-    public function getJsApiKey($store = null) {
-            return $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_JS_API_KEY,\Magento\Store\Model\ScopeInterface::SCOPE_STORE,$store);
+    public function getJsApiKey($store = null)
+    {
+            return $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_JS_API_KEY, \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $store);
     }
 
     /**
@@ -239,13 +248,13 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper {
      *
      * @param string                    $key
      * @param \Magento\Framework\Model\Store|int $store     Store to use. If not specified, will use the current store.
-     * @param bool                      $test_mode Set the key to be used in Test Mode.
      *
      * @return $this
      */
-    public function setRestApiKey($key, $store = null, $test_mode = false) {
+    public function setRestApiKey($key, $store = null)
+    {
         $path = static::XML_PATH_REST_API_KEY;
-        $this->setStoreConfig($path, $key,$store);
+        $this->setStoreConfig($path, $key, $store);
         return $this;
     }
 
@@ -256,19 +265,20 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper {
      *
      * @return mixed
      */
-    public function getRestApiKey($store = null) {
-        return $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_REST_API_KEY,\Magento\Store\Model\ScopeInterface::SCOPE_STORE,$store);
+    public function getRestApiKey($store = null)
+    {
+        return $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_REST_API_KEY, \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $store);
     }
 
     /**
      * Set the API Hostname value in System Configuration for a given store
      * @param $hostname
      * @param null $store
-     * @param bool $test_mode
      * @return $this
      */
-    public function setHostname($hostname, $store = null, $test_mode = false) {
-        $path = ($test_mode) ? static::XML_PATH_TEST_HOSTNAME : static::XML_PATH_HOSTNAME;
+    public function setHostname($hostname, $store = null)
+    {
+        $path = static::XML_PATH_HOSTNAME;
         $this->setStoreConfig($path, $hostname, $store);
         return $this;
     }
@@ -278,30 +288,31 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper {
      * @param \Magento\Framework\Model\Store|int|null $store
      * @return string
      */
-    public function getHostname($store = null) {
-        $hostname = $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_HOSTNAME,\Magento\Store\Model\ScopeInterface::SCOPE_STORE,$store->getId());
+    public function getHostname($store = null)
+    {
+        $hostname = $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_HOSTNAME, \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $store->getId());
         return ($hostname) ? $hostname : \Klevu\Search\Helper\Api::ENDPOINT_DEFAULT_HOSTNAME;
     }
     
     /**
      * Return the API Rest Hostname configured, used for API requests, for a specified store
-     * @param \Magento\Framework\Model\Store|int|null $store
      * @return string
      */
-    public function getRestHostname($store = null) {
-        $hostname = $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_RESTHOSTNAME,\Magento\Store\Model\ScopeInterface::SCOPE_STORE);
+    public function getRestHostname()
+    {
+        $hostname = $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_RESTHOSTNAME, \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
         return ($hostname) ? $hostname : \Klevu\Search\Helper\Api::ENDPOINT_DEFAULT_HOSTNAME;
     }
     
      /**
-     * Set the Rest Hostname value in System Configuration for a given store
-     * @param $url
-     * @param null $store
-     * @param bool $test_mode
-     * @return $this
-     */
-    public function setRestHostname($url, $store = null, $test_mode = false) {
-        $path = ($test_mode) ? static::XML_PATH_RESTHOSTNAME : static::XML_PATH_RESTHOSTNAME;
+      * Set the Rest Hostname value in System Configuration for a given store
+      * @param $url
+      * @param null $store
+      * @return $this
+      */
+    public function setRestHostname($url, $store = null)
+    {
+        $path = static::XML_PATH_RESTHOSTNAME;
         $this->setStoreConfig($path, $url, $store);
         return $this;
     }
@@ -309,11 +320,11 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper {
     /**
      * @param $url
      * @param null $store
-     * @param bool $test_mode
      * @return $this
      */
-    public function setCloudSearchUrl($url, $store = null, $test_mode = false) {
-        $path = ($test_mode) ? static::XML_PATH_TEST_CLOUD_SEARCH_URL : static::XML_PATH_CLOUD_SEARCH_URL;
+    public function setCloudSearchUrl($url, $store = null)
+    {
+        $path = static::XML_PATH_CLOUD_SEARCH_URL;
         $this->setStoreConfig($path, $url, $store);
         return $this;
     }
@@ -322,19 +333,20 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper {
      * @param null $store
      * @return string
      */
-    public function getCloudSearchUrl($store = null) {
-        $url = $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_CLOUD_SEARCH_URL,\Magento\Store\Model\ScopeInterface::SCOPE_STORE,$store);
+    public function getCloudSearchUrl($store = null)
+    {
+        $url = $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_CLOUD_SEARCH_URL, \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $store);
         return ($url) ? $url : \Klevu\Search\Helper\Api::ENDPOINT_DEFAULT_HOSTNAME;
     }
 
     /**
      * @param $url
      * @param null $store
-     * @param bool $test_mode
      * @return $this
      */
-    public function setAnalyticsUrl($url, $store = null, $test_mode = false) {
-        $path = ($test_mode) ? static::XML_PATH_TEST_ANALYTICS_URL : static::XML_PATH_ANALYTICS_URL;
+    public function setAnalyticsUrl($url, $store = null)
+    {
+        $path = static::XML_PATH_ANALYTICS_URL;
         $this->setStoreConfig($path, $url, $store);
         return $this;
     }
@@ -343,7 +355,8 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper {
      * @param null $store
      * @return string
      */
-    public function getAnalyticsUrl($store = null) {
+    public function getAnalyticsUrl()
+    {
         $url = $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_ANALYTICS_URL);
         return ($url) ? $url : \Klevu\Search\Helper\Api::ENDPOINT_DEFAULT_HOSTNAME;
     }
@@ -351,11 +364,11 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper {
     /**
      * @param $url
      * @param null $store
-     * @param bool $test_mode
      * @return $this
      */
-    public function setJsUrl($url, $store = null, $test_mode = false) {
-        $path = ($test_mode) ? static::XML_PATH_TEST_JS_URL : static::XML_PATH_JS_URL;
+    public function setJsUrl($url, $store = null)
+    {
+        $path = static::XML_PATH_JS_URL;
         $this->setStoreConfig($path, $url, $store);
         return $this;
     }
@@ -364,8 +377,9 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper {
      * @param null $store
      * @return string
      */
-    public function getJsUrl($store = null) {
-        $url = $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_JS_URL,\Magento\Store\Model\ScopeInterface::SCOPE_STORE);
+    public function getJsUrl()
+    {
+        $url = $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_JS_URL, \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
         return ($url) ? $url : \Klevu\Search\Helper\Api::ENDPOINT_DEFAULT_HOSTNAME;
     }
 
@@ -376,7 +390,8 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper {
      *
      * @return bool
      */
-    public function isExtensionConfigured($store_id = null) {
+    public function isExtensionConfigured($store_id = null)
+    {
         $js_api_key = $this->getJsApiKey($store_id);
         $rest_api_key = $this->getRestApiKey($store_id);
         return (
@@ -396,8 +411,9 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper {
      *
      * @return int
      */
-    public function getProductSyncEnabledFlag($store_id = 0) {
-        return intval($this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_PRODUCT_SYNC_ENABLED,\Magento\Store\Model\ScopeInterface::SCOPE_STORE,$store_id));
+    public function getProductSyncEnabledFlag($store_id = 0)
+    {
+        return intval($this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_PRODUCT_SYNC_ENABLED, \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $store_id));
     }
 
     /**
@@ -407,12 +423,13 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper {
      *
      * @return bool
      */
-    public function isProductSyncEnabled($store_id = 0) {
+    public function isProductSyncEnabled($store_id = 0)
+    {
         $flag = $this->getProductSyncEnabledFlag($store_id);
-            return in_array($flag, array(
+            return in_array($flag, [
                 \Klevu\Search\Model\System\Config\Source\Yesnoforced::YES,
                 static::KLEVU_PRODUCT_FORCE_OLDERVERSION
-            ));
+            ]);
     }
 
     /**
@@ -420,26 +437,34 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper {
      *
      * @return string
      */
-    public function getProductSyncFrequency() {
+    public function getProductSyncFrequency()
+    {
         return $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_PRODUCT_SYNC_FREQUENCY);
     }
 
     /**
-     * Set the last Product Sync run time in System Configuration for the given store.
+     * Set the last Product Sync run time from klevu sync table.
      *
      * @param DateTime|string                $datetime If string is passed, it will be converted to DateTime.
      * @param \Magento\Framework\Model\Store|int|null $store
      *
      * @return $this
      */
-    public function setLastProductSyncRun($datetime = "now", $store = null) {
-        if (!$datetime instanceof DateTime) {
-            $datetime = new \DateTime($datetime);
+    public function getLastProductSyncRun($store = null)
+    {
+        $resource = $this->_frameworkModelResource;
+        $connection = $resource->getConnection();
+        $select = $connection
+                ->select()
+                ->from(['k' => $resource->getTableName("klevu_product_sync")])
+                ->where("k.store_id = ?", $store)
+                ->order(['k.last_synced_at DESC'])
+                ->limit(1);
+        $result = $connection->fetchAll($select);
+        if (!empty($result)) {
+            $datetime = new \DateTime($result[0]['last_synced_at']);
+            return $datetime->format(static::DATETIME_FORMAT);
         }
-
-        $this->setStoreConfig(static::XML_PATH_PRODUCT_SYNC_LAST_RUN, $datetime->format(static::DATETIME_FORMAT), $store);
-
-        return $this;
     }
 
     /**
@@ -449,16 +474,18 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper {
      *
      * @return bool
      */
-    public function hasProductSyncRun($store = null) {
+    public function hasProductSyncRun($store = null)
+    {
         $config = $this->_appConfigScopeConfigInterface;
-        if (!$config->getValue(static::XML_PATH_PRODUCT_SYNC_LAST_RUN,\Magento\Store\Model\ScopeInterface::SCOPE_STORE,$store)) {
+        if (!$config->getValue(static::XML_PATH_PRODUCT_SYNC_LAST_RUN, \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $store)) {
             return false;
         }
 
         return true;
     }
 
-    public function setAdditionalAttributesMap($map, $store = null) {
+    public function setAdditionalAttributesMap($map, $store = null)
+    {
         unset($map["__empty"]);
         $this->setStoreConfig(static::XML_PATH_ATTRIBUTES_ADDITIONAL, serialize($map), $store);
         return $this;
@@ -471,10 +498,11 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper {
      *
      * @return array
      */
-    public function getAdditionalAttributesMap($store = null) {
+    public function getAdditionalAttributesMap($store = null)
+    {
         $map = unserialize($this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_ATTRIBUTES_ADDITIONAL, $store));
 
-        return (is_array($map)) ? $map : array();
+        return (is_array($map)) ? $map : [];
     }
 
     /**
@@ -483,7 +511,8 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper {
      * @param int|\Magento\Framework\Model\Store $store
      * @return $this
      */
-    public function setAutomaticAttributesMap($map, $store = null) {
+    public function setAutomaticAttributesMap($map, $store = null)
+    {
         unset($map["__empty"]);
         $this->setStoreConfig(static::XML_PATH_ATTRIBUTES_AUTOMATIC, serialize($map), $store);
         return $this;
@@ -494,10 +523,11 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper {
      * @param int|\Magento\Framework\Model\Store $store
      * @return array
      */
-    public function getAutomaticAttributesMap($store = null) {
+    public function getAutomaticAttributesMap($store = null)
+    {
         $map = unserialize($this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_ATTRIBUTES_AUTOMATIC, $store));
 
-        return (is_array($map)) ? $map : array();
+        return (is_array($map)) ? $map : [];
     }
 
     /**
@@ -510,8 +540,9 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper {
      *
      * @return int
      */
-    public function getOrderSyncEnabledFlag($store = null) {
-        return intval($this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_ORDER_SYNC_ENABLED, $store));
+    public function getOrderSyncEnabledFlag($store = null)
+    {
+        return (int)$this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_ORDER_SYNC_ENABLED, $store);
     }
 
     /**
@@ -521,12 +552,13 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper {
      *
      * @return bool
      */
-    public function isOrderSyncEnabled($store = null) {
+    public function isOrderSyncEnabled($store = null)
+    {
         $flag = $this->getOrderSyncEnabledFlag($store);
-            return in_array($flag, array(
+            return in_array($flag, [
                 \Klevu\Search\Model\System\Config\Source\Yesnoforced::YES,
                 static::KLEVU_PRODUCT_FORCE_OLDERVERSION
-            ));
+            ]);
     }
 
     /**
@@ -534,7 +566,8 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper {
      *
      * @return string
      */
-    public function getOrderSyncFrequency() {
+    public function getOrderSyncFrequency()
+    {
         return $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_ORDER_SYNC_FREQUENCY);
     }
 
@@ -545,7 +578,8 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper {
      *
      * @return $this
      */
-    public function setLastOrderSyncRun($datetime = "now") {
+    public function setLastOrderSyncRun($datetime = "now")
+    {
         if (!$datetime instanceof DateTime) {
             $datetime = new DateTime($datetime);
         }
@@ -558,7 +592,8 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper {
      *
      * @return bool
      */
-    public function isLoggingForced() {
+    public function isLoggingForced()
+    {
         return $this->_appConfigScopeConfigInterface->isSetFlag(static::XML_PATH_FORCE_LOG);
     }
 
@@ -567,62 +602,62 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper {
      *
      * @return int
      */
-    public function getLogLevel() {
-        $log_level = $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_LOG_LEVEL,\Magento\Store\Model\ScopeInterface::SCOPE_STORE);
-        return ($log_level !== null) ? intval($log_level) : \Zend\Log\Logger::INFO;
+    public function getLogLevel()
+    {
+        $log_level = $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_LOG_LEVEL, \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
+        return ($log_level !== null) ? (int)$log_level : \Zend\Log\Logger::INFO;
     }
     
     /**
      * @param $url
      * @param null $store
-     * @param bool $test_mode
      * @return $this
      */
-    public function setTiresUrl($url, $store = null, $test_mode = false) {
+    public function setTiresUrl($url, $store = null)
+    {
         $path = static::XML_PATH_UPGRADE_TIRES_URL;
         $this->setStoreConfig($path, $url, $store);
         return $this;
     }
-    
 
     /**
      * @param null $store
      * @return string
      */
-    public function getTiresUrl($store = null) {
-        $url = $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_UPGRADE_TIRES_URL,\Magento\Store\Model\ScopeInterface::SCOPE_STORE,$store);
-
+    public function getTiresUrl($store = null)
+    {
+        $url = $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_UPGRADE_TIRES_URL, \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $store);
         return ($url) ? $url : \Klevu\Search\Helper\Api::ENDPOINT_DEFAULT_HOSTNAME;
     }
-
 
     /**
      * Return an multi-dimensional array of magento and klevu attributes that are mapped by default.
      * @return array
      */
-    public function getDefaultMappedAttributes() {
-        return array(
-            "magento_attribute" => array(
+    public function getDefaultMappedAttributes()
+    {
+        return [
+            "magento_attribute" => [
                 "name",
                 "sku",
                 "image",
-				"small_image",
-				"media_gallery",
-				"status",
+                "small_image",
+                "media_gallery",
+                "status",
                 "description",
                 "short_description",
                 "price",
                 "price",
                 "tax_class_id",
                 "weight",
-                "rating"),
-            "klevu_attribute" => array(
+                "rating"],
+            "klevu_attribute" => [
                 "name",
                 "sku",
                 "image",
-				"small_image",
-				"media_gallery",
-				"status",
+                "small_image",
+                "media_gallery",
+                "status",
                 "desc",
                 "shortDesc",
                 "price",
@@ -630,8 +665,8 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper {
                 "salePrice",
                 "weight",
                 "rating"
-            )
-        );
+            ]
+        ];
     }
 
     /**
@@ -640,12 +675,13 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper {
      * @param \Magento\Framework\Model\Store|int|null $store
      * @return array
      */
-    public function getOtherAttributesToIndex($store = null) {
-        if ($this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_ATTRIBUTES_OTHER, \Magento\Store\Model\ScopeInterface::SCOPE_STORE,$store)) {
-            return explode(",", $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_ATTRIBUTES_OTHER,\Magento\Store\Model\ScopeInterface::SCOPE_STORE, $store));
+    public function getOtherAttributesToIndex($store = null)
+    {
+        if ($this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_ATTRIBUTES_OTHER, \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $store)) {
+            return explode(",", $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_ATTRIBUTES_OTHER, \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $store));
         }
 
-        return array();
+        return [];
     }
 
     /**
@@ -654,8 +690,9 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper {
      * @param \Magento\Framework\Model\Store|int|null $store
      * @return array
      */
-    public function getBoostingAttribute($store = null) {
-        return $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_ATTRIBUTES_BOOSTING,\Magento\Store\Model\ScopeInterface::SCOPE_STORE,$store);
+    public function getBoostingAttribute($store = null)
+    {
+        return $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_ATTRIBUTES_BOOSTING, \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $store);
     }
 
     /**
@@ -666,9 +703,10 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper {
      *
      * @return $this
      */
-    protected function setGlobalConfig($key, $value) {
+    protected function setGlobalConfig($key, $value)
+    {
         $saveconfig = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Config\Model\ResourceModel\Config');
-        $saveconfig->saveConfig($key, $value, "default",0);
+        $saveconfig->saveConfig($key, $value, "default", 0);
         
         $config = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Framework\App\Config\ReinitableConfigInterface');
         $config->reinit();
@@ -684,13 +722,14 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper {
      *
      * @return $this
      */
-    public function setStoreConfig($key, $value, $store = null) {
+    public function setStoreConfig($key, $value, $store = null)
+    {
         $config = $this->_appConfigScopeConfigInterface;
 
         $config = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Config\Model\ResourceModel\Config');
         $scope_id = $this->_storeModelStoreManagerInterface->getStore($store)->getId();
         if ($scope_id !== null) {
-            $config->saveConfig($key, $value, "stores",$scope_id);
+            $config->saveConfig($key, $value, "stores", $scope_id);
             $this->_resetConfig();
         }
         return $this;
@@ -702,7 +741,6 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper {
     protected function _resetConfig()
     {
         \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Framework\App\Config\ReinitableConfigInterface')->reinit();
-      
     }
     /**
      * Return the configuration flag for sync options.
@@ -710,7 +748,8 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper {
      *
      * @return int
      */
-    public function getSyncOptionsFlag() {
+    public function getSyncOptionsFlag()
+    {
         return $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_SYNC_OPTIONS);
     }
     
@@ -721,7 +760,8 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper {
      *
      * @return
      */
-    public function saveSyncOptions($value) {
+    public function saveSyncOptions($value)
+    {
         $this->setGlobalConfig(static::XML_PATH_SYNC_OPTIONS, $value);
         return $this;
     }
@@ -733,7 +773,8 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper {
      *
      * @return
      */
-    public function saveUpgradePremium($value) {
+    public function saveUpgradePremium($value)
+    {
         $this->setGlobalConfig(static::XML_PATH_UPGRADE_PREMIUM, $value);
         return $this;
     }
@@ -745,7 +786,8 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper {
      *
      * @return
      */
-    public function saveRatingUpgradeFlag($value) {
+    public function saveRatingUpgradeFlag($value)
+    {
         $this->setGlobalConfig(static::XML_PATH_RATING, $value);
         return $this;
     }
@@ -753,19 +795,20 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper {
     /**
      * get upgrade rating value
      *
-     * @return int 
+     * @return int
      */
-    public function getRatingUpgradeFlag() {
+    public function getRatingUpgradeFlag()
+    {
         return $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_RATING);
     }
-    
     
     /**
      * get feature update
      *
-     * @return bool 
+     * @return bool
      */
-    public function getFeaturesUpdate($elemnetID) {
+    public function getFeaturesUpdate($elemnetID)
+    {
 
         try {
             if (!$this->_klevu_features_response) {
@@ -774,59 +817,57 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper {
             }
             $features = $this->_klevu_features_response;
 
-            if(!empty($features) && !empty($features['disabled'])) {
-                $checkStr = explode("_",$elemnetID);
-                $disable_features =  explode(",",$features['disabled']);
+            if (!empty($features) && !empty($features['disabled'])) {
+                $checkStr = explode("_", $elemnetID);
+                $disable_features =  explode(",", $features['disabled']);
                 $code = $this->_frameworkAppRequestInterface->getParam('store');// store level
                 $store = $this->_frameworkModelStore->load($code);
 
-                if(in_array("preserves_layout", $disable_features) && $this->_frameworkAppRequestInterface->getParam('section')=="klevu_search") {
+                if (in_array("preserves_layout", $disable_features) && $this->_frameworkAppRequestInterface->getParam('section')=="klevu_search") {
                     // when some upgrade plugin if default value set to 1 means preserve layout
                     // then convert to klevu template layout
-                    if($this->_appConfigScopeConfigInterface->getValue(\Klevu\Search\Helper\Config::XML_PATH_LANDING_ENABLED,\Magento\Store\Model\ScopeInterface::SCOPE_STORE,$store) == 1){
-                        $this->setStoreConfig(\Klevu\Search\Helper\Config::XML_PATH_LANDING_ENABLED,2,$store);
+                    if ($this->_appConfigScopeConfigInterface->getValue(\Klevu\Search\Helper\Config::XML_PATH_LANDING_ENABLED, \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $store) == 1) {
+                        $this->setStoreConfig(\Klevu\Search\Helper\Config::XML_PATH_LANDING_ENABLED, 2, $store);
                     }
                 }
 
-
-                if (in_array($checkStr[count($checkStr)-1], $disable_features)  && $this->_frameworkAppRequestInterface->getParam('section')=="klevu_search") {
+                if (in_array($checkStr[count($checkStr)-1], $disable_features) && $this->_frameworkAppRequestInterface->getParam('section')=="klevu_search") {
                         $check = $checkStr[count($checkStr)-1];
-                        if(!empty($check)) {
-                            $configs = $this->_modelConfigData->getCollection()
-                            ->addFieldToFilter('path', array("like" => '%/'.$check.'%'))->load();
-                            $data = $configs->getData();
-                            if(!empty($data)) {
-                                $this->setStoreConfig($data[0]['path'],0,$store);
-                            }
-                            return $features;
+                    if (!empty($check)) {
+                        $configs = $this->_modelConfigData->getCollection()
+                        ->addFieldToFilter('path', ["like" => '%/'.$check.'%'])->load();
+                        $data = $configs->getData();
+                        if (!empty($data)) {
+                            $this->setStoreConfig($data[0]['path'], 0, $store);
                         }
+                        return $features;
+                    }
                 }
-      
-            }                
-        } catch(\Exception $e) {
+            }
+        } catch (\Exception $e) {
             $dataHelper = \Magento\Framework\App\ObjectManager::getInstance()->get('\Klevu\Search\Helper\Data');
-		    $dataHelper->log(\Zend\Log\Logger::CRIT, sprintf("Error occured while getting features based on account %s::%s - %s", __CLASS__, __METHOD__, $e->getMessage()));
+            $dataHelper->log(\Zend\Log\Logger::CRIT, sprintf("Error occured while getting features based on account %s::%s - %s", __CLASS__, __METHOD__, $e->getMessage()));
         }
         return;
     }
     
-    
-    public function  executeFeatures($restApi,$store) {
-        if(!$this->_klevu_enabled_feature_response) {
-            $param =  array("restApiKey" => $restApi,"store" => $store->getId());
+    public function executeFeatures($restApi, $store)
+    {
+        if (!$this->_klevu_enabled_feature_response) {
+            $param =  ["restApiKey" => $restApi,"store" => $store->getId()];
             $features_request = $this->_apiActionFeatures->execute($param);
-            if($features_request->isSuccess() === true) {
+            if ($features_request->isSuccess() === true) {
                 $this->_klevu_enabled_feature_response = $features_request->getData();
-                $this->saveUpgradeFetaures(serialize($this->_klevu_enabled_feature_response),$store);
+                $this->saveUpgradeFetaures(serialize($this->_klevu_enabled_feature_response), $store);
             } else {
-                if(!empty($restApi)) {
+                if (!empty($restApi)) {
                     $this->_klevu_enabled_feature_response = unserialize($this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_UPGRADE_FEATURES, $store));
                 }
                 $dataHelper = \Magento\Framework\App\ObjectManager::getInstance()->get('\Klevu\Search\Helper\Data');
-				$dataHelper->log(\Zend\Log\Logger::INFO,sprintf("failed to fetch feature details (%s)",$features_request->getMessage()));
+                $dataHelper->log(\Zend\Log\Logger::INFO, sprintf("failed to fetch feature details (%s)", $features_request->getMessage()));
             }
-        }  
-        return $this->_klevu_enabled_feature_response;        
+        }
+        return $this->_klevu_enabled_feature_response;
     }
     
     /**
@@ -835,8 +876,16 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper {
      * @param \Magento\Framework\Model\Store|int|null $store
      */
     
-    public function saveUpgradeFetaures($value,$store=null) {
-        $this->setStoreConfig(static::XML_PATH_UPGRADE_FEATURES,$value,$store);
+    public function saveUpgradeFetaures($value, $store = null)
+    {
+        $savedValue = $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_UPGRADE_FEATURES, \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $store);
+        if (isset($savedValue) && !empty($savedValue)) {
+            if ($savedValue != $value) {
+                $this->setStoreConfig(static::XML_PATH_UPGRADE_FEATURES, $value, $store);
+            }
+        } else {
+            $this->setStoreConfig(static::XML_PATH_UPGRADE_FEATURES, $value, $store);
+        }
     }
     
     /**
@@ -845,20 +894,18 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper {
      * @param \Magento\Framework\Model\Store|int|null $store
      * @return array
      */
-    public function getUpgradeFetaures($store = null) {
-        return $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_UPGRADE_FEATURES,\Magento\Store\Model\ScopeInterface::SCOPE_STORE,$store);
+    public function getUpgradeFetaures($store = null)
+    {
+        return $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_UPGRADE_FEATURES, \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $store);
     }
     
-	
-	/**
+    /**
      * Check if default Magento log settings should be overridden to force logging for this module.
      *
      * @return bool
      */
-    public function isCollectionMethodEnabled() {
+    public function isCollectionMethodEnabled()
+    {
         return $this->_appConfigScopeConfigInterface->isSetFlag(static::XML_PATH_COLLECTION_METHOD);
     }
-    
-
 }
-

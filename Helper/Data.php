@@ -1,14 +1,15 @@
 <?php
 
 namespace Klevu\Search\Helper;
+
 use \Magento\Store\Model\StoreManagerInterface;
 use \Magento\Backend\Model\Url;
 use \Klevu\Search\Helper\Config;
 use \Psr\Log\LoggerInterface;
 use \Magento\Catalog\Model\Product;
 
-
-class Data extends \Magento\Framework\App\Helper\AbstractHelper {
+class Data extends \Magento\Framework\App\Helper\AbstractHelper
+{
     /**
      * @var \Magento\Store\Model\StoreManagerInterface
      */
@@ -48,29 +49,30 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
      * @var \Magento\Eav\Model\Entity\Attribute
      */
     protected $_modelEntityAttribute;
-	
-	/**
+    
+    /**
      * @var \Magento\Framework\Locale\CurrencyInterface
      */
     protected $_localeCurrency;
-	
-	/**
+    
+    /**
      * @var Magento\Directory\Model\CurrencyFactory
      */
-	protected $_currencyFactory;
+    protected $_currencyFactory;
 
     public function __construct(
-        \Magento\Store\Model\StoreManagerInterface $storeModelStoreManagerInterface, 
-        \Magento\Backend\Model\Url $backendModelUrl, 
-        \Klevu\Search\Helper\Config $searchHelperConfig, 
-        \Psr\Log\LoggerInterface $psrLogLoggerInterface, 
-        \Magento\Catalog\Model\Product $catalogModelProduct, 
+        \Magento\Store\Model\StoreManagerInterface $storeModelStoreManagerInterface,
+        \Magento\Backend\Model\Url $backendModelUrl,
+        \Klevu\Search\Helper\Config $searchHelperConfig,
+        \Psr\Log\LoggerInterface $psrLogLoggerInterface,
+        \Magento\Catalog\Model\Product $catalogModelProduct,
         \Magento\Catalog\Helper\Data $taxHelperData,
-        \Magento\Eav\Model\Entity\Type $modelEntityType, 
+        \Magento\Eav\Model\Entity\Type $modelEntityType,
         \Magento\Eav\Model\Entity\Attribute $modelEntityAttribute,
-		\Magento\Directory\Model\CurrencyFactory $currencyFactory,
-		\Magento\Framework\Locale\CurrencyInterface $localeCurrency)
-    {
+        \Magento\Directory\Model\CurrencyFactory $currencyFactory,
+        \Magento\Framework\Locale\CurrencyInterface $localeCurrency
+    ) {
+    
         $this->_storeModelStoreManagerInterface = $storeModelStoreManagerInterface;
         $this->_backendModelUrl = $backendModelUrl;
         $this->_searchHelperConfig = $searchHelperConfig;
@@ -79,9 +81,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
         $this->_taxHelperData = $taxHelperData;
         $this->_modelEntityType = $modelEntityType;
         $this->_modelEntityAttribute = $modelEntityAttribute;
-		$this->_localeCurrency = $localeCurrency;
-		$this->_currencyFactory = $currencyFactory;
-
+        $this->_localeCurrency = $localeCurrency;
+        $this->_currencyFactory = $currencyFactory;
     }
 
 
@@ -97,8 +98,9 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
      *
      * @param string $locale
      */
-    function getLanguageFromLocale($locale) {
-        if (strlen($locale) == 5 && strpos($locale, "_") == 2) {
+    public function getLanguageFromLocale($locale)
+    {
+        if (strlen($locale) == 5 && strpos($locale, "_") === 2) {
             return substr($locale, 0, 2);
         }
 
@@ -112,7 +114,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
      *
      * @return string
      */
-    function getStoreLanguage($store = null) {
+    public function getStoreLanguage($store = null)
+    {
         if ($store = $this->_storeModelStoreManagerInterface->getStore($store)) {
             return $this->getLanguageFromLocale($store->getConfig(\Magento\Directory\Helper\Data::XML_PATH_DEFAULT_LOCALE));
         }
@@ -125,7 +128,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
      *
      * @return string
      */
-    function getStoreTimeZone($store = null) {
+    public function getStoreTimeZone($store = null)
+    {
         if ($store = $this->_storeModelStoreManagerInterface->getStore($store)) {
             return $this->getLanguageFromLocale($store->getConfig(\Magento\Directory\Helper\Data::XML_PATH_DEFAULT_TIMEZONE));
         }
@@ -138,7 +142,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
      *
      * @return bool
      */
-    public function isProductionDomain($domain) {
+    public function isProductionDomain($domain)
+    {
         return preg_match("/\b(staging|dev|local)\b/", $domain) == 0;
     }
 
@@ -150,7 +155,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
      *
      * @return string
      */
-    public function getKlevuProductId($product_id, $parent_id = 0) {
+    public function getKlevuProductId($product_id, $parent_id = 0)
+    {
         if ($parent_id != 0) {
             $parent_id .= static::ID_SEPARATOR;
         } else {
@@ -170,13 +176,14 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
      *
      * @return array
      */
-    public function getMagentoProductId($klevu_id) {
+    public function getMagentoProductId($klevu_id)
+    {
         $parts = explode(static::ID_SEPARATOR, $klevu_id, 2);
 
         if (count($parts) > 1) {
-            return array('product_id' => $parts[1], 'parent_id' => $parts[0]);
+            return ['product_id' => $parts[1], 'parent_id' => $parts[0]];
         } else {
-            return array('product_id' => $parts[0], 'parent_id' => "0");
+            return ['product_id' => $parts[0], 'parent_id' => "0"];
         }
     }
 
@@ -189,8 +196,9 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
      *
      * @return string
      */
-    public function bytesToHumanReadable($bytes, $precision = 2) {
-        $suffixes = array("", "k", "M", "G", "T", "P");
+    public function bytesToHumanReadable($bytes, $precision = 2)
+    {
+        $suffixes = ["", "k", "M", "G", "T", "P"];
         $base = log($bytes) / log(1024);
         return round(pow(1024, $base - floor($base)), $precision) . $suffixes[floor($base)];
     }
@@ -203,12 +211,12 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
      *
      * @return int
      */
-    public function humanReadableToBytes($string) {
+    public function humanReadableToBytes($string)
+    {
         $suffix = strtolower(substr($string, -1));
         $result = substr($string, 0, -1);
-
         switch ($suffix) {
-            case 'g': // G is the max unit as of PHP 5.5.12
+            case 'g':
                 $result *= 1024;
             case 'm':
                 $result *= 1024;
@@ -228,11 +236,12 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
      *
      * @return array
      */
-    public function getSyncAllButtonData() {
-        return array(
+    public function getSyncAllButtonData()
+    {
+        return [
             'label'   => __("Sync All Products to Klevu"),
             'onclick' => sprintf("setLocation('%s')", $this->_backendModelUrl->getUrl("adminhtml/klevu_search/sync_all"))
-        );
+        ];
     }
 
     /**
@@ -241,10 +250,11 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
      * @param int    $level
      * @param string $message
      */
-    public function log($level, $message) {
+    public function log($level, $message)
+    {
         $config = $this->_searchHelperConfig;
         if ($level <= $config->getLogLevel()) {
-            $writer = new \Zend\Log\Writer\Stream(BP . '/var/log/'.Static::LOG_FILE);
+            $writer = new \Zend\Log\Writer\Stream(BP . '/var/log/'.static::LOG_FILE);
             $logger = new \Zend\Log\Logger();
             $logger->addWriter($writer);
             $logger->info($message);
@@ -258,16 +268,14 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
      * @param string $value
      * @return string
      */
-    public function santiseAttributeValue($value) {
+    public function santiseAttributeValue($value)
+    {
         if (is_array($value) && !empty($value)) {
-            $sanitised_array = array();
-            foreach($value as $item) {
-                    if (is_array($item) || is_object($item)){
-                    
-                    } else {
-                        $sanitised_array[] = preg_replace(self::SANITISE_STRING, " ", $item);
-                    }
-                   
+            $sanitised_array = [];
+            foreach ($value as $item) {
+                if (!is_array($item) && !is_object($item)) {
+                    $sanitised_array[] = preg_replace(self::SANITISE_STRING, " ", $item);
+                }
             }
             return $sanitised_array;
         }
@@ -282,7 +290,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
      *
      * @return string
      */
-    public function getKlevuProductSku($product_sku, $parent_sku = "") {
+    public function getKlevuProductSku($product_sku, $parent_sku = "")
+    {
         if (!empty($parent_sku)) {
             $parent_sku .= static::ID_SEPARATOR;
         } else {
@@ -297,17 +306,18 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
      * @param object $product.
      *
      * @return
-     */    
-    public function getGroupProductOriginalPrice($product,$store){
+     */
+    public function getGroupProductOriginalPrice($product, $store)
+    {
         try {
             $groupProductIds = $product->getTypeInstance()->getChildrenIds($product->getId());
             $config = $this->_searchHelperConfig;
-            $groupPrices = array();
+            $groupPrices = [];
             foreach ($groupProductIds as $ids) {
                 foreach ($ids as $id) {
                     $groupProduct = \Magento\Framework\App\ObjectManager::getInstance()->create('\Magento\Catalog\Model\Product')->load($id);
-                    if($config->isTaxEnabled($store->getId())) {
-                        $groupPrices[] = $this->_taxHelperData->getTaxPrice($groupProduct,$groupProduct->getPriceInfo()->getPrice('regular_price')->getAmount()->getValue(), true, null, null, null, $store,false);
+                    if ($config->isTaxEnabled($store->getId())) {
+                        $groupPrices[] = $this->_taxHelperData->getTaxPrice($groupProduct, $groupProduct->getPriceInfo()->getPrice('regular_price')->getAmount()->getValue(), true, null, null, null, $store, false);
                     } else {
                         $groupPrices[] = $groupProduct->getPriceInfo()->getPrice('regular_price')->getAmount()->getValue();
                     }
@@ -315,11 +325,10 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
             }
             asort($groupPrices);
             $product->setPrice(array_shift($groupPrices));
-        } catch(\Exception $e) {
-            $this->_searchHelperData->log(\Zend\Log\Logger::WARN, sprintf("Unable to get original group price for product id %s",$product->getId()));
-        }            
+        } catch (\Exception $e) {
+            $this->_searchHelperData->log(\Zend\Log\Logger::WARN, sprintf("Unable to get original group price for product id %s", $product->getId()));
+        }
     }
-    
     
     /**
      Get Min price for group product.
@@ -327,23 +336,24 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
      * @param object $product.
      *
      * @return
-     */    
-    public function getGroupProductMinPrice($product,$store){
+     */
+    public function getGroupProductMinPrice($product, $store)
+    {
         $groupProductIds = $product->getTypeInstance()->getChildrenIds($product->getId());
         $config = $this->_searchHelperConfig;
-        $groupPrices = array();
-            foreach ($groupProductIds as $ids) {
-                foreach ($ids as $id) {
-                    $groupProduct = \Magento\Framework\App\ObjectManager::getInstance()->create('\Magento\Catalog\Model\Product')->load($id);
-                    if($config->isTaxEnabled($store->getId())) {
-                        $groupPrices[] = $this->_taxHelperData->getTaxPrice($groupProduct, $groupProduct->getPriceInfo()->getPrice('final_price')->getAmount()->getValue(), true, null, null, null, $store,false);
-                    } else {
-                        $groupPrices[] = $groupProduct->getPriceInfo()->getPrice('final_price')->getAmount()->getValue();
-                    }
+        $groupPrices = [];
+        foreach ($groupProductIds as $ids) {
+            foreach ($ids as $id) {
+                $groupProduct = \Magento\Framework\App\ObjectManager::getInstance()->create('\Magento\Catalog\Model\Product')->load($id);
+                if ($config->isTaxEnabled($store->getId())) {
+                    $groupPrices[] = $this->_taxHelperData->getTaxPrice($groupProduct, $groupProduct->getPriceInfo()->getPrice('final_price')->getAmount()->getValue(), true, null, null, null, $store, false);
+                } else {
+                    $groupPrices[] = $groupProduct->getPriceInfo()->getPrice('final_price')->getAmount()->getValue();
                 }
             }
+        }
         asort($groupPrices);
-        $product->setFinalPrice(array_shift($groupPrices));       
+        $product->setFinalPrice(array_shift($groupPrices));
     }
     
     /**
@@ -352,10 +362,11 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
      * @param object $product.
      *
      * @return
-     */    
-    public function getBundleProductPrices($item,$store){
+     */
+    public function getBundleProductPrices($item, $store)
+    {
         $config = $this->_searchHelperConfig;
-        if($config->isTaxEnabled($store->getId())) {
+        if ($config->isTaxEnabled($store->getId())) {
                 return $item->getPriceModel()->getTotalPrices($item, null, true, false);
         } else {
                 return $item->getPriceModel()->getTotalPrices($item, null, false, false);
@@ -367,35 +378,36 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
      *
      * @return string
      */
-    public function getIsActiveAttributeId(){
+    public function getIsActiveAttributeId()
+    {
         $entity_type = $this->_modelEntityType->loadByCode("catalog_category");
         $entity_typeid = $entity_type->getId();
         $attributecollection = $this->_modelEntityAttribute->getCollection()->addFieldToFilter("entity_type_id", $entity_typeid)->addFieldToFilter("attribute_code", "is_active");
         $attribute = $attributecollection->getFirstItem();
         return $attribute->getAttributeId();
     }
-	
-	
-	/**
+    
+    /**
      * Get the attribute id for media gallery
      *
      * @return string
      */
-    public function getIsMediaGalleryAttributeId(){
+    public function getIsMediaGalleryAttributeId()
+    {
         $entity_type = $this->_modelEntityType->loadByCode("catalog_product");
         $entity_typeid = $entity_type->getId();
         $attributecollection = $this->_modelEntityAttribute->getCollection()->addFieldToFilter("entity_type_id", $entity_typeid)->addFieldToFilter("attribute_code", "media_gallery");
         $attribute = $attributecollection->getFirstItem();
         return $attribute->getAttributeId();
     }
-	
-	
-	/**
+    
+    /**
      * Get the is active attribute id
      *
      * @return string
      */
-    public function getIsExcludeAttributeId(){
+    public function getIsExcludeAttributeId()
+    {
         $entity_type = $this->_modelEntityType->loadByCode("catalog_category");
         $entity_typeid = $entity_type->getId();
         $attributecollection = $this->_modelEntityAttribute->getCollection()->addFieldToFilter("entity_type_id", $entity_typeid)->addFieldToFilter("attribute_code", "is_exclude_cat");
@@ -408,50 +420,51 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
      *
      * @return string
      */
-    public function getIp() {
+    public function getIp()
+    {
         $ip = '';
-        if (!empty($_SERVER['HTTP_CLIENT_IP']))
+        if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
             $ip = $_SERVER['HTTP_CLIENT_IP'];
-        else if(!empty($_SERVER['HTTP_X_FORWARDED_FOR']))
+        } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
             $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
-        else if(!empty($_SERVER['HTTP_X_FORWARDED']))
+        } elseif (!empty($_SERVER['HTTP_X_FORWARDED'])) {
             $ip = $_SERVER['HTTP_X_FORWARDED'];
-        else if(!empty($_SERVER['HTTP_FORWARDED_FOR']))
+        } elseif (!empty($_SERVER['HTTP_FORWARDED_FOR'])) {
             $ip = $_SERVER['HTTP_FORWARDED_FOR'];
-        else if(!empty($_SERVER['HTTP_FORWARDED']))
+        } elseif (!empty($_SERVER['HTTP_FORWARDED'])) {
             $ip = $_SERVER['HTTP_FORWARDED'];
-        else if(!empty($_SERVER['REMOTE_ADDR']))
+        } elseif (!empty($_SERVER['REMOTE_ADDR'])) {
             $ip = $_SERVER['REMOTE_ADDR'];
-        else
+        } else {
             $ip = 'UNKNOWN';
+        }
      
         return $ip;
     }
-	
-	
-	/**
+    
+    /**
      * Get the currecy switcher data
      *
      * @return string
      */
-	public function getCurrencyData($store) {
-	    $baseCurrencyCode = $store->getBaseCurrency()->getCode();
-		$currentCurrencyCode = $store->getCurrentCurrencyCode();
-		if($baseCurrencyCode != $currentCurrencyCode){
-	        $availableCurrencies = $store->getAvailableCurrencyCodes();
-			$currencyResource = $this->_currencyFactory
+    public function getCurrencyData($store)
+    {
+        $baseCurrencyCode = $store->getBaseCurrency()->getCode();
+        $currentCurrencyCode = $store->getCurrentCurrencyCode();
+        if ($baseCurrencyCode != $currentCurrencyCode) {
+            $availableCurrencies = $store->getAvailableCurrencyCodes();
+            $currencyResource = $this->_currencyFactory
             ->create()
             ->getResource();
             $currencyRates = $currencyResource->getCurrencyRates($baseCurrencyCode, array_values($availableCurrencies));
-	        if(count($availableCurrencies) > 1) { 
-                foreach($currencyRates as $key => &$value){
-					$Symbol = $this->_localeCurrency->getCurrency($key)->getSymbol() ? $this->_localeCurrency->getCurrency($key)->getSymbol() : $this->_localeCurrency->getCurrency($key)->getShortName();
-			        $value = sprintf("'%s':'%s:%s'", $key,$value,$Symbol);
-		        }
-		        $currency = implode(",",$currencyRates);
-			    return $currency;
-		    }
-	    }
-	}
-
+            if (count($availableCurrencies) > 1) {
+                foreach ($currencyRates as $key => &$value) {
+                    $Symbol = $this->_localeCurrency->getCurrency($key)->getSymbol() ? $this->_localeCurrency->getCurrency($key)->getSymbol() : $this->_localeCurrency->getCurrency($key)->getShortName();
+                    $value = sprintf("'%s':'%s:%s'", $key, $value, $Symbol);
+                }
+                $currency = implode(",", $currencyRates);
+                return $currency;
+            }
+        }
+    }
 }

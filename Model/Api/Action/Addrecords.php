@@ -2,7 +2,8 @@
 
 namespace Klevu\Search\Model\Api\Action;
 
-class Addrecords extends \Klevu\Search\Model\Api\Actionall {
+class Addrecords extends \Klevu\Search\Model\Api\Actionall
+{
     /**
      * @var \Klevu\Search\Model\Api\Response\Invalid
      */
@@ -28,20 +29,20 @@ class Addrecords extends \Klevu\Search\Model\Api\Actionall {
      */
     protected $_searchHelperData;
 
-    public function __construct(\Klevu\Search\Model\Api\Response\Invalid $apiResponseInvalid, 
-        \Klevu\Search\Helper\Api $searchHelperApi, 
-        \Klevu\Search\Helper\Config $searchHelperConfig, 
-        \Magento\Store\Model\StoreManagerInterface $storeModelStoreManagerInterface, 
-        \Klevu\Search\Helper\Data $searchHelperData)
-    {
+    public function __construct(
+        \Klevu\Search\Model\Api\Response\Invalid $apiResponseInvalid,
+        \Klevu\Search\Helper\Api $searchHelperApi,
+        \Klevu\Search\Helper\Config $searchHelperConfig,
+        \Magento\Store\Model\StoreManagerInterface $storeModelStoreManagerInterface,
+        \Klevu\Search\Helper\Data $searchHelperData
+    ) {
+    
         $this->_apiResponseInvalid = $apiResponseInvalid;
         $this->_searchHelperApi = $searchHelperApi;
         $this->_searchHelperConfig = $searchHelperConfig;
         $this->_storeModelStoreManagerInterface = $storeModelStoreManagerInterface;
         $this->_searchHelperData = $searchHelperData;
-
     }
-
 
     const ENDPOINT = "/rest/service/addRecords";
     const METHOD   = "POST";
@@ -50,7 +51,7 @@ class Addrecords extends \Klevu\Search\Model\Api\Actionall {
     const DEFAULT_RESPONSE_MODEL = "Klevu\Search\Model\Api\Response\Message";
 
     // mandatory_field_name => allowed_empty
-    protected $mandatory_fields = array(
+    protected $mandatory_fields = [
         "id"               => false,
         "name"             => false,
         "url"              => false,
@@ -58,9 +59,10 @@ class Addrecords extends \Klevu\Search\Model\Api\Actionall {
         "currency"         => false,
         "category"         => true,
         "listCategory"     => true
-    );
+    ];
 
-    public function execute($parameters = array()) {
+    public function execute($parameters = [])
+    {
         $response = $this->getResponse();
 
         $validation_result = $this->validate($parameters);
@@ -76,13 +78,13 @@ class Addrecords extends \Klevu\Search\Model\Api\Actionall {
                 $response->setData("skipped_records", $skipped_records);
             }
         } else {
-            return $this->_apiResponseInvalid->setErrors(array(
+            return $this->_apiResponseInvalid->setErrors([
                 "all_records_invalid" => implode(", ", $skipped_records["messages"])
-            ));
+            ]);
         }
 
         $this->prepareParameters($parameters);
-        $endpoint = $this->buildEndpoint(static::ENDPOINT, $this->getStore(),$this->_searchHelperConfig->getRestHostname($this->getStore()));
+        $endpoint = $this->buildEndpoint(static::ENDPOINT, $this->getStore(), $this->_searchHelperConfig->getRestHostname($this->getStore()));
         $request = $this->getRequest();
         $request
             ->setResponseModel($response)
@@ -97,7 +99,8 @@ class Addrecords extends \Klevu\Search\Model\Api\Actionall {
      * Get the store used for this request.
      * @return \Magento\Framework\Model\Store
      */
-    public function getStore() {
+    public function getStore()
+    {
         if (!$this->hasData('store')) {
             $this->setData('store', $this->_storeModelStoreManagerInterface->getStore());
         }
@@ -105,8 +108,9 @@ class Addrecords extends \Klevu\Search\Model\Api\Actionall {
         return $this->getData('store');
     }
 
-    protected function validate($parameters) {
-        $errors = array();
+    protected function validate($parameters)
+    {
+        $errors = [];
 
         if (!isset($parameters['sessionId']) || empty($parameters['sessionId'])) {
             $errors['sessionId'] = "Missing session ID";
@@ -132,16 +136,17 @@ class Addrecords extends \Klevu\Search\Model\Api\Actionall {
      *
      * @return array
      */
-    protected function validateRecords(&$parameters) {
+    protected function validateRecords(&$parameters)
+    {
         if (isset($parameters['records']) && is_array($parameters['records'])) {
-            $skipped_records = array(
-                "index"         => array(),
-                "messages"      => array()
-            );
+            $skipped_records = [
+                "index"         => [],
+                "messages"      => []
+            ];
 
             foreach ($parameters['records'] as $i => $record) {
-                $missing_fields = array();
-                $empty_fields = array();
+                $missing_fields = [];
+                $empty_fields = [];
 
                 foreach ($this->mandatory_fields as $mandatory_field => $allowed_empty) {
                     if (!array_key_exists($mandatory_field, $record)) {
@@ -176,7 +181,8 @@ class Addrecords extends \Klevu\Search\Model\Api\Actionall {
      *
      * @param $parameters
      */
-    protected function prepareParameters(&$parameters) {
+    protected function prepareParameters(&$parameters)
+    {
         foreach ($parameters['records'] as &$record) {
             if (isset($record['listCategory']) && is_array($record['listCategory'])) {
                 $record['listCategory'] = implode(";", $record['listCategory']);
@@ -194,22 +200,22 @@ class Addrecords extends \Klevu\Search\Model\Api\Actionall {
                 $this->prepareGroupPricesParameters($record);
             }
 
-            $pairs = array();
+            $pairs = [];
 
             foreach ($record as $key => $value) {
-                $pairs[] = array(
-                    'pair' => array(
+                $pairs[] = [
+                    'pair' => [
                         'key' => $key,
                         'value' => $value
-                    )
-                );
+                    ]
+                ];
             }
 
-            $record = array(
-                'record' => array(
+            $record = [
+                'record' => [
                     'pairs' => $pairs
-                )
-            );
+                ]
+            ];
         }
     }
 
@@ -217,13 +223,14 @@ class Addrecords extends \Klevu\Search\Model\Api\Actionall {
      * Flattens other parameters array to a string formatted: key:value[,value]
      * @param string
      */
-    protected function prepareOtherParameters(&$record) {
+    protected function prepareOtherParameters(&$record)
+    {
         foreach ($record['other'] as $key => &$value) {
             $key = $this->sanitiseOtherAttribute($key);
-            if(is_array($value)){
+            if (is_array($value)) {
                 $label = $this->sanitiseOtherAttribute($value['label']);
                 $value = $this->sanitiseOtherAttribute($value['values']);
-            }else {
+            } else {
                 $label = $this->sanitiseOtherAttribute($key);
                 $value = $this->sanitiseOtherAttribute($value);
             }
@@ -241,14 +248,15 @@ class Addrecords extends \Klevu\Search\Model\Api\Actionall {
      * Flattens otherAttributeToIndex parameters array to a string formatted: key:value[,value]
      * @param string
      */
-    protected function prepareOtherAttributeToIndexParameters(&$record) {
+    protected function prepareOtherAttributeToIndexParameters(&$record)
+    {
         foreach ($record['otherAttributeToIndex'] as $key => &$value) {
             $key = $this->sanitiseOtherAttribute($key);
             
-            if(is_array($value)){
+            if (is_array($value)) {
                 $label = $this->sanitiseOtherAttribute($value['label']);
                 $value = $this->sanitiseOtherAttribute($value['values']);
-            }else {
+            } else {
                 $label = $this->sanitiseOtherAttribute($key);
                 $value = $this->sanitiseOtherAttribute($value);
             }
@@ -262,19 +270,19 @@ class Addrecords extends \Klevu\Search\Model\Api\Actionall {
         $record['otherAttributeToIndex'] = implode(";", $record['otherAttributeToIndex']);
     }
     
-    
     /**
      * Flattens GroupPrices parameters array to a string formatted: key:value[,value]
      * @param string
      */
-    protected function prepareGroupPricesParameters(&$record) {
+    protected function prepareGroupPricesParameters(&$record)
+    {
         foreach ($record['groupPrices'] as $key => &$value) {
             $key = $this->sanitiseOtherAttribute($key);
             
-            if(is_array($value)){
+            if (is_array($value)) {
                 $label = $this->sanitiseOtherAttribute($value['label']);
                 $value = $this->sanitiseOtherAttribute($value['values']);
-            }else {
+            } else {
                 $label = $this->sanitiseOtherAttribute($key);
                 $value = $this->sanitiseOtherAttribute($value);
             }
@@ -296,11 +304,13 @@ class Addrecords extends \Klevu\Search\Model\Api\Actionall {
      *
      * @return string
      */
-    protected function sanitiseOtherAttribute($value) {
+    protected function sanitiseOtherAttribute($value)
+    {
         return $this->_searchHelperData->santiseAttributeValue($value);
     }
-	
-	public function buildEndpoint($endpoint, $store = null, $hostname = null) {
+    
+    public function buildEndpoint($endpoint, $store = null, $hostname = null)
+    {
        
         return static::ENDPOINT_PROTOCOL . (($hostname) ? $hostname : $this->_searchHelperConfig->getHostname($store)) . $endpoint;
     }

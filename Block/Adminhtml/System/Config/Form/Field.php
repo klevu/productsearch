@@ -2,13 +2,14 @@
 
 namespace Klevu\Search\Block\Adminhtml\System\Config\Form;
 
-class Field extends \Magento\Config\Block\System\Config\Form\Field {
+class Field extends \Magento\Config\Block\System\Config\Form\Field
+{
  /**
-     * Retrieve element HTML markup
-     *
-     * @param \Magento\Framework\Data\Form\Element\AbstractElement $element
-     * @return string
-     */
+  * Retrieve element HTML markup
+  *
+  * @param \Magento\Framework\Data\Form\Element\AbstractElement $element
+  * @return string
+  */
     protected function _getElementHtml(\Magento\Framework\Data\Form\Element\AbstractElement $element)
     {
         return $element->getElementHtml();
@@ -28,35 +29,33 @@ class Field extends \Magento\Config\Block\System\Config\Form\Field {
         if ($element->getInherit() == 1 && $isCheckboxRequired) {
             $element->setDisabled(true);
         }
-		
-		$config = \Magento\Framework\App\ObjectManager::getInstance()->get('Klevu\Search\Helper\Config');
-		$features = $config->getFeaturesUpdate($element->getHtmlId());
-                if (!empty($features)) {
-                    $style        = 'class="klevu-disabled"';
-                    $upgrade_text = '';
-                    if (!empty($features['upgrade_message']) || !empty($features['upgrade_label'])) {
-                        $upgrade_text .= "<div class='klevu-upgrade-block'>";
-                        if (!empty($features['upgrade_message'])) {
-                            $upgrade_text .= $features['upgrade_message'];
-                        }
-                        if (!empty($features['upgrade_label'])) {
-                            $upgrade_text .= "<br/><button type='button' onClick=upgradeLink('" . $features["upgrade_url"] . "')>" . $features['upgrade_label'] . "</button>";
-                        }
-                        $upgrade_text .= "</div>";
-                    }
-                } else {
-                    $style        = '';
-                    $upgrade_text = '';
+        
+        $config = \Magento\Framework\App\ObjectManager::getInstance()->get('Klevu\Search\Helper\Config');
+        $features = $config->getFeaturesUpdate($element->getHtmlId());
+        if (!empty($features)) {
+            $style        = 'class="klevu-disabled"';
+            $upgrade_text = '';
+            if (!empty($features['upgrade_message']) || !empty($features['upgrade_label'])) {
+                $upgrade_text .= "<div class='klevu-upgrade-block'>";
+                if (!empty($features['upgrade_message'])) {
+                    $upgrade_text .= $features['upgrade_message'];
                 }
-				
-
-		
-		// Code added by klevu
+                if (!empty($features['upgrade_label'])) {
+                    $upgrade_text .= "<br/><button type='button' onClick=upgradeLink('" . $features["upgrade_url"] . "')>" . $features['upgrade_label'] . "</button>";
+                }
+                $upgrade_text .= "</div>";
+            }
+        } else {
+            $style        = '';
+            $upgrade_text = '';
+        }
+        
+        // Code added by klevu
         if (!empty($features)) {
             $element->setDisabled(true);
             $element->setValue(0);
         }
-		
+        
         $html = '<td class="label"><label for="' .
             $element->getHtmlId() .
             '">' .
@@ -83,7 +82,6 @@ class Field extends \Magento\Config\Block\System\Config\Form\Field {
     protected function _renderValue(\Magento\Framework\Data\Form\Element\AbstractElement $element)
     {
 
-		
         if ($element->getTooltip()) {
             $html = '<td class="value with-tooltip">';
             $html .= $this->_getElementHtml($element);
@@ -93,36 +91,34 @@ class Field extends \Magento\Config\Block\System\Config\Form\Field {
             $html = '<td class="value">';
             $html .= $this->_getElementHtml($element);
         }
-		if($element->getHtmlId() == "klevu_search_searchlanding_landenabled"){
-			$klevu_html ='';
-				$check_preserve = \Magento\Framework\App\ObjectManager::getInstance()->get('Klevu\Search\Model\Product\Sync')->getFeatures();
-				if(!empty($check_preserve)){
-					if(isset($check_preserve['disabled']) && !empty($check_preserve['disabled'])) {
-						if(strpos($check_preserve['disabled'],"preserves_layout") !== false) {
-							$klevu_html ="";
-							if(!empty($check_preserve['preserve_layout_message']) || !empty($check_preserve['upgrade_label'])) {
-								$klevu_html.=  "<div class='klevu-upgrade-block-simple'>";
-									if(!empty($check_preserve['preserve_layout_message'])){
-										$klevu_html.=$check_preserve['preserve_layout_message'];
-									}
-									
-								$klevu_html.="</div>";
-							}  
-						}
-					} else {
-					   $klevu_html = "Choose your Layout";
-					}
-				}
-			
-			$html .= '<p class="note"><span>' . $klevu_html . '</span></p>';
-		} else {
-			if ($element->getComment()) {
-				$html .= '<p class="note"><span>' . $element->getComment() . '</span></p>';
-			}
-		}
+        if ($element->getHtmlId() == "klevu_search_searchlanding_landenabled") {
+            $klevu_html ='';
+                $check_preserve = \Magento\Framework\App\ObjectManager::getInstance()->get('Klevu\Search\Model\Product\Sync')->getFeatures();
+            if (!empty($check_preserve)) {
+                if (isset($check_preserve['disabled']) && !empty($check_preserve['disabled'])) {
+                    if (strpos($check_preserve['disabled'], "preserves_layout") !== false) {
+                        $klevu_html ="";
+                        if (!empty($check_preserve['preserve_layout_message']) || !empty($check_preserve['upgrade_label'])) {
+                            $klevu_html.=  "<div class='klevu-upgrade-block-simple'>";
+                            if (!empty($check_preserve['preserve_layout_message'])) {
+                                $klevu_html.=$check_preserve['preserve_layout_message'];
+                            }
+                                    
+                            $klevu_html.="</div>";
+                        }
+                    }
+                } else {
+                    $klevu_html = "Choose your Layout";
+                }
+            }
+            
+            $html .= '<p class="note"><span>' . $klevu_html . '</span></p>';
+        } else {
+            if ($element->getComment()) {
+                $html .= '<p class="note"><span>' . $element->getComment() . '</span></p>';
+            }
+        }
         $html .= '</td>';
-		
-
         return $html;
     }
 
@@ -212,6 +208,4 @@ class Field extends \Magento\Config\Block\System\Config\Form\Field {
         $html .= '</td>';
         return $html;
     }
-
-    
 }

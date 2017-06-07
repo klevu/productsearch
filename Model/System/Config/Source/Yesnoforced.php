@@ -2,7 +2,8 @@
 
 namespace Klevu\Search\Model\System\Config\Source;
 
-class Yesnoforced {
+class Yesnoforced
+{
 
     const YES    = 1;
     const NO     = 0;
@@ -10,9 +11,9 @@ class Yesnoforced {
     
     public function toOptionArray()
     {
-       return [
+        return [
            ['value' => static::YES, 'label' => __('Yes')],
            ['value' => static::NO, 'label' => __('No')],
-       ];
+        ];
     }
 }

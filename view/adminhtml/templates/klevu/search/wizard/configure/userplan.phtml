@@ -1,4 +1,4 @@
-<?php /** @var \Klevu\Search\Block\Adminhtml\Wizard\Configure\Store $this */ ?>
+<?php /** @var \Klevu\Search\Block\Adminhtml\Wizard\Configure\Store $block */ ?>
 <?php echo $block->getLayout()->getMessagesBlock()->getGroupedHtml(); ?>
 <div class="kuWizardSteps">
 <ol class="wizard-progress clearfix">
@@ -22,8 +22,8 @@
 </div>
 
 
-<form id="klevu_search_wizard_configure_store_form" action="<?php echo $this->getFormActionUrl() ?>" method="POST">
-    <input type="hidden" name="form_key" value="<?php echo $this->getFormKey() ?>" />
+<form id="klevu_search_wizard_configure_store_form" action="<?php echo $block->getFormActionUrl() ?>" method="POST">
+    <input type="hidden" name="form_key" value="<?php echo $block->getFormKey() ?>" />
 	 
 	<div class="kuSelectPlanHeader">
 	<h2><?php echo __("Start 14-Day risk free trial");?></h2>

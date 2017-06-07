@@ -57,8 +57,8 @@ class IndexBuilder extends \Magento\CatalogSearch\Model\Search\IndexBuilder
      * @var TableMapper
      */
     private $tableMapper;
-	
-	/**
+    
+    /**
      * @var StockConfigurationInterface
      */
     private $stockConfiguration;
@@ -96,24 +96,24 @@ class IndexBuilder extends \Magento\CatalogSearch\Model\Search\IndexBuilder
     
     public function build(RequestInterface $request)
     {
-		$config = \Magento\Framework\App\ObjectManager::getInstance()->get('Klevu\Search\Helper\Config');
-		if($config->isLandingEnabled()==1 && $config->isExtensionConfigured()) {
-			$searchIndexTable = $this->scopeResolver->resolve($request->getIndex(), $request->getDimensions());
-				$select = $this->resource->getConnection()->select()
-				->from(
-					['search_index' => 'catalog_product_entity'],
-					['entity_id' => 'entity_id']
-				);
-				
-			$select = $this->tableMapper->addTables($select, $request);
+        $config = \Magento\Framework\App\ObjectManager::getInstance()->get('Klevu\Search\Helper\Config');
+        if ($config->isLandingEnabled()==1 && $config->isExtensionConfigured()) {
+            $searchIndexTable = $this->scopeResolver->resolve($request->getIndex(), $request->getDimensions());
+                $select = $this->resource->getConnection()->select()
+                ->from(
+                    ['search_index' => 'catalog_product_entity'],
+                    ['entity_id' => 'entity_id']
+                );
+                
+            $select = $this->tableMapper->addTables($select, $request);
 
-			$select = $this->processDimensions($request, $select);
+            $select = $this->processDimensions($request, $select);
 
-			$isShowOutOfStock = $this->config->isSetFlag(
-				'cataloginventory/options/show_out_of_stock',
-				ScopeInterface::SCOPE_STORE
-			);
-			/*if ($isShowOutOfStock === false) {
+            $isShowOutOfStock = $this->config->isSetFlag(
+                'cataloginventory/options/show_out_of_stock',
+                ScopeInterface::SCOPE_STORE
+            );
+            /*if ($isShowOutOfStock === false) {
 				$select->joinLeft(
 					['stock_index' => $this->resource->getTableName('cataloginventory_stock_status')],
 					'search_index.entity_id = stock_index.product_id'
@@ -125,46 +125,46 @@ class IndexBuilder extends \Magento\CatalogSearch\Model\Search\IndexBuilder
 				);
 				$select->where('stock_index.stock_status = ?', Stock::DEFAULT_STOCK_ID);
 			}*/
-			return $select;
-		} else {
-				$searchIndexTable = $this->scopeResolver->resolve($request->getIndex(), $request->getDimensions());
-			    $select = $this->resource->getConnection()->select()
-				->from(
-					['search_index' => $searchIndexTable],
-					['entity_id' => 'entity_id']
-				)
-				->joinLeft(
-					['cea' => $this->resource->getTableName('catalog_eav_attribute')],
-					'search_index.attribute_id = cea.attribute_id',
-					[]
-				);
+            return $select;
+        } else {
+                $searchIndexTable = $this->scopeResolver->resolve($request->getIndex(), $request->getDimensions());
+                $select = $this->resource->getConnection()->select()
+                ->from(
+                    ['search_index' => $searchIndexTable],
+                    ['entity_id' => 'entity_id']
+                )
+                ->joinLeft(
+                    ['cea' => $this->resource->getTableName('catalog_eav_attribute')],
+                    'search_index.attribute_id = cea.attribute_id',
+                    []
+                );
 
-			$select = $this->tableMapper->addTables($select, $request);
+            $select = $this->tableMapper->addTables($select, $request);
 
-			$select = $this->processDimensions($request, $select);
+            $select = $this->processDimensions($request, $select);
 
-			$isShowOutOfStock = $this->config->isSetFlag(
-				'cataloginventory/options/show_out_of_stock',
-				ScopeInterface::SCOPE_STORE
-			);
-			if ($isShowOutOfStock === false) {
-				$select->joinLeft(
-					['stock_index' => $this->resource->getTableName('cataloginventory_stock_status')],
-					'search_index.entity_id = stock_index.product_id'
-					. $this->resource->getConnection()->quoteInto(
-						' AND stock_index.website_id = ?',
-						$this->getStockConfiguration()->getDefaultScopeId()
-					),
-					[]
-				);
-				$select->where('stock_index.stock_status = ?', Stock::DEFAULT_STOCK_ID);
-			}
+            $isShowOutOfStock = $this->config->isSetFlag(
+                'cataloginventory/options/show_out_of_stock',
+                ScopeInterface::SCOPE_STORE
+            );
+            if ($isShowOutOfStock === false) {
+                $select->joinLeft(
+                    ['stock_index' => $this->resource->getTableName('cataloginventory_stock_status')],
+                    'search_index.entity_id = stock_index.product_id'
+                    . $this->resource->getConnection()->quoteInto(
+                        ' AND stock_index.website_id = ?',
+                        $this->getStockConfiguration()->getDefaultScopeId()
+                    ),
+                    []
+                );
+                $select->where('stock_index.stock_status = ?', Stock::DEFAULT_STOCK_ID);
+            }
 
-			return $select;
-		}
+            return $select;
+        }
     }
-	
-	/**
+    
+    /**
      * @return StockConfigurationInterface
      *
      * @deprecated
@@ -177,8 +177,6 @@ class IndexBuilder extends \Magento\CatalogSearch\Model\Search\IndexBuilder
         }
         return $this->stockConfiguration;
     }
-  
-
 
     /**
      * Add filtering by dimensions

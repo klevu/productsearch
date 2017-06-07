@@ -1,7 +1,9 @@
 ;'use strict';
 
-if (!window.Klevu) window.Klevu = {};
-if (!window.Klevu.Search) window.Klevu.Search = {};
+if (!window.Klevu) {
+window.Klevu = };
+if (!window.Klevu.Search) {
+window.Klevu.Search = };
 
 (function () {
     /**
@@ -128,7 +130,7 @@ if (!window.Klevu.Search) window.Klevu.Search = {};
          *
          * @param dialog The dialog window to close
          */
-        close: function(dialog) {
+        close: function (dialog) {
             var self = this;
 
             if (!dialog) {
@@ -147,7 +149,8 @@ if (!window.Klevu.Search) window.Klevu.Search = {};
     window.Klevu.Search.Wizard = Wizard;
 })();
 
-function showPopup(sUrl) {
+function showPopup(sUrl)
+{
     oPopup = new Window({
     id:'popup_window',
     className: 'magento',
@@ -169,7 +172,8 @@ function showPopup(sUrl) {
     oPopup.showCenter(true);
 }
 
-function closePopup() {
+function closePopup()
+{
     Windows.close('popup_window');
 }
 

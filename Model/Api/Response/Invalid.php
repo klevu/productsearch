@@ -7,9 +7,11 @@
  */
 namespace Klevu\Search\Model\Api\Response;
 
-class Invalid extends \Klevu\Search\Model\Api\Response {
+class Invalid extends \Klevu\Search\Model\Api\Response
+{
 
-    public function _construct() {
+    public function _construct()
+    {
         $this->successful = false;
     }
 
@@ -18,15 +20,16 @@ class Invalid extends \Klevu\Search\Model\Api\Response {
      *
      * @return array
      */
-    public function getErrors() {
+    public function getErrors()
+    {
         $errors = $this->getData('errors');
 
         if (!$errors) {
-            $errors = array();
+            $errors = [];
         }
 
         if (!is_array($errors)) {
-            $errors = array($errors);
+            $errors = [$errors];
         }
 
         return $errors;
@@ -37,11 +40,11 @@ class Invalid extends \Klevu\Search\Model\Api\Response {
      *
      * @return string
      */
-    public function getMessage() {
+    public function getMessage()
+    {
         $message = "Invalid request";
-
         $errors = $this->getErrors();
-        if (count($errors) > 0) {
+        if (!empty($errors)) {
             $message = sprintf("%s: %s", $message, implode(", ", $errors));
         }
 
@@ -55,7 +58,8 @@ class Invalid extends \Klevu\Search\Model\Api\Response {
      *
      * @return $this
      */
-    protected function parseRawResponse(\Zend\Http\Response $response) {
+    protected function parseRawResponse(\Zend\Http\Response $response)
+    {
         // Do nothing
         return $this;
     }

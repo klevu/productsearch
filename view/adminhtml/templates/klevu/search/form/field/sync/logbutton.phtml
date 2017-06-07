@@ -1,9 +1,9 @@
-<?php /** @var \Klevu\Search\Block\Adminhtml\Form\Field\Sync\Button $this */ ?>
-<button id="<?php echo $this->getHtmlId() ?>" class="scalable" type="button">
-    <span><?php echo __($this->getButtonLabel()) ?></span>
+<?php /** @var \Klevu\Search\Block\Adminhtml\Form\Field\Sync\Button $block */ ?>
+<button id="<?php echo $block->getHtmlId() ?>" class="scalable" type="button">
+    <span><?php echo __($block->getButtonLabel()) ?></span>
 </button>
 <script type="text/javascript">
-    $("<?php echo $this->getHtmlId() ?>").observe("click", function () {
-        window.open('<?php echo $this->getDestinationUrl() ?>','_blank');
+    $("<?php echo $block->getHtmlId() ?>").observe("click", function () {
+        window.open('<?php echo $block->getDestinationUrl() ?>','_blank');
     });
 </script>

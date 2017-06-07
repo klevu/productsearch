@@ -2,7 +2,8 @@
 
 namespace Klevu\Search\Helper;
 
-class Api extends \Magento\Framework\App\Helper\AbstractHelper {
+class Api extends \Magento\Framework\App\Helper\AbstractHelper
+{
     /**
      * @var \Magento\Backend\Model\Session
      */
@@ -49,18 +50,18 @@ class Api extends \Magento\Framework\App\Helper\AbstractHelper {
     protected $_apiActionCheckuserdetail;
 
     public function __construct(
-        \Magento\Backend\Model\Auth\Session $backendModelSession, 
-        \Magento\Framework\App\Config\ScopeConfigInterface $appConfigScopeConfigInterface, 
-        \Klevu\Search\Model\Api\Action\Adduser $apiActionAdduser, 
-        \Klevu\Search\Model\Api\Action\Getuserdetail $apiActionGetuserdetail, 
-        \Klevu\Search\Helper\Data $searchHelperData, 
-        \Klevu\Search\Model\Api\Action\Addwebstore $apiActionAddwebstore, 
-        \Klevu\Search\Model\Api\Action\Gettimezone $apiActionGettimezone, 
+        \Magento\Backend\Model\Auth\Session $backendModelSession,
+        \Magento\Framework\App\Config\ScopeConfigInterface $appConfigScopeConfigInterface,
+        \Klevu\Search\Model\Api\Action\Adduser $apiActionAdduser,
+        \Klevu\Search\Model\Api\Action\Getuserdetail $apiActionGetuserdetail,
+        \Klevu\Search\Helper\Data $searchHelperData,
+        \Klevu\Search\Model\Api\Action\Addwebstore $apiActionAddwebstore,
+        \Klevu\Search\Model\Api\Action\Gettimezone $apiActionGettimezone,
         \Klevu\Search\Helper\Config $searchHelperConfig,
         \Klevu\Search\Model\Api\Action\Checkuserdetail $apiActionCheckuserdetail,
-		\Magento\Framework\App\ProductMetadataInterface $productMetadataInterface
-    )
-    {
+        \Magento\Framework\App\ProductMetadataInterface $productMetadataInterface
+    ) {
+    
         $this->_backendModelSession = $backendModelSession;
         $this->_appConfigScopeConfigInterface = $appConfigScopeConfigInterface;
         $this->_apiActionAdduser = $apiActionAdduser;
@@ -70,9 +71,8 @@ class Api extends \Magento\Framework\App\Helper\AbstractHelper {
         $this->_apiActionGettimezone = $apiActionGettimezone;
         $this->_searchHelperConfig = $searchHelperConfig;
         $this->_apiActionCheckuserdetail = $apiActionCheckuserdetail;
-		$this->_ProductMetadataInterface = $productMetadataInterface;
+        $this->_ProductMetadataInterface = $productMetadataInterface;
     }
-
 
     const ENDPOINT_PROTOCOL = 'https://';
     const ENDPOINT_DEFAULT_HOSTNAME = 'box.klevu.com';
@@ -88,34 +88,35 @@ class Api extends \Magento\Framework\App\Helper\AbstractHelper {
      *                 customer_id: the customer ID for the newly created user (on success only).
      *                 message:     a message to be shown to the user.
      */
-    public function createUser($email, $password, $userPlan, $partnerAccount, $url, $merchantEmail,$contactNo) {
+    public function createUser($email, $password, $userPlan, $partnerAccount, $url, $merchantEmail, $contactNo)
+    {
         $user = $this->_backendModelSession;
         $userEmail = $user->getUser()->getEmail();
         $storePhone = $this->_appConfigScopeConfigInterface->getValue('general/store_information/phone');
-		$mage_version = $this->_ProductMetadataInterface->getEdition().$this->_ProductMetadataInterface->getVersion();
-        $response = $this->_apiActionAdduser->execute(array(
+        $mage_version = $this->_ProductMetadataInterface->getEdition().$this->_ProductMetadataInterface->getVersion();
+        $response = $this->_apiActionAdduser->execute([
             "email"    => $email,
             "password" => $password,
             "userPlan" => $userPlan,
-            "partnerAccount" => $partnerAccount,             
+            "partnerAccount" => $partnerAccount,
             "url"      => $url,
             "merchantEmail" => $merchantEmail,
             "contactNo" => $contactNo,
             "shopInfo" => $userEmail.";".$storePhone.";".$mage_version,
             "bmVersion" => 1,
-        ));
+        ]);
 
         if ($response->isSuccess()) {
-            return array(
+            return [
                 "success"     => true,
                 "customer_id" => $response->getCustomerId(),
                 "message"     => $response->getMessage()
-            );
+            ];
         } else {
-            return array(
+            return [
                 "success" => false,
                 "message" => $response->getMessage()
-            );
+            ];
         }
     }
 
@@ -131,17 +132,16 @@ class Api extends \Magento\Framework\App\Helper\AbstractHelper {
      *                 webstores: (on success only) A list of webstores the given user has configured.
      *                 message: (on failure only) Error message to be shown to the user.
      */
-    public function getUser($email, $password) {
+    public function getUser($email, $password)
+    {
 
-        $response = $this->_apiActionGetuserdetail->execute(array(
+        $response = $this->_apiActionGetuserdetail->execute([
             "email"    => $email,
             "password" => $password
-        ));
-        
-
+        ]);
         
         if ($response->isSuccess()) {
-            $webstores = array();
+            $webstores = [];
 
             // Add each webstore as a \Magento\Framework\DataObject
             $webstores_data = $response->getWebstores();
@@ -150,15 +150,15 @@ class Api extends \Magento\Framework\App\Helper\AbstractHelper {
 
                 if (isset($webstores_data['storeName'])) {
                     // Got a single webstore
-                    $webstores_data = array($webstores_data);
+                    $webstores_data = [$webstores_data];
                 }
 
                 $i = 0;
                 foreach ($webstores_data as $webstore_data) {
-                    $webstore = array(
+                    $webstore = [
                         'id' => $i++
-                    );
-                    foreach($webstore_data as $key => $value) {
+                    ];
+                    foreach ($webstore_data as $key => $value) {
                         // Convert field names from camelCase to underscore (code taken from \Magento\Framework\Object)
                         $webstore[strtolower(preg_replace('/(.)([A-Z])/', "$1_$2", $key))] = $value;
                     }
@@ -166,16 +166,16 @@ class Api extends \Magento\Framework\App\Helper\AbstractHelper {
                 }
             }
 
-            return array(
+            return [
                 "success"     => true,
                 "customer_id" => $response->getCustomerId(),
                 "webstores"   => $webstores
-            );
+            ];
         } else {
-            return array(
+            return [
                 "success" => false,
                 "message" => $response->getMessage()
-            );
+            ];
         }
     }
     
@@ -188,20 +188,21 @@ class Api extends \Magento\Framework\App\Helper\AbstractHelper {
      *                 success: boolean value indicating whether the operation was successful.
      *                 message: (on failure only) Error message to be shown to the user.
      */
-    public function checkUserDetail($email) {
-        $response = $this->_apiActionCheckuserdetail->execute(array(
+    public function checkUserDetail($email)
+    {
+        $response = $this->_apiActionCheckuserdetail->execute([
             "email"    => $email,
-        ));
+        ]);
 
         if ($response->isSuccess()) {
-            return array(
+            return [
                 "success"     => true,
-            );
+            ];
         } else {
-            return array(
+            return [
                 "success" => false,
                 "message" => $response->getMessage()
-            );
+            ];
         }
     }
 
@@ -217,8 +218,10 @@ class Api extends \Magento\Framework\App\Helper\AbstractHelper {
      *                 webstore: (success only) \Magento\Framework\Object containing Webstore information.
      *                 message: message to be displayed to the user.
      */
-    public function createWebstore($customer_id,$store, $test_mode = false) {
-        $name = sprintf("%s - %s - %s - %s",
+    public function createWebstore($customer_id, $store)
+    {
+        $name = sprintf(
+            "%s - %s - %s - %s",
             $store->getWebsite()->getName(),
             $store->getCode(),
             $store->getName(),
@@ -231,10 +234,8 @@ class Api extends \Magento\Framework\App\Helper\AbstractHelper {
 
         $version = $this->getVersion();
 
-        // Convert $test_mode to string
-        $test_mode = ($test_mode) ? "true" : "false";
 
-        $response = $this->_apiActionAddwebstore->execute(array(
+        $response = $this->_apiActionAddwebstore->execute([
             "customerId" => $customer_id,
             "storeName"  => $name,
             "language"   => $language,
@@ -242,54 +243,55 @@ class Api extends \Magento\Framework\App\Helper\AbstractHelper {
             "version"    => $version,
             "country"    => $country,
             "locale"     => $locale,
-            "testMode"   => $test_mode,
-        ));
+            "testMode"   => false,
+        ]);
 
         if ($response->isSuccess()) {
-            $webstore = new \Magento\Framework\DataObject(array(
+            $webstore = new \Magento\Framework\DataObject([
                 "store_name"           => $name,
                 "js_api_key"           => $response->getJsApiKey(),
                 "rest_api_key"         => $response->getRestApiKey(),
-                "test_account_enabled" => $test_mode,
+                "test_account_enabled" => false,
                 "hosted_on"            => $response->getHostedOn(),
                 "cloud_search_url"     => $response->getCloudSearchUrl(),
                 "analytics_url"        => $response->getAnalyticsUrl(),
                 "js_url"               => $response->getJsUrl(),
                 "rest_hostname"        => $response->getRestUrl(),
-			    "tires_url"            => $response->getTiersUrl(),
+                "tires_url"            => $response->getTiersUrl(),
 
-            ));
+            ]);
 
-            return array(
+            return [
                 "success"  => true,
                 "webstore" => $webstore,
                 "message"  => $response->getMessage()
-            );
+            ];
         } else {
-            return array(
+            return [
                 "success" => false,
                 "message" => $response->getMessage()
-            );
+            ];
         }
     }
 
-    public function getTimezoneOptions() {
+    public function getTimezoneOptions()
+    {
         $response = $this->_apiActionGettimezone->execute();
 
         if ($response->isSuccess()) {
-            $options = array();
+            $options = [];
 
             $data = $response->getTimezone();
 
             if (!is_array($data)) {
-                $data = array($data);
+                $data = [$data];
             }
 
             foreach ($data as $timezone) {
-                $options[] = array(
+                $options[] = [
                     "label" => __($timezone),
                     "value" => $this->escapeHtml($timezone)
-                );
+                ];
             }
 
             return $options;
@@ -298,14 +300,13 @@ class Api extends \Magento\Framework\App\Helper\AbstractHelper {
         }
     }
 
-
-
     /**
      * Get the module version number from the module config.
      * @return string
      */
-    public function getVersion() {
-		$moduleInfo =  \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Framework\Module\ModuleList')->getOne('Klevu_Search');
+    public function getVersion()
+    {
+        $moduleInfo =  \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Framework\Module\ModuleList')->getOne('Klevu_Search');
         return $moduleInfo['setup_version'];
     }
 }

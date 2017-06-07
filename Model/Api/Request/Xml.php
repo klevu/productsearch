@@ -1,10 +1,13 @@
 <?php
 use \Klevu\Search\Model\Api\Request\XMLExtended;
+
 namespace Klevu\Search\Model\Api\Request;
 
-class Xml extends \Klevu\Search\Model\Api\Request {
+class Xml extends \Klevu\Search\Model\Api\Request
+{
 
-    public function __toString() {
+    public function __toString()
+    {
         $string = parent::__toString();
         return sprintf("%s\n%s\n", $string, $this->getDataAsXml());
     }
@@ -14,32 +17,34 @@ class Xml extends \Klevu\Search\Model\Api\Request {
      *
      * @return string
      */
-    public function getDataAsXml() {
+    public function getDataAsXml()
+    {
         $xml = new \Klevu\Search\Model\Api\Request\XMLExtended("<request/>");
         $this->_convertArrayToXml($this->getData(), $xml);
-		return $xml->asXML();
-	}
+        return $xml->asXML();
+    }
 
     /**
      * Add data to the request as XML content and set the Content-Type to application/xml.
      *
      * @return \Zend\Http\Client
      */
-    protected function build() {
+    protected function build()
+    {
         $client = parent::build();
-		$convertDataToXml = $this->getDataAsXml();
-        $gZen = gzencode($convertDataToXml,5);
+        $convertDataToXml = $this->getDataAsXml();
+        $gZen = gzencode($convertDataToXml, 5);
         $requestHeaders  = $client->getRequest()->getHeaders();
-	    if($gZen !== false) {
-			$requestHeaders->addHeaders(array("Content-Encoding" => "gzip"));
-			$requestHeaders->addHeaders(array("Content-Type" => "application/xml"));
+        if ($gZen !== false) {
+            $requestHeaders->addHeaders(["Content-Encoding" => "gzip"]);
+            $requestHeaders->addHeaders(["Content-Type" => "application/xml"]);
             $client
-                ->setHeaders($requestHeaders) 
+                ->setHeaders($requestHeaders)
                 ->setRawBody($gZen);
         } else {
-			$requestHeaders->addHeaders(array("Content-Type" => "application/xml"));
+            $requestHeaders->addHeaders(["Content-Type" => "application/xml"]);
             $client
-                ->setHeaders($requestHeaders) 
+                ->setHeaders($requestHeaders)
                 ->setRawBody($convertDataToXml);
         }
 
@@ -121,8 +126,9 @@ class Xml extends \Klevu\Search\Model\Api\Request {
      * @param array            $array  The data to convert.
      * @param SimpleXmlElement $parent XML element used as a parent for the data.
      */
-    protected function _convertArrayToXml(array $array, \Klevu\Search\Model\Api\Request\XMLExtended &$parent) {
-		$flag = 0;
+    protected function _convertArrayToXml(array $array, \Klevu\Search\Model\Api\Request\XMLExtended &$parent)
+    {
+        $flag = 0;
         foreach ($array as $key => $value) {
             if (is_array($value)) {
                 if (is_numeric($key)) {
@@ -133,63 +139,55 @@ class Xml extends \Klevu\Search\Model\Api\Request {
                 }
             } else {
                 $key = (is_numeric($key)) ? "item" . $key : $key;
-				
-				if($value == "desc" || $value == "shortDesc" ) {
-					$flag =1;
-					$parent->addChild($key, $this->stripInvalidXml(htmlspecialchars($value)));
-				} else {
-					if($flag == 1){
-						$parent = $parent->addChild($key); 
-						$parent->addCData($this->stripInvalidXml(htmlspecialchars($value))); 
-					} else {
-						$flag = 0;
-						$parent->addChild($key, $this->stripInvalidXml(htmlspecialchars($value)));
-						
-				    }
-				}
                 
+                if ($value == "desc" || $value == "shortDesc") {
+                    $flag =1;
+                    $parent->addChild($key, $this->stripInvalidXml(htmlspecialchars($value)));
+                } else {
+                    if ($flag == 1) {
+                        $parent = $parent->addChild($key);
+                        $parent->addCData($this->stripInvalidXml(htmlspecialchars($value)));
+                    } else {
+                        $flag = 0;
+                        $parent->addChild($key, $this->stripInvalidXml(htmlspecialchars($value)));
+                    }
+                }
             }
         }
     }
-	
-	
-	/**
-	 * Removes invalid XML
-	 *
-	 * @access public
-	 * @param string $value
-	 * @return string
-	 */
+    
+    /**
+     * Removes invalid XML
+     *
+     * @access public
+     * @param string $value
+     * @return string
+     */
     public function stripInvalidXml($value)
-	{
-        if(is_array($value)){
-			return $value;
-		}
-		$ret = "";
-		$current;
-		if (empty($value)) 
-		{
-			return $ret;
-		}
+    {
+        if (is_array($value)) {
+            return $value;
+        }
+        $ret = "";
+        $current;
+        if (empty($value)) {
+            return $ret;
+        }
 
-		$length = strlen($value);
-		for ($i=0; $i < $length; $i++)
-		{
-			$current = ord($value{$i});
-			if (($current == 0x9) ||
-				($current == 0xA) ||
-				($current == 0xD) ||
-				(($current >= 0x20) && ($current <= 0xD7FF)) ||
-				(($current >= 0xE000) && ($current <= 0xFFFD)) ||
-				(($current >= 0x10000) && ($current <= 0x10FFFF)))
-			{
-				$ret .= chr($current);
-			}
-			else
-			{
-				$ret .= " ";
-			}
-		}
-		return $ret;
-	}
+        $length = strlen($value);
+        for ($i=0; $i < $length; $i++) {
+            $current = ord($value{$i});
+            if (($current == 0x9) ||
+                ($current == 0xA) ||
+                ($current == 0xD) ||
+                (($current >= 0x20) && ($current <= 0xD7FF)) ||
+                (($current >= 0xE000) && ($current <= 0xFFFD)) ||
+                (($current >= 0x10000) && ($current <= 0x10FFFF))) {
+                $ret .= chr($current);
+            } else {
+                $ret .= " ";
+            }
+        }
+        return $ret;
+    }
 }

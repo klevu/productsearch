@@ -2,7 +2,8 @@
 
 namespace Klevu\Search\Model\Api;
 
-class Request extends \Magento\Framework\DataObject {
+class Request extends \Magento\Framework\DataObject
+{
     /**
      * @var \Klevu\Search\Model\Api\Response
      */
@@ -18,17 +19,18 @@ class Request extends \Magento\Framework\DataObject {
      */
     protected $_apiResponseEmpty;
 
-    public function __construct(\Klevu\Search\Model\Api\Response $modelApiResponse, 
-        \Klevu\Search\Helper\Data $searchHelperData, 
-        \Klevu\Search\Model\Api\Response\Rempty $apiResponseEmpty)
-    {
+    public function __construct(
+        \Klevu\Search\Model\Api\Response $modelApiResponse,
+        \Klevu\Search\Helper\Data $searchHelperData,
+        \Klevu\Search\Model\Api\Response\Rempty $apiResponseEmpty
+    ) {
+    
         $this->_modelApiResponse = $modelApiResponse;
         $this->_searchHelperData = $searchHelperData;
         $this->_apiResponseEmpty = $apiResponseEmpty;
 
         parent::__construct();
     }
-
 
     protected $endpoint;
 
@@ -38,11 +40,12 @@ class Request extends \Magento\Framework\DataObject {
 
     protected $response_model;
 
-    public function _construct() {
+    public function _construct()
+    {
         parent::_construct();
 
         $this->method = \Zend\Http\Client::GET;
-        $this->headers = array();
+        $this->headers = [];
         $this->response_model = $this->_modelApiResponse;
     }
 
@@ -53,7 +56,8 @@ class Request extends \Magento\Framework\DataObject {
      *
      * @return $this
      */
-    public function setEndpoint($url) {
+    public function setEndpoint($url)
+    {
         $this->endpoint = $url;
 
         return $this;
@@ -64,7 +68,8 @@ class Request extends \Magento\Framework\DataObject {
      *
      * @return string
      */
-    public function getEndpoint() {
+    public function getEndpoint()
+    {
         return $this->endpoint;
     }
 
@@ -75,7 +80,8 @@ class Request extends \Magento\Framework\DataObject {
      *
      * @return $this
      */
-    public function setMethod($method) {
+    public function setMethod($method)
+    {
         $this->method = $method;
 
         return $this;
@@ -86,7 +92,8 @@ class Request extends \Magento\Framework\DataObject {
      *
      * @return mixed
      */
-    public function getMethod() {
+    public function getMethod()
+    {
         return $this->method;
     }
 
@@ -98,8 +105,9 @@ class Request extends \Magento\Framework\DataObject {
      *
      * @return $this
      */
-    public function setHeader($name, $value) {
-        $this->headers = array($name => $value);
+    public function setHeader($name, $value)
+    {
+        $this->headers = [$name => $value];
 
         return $this;
     }
@@ -109,7 +117,8 @@ class Request extends \Magento\Framework\DataObject {
      *
      * @return array
      */
-    public function getHeaders() {
+    public function getHeaders()
+    {
         return $this->headers;
     }
 
@@ -120,7 +129,8 @@ class Request extends \Magento\Framework\DataObject {
      *
      * @return $this
      */
-    public function setResponseModel(\Klevu\Search\Model\Api\Response $response_model) {
+    public function setResponseModel(\Klevu\Search\Model\Api\Response $response_model)
+    {
         $this->response_model = $response_model;
 
         return $this;
@@ -131,7 +141,8 @@ class Request extends \Magento\Framework\DataObject {
      *
      * @return \Klevu\Search\Model\Api\Response
      */
-    public function getResponseModel() {
+    public function getResponseModel()
+    {
         return $this->response_model;
     }
 
@@ -140,7 +151,8 @@ class Request extends \Magento\Framework\DataObject {
      *
      * @return \Klevu\Search\Model\Api\Response
      */
-    public function send() {
+    public function send()
+    {
         if (!$this->getEndpoint()) {
             // Can't make a request without a URL
             throw new \Exception("Unable to send a Klevu Search API request: No URL specified.");
@@ -152,8 +164,6 @@ class Request extends \Magento\Framework\DataObject {
 
         try {
             $raw_response = $raw_request->send();
-            
-
         } catch (\Zend\Http\Client\Exception $e) {
             // Return an empty response
             $this->_searchHelperData->log(\Zend\Log\Logger::ERR, sprintf("HTTP error: %s", $e->getMessage()));
@@ -162,7 +172,6 @@ class Request extends \Magento\Framework\DataObject {
 
         $this->_searchHelperData->log(\Zend\Log\Logger::DEBUG, sprintf(
             "API response:\n%s",
-            //$raw_response->getHeadersAsString(true, "\n"),
             $raw_response->getBody()
         ));
 
@@ -177,21 +186,23 @@ class Request extends \Magento\Framework\DataObject {
      *
      * @return string
      */
-    public function __toString() {
+    public function __toString()
+    {
         $headers = $this->getHeaders();
-        if (count($headers) > 0) {
+        if (!empty($headers)) {
             array_walk($headers, function (&$value, $key) {
                 $value = ($value !== null && $value !== false) ? sprintf("%s: %s", $key, $value) : null;
             });
         }
 
-		if($headers != NULL) {
-			return sprintf("%s %s\n%s\n",
-				$this->getMethod(),
-				$this->getEndpoint(),
-				implode("\n", array_filter($headers))
-			);
-		}
+        if ($headers != null) {
+            return sprintf(
+                "%s %s\n%s\n",
+                $this->getMethod(),
+                $this->getEndpoint(),
+                implode("\n", array_filter($headers))
+            );
+        }
     }
 
     /**
@@ -199,18 +210,19 @@ class Request extends \Magento\Framework\DataObject {
      *
      * @return \Zend\Http\Client
      */
-    protected function build() {
+    protected function build()
+    {
         $client = new \Zend\Http\Client();
-        if(!empty($this->getHeaders())) {
+        if (!empty($this->getHeaders())) {
             $client
                 ->setUri($this->getEndpoint())
                 ->setMethod($this->getMethod())
-				->setOptions(array('sslverifypeer' => false))
+                ->setOptions(['sslverifypeer' => false])
                 ->setHeaders($this->getHeaders());
         } else {
             $client
                 ->setUri($this->getEndpoint())
-				->setOptions(array('sslverifypeer' => false))
+                ->setOptions(['sslverifypeer' => false])
                 ->setMethod($this->getMethod());
         }
 

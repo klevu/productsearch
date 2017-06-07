@@ -1,20 +1,20 @@
-<?php /** @var \Klevu\Search\Block\Adminhtml\Form\Field\Sync\Button $this */ ?>
-<button id="<?php echo $this->getHtmlId() ?>" class="scalable" type="button">
-    <span><?php echo __($this->getButtonLabel()) ?></span>
+<?php /** @var \Klevu\Search\Block\Adminhtml\Form\Field\Sync\Button $block */ ?>
+<button id="<?php echo $block->getHtmlId() ?>" class="scalable" type="button">
+    <span><?php echo __($block->getButtonLabel()) ?></span>
 </button>
 <script type="text/javascript">
     require(["prototype"], function(){
-        $("<?php echo $this->getHtmlId() ?>").observe("click", function () {
+        $("<?php echo $block->getHtmlId() ?>").observe("click", function () {
             if(document.getElementById('klevu_search_product_sync_sync_options')) {
                 var syncoptions = document.getElementById('klevu_search_product_sync_sync_options').value;
-                new Ajax.Request("<?php echo $this->getUrl('klevu_search/savesyncoption/option'); ?>" + '?sync_options=' + syncoptions, {
+                new Ajax.Request("<?php echo $block->getUrl('klevu_search/savesyncoption/option'); ?>" + '?sync_options=' + syncoptions, {
                     method: 'POST',
                     onComplete: function(data) {
-                        setLocation("<?php echo $this->getDestinationUrl() ?>");
+                        setLocation("<?php echo $block->getDestinationUrl() ?>");
                     }
                 });
             } else {
-                setLocation("<?php echo $this->getDestinationUrl() ?>");
+                setLocation("<?php echo $block->getDestinationUrl() ?>");
             }
             
         });

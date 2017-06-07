@@ -2,9 +2,11 @@
 
 namespace Klevu\Search\Model\Api\Response;
 
-class Data extends \Klevu\Search\Model\Api\Response {
+class Data extends \Klevu\Search\Model\Api\Response
+{
 
-    protected function parseRawResponse(\Zend\Http\Response $response) {
+    protected function parseRawResponse(\Zend\Http\Response $response)
+    {
         parent::parseRawResponse($response);
 
         if ($this->isSuccess()) {
@@ -33,7 +35,8 @@ class Data extends \Klevu\Search\Model\Api\Response {
      *
      * @return array
      */
-    protected function xmlToArray(\SimpleXMLElement $xml) {
+    protected function xmlToArray(\SimpleXMLElement $xml)
+    {
         return json_decode(json_encode($xml), true);
     }
 }

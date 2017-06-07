@@ -8,7 +8,8 @@
  */
 namespace Klevu\Search\Model\Api;
 
-class Response extends \Magento\Framework\DataObject {
+class Response extends \Magento\Framework\DataObject
+{
     /**
      * @var \Klevu\Search\Helper\Data
      */
@@ -21,13 +22,12 @@ class Response extends \Magento\Framework\DataObject {
         parent::__construct();
     }
 
-
     protected $raw_response;
-
     protected $successful;
     protected $xml;
 
-    public function _construct() {
+    public function _construct()
+    {
         parent::_construct();
 
         $this->successful = false;
@@ -40,7 +40,8 @@ class Response extends \Magento\Framework\DataObject {
      *
      * @return $this
      */
-    public function setRawResponse(\Zend\Http\Response $response) {
+    public function setRawResponse(\Zend\Http\Response $response)
+    {
         $this->raw_response = $response;
 
         $this->parseRawResponse($response);
@@ -53,7 +54,8 @@ class Response extends \Magento\Framework\DataObject {
      *
      * @return boolean
      */
-    public function isSuccess() {
+    public function isSuccess()
+    {
         return $this->successful;
     }
 
@@ -62,7 +64,8 @@ class Response extends \Magento\Framework\DataObject {
      *
      * @return SimpleXMLElement
      */
-    public function getXml() {
+    public function getXml()
+    {
         return $this->xml;
     }
 
@@ -73,7 +76,8 @@ class Response extends \Magento\Framework\DataObject {
      *
      * @return $this
      */
-    protected function parseRawResponse(\Zend\Http\Response $response) {
+    protected function parseRawResponse(\Zend\Http\Response $response)
+    {
         if ($response->isSuccess()) {
             $content = $response->getBody();
             if (strlen($content) > 0) {

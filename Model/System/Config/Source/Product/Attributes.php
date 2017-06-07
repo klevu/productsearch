@@ -2,12 +2,13 @@
 
 namespace Klevu\Search\Model\System\Config\Source\Product;
 
-class Attributes extends \Magento\Backend\Helper\Data {
+class Attributes extends \Magento\Backend\Helper\Data
+{
    /**
-     * Selected products for mass-update
-     *
-     * @var \Magento\Catalog\Model\ResourceModel\Product\Collection
-     */
+    * Selected products for mass-update
+    *
+    * @var \Magento\Catalog\Model\ResourceModel\Product\Collection
+    */
     protected $_products;
 
     /**
@@ -62,7 +63,6 @@ class Attributes extends \Magento\Backend\Helper\Data {
         \Magento\Eav\Model\Config $eavConfig
     ) {
         $this->_eavConfig = $eavConfig;
-
     }
 
     /**
@@ -72,7 +72,6 @@ class Attributes extends \Magento\Backend\Helper\Data {
      */
     public function toOptionArray()
     {
-    
     
         $boost_option = [
             'value' => null,
@@ -94,15 +93,12 @@ class Attributes extends \Magento\Backend\Helper\Data {
                 $this->_attributes->addFieldToFilter('attribute_code', ['nin' => $this->_excludedAttributes]);
             }
 
-
             foreach ($this->_attributes as $attribute) {
-                
                 $options[] =
                 [
                     'value' => $attribute->getAttributeCode(),
                     'label' => $attribute->getAttributeCode()
                 ];
-
             }
         }
 

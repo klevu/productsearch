@@ -1,12 +1,12 @@
-<?php /** @var \Klevu\Search\Block\Search\Index $this */ ?>
-<?php if ($block->isExtensionConfigured()): 
+<?php /** @var \Klevu\Search\Block\Search\Index $block */ ?>
+<?php if ($block->isExtensionConfigured()) :
 $url = $block->getUrl('search', ['_secure' => $block->getRequest()->isSecure()]);?>
 <script type="text/javascript">
 // add in cms template
 var klevu_current_version = '<?php echo $block->getModuleInfo(); ?>';
 var allInputs = document.getElementsByTagName( 'input' );
-<?php 
-    if ($block->isLandingEnabled()== $block::DISABLE){ ?>
+<?php
+    if ($block->isLandingEnabled()== $block::DISABLE) { ?>
     var klevu_showQuickSearchOnEnter=true;
     (function () {
         // Remove Magento event observers from the search box
@@ -15,15 +15,15 @@ var allInputs = document.getElementsByTagName( 'input' );
             if( allInputs[i].type === "text" || allInputs[i].type === "search" ){
                 if( allInputs[i].name === "q" ||  allInputs[i].id === "search" ){
                     var search_input = allInputs[i];
-					search_input.form.onsubmit = function() {
-						return false;
-					};
+                    search_input.form.onsubmit = function() {
+                        return false;
+                    };
                }
             }
         }
         
     })(); 
-    <?php } else if($block->isLandingEnabled()== $block::KlEVUTEMPLATE) { ?>
+    <?php } elseif ($block->isLandingEnabled()== $block::KlEVUTEMPLATE) { ?>
     (function () {
         // Remove Magento event observers from the search box
         // Redirect to klevu js page
@@ -39,7 +39,7 @@ var allInputs = document.getElementsByTagName( 'input' );
     })();
      var klevu_storeLandingPageUrl = '<?php echo $url; ?>';
      var klevu_showQuickSearchOnEnter=false;
-    <?php } else if($block->isLandingEnabled()== $block::KlEVUPRESERVELAYOUT) { ?>
+    <?php } elseif ($block->isLandingEnabled()== $block::KlEVUPRESERVELAYOUT) { ?>
     (function () {
         // Remove Magento event observers from the search box
         // default magetno layout landing page 
@@ -54,14 +54,14 @@ var allInputs = document.getElementsByTagName( 'input' );
     
     var klevu_showQuickSearchOnEnter=false;
     <?php } ?>
-    <?php 
-	if($block->isLandingEnabled()== $block::KlEVUPRESERVELAYOUT) {?>
-		var klevu_storeLandingPageUrl = '<?php echo $block->getUrl('catalogsearch/result',['_secure' => $block->getRequest()->isSecure()]);?>'; 
-		var klevu_showQuickSearchOnEnter=false;
-	<?php } else if($block->isLandingEnabled()== $block::KlEVUTEMPLATE ){ ?>
-		var klevu_storeLandingPageUrl = '<?php echo $url;?>'; 
-		var klevu_showQuickSearchOnEnter=false;
-	<?php } ?>
+    <?php
+    if ($block->isLandingEnabled()== $block::KlEVUPRESERVELAYOUT) {?>
+        var klevu_storeLandingPageUrl = '<?php echo $block->getUrl('catalogsearch/result', ['_secure' => $block->getRequest()->isSecure()]);?>'; 
+        var klevu_showQuickSearchOnEnter=false;
+    <?php                                                                                                         } elseif ($block->isLandingEnabled()== $block::KlEVUTEMPLATE) { ?>
+        var klevu_storeLandingPageUrl = '<?php echo $url;?>'; 
+        var klevu_showQuickSearchOnEnter=false;
+    <?php } ?>
     
     // call store js
     var klevu_apiKey = '<?php echo $block->getJsApiKey() ?>',
@@ -72,23 +72,22 @@ var allInputs = document.getElementsByTagName( 'input' );
     (function () { var ws = document.createElement('script'),kl_protocol =("https:"===document.location.protocol?"https://":"http://"); ws.type = 'text/javascript'; ws.async = true; ws.src = kl_protocol+'<?php echo $block->getJsUrl() ?>/klevu-js-v1/js/klevu-webstore.js'; var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ws, s); })();
 </script>
 <?php endif; ?>
-<?php 
-	$currency = $block->getCurrencyData();
-	if(!empty($currency)){ ?>
-	<script type="text/javascript">
-	    var klevu_currentCurrencyCode = "<?php echo $block->getCurrentCurrencyCode(); ?>";
-	    var klevu_currentCurrencyRates = {<?php echo $currency;?>};
-	</script>
-<?php 	
+<?php
+    $currency = $block->getCurrencyData();
+    if (!empty($currency)) { ?>
+    <script type="text/javascript">
+        var klevu_currentCurrencyCode = "<?php echo $block->getCurrentCurrencyCode(); ?>";
+        var klevu_currentCurrencyRates = {<?php echo $currency;?>};
+    </script>
+<?php
     }
 ?>
-<?php 
-
-if($block->isPubInUse()){ ?>
+<?php
+if ($block->isPubInUse()) { ?>
 <script type="text/javascript">
-	function klevu_uc_productCustomizations( product ){
-		product.productImage = product.productImage.replace( 'pub/', '');
-		return product;
-	}
+    function klevu_uc_productCustomizations( product ){
+        product.productImage = product.productImage.replace( 'pub/', '');
+        return product;
+    }
 </script>
-<?php } ?>	
+<?php } ?>  

@@ -2,7 +2,8 @@
 
 namespace Klevu\Search\Model\Api;
 
-class Actionall extends \Magento\Framework\DataObject {
+class Actionall extends \Magento\Framework\DataObject
+{
     /**
      * @var \Klevu\Search\Model\Api\Response\Invalid
      */
@@ -28,17 +29,16 @@ class Actionall extends \Magento\Framework\DataObject {
      */
     protected $_storeModelStoreManagerInterface;
 
-    public function __construct(\Klevu\Search\Model\Api\Response\Invalid $apiResponseInvalid, 
-        \Klevu\Search\Helper\Config $searchHelperConfig, 
+    public function __construct(
+        \Klevu\Search\Model\Api\Response\Invalid $apiResponseInvalid,
+        \Klevu\Search\Helper\Config $searchHelperConfig,
         \Magento\Store\Model\StoreManagerInterface $storeModelStoreManagerInterface
-        )
-    {
+    ) {
+    
         $this->_apiResponseInvalid = $apiResponseInvalid;
         $this->_searchHelperConfig = $searchHelperConfig;
         $this->_storeModelStoreManagerInterface = $storeModelStoreManagerInterface;
-
     }
-
 
     const ENDPOINT = "";
     const METHOD   = "GET";
@@ -47,7 +47,6 @@ class Actionall extends \Magento\Framework\DataObject {
 
     const DEFAULT_REQUEST_MODEL = "Klevu\Search\Model\Api\Request";
     const DEFAULT_RESPONSE_MODEL = "Klevu\Search\Model\Api\Response";
-
 
     /** @var \Klevu\Search\Model\Api\Request $request */
     protected $request;
@@ -62,7 +61,8 @@ class Actionall extends \Magento\Framework\DataObject {
      *
      * @return $this
      */
-    public function setRequest(\Klevu\Search\Model\Api\Request $request_model) {
+    public function setRequest(\Klevu\Search\Model\Api\Request $request_model)
+    {
         $this->request = $request_model;
 
         return $this;
@@ -73,7 +73,8 @@ class Actionall extends \Magento\Framework\DataObject {
      *
      * @return \Klevu\Search\Model\Api\Request
      */
-    public function getRequest() {
+    public function getRequest()
+    {
         if (!$this->request) {
             $this->request = \Magento\Framework\App\ObjectManager::getInstance()->get(static::DEFAULT_REQUEST_MODEL);
         }
@@ -88,7 +89,8 @@ class Actionall extends \Magento\Framework\DataObject {
      *
      * @return $this
      */
-    public function setResponse(\Klevu\Search\Model\Api\Response $response_model) {
+    public function setResponse(\Klevu\Search\Model\Api\Response $response_model)
+    {
         $this->response = $response_model;
 
         return $this;
@@ -99,7 +101,8 @@ class Actionall extends \Magento\Framework\DataObject {
      *
      * @return \Klevu\Search\Model\Api\Response
      */
-    public function getResponse() {
+    public function getResponse()
+    {
         if (!$this->response) {
             $this->response = \Magento\Framework\App\ObjectManager::getInstance()->get(static::DEFAULT_RESPONSE_MODEL);
         }
@@ -114,7 +117,8 @@ class Actionall extends \Magento\Framework\DataObject {
      *
      * @return \Klevu\Search\Model\Api\Response
      */
-    public function execute($parameters) {
+    public function execute($parameters)
+    {
         $validation_result = $this->validate($parameters);
         if ($validation_result !== true) {
             return $this->_apiResponseInvalid->setErrors($validation_result);
@@ -122,7 +126,7 @@ class Actionall extends \Magento\Framework\DataObject {
 
         $request = $this->getRequest();
 
-        $endpoint = $this->buildEndpoint(static::ENDPOINT, $this->_storeModelStoreManagerInterface->getStore(),$this->_searchHelperConfig->getHostname($this->_storeModelStoreManagerInterface->getStore()));
+        $endpoint = $this->buildEndpoint(static::ENDPOINT, $this->_storeModelStoreManagerInterface->getStore(), $this->_searchHelperConfig->getHostname($this->_storeModelStoreManagerInterface->getStore()));
         $request
             ->setResponseModel($this->getResponse())
             ->setEndpoint($endpoint)
@@ -136,8 +140,9 @@ class Actionall extends \Magento\Framework\DataObject {
      * Get the store used for this request
      * @return \Magento\Framework\Model\Store
      */
-    public function getStore() {
-        if(!$this->hasData('store')) {
+    public function getStore()
+    {
+        if (!$this->hasData('store')) {
             $this->setData('store', $this->_storeModelStoreManagerInterface->getStore());
         }
         return $this->getData('store');
@@ -152,11 +157,13 @@ class Actionall extends \Magento\Framework\DataObject {
      *
      * @return bool|array
      */
-    protected function validate($parameters) {
+    protected function validate($parameters)
+    {
         return true;
     }
     
-    public function buildEndpoint($endpoint, $store = null, $hostname = null) {
+    public function buildEndpoint($endpoint, $store = null, $hostname = null)
+    {
         return static::ENDPOINT_PROTOCOL . (($hostname) ? $hostname : $this->_searchHelperConfig->getHostname($store)) . $endpoint;
     }
 }

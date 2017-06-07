@@ -2,9 +2,11 @@
 
 namespace Klevu\Search\Model\Api\Response;
 
-class Search extends \Klevu\Search\Model\Api\Response {
+class Search extends \Klevu\Search\Model\Api\Response
+{
 
-    protected function parseRawResponse(\Zend\Http\Response $response) {
+    protected function parseRawResponse(\Zend\Http\Response $response)
+    {
         parent::parseRawResponse($response);
 
         if ($this->isSuccess()) {
@@ -19,11 +21,11 @@ class Search extends \Klevu\Search\Model\Api\Response {
             }
 
             foreach ($data as $key => $value) {
-                switch($key) {
+                switch ($key) {
                     case 'result':
                         $prepared_value = $value;
                         if (isset($value['id'])) {
-                            $prepared_value = array($value);
+                            $prepared_value = [$value];
                         }
 
                         break;
@@ -46,8 +48,9 @@ class Search extends \Klevu\Search\Model\Api\Response {
         return $this;
     }
 
-    protected function _prepareFilters($filters) {
-        $prepared_filters = array();
+    protected function _prepareFilters($filters)
+    {
+        $prepared_filters = [];
         $i = 0;
 
         foreach ($filters as $filter) {
@@ -69,7 +72,8 @@ class Search extends \Klevu\Search\Model\Api\Response {
      *
      * @return array
      */
-    protected function xmlToArray(SimpleXMLElement $xml) {
+    protected function xmlToArray(SimpleXMLElement $xml)
+    {
         return json_decode(json_encode($xml), true);
     }
 }

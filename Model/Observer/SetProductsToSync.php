@@ -12,7 +12,8 @@ use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\View\Layout\Interceptor;
 
-class SetProductsToSync implements ObserverInterface{
+class SetProductsToSync implements ObserverInterface
+{
 
     /**
      * @var \Klevu\Search\Model\Product\Sync
@@ -29,39 +30,38 @@ class SetProductsToSync implements ObserverInterface{
      */
     protected $_searchHelperData;
 
-
     /**
      * @var \Magento\Catalog\Model\Product\Action
      */
     protected $_modelProductAction;
-	
-	/**
+    
+    /**
      * @var \Magento\Framework\App\ResourceConnection
      */
     protected $_frameworkModelResource;
 
     public function __construct(
-        \Klevu\Search\Model\Product\Sync $modelProductSync, 
-        \Magento\Framework\Filesystem $magentoFrameworkFilesystem, 
+        \Klevu\Search\Model\Product\Sync $modelProductSync,
+        \Magento\Framework\Filesystem $magentoFrameworkFilesystem,
         \Klevu\Search\Helper\Data $searchHelperData,
-		\Magento\Framework\App\ResourceConnection $frameworkModelResource
-)
-    {
+        \Magento\Framework\App\ResourceConnection $frameworkModelResource
+    ) {
+    
         $this->_modelProductSync = $modelProductSync;
         $this->_magentoFrameworkFilesystem = $magentoFrameworkFilesystem;
         $this->_searchHelperData = $searchHelperData;
-		$this->_frameworkModelResource = $frameworkModelResource;
-
+        $this->_frameworkModelResource = $frameworkModelResource;
     }
 
     /**
      * When products are updated in bulk, update products so that they will be synced.
      * @param \Magento\Framework\Event\Observer $observer
      */
-    public function execute(\Magento\Framework\Event\Observer $observer) {
+    public function execute(\Magento\Framework\Event\Observer $observer)
+    {
         $product_ids = $observer->getData('product_ids');
 
-        if(empty($product_ids)) {
+        if (empty($product_ids)) {
             return;
         }
 
@@ -71,9 +71,8 @@ class SetProductsToSync implements ObserverInterface{
         $resource->getConnection('core_write')
             ->update(
                 $resource->getTableName('klevu_product_sync'),
-                array('last_synced_at' => '0'),
+                ['last_synced_at' => '0'],
                 $where
             );
     }
-     
 }

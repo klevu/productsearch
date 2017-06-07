@@ -2,7 +2,8 @@
 
 namespace Klevu\Search\Model\Api\Action;
 
-class Searchtermtracking extends \Klevu\Search\Model\Api\Actionall {
+class Searchtermtracking extends \Klevu\Search\Model\Api\Actionall
+{
     /**
      * @var \Klevu\Search\Model\Api\Response\Invalid
      */
@@ -18,17 +19,18 @@ class Searchtermtracking extends \Klevu\Search\Model\Api\Actionall {
      */
     protected $_searchHelperConfig;
 
-    public function __construct(\Klevu\Search\Model\Api\Response\Invalid $apiResponseInvalid, 
-        \Klevu\Search\Helper\Api $searchHelperApi, 
-		\Magento\Store\Model\StoreManagerInterface $storeModelStoreManagerInterface,		
-        \Klevu\Search\Helper\Config $searchHelperConfig)
-    {
+    public function __construct(
+        \Klevu\Search\Model\Api\Response\Invalid $apiResponseInvalid,
+        \Klevu\Search\Helper\Api $searchHelperApi,
+        \Magento\Store\Model\StoreManagerInterface $storeModelStoreManagerInterface,
+        \Klevu\Search\Helper\Config $searchHelperConfig
+    ) {
+    
         $this->_apiResponseInvalid = $apiResponseInvalid;
         $this->_searchHelperApi = $searchHelperApi;
         $this->_searchHelperConfig = $searchHelperConfig;
-		$this->_storeModelStoreManagerInterface = $storeModelStoreManagerInterface;
+        $this->_storeModelStoreManagerInterface = $storeModelStoreManagerInterface;
     }
-
 
     const ENDPOINT = "/analytics/n-search/search";
     const METHOD   = "POST";
@@ -36,9 +38,9 @@ class Searchtermtracking extends \Klevu\Search\Model\Api\Actionall {
     const DEFAULT_REQUEST_MODEL = "Klevu\Search\Model\Api\Request\Post";
     const DEFAULT_RESPONSE_MODEL = "Klevu\Search\Model\Api\Response\Data";
 
-
-    protected function validate($parameters) {
-        $errors = array();
+    protected function validate($parameters)
+    {
+        $errors = [];
 
         if (!isset($parameters["klevu_apiKey"]) || empty($parameters["klevu_apiKey"])) {
             $errors["klevu_apiKey"] = "Missing JS API key.";
@@ -64,7 +66,6 @@ class Searchtermtracking extends \Klevu\Search\Model\Api\Actionall {
         return $errors;
     }
 
-
     /**
      * Execute the API action with the given parameters.
      *
@@ -72,7 +73,8 @@ class Searchtermtracking extends \Klevu\Search\Model\Api\Actionall {
      *
      * @return \Klevu\Search\Model\Api\Response
      */
-    public function execute($parameters = array()) {
+    public function execute($parameters = [])
+    {
         $validation_result = $this->validate($parameters);
         if ($validation_result !== true) {
             return $this->_apiResponseInvalid->setErrors($validation_result);
@@ -94,8 +96,9 @@ class Searchtermtracking extends \Klevu\Search\Model\Api\Actionall {
 
         return $request->send();
     }
-	
-	public function buildEndpoint($endpoint, $store = null, $hostname = null) {
+    
+    public function buildEndpoint($endpoint, $store = null, $hostname = null)
+    {
         return static::ENDPOINT_PROTOCOL . (($hostname) ? $hostname : $this->_searchHelperConfig->getHostname($store)) . $endpoint;
     }
 }

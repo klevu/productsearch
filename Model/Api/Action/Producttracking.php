@@ -2,7 +2,8 @@
 
 namespace Klevu\Search\Model\Api\Action;
 
-class Producttracking extends \Klevu\Search\Model\Api\Actionall {
+class Producttracking extends \Klevu\Search\Model\Api\Actionall
+{
     /**
      * @var \Klevu\Search\Model\Api\Response\Invalid
      */
@@ -18,18 +19,18 @@ class Producttracking extends \Klevu\Search\Model\Api\Actionall {
      */
     protected $_searchHelperConfig;
 
-    public function __construct(\Klevu\Search\Model\Api\Response\Invalid $apiResponseInvalid, 
-        \Klevu\Search\Helper\Api $searchHelperApi, 
-		\Magento\Store\Model\StoreManagerInterface $storeModelStoreManagerInterface,		
-        \Klevu\Search\Helper\Config $searchHelperConfig)
-    {
+    public function __construct(
+        \Klevu\Search\Model\Api\Response\Invalid $apiResponseInvalid,
+        \Klevu\Search\Helper\Api $searchHelperApi,
+        \Magento\Store\Model\StoreManagerInterface $storeModelStoreManagerInterface,
+        \Klevu\Search\Helper\Config $searchHelperConfig
+    ) {
+    
         $this->_apiResponseInvalid = $apiResponseInvalid;
         $this->_searchHelperApi = $searchHelperApi;
         $this->_searchHelperConfig = $searchHelperConfig;
-		$this->_storeModelStoreManagerInterface = $storeModelStoreManagerInterface;
-        //parent::__construct();
+        $this->_storeModelStoreManagerInterface = $storeModelStoreManagerInterface;
     }
-
 
     const ENDPOINT = "/analytics/productTracking";
     const METHOD   = "POST";
@@ -37,8 +38,9 @@ class Producttracking extends \Klevu\Search\Model\Api\Actionall {
     const DEFAULT_REQUEST_MODEL = "Klevu\Search\Model\Api\Request\Post";
     const DEFAULT_RESPONSE_MODEL = "Klevu\Search\Model\Api\Response\Data";
 
-    protected function validate($parameters) {
-        $errors = array();
+    protected function validate($parameters)
+    {
+        $errors = [];
 
         if (!isset($parameters["klevu_apiKey"]) || empty($parameters["klevu_apiKey"])) {
             $errors["klevu_apiKey"] = "Missing JS API key.";
@@ -64,13 +66,11 @@ class Producttracking extends \Klevu\Search\Model\Api\Actionall {
             $errors["klevu_currency"] = "Missing currency.";
         }
 
-
         if (count($errors) == 0) {
             return true;
         }
         return $errors;
     }
-
 
     /**
      * Execute the API action with the given parameters.
@@ -79,7 +79,8 @@ class Producttracking extends \Klevu\Search\Model\Api\Actionall {
      *
      * @return \Klevu\Search\Model\Api\Response
      */
-    public function execute($parameters = array()) {
+    public function execute($parameters = [])
+    {
         $validation_result = $this->validate($parameters);
         if ($validation_result !== true) {
             return $this->_apiResponseInvalid->setErrors($validation_result);
@@ -101,8 +102,9 @@ class Producttracking extends \Klevu\Search\Model\Api\Actionall {
 
         return $request->send();
     }
-	
-	public function buildEndpoint($endpoint, $store = null, $hostname = null) {
+    
+    public function buildEndpoint($endpoint, $store = null, $hostname = null)
+    {
        
         return static::ENDPOINT_PROTOCOL . (($hostname) ? $hostname : $this->_searchHelperConfig->getHostname($store)) . $endpoint;
     }

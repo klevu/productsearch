@@ -2,9 +2,10 @@
 
 namespace Klevu\Search\Controller\Adminhtml\Wizard;
 
-class userplan extends \Magento\Backend\App\Action
+class Userplan extends \Magento\Backend\App\Action
 {
-    public function execute() {
+    public function execute()
+    {
         $this->_view->loadLayout();
         $this->_view->getLayout()->initMessages();
         $this->_view->renderLayout();

@@ -2,7 +2,8 @@
 
 namespace Klevu\Search\Model\Api\Action;
 
-class Adduser extends \Klevu\Search\Model\Api\Actionall {
+class Adduser extends \Klevu\Search\Model\Api\Actionall
+{
 
     const ENDPOINT = "/n-search/addUser";
     const METHOD   = "POST";
@@ -10,8 +11,9 @@ class Adduser extends \Klevu\Search\Model\Api\Actionall {
     const DEFAULT_REQUEST_MODEL = "Klevu\Search\Model\Api\Request\Post";
     const DEFAULT_RESPONSE_MODEL = "Klevu\Search\Model\Api\Response\Data";
 
-    protected function validate($parameters) {
-        $errors = array();
+    protected function validate($parameters)
+    {
+        $errors = [];
 
         if (!isset($parameters['email']) || empty($parameters['email'])) {
             $errors['email'] = "Missing email";

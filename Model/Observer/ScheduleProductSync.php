@@ -10,7 +10,8 @@ use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\View\Layout\Interceptor;
 
-class ScheduleProductSync implements ObserverInterface{
+class ScheduleProductSync implements ObserverInterface
+{
 
     /**
      * @var \Klevu\Search\Model\Product\Sync
@@ -33,10 +34,11 @@ class ScheduleProductSync implements ObserverInterface{
     protected $_modelProductAction;
 
     public function __construct(
-        \Klevu\Search\Model\Product\Sync $modelProductSync, 
-        \Magento\Framework\Filesystem $magentoFrameworkFilesystem, 
-        \Klevu\Search\Helper\Data $searchHelperData)
-    {
+        \Klevu\Search\Model\Product\Sync $modelProductSync,
+        \Magento\Framework\Filesystem $magentoFrameworkFilesystem,
+        \Klevu\Search\Helper\Data $searchHelperData
+    ) {
+    
         $this->_modelProductSync = $modelProductSync;
         $this->_magentoFrameworkFilesystem = $magentoFrameworkFilesystem;
         $this->_searchHelperData = $searchHelperData;
@@ -47,8 +49,8 @@ class ScheduleProductSync implements ObserverInterface{
      *
      * @param \Magento\Framework\Event\Observer $observer
      */
-    public function execute(\Magento\Framework\Event\Observer $observer) {
+    public function execute(\Magento\Framework\Event\Observer $observer)
+    {
             $this->_modelProductSync->schedule();
     }
-    
 }

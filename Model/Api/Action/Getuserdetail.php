@@ -2,7 +2,8 @@
 
 namespace Klevu\Search\Model\Api\Action;
 
-class Getuserdetail extends \Klevu\Search\Model\Api\Actionall {
+class Getuserdetail extends \Klevu\Search\Model\Api\Actionall
+{
 
     const ENDPOINT = "/n-search/getUserDetail";
     const METHOD   = "POST";
@@ -10,9 +11,10 @@ class Getuserdetail extends \Klevu\Search\Model\Api\Actionall {
     const DEFAULT_REQUEST_MODEL = "Klevu\Search\Model\Api\Request\Post";
     const DEFAULT_RESPONSE_MODEL = "Klevu\Search\Model\Api\Response\Data";
 
-    protected function validate($parameters) {
+    protected function validate($parameters)
+    {
 
-        $errors = array();
+        $errors = [];
 
         if (!isset($parameters['email']) || empty($parameters['email'])) {
             $errors['email'] = "Missing email";

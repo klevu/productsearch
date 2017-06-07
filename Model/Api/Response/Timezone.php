@@ -2,9 +2,11 @@
 
 namespace Klevu\Search\Model\Api\Response;
 
-class Timezone extends \Klevu\Search\Model\Api\Response\Data {
+class Timezone extends \Klevu\Search\Model\Api\Response\Data
+{
 
-    protected function parseRawResponse(\Zend\Http\Response $response) {
+    protected function parseRawResponse(\Zend\Http\Response $response)
+    {
         parent::parseRawResponse($response);
 
         // Timezone responses don't have a status parameters, just data

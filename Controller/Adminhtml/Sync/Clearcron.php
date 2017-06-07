@@ -1,6 +1,7 @@
 <?php
 
 namespace Klevu\Search\Controller\Adminhtml\Sync;
+
 use Magento\Backend\App\Action;
 use Magento\Backend\App\Action\Context;
 use Magento\Framework\View\Result\PageFactory;
@@ -9,9 +10,7 @@ use Magento\Backend\Model\Session;
 use Klevu\Search\Model\Product\Sync;
 use Magento\Framework\Event\ManagerInterface;
 
-
-
-class clearcron extends \Magento\Backend\App\Action
+class Clearcron extends \Magento\Backend\App\Action
 {
     /**
      * @var \Magento\Store\Model\StoreManagerInterface
@@ -43,11 +42,10 @@ class clearcron extends \Magento\Backend\App\Action
      */
     protected $_frameworkEventManagerInterface;
 
-    public function __construct(\Magento\Backend\App\Action\Context $context,
-        \Klevu\Search\Model\Product\Sync $modelProductSync, 
-        \Klevu\Search\Helper\Data $searchHelperData)
-    {
-
+    public function __construct(
+        \Magento\Backend\App\Action\Context $context,
+        \Klevu\Search\Model\Product\Sync $modelProductSync
+    ) {
 
         $this->_modelProductSync = $modelProductSync;
         $this->_frameworkEventManagerInterface = $context->getEventManager();
@@ -60,8 +58,9 @@ class clearcron extends \Magento\Backend\App\Action
          return true;
     }
     
-	/* clear the cron entry */
-    public function execute() {
+    /* clear the cron entry */
+    public function execute()
+    {
         $this->_modelProductSync->clearKlevuCron();
         $this->messageManager->addSuccess(__("Running Klevu product Sync entry cleared from cron_schedule table."));
         $this->_redirect($this->_redirect->getRefererUrl());

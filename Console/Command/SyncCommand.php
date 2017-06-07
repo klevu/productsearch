@@ -11,10 +11,11 @@ use Exception;
 use Klevu\Search\Model\Product\Sync;
 use Klevu\Search\Model\Order\Sync as Order;
 use Klevu\Content\Model\Content;
+use Magento\Framework\App\Filesystem\DirectoryList;
 
 class SyncCommand extends Command
 {
-    const LOCK_FILE = 'var/klevu_running_index.lock';
+    const LOCK_FILE = 'klevu_running_index.lock';
 
     protected function configure()
     {
@@ -26,40 +27,42 @@ class SyncCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        if (file_exists(self::LOCK_FILE)) {
+        $directoryList = ObjectManager::getInstance()->get(DirectoryList::class);
+        $logDir = $directoryList->getPath(DirectoryList::VAR_DIR);
+        $dir = $logDir."/".self::LOCK_FILE;
+        if (file_exists($dir)) {
             $output->writeln('<info>Klevu indexing process is in running state</info>');
-			return;
-		} 
+            return;
+        }
 
-        fopen(self::LOCK_FILE, 'w');
-			
+        fopen($dir, 'w');
+            
         try {
             $state = ObjectManager::getInstance()->get('\Magento\Framework\App\State');
-			$state->setAreaCode('frontend');
+            $state->setAreaCode('frontend');
 
-            //Sync Data 
+            //Sync Data
             $sync = ObjectManager::getInstance()->get(Sync::class);
-				
+                
             if ($input->hasParameterOption('--alldata')) {
                 $sync->markAllProductsForUpdate();
             }
 
-		    $sync->run();
-			
-			// sync cms data
+            $sync->run();
+            
+            // sync cms data
             $sync = ObjectManager::getInstance()->get(Content::class);
             $sync->run();
-			
-			// sync order data
-			$syncOrder = ObjectManager::getInstance()->get(Order::class);
-			$syncOrder->run();
-			
-			if($input->hasParameterOption('--alldata')){
+            
+            // sync order data
+            $syncOrder = ObjectManager::getInstance()->get(Order::class);
+            $syncOrder->run();
+            
+            if ($input->hasParameterOption('--alldata')) {
                 $output->writeln('<info>Data updates have been sent to Klevu</info>');
             } elseif ($input->hasParameterOption('--updatesonly')) {
                 $output->writeln('<info>All Data have been sent to Klevu</info>');
-			}
-
+            }
         } catch (LocalizedException $e) {
             $output->writeln('<error>' . $e->getMessage() . '</error>');
         } catch (Exception $e) {
@@ -67,8 +70,8 @@ class SyncCommand extends Command
             $output->writeln('<error>' . $e->getMessage() . '</error>');
         }
 
-        if (file_exists(self::LOCK_FILE)) {
-            unlink(self::LOCK_FILE);
+        if (file_exists($dir)) {
+            unlink($dir);
         }
     }
 
@@ -94,5 +97,4 @@ class SyncCommand extends Command
 
         return $inputList;
     }
-
 }

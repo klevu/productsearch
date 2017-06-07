@@ -1,13 +1,16 @@
 <?php
 
 namespace Klevu\Search\Model;
+
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Filesystem;
 use Magento\Framework\Model\AbstractModel;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Cron\Model\ResourceModel\Schedule\Collection;
-abstract class Sync extends AbstractModel {
+
+abstract class Sync extends AbstractModel
+{
 
     /**
      * Limit the memory usage of the sync to 80% of the memory
@@ -22,12 +25,12 @@ abstract class Sync extends AbstractModel {
      *
      * @return string
      */
-    abstract function getJobCode();
+    abstract protected function getJobCode();
 
     /**
      * Perform the sync.
      */
-    abstract function run();
+    abstract protected function run();
 
     /**
      * Run a sync from cron at the specified time. Checks that a cron is not already
@@ -38,7 +41,8 @@ abstract class Sync extends AbstractModel {
      *
      * @return $this
      */
-    public function schedule($time = "now") {
+    public function schedule($time = "now")
+    {
         if (! $time instanceof \DateTime) {
             $time = new \DateTime($time);
         } else {
@@ -48,14 +52,14 @@ abstract class Sync extends AbstractModel {
         $time_str = $time->format("Y-m-d H:i:00");
         $before_str = $time->modify("15 minutes ago")->format("Y-m-d H:i:00");
         $after_str = $time->modify("30 minutes")->format("Y-m-d H:i:00"); // Modifying the same DateTime object, so it's -15 + 30 = +15 minutes
-        $collection_obj = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Cron\Model\ResourceModel\Schedule\Collection'); 
+        $collection_obj = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Cron\Model\ResourceModel\Schedule\Collection');
         $collection = $collection_obj
             ->addFieldToFilter("job_code", $this->getJobCode())
             ->addFieldToFilter("status", \Magento\Cron\Model\Schedule::STATUS_PENDING)
-            ->addFieldToFilter("scheduled_at", array(
+            ->addFieldToFilter("scheduled_at", [
                 "from" => $before_str,
                 "to" => $after_str
-            ));
+            ]);
 
         if ($collection->getSize() == 0) {
             $schedule = \Magento\Framework\App\ObjectManager::getInstance()->get('\Magento\Cron\Model\Schedule');
@@ -82,14 +86,15 @@ abstract class Sync extends AbstractModel {
      *
      * @return bool
      */
-    public function isRunning($copies = 1) {
+    public function isRunning($copies = 1)
+    {
         $time = new \Datetime("1 hour ago");
         $time = $time->format("Y-m-d H:i:00");
-        $collection_obj = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Cron\Model\ResourceModel\Schedule\Collection'); 
+        $collection_obj = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Cron\Model\ResourceModel\Schedule\Collection');
         $collection = $collection_obj
             ->addFieldToFilter("job_code", $this->getJobCode())
             ->addFieldToFilter("status", \Magento\Cron\Model\Schedule::STATUS_RUNNING)
-            ->addFieldToFilter("executed_at", array("gteq" => $time));
+            ->addFieldToFilter("executed_at", ["gteq" => $time]);
 
         return $collection->getSize() >= $copies;
     }
@@ -99,16 +104,18 @@ abstract class Sync extends AbstractModel {
      *
      * @return bool
      */
-    protected function isBelowMemoryLimit() {
+    protected function isBelowMemoryLimit()
+    {
         $helper = $this->_searchHelperData;
         $php_memory_limit = ini_get('memory_limit');
         $usage = memory_get_usage(true);
 
-        if($php_memory_limit < 0){
+        if ($php_memory_limit < 0) {
             $this->log(\Zend\Log\Logger::DEBUG, sprintf(
-            "Memory usage: %s of %s.",
-            $helper->bytesToHumanReadable($usage),
-            $php_memory_limit));
+                "Memory usage: %s of %s.",
+                $helper->bytesToHumanReadable($usage),
+                $php_memory_limit
+            ));
             return true;
         }
         $limit = $helper->humanReadableToBytes($php_memory_limit);
@@ -132,7 +139,8 @@ abstract class Sync extends AbstractModel {
      *
      * @return bool true if a new process was scheduled, false otherwise.
      */
-    protected function rescheduleIfOutOfMemory() {
+    protected function rescheduleIfOutOfMemory()
+    {
         if (!$this->isBelowMemoryLimit()) {
             $this->log(\Zend\Log\Logger::INFO, "Memory limit reached. Stopped and rescheduled.");
             $this->schedule();
@@ -150,7 +158,8 @@ abstract class Sync extends AbstractModel {
      *
      * @return string
      */
-    protected function getTableName($entity) {
+    protected function getTableName($entity)
+    {
         return $this->_frameworkModelResource->getTableName($entity);
     }
 
@@ -162,7 +171,8 @@ abstract class Sync extends AbstractModel {
      *
      * @return $this
      */
-    protected function log($level, $message) {
+    protected function log($level, $message)
+    {
         $this->_searchHelperData->log($level, sprintf("[%s] %s", $this->getJobCode(), $message));
 
         return $this;

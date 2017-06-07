@@ -2,13 +2,15 @@
 
 namespace Klevu\Search\Model\Api\Response;
 
-class Rempty extends \Klevu\Search\Model\Api\Response {
+class Rempty extends \Klevu\Search\Model\Api\Response
+{
 
-    public function _construct() {
+    public function _construct()
+    {
         $this->successful = false;
-        $this->addData(array(
+        $this->addData([
             'message' => "No HTTP response received. if you are using PHP version 5.4, please make sure to enable the php_openssl.dll module in your php.ini file."
-        ));
+        ]);
     }
 
     /**
@@ -18,9 +20,9 @@ class Rempty extends \Klevu\Search\Model\Api\Response {
      *
      * @return $this
      */
-    protected function parseRawResponse(\Zend\Http\Response $response) {
+    protected function parseRawResponse(\Zend\Http\Response $response)
+    {
         // Do nothing
         return $this;
     }
-
 }

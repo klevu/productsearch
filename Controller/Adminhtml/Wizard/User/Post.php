@@ -1,8 +1,8 @@
 <?php
 
-namespace Klevu\Search\Controller\Adminhtml\Wizard\user;
+namespace Klevu\Search\Controller\Adminhtml\Wizard\User;
 
-class post extends \Magento\Backend\App\Action
+class Post extends \Magento\Backend\App\Action
 {
     /**
      * @var \Klevu\Search\Helper\Api
@@ -14,15 +14,18 @@ class post extends \Magento\Backend\App\Action
      */
     protected $_searchModelSession;
     
-    public function __construct(\Magento\Backend\App\Action\Context $context,
-        \Klevu\Search\Helper\Api $searchHelperApi)
-    {
+    public function __construct(
+        \Magento\Backend\App\Action\Context $context,
+        \Klevu\Search\Helper\Api $searchHelperApi
+    ) {
+    
         $this->_searchHelperApi = $searchHelperApi;
         $this->_searchModelSession = $context->getSession();
         parent::__construct($context);
     }
 
-    public function execute() {
+    public function execute()
+    {
 
         $request = $this->getRequest();
 
@@ -32,7 +35,7 @@ class post extends \Magento\Backend\App\Action
 
         $api = $this->_searchHelperApi;
         $session = $this->_searchModelSession;
-        $this->_searchModelSession->setHideStep("no"); 
+        $this->_searchModelSession->setHideStep("no");
         if ($request->getPost("klevu_existing_email")) {
             $result = $api->getUser(
                 $request->getPost("klevu_existing_email"),
@@ -60,40 +63,38 @@ class post extends \Magento\Backend\App\Action
             $merchantEmail = $request->getPost("merchantEmail");
             $contactNo = $request->getPost("countyCode")."-".$request->getPost("contactNo");
             $error = true;
-            if(empty($klevu_new_email) || empty($klevu_new_password) || empty($klevu_new_url)
+            if (empty($klevu_new_email) || empty($klevu_new_password) || empty($klevu_new_url)
             || empty($merchantEmail) ) {
                 $this->messageManager->addError(__("Missing details in the form. Please check."));
                 return $this->_forward("user");
-            } else if(!preg_match("/^[_\.0-9a-zA-Z-]+@([0-9a-zA-Z][0-9a-zA-Z-]+\.)+[a-zA-Z]{2,6}$/i",$klevu_new_email)) {
+            } elseif (!preg_match("/^[_\.0-9a-zA-Z-]+@([0-9a-zA-Z][0-9a-zA-Z-]+\.)+[a-zA-Z]{2,6}$/i", $klevu_new_email)) {
                 $this->messageManager->addError(__("Please enter valid Primary Email."));
                 return $this->_forward("user");
-            } else if(!preg_match("/^[_\.0-9a-zA-Z-]+@([0-9a-zA-Z][0-9a-zA-Z-]+\.)+[a-zA-Z]{2,6}$/i",$merchantEmail)) {
+            } elseif (!preg_match("/^[_\.0-9a-zA-Z-]+@([0-9a-zA-Z][0-9a-zA-Z-]+\.)+[a-zA-Z]{2,6}$/i", $merchantEmail)) {
                 $this->messageManager->addError(__("Please enter valid Retailer Email."));
                 return $this->_forward("user");
-            }else if(empty($termsconditions)){
+            } elseif (empty($termsconditions)) {
                 $this->messageManager->addError(__("Please accept terms and conditions."));
                 return $this->_forward("user");
-            }else {
-                   
+            } else {
                     $result = $api->checkUserDetail(
                         $request->getPost("klevu_new_email")
                     );
 
-                    if ($result["success"]) {
-                        $this->_searchModelSession->setTermsconditions($request->getPost("termsconditions"));
-                        $this->_searchModelSession->setKlevuNewEmail($request->getPost("klevu_new_email"));
-                        $this->_searchModelSession->setKlevuNewPassword($request->getPost("klevu_new_password"));
-                        $this->_searchModelSession->setKlevuNewUrl($request->getPost("klevu_new_url"));
-                        $this->_searchModelSession->setMerchantEmail($request->getPost("merchantEmail"));
-                        $contactNo = $request->getPost("countyCode")."-".$request->getPost("contactNo");
-                        $this->_searchModelSession->setContactNo($contactNo);
-                        return $this->_forward("userplan");
-                    } else {
-                            $this->messageManager->addError(__($result["message"]));
-                            return $this->_forward("user");
-                    }
+                if ($result["success"]) {
+                    $this->_searchModelSession->setTermsconditions($request->getPost("termsconditions"));
+                    $this->_searchModelSession->setKlevuNewEmail($request->getPost("klevu_new_email"));
+                    $this->_searchModelSession->setKlevuNewPassword($request->getPost("klevu_new_password"));
+                    $this->_searchModelSession->setKlevuNewUrl($request->getPost("klevu_new_url"));
+                    $this->_searchModelSession->setMerchantEmail($request->getPost("merchantEmail"));
+                    $contactNo = $request->getPost("countyCode")."-".$request->getPost("contactNo");
+                    $this->_searchModelSession->setContactNo($contactNo);
+                    return $this->_forward("userplan");
+                } else {
+                    $this->messageManager->addError(__($result["message"]));
+                    return $this->_forward("user");
+                }
             }
         }
-
     }
 }

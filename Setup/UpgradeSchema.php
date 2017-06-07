@@ -15,41 +15,43 @@ use Magento\Framework\Setup\SchemaSetupInterface;
  */
 class UpgradeSchema implements UpgradeSchemaInterface
 {
-	
-	/**
+    
+    /**
      * {@inheritdoc}
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     public function upgrade(SchemaSetupInterface $setup, ModuleContextInterface $context)
     {
-		
-
+        
         $installer = $setup;
-
         $installer->startSetup();
-		
-		if(!$context->getVersion()) {
-            //no previous version found, installation, InstallSchema was just executed
-            //be careful, since everything below is true for installation !
-        }
-		
-		
-		if (version_compare($context->getVersion(), '2.0.2') < 0) {
+        
+        if (version_compare($context->getVersion(), '2.0.2') < 0) {
             //code to upgrade to 2.0.2
-			$order_sync_table = $installer->getTable('klevu_order_sync');
-			$installer->run("ALTER TABLE `{$order_sync_table}` ADD `klevu_session_id` VARCHAR(255) NOT NULL , ADD `ip_address` VARCHAR(255) NOT NULL , ADD `date` DATETIME NOT NULL");
+            $order_sync_table = $installer->getTable('klevu_order_sync');
+            $installer->run("ALTER TABLE `{$order_sync_table}` ADD `klevu_session_id` VARCHAR(255) NOT NULL , ADD `ip_address` VARCHAR(255) NOT NULL , ADD `date` DATETIME NOT NULL");
         }
-		
-		
-		if (version_compare($context->getVersion(), '2.0.10') < 0) {
+        
+        if (version_compare($context->getVersion(), '2.0.10') < 0) {
             //code to upgrade to 2.0.2
-			$klevu_sync_table = $installer->getTable('klevu_product_sync');
-			$installer->run("ALTER TABLE `{$klevu_sync_table}` ADD `error_flag` INT(11) NOT NULL DEFAULT '0' AFTER `type`");
+            $klevu_sync_table = $installer->getTable('klevu_product_sync');
+            $installer->run("ALTER TABLE `{$klevu_sync_table}` ADD `error_flag` INT(11) NOT NULL DEFAULT '0' AFTER `type`");
         }
-		
-		$installer->endSetup();
-
-	
-	}
-
+        
+        if (version_compare($context->getVersion(), '2.1.10') < 0) {
+            $sql = "SHOW COLUMNS FROM `{$installer->getTable('klevu_product_sync')}` LIKE 'test_mode'";
+            if (!empty($setup->getConnection()->fetchAll($sql))) {
+                //remove test mode
+                $setup->run("ALTER TABLE `{$installer->getTable('klevu_product_sync')}` DROP `test_mode`");
+            }
+            
+            $setup->run("ALTER TABLE `{$installer->getTable('klevu_product_sync')}` ADD KEY `KLEVU_PRODUCT_SYNC_PARENT_PRODUCT_ID` (`parent_id`,`product_id`), 
+			ADD KEY `KLEVU_PRODUCT_SYNC_STORE_ID` (`store_id`)");
+            
+            $order_sync_table = $installer->getTable('klevu_order_sync');
+            $installer->run("ALTER TABLE `{$order_sync_table}` ADD `idcode` VARCHAR(255) NOT NULL AFTER `date`");
+        }
+        
+        $installer->endSetup();
+    }
 }

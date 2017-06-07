@@ -1,9 +1,9 @@
-<?php /** @var \Klevu\Search\Block\Adminhtml\Wizard\Configure\User $this */ ?>
+<?php /** @var \Klevu\Search\Block\Adminhtml\Wizard\Configure\User $block */ ?>
 <?php 
 echo $block->getLayout()->getMessagesBlock()->getGroupedHtml(); 
-$request = $this->getRequest(); ?>
-<form id="klevu_search_wizard_configure_user_form" action="<?php echo $this->getFormActionUrl() ?>" method="POST">
-    <input type="hidden" name="form_key" value="<?php echo $this->getFormKey() ?>" />
+$request = $block->getRequest(); ?>
+<form id="klevu_search_wizard_configure_user_form" action="<?php echo $block->getFormActionUrl() ?>" method="POST">
+    <input type="hidden" name="form_key" value="<?php echo $block->getFormKey() ?>" />
     
 		<div class="kuWizardSteps">
 		<ol class="wizard-progress clearfix">
@@ -72,7 +72,7 @@ $request = $this->getRequest(); ?>
 										<label class="label admin__field-label" for="klevu_new_url"> <?php echo __("Store URL:") ?><span class="required">&nbsp;<em>*</em></span></label>
 										
 										<div class="admin__field-control control">
-											<input type="text" name="klevu_new_url" id="klevu_new_url" class="input-text admin__control-text" value="<?php echo $this->getStoreUrl() ?>" />
+											<input type="text" name="klevu_new_url" id="klevu_new_url" class="input-text admin__control-text" value="<?php echo $block->getStoreUrl() ?>" />
 										</div>
 										
 									</div>

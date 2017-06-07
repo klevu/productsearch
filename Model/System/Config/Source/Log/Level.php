@@ -2,9 +2,11 @@
 
 namespace Klevu\Search\Model\System\Config\Source\Log;
 
-class Level {
+class Level
+{
 
-    public function toOptionArray() {
+    public function toOptionArray()
+    {
         return [
             ['value' => \Zend\Log\Logger::EMERG,  'label' => __("Emergency")],
             ['value' => \Zend\Log\Logger::ALERT,  'label' => __("Alert")],

@@ -2,7 +2,7 @@
 
 namespace Klevu\Search\Controller\Adminhtml\Wizard\store;
 
-class post extends \Magento\Backend\App\Action
+class Post extends \Magento\Backend\App\Action
 {
     /**
      * @var \Klevu\Search\Helper\Config
@@ -36,12 +36,13 @@ class post extends \Magento\Backend\App\Action
 
     public function __construct(
         \Magento\Backend\App\Action\Context $context,
-        \Klevu\Search\Helper\Config $searchHelperConfig, 
-        \Klevu\Search\Helper\Api $searchHelperApi, 
-        \Magento\Store\Model\StoreManagerInterface $storeModelStoreManagerInterface, 
-        \Klevu\Search\Model\Product\Sync $modelProductSync, 
-        \Klevu\Search\Model\Order\Sync $modelOrderSync)
-    {
+        \Klevu\Search\Helper\Config $searchHelperConfig,
+        \Klevu\Search\Helper\Api $searchHelperApi,
+        \Magento\Store\Model\StoreManagerInterface $storeModelStoreManagerInterface,
+        \Klevu\Search\Model\Product\Sync $modelProductSync,
+        \Klevu\Search\Model\Order\Sync $modelOrderSync
+    ) {
+    
         $this->_searchHelperConfig = $searchHelperConfig;
         $this->_searchHelperApi = $searchHelperApi;
         $this->_searchModelSession = $context->getSession();
@@ -52,7 +53,8 @@ class post extends \Magento\Backend\App\Action
         parent::__construct($context);
     }
 
-    public function execute() {
+    public function execute()
+    {
 
         $request = $this->getRequest();
 
@@ -84,25 +86,23 @@ class post extends \Magento\Backend\App\Action
         }
 
         // Setup the live and test Webstores
-        foreach (array(false) as $test_mode) {
-            $result = $api->createWebstore($customer_id, $store, $test_mode);
-            if ($result["success"]) {
-                $config->setJsApiKey($result["webstore"]->getJsApiKey(), $store, $test_mode);
-                $config->setRestApiKey($result["webstore"]->getRestApiKey(), $store, $test_mode);
-                $config->setHostname($result["webstore"]->getHostedOn(), $store, $test_mode);
-                $config->setCloudSearchUrl($result['webstore']->getCloudSearchUrl(), $store, $test_mode);
-                $config->setAnalyticsUrl($result['webstore']->getAnalyticsUrl(), $store, $test_mode);
-                $config->setJsUrl($result['webstore']->getJsUrl(), $store, $test_mode);
-                $config->setRestHostname($result['webstore']->getRestHostname(), $store, $test_mode);
-			    $config->setTiresUrl($result['webstore']->getTiresUrl(), $store, $test_mode);
-                if (isset($result["message"])) {
-                    $this->messageManager->addSuccess(__($result["message"]));
-                    $this->_searchModelSession->setFirstSync($store_code);
-                }
-            } else {
-                $this->messageManager->addError(__($result["message"]));
-                return $this->_forward("store");
+            $result = $api->createWebstore($customer_id, $store);
+        if ($result["success"]) {
+            $config->setJsApiKey($result["webstore"]->getJsApiKey(), $store);
+            $config->setRestApiKey($result["webstore"]->getRestApiKey(), $store);
+            $config->setHostname($result["webstore"]->getHostedOn(), $store);
+            $config->setCloudSearchUrl($result['webstore']->getCloudSearchUrl(), $store);
+            $config->setAnalyticsUrl($result['webstore']->getAnalyticsUrl(), $store);
+            $config->setJsUrl($result['webstore']->getJsUrl(), $store);
+            $config->setRestHostname($result['webstore']->getRestHostname(), $store);
+            $config->setTiresUrl($result['webstore']->getTiresUrl(), $store);
+            if (isset($result["message"])) {
+                $this->messageManager->addSuccess(__($result["message"]));
+                $this->_searchModelSession->setFirstSync($store_code);
             }
+        } else {
+            $this->messageManager->addError(__($result["message"]));
+            return $this->_forward("store");
         }
         $this->messageManager->addSuccess("Store configured successfully. Saved API credentials.");
 
@@ -122,7 +122,5 @@ class post extends \Magento\Backend\App\Action
 
         // Schedule a Product Sync
         $this->_modelProductSync->schedule();
-       
-
     }
 }

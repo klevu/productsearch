@@ -8,13 +8,13 @@
  */
 namespace Klevu\Search\Block\Adminhtml\Form\Field\Sync;
 
-class Button extends \Magento\Config\Block\System\Config\Form\Field {
+class Button extends \Magento\Config\Block\System\Config\Form\Field
+{
     
     protected $_template = 'klevu/search/form/field/sync/button.phtml';
 
-
-
-    public function render(\Magento\Framework\Data\Form\Element\AbstractElement $element) {
+    public function render(\Magento\Framework\Data\Form\Element\AbstractElement $element)
+    {
         if ($element->getScope() == "stores") {
             $this->setStoreId($element->getScopeId());
         }
@@ -28,15 +28,16 @@ class Button extends \Magento\Config\Block\System\Config\Form\Field {
         return parent::render($element);
     }
 
-    protected function _getElementHtml(\Magento\Framework\Data\Form\Element\AbstractElement $element) {
-        $url_params = ($this->getStoreId()) ? array("store" => $this->getStoreId()) : array();
+    protected function _getElementHtml(\Magento\Framework\Data\Form\Element\AbstractElement $element)
+    {
+        $url_params = ($this->getStoreId()) ? ["store" => $this->getStoreId()] : [];
         $label_suffix = ($this->getStoreId()) ? " for This Store" : "";
 
-        $this->addData(array(
+        $this->addData([
             "html_id"         => $element->getHtmlId(),
             "button_label"    => sprintf("Sync Data %s", $label_suffix),
             "destination_url" => $this->getUrl("klevu_search/sync/all", $url_params)
-        ));
+        ]);
 
         return $this->_toHtml();
     }

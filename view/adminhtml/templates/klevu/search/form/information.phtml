@@ -1,7 +1,7 @@
-<?php /** @var \Klevu\Search\Block\Adminhtml\Form\Information $this */ ?>
+<?php /** @var \Klevu\Search\Block\Adminhtml\Form\Information $block */ ?>
 <div class="kuInfo">
    <div class="kuInfo-fLeft">
-      <p><b><?php echo __("Installed Version:") ?></b> <?php echo __("{$this->getVersion()}") ?></br></p>
+      <p><b><?php echo __("Installed Version:") ?></b> <?php echo __("{$block->getVersion()}") ?></br></p>
       <?php $check_plan = \Magento\Framework\App\ObjectManager::getInstance()->get('Klevu\Search\Model\Product\Sync')->getFeatures();?>
       <?php if(empty($check_plan["errors"]) && !empty($check_plan)) { ?> 
         <p>

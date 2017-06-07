@@ -7,7 +7,8 @@
  */
 namespace Klevu\Search\Block\Adminhtml\Wizard\Config;
 
-class Button extends \Magento\Config\Block\System\Config\Form\Field {
+class Button extends \Magento\Config\Block\System\Config\Form\Field
+{
     /**
      * @var \Klevu\Search\Helper\Config
      */
@@ -15,21 +16,22 @@ class Button extends \Magento\Config\Block\System\Config\Form\Field {
     
     protected $_template = 'klevu/search/wizard/config/button.phtml';
     
-    public function __construct(\Magento\Backend\Block\Template\Context $context,
-    \Klevu\Search\Helper\Config $searchHelperConfig)
-    {
+    public function __construct(
+        \Magento\Backend\Block\Template\Context $context,
+        \Klevu\Search\Helper\Config $searchHelperConfig
+    ) {
+    
         $this->_searchHelperConfig = $searchHelperConfig;
         $this->_storeModelStoreManagerInterface = $context->getStoreManager();
 
         parent::__construct($context);
     }
 
-
-
-    public function render(\Magento\Framework\Data\Form\Element\AbstractElement $element) {
+    public function render(\Magento\Framework\Data\Form\Element\AbstractElement $element)
+    {
        
         // Only show the current scope hasn't been configured yet
-        switch($element->getScope()) {
+        switch ($element->getScope()) {
             case "stores":
                 if ($this->hasApiKeys($element->getScopeId())) {
                     return "";
@@ -59,16 +61,14 @@ class Button extends \Magento\Config\Block\System\Config\Form\Field {
 
         return parent::render($element);
     }
-    
-    
-    
 
-    protected function _getElementHtml(\Magento\Framework\Data\Form\Element\AbstractElement $element) {
-        $this->addData(array(
+    protected function _getElementHtml(\Magento\Framework\Data\Form\Element\AbstractElement $element)
+    {
+        $this->addData([
             'html_id' => $element->getHtmlId(),
             "button_label"    => "Start Wizard",
             'wizard_url' => $this->getUrl("klevu_search/wizard/user")
-        ));
+        ]);
 
         return $this->_toHtml();
     }
@@ -81,7 +81,8 @@ class Button extends \Magento\Config\Block\System\Config\Form\Field {
      *
      * @return bool true if all stores have API keys, false otherwise.
      */
-    protected function hasApiKeys($stores = null) {
+    protected function hasApiKeys($stores = null)
+    {
 
         $config = $this->_searchHelperConfig;
 
@@ -90,11 +91,10 @@ class Button extends \Magento\Config\Block\System\Config\Form\Field {
         }
 
         if (!is_array($stores)) {
-            $stores = array($stores);
+            $stores = [$stores];
         }
 
         foreach ($stores as $store) {
-
             if (!$config->getJsApiKey($store) || !$config->getRestApiKey($store)) {
                 return false;
             }

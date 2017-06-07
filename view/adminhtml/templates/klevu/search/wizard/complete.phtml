@@ -1,4 +1,4 @@
-<?php /** @var \Magento\Framework\View\Element\Template $this */ ?>
+<?php /** @var \Magento\Framework\View\Element\Template $block */ ?>
 <?php echo $block->getLayout()->getMessagesBlock()->getGroupedHtml(); ?>
 <div class="kuWizardSteps">
 <ol class="wizard-progress clearfix">
@@ -47,7 +47,7 @@ require([
 ], function($, alert){
     $("#sync-button").on("click", function (e) {
         $('.loading-mask').show();
-        window.location = "<?php echo $this->getUrl("klevu_search/manual/sync") ?>";
+        window.location = "<?php echo $block->getUrl("klevu_search/manual/sync") ?>";
     });
 });
 </script>

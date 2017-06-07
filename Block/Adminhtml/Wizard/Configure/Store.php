@@ -2,14 +2,16 @@
 
 namespace Klevu\Search\Block\Adminhtml\Wizard\Configure;
 
-class Store extends \Magento\Backend\Block\Template {
+class Store extends \Magento\Backend\Block\Template
+{
 
     /**
      * Return the submit URL for the store configuration form.
      *
      * @return string
      */
-    public function getFormActionUrl() {
+    public function getFormActionUrl()
+    {
         return $this->getUrl("klevu_search/wizard/store_post");
     }
 
@@ -19,11 +21,12 @@ class Store extends \Magento\Backend\Block\Template {
      *
      * @return array
      */
-    public function getStoreSelectData() {
+    public function getStoreSelectData()
+    {
         $stores = \Magento\Framework\App\ObjectManager::getInstance()->get('\Magento\Store\Model\StoreManagerInterface')->getStores(false);
         $config = \Magento\Framework\App\ObjectManager::getInstance()->get('\Klevu\Search\Helper\Config');
 
-        $data = array();
+        $data = [];
 
         foreach ($stores as $store) {
             /** @var \Magento\Framework\Model\Store $store */
@@ -36,10 +39,10 @@ class Store extends \Magento\Backend\Block\Template {
             $group = $store->getGroup()->getName();
 
             if (!isset($data[$website])) {
-                $data[$website] = array();
+                $data[$website] = [];
             }
             if (!isset($data[$website][$group])) {
-                $data[$website][$group] = array();
+                $data[$website][$group] = [];
             }
 
             $data[$website][$group][] = $store;

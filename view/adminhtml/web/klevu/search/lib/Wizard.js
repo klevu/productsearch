@@ -151,7 +151,8 @@ if (!window.Klevu.Search) window.Klevu.Search = {};
 });
 
 
-function closePopup() {
+function closePopup()
+{
     Windows.close('popup_window');
 }
 
@@ -165,11 +166,13 @@ function termsofservice()
  openMyPopup("https://www.klevu.com/support/magento-links/terms-of-service.html",500,500);
 }
 
-function upgradeLink(url){
+function upgradeLink(url)
+{
   window.open(url,'_blank');
 }
 
-function openMyPopup(pUrl,width,height) {
+function openMyPopup(pUrl,width,height)
+{
  
         var url = pUrl;
 
@@ -194,7 +197,8 @@ function openMyPopup(pUrl,width,height) {
         });
 }
  
-function closePopup() {
+function closePopup()
+{
         Windows.close('browser_window');
 }
 //var klevu_search_wizard_configure_user_form = new varienForm('klevu_search_wizard_configure_user_form');

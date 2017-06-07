@@ -12,7 +12,8 @@ use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\View\Layout\Interceptor;
 
-class SyncAllProducts implements ObserverInterface{
+class SyncAllProducts implements ObserverInterface
+{
 
     /**
      * @var \Klevu\Search\Model\Product\Sync
@@ -29,42 +30,39 @@ class SyncAllProducts implements ObserverInterface{
      */
     protected $_searchHelperData;
 
-
     /**
      * @var \Magento\Catalog\Model\Product\Action
      */
     protected $_modelProductAction;
 
     public function __construct(
-        \Klevu\Search\Model\Product\Sync $modelProductSync, 
-        \Magento\Framework\Filesystem $magentoFrameworkFilesystem, 
-        \Klevu\Search\Helper\Data $searchHelperData)
-    {
+        \Klevu\Search\Model\Product\Sync $modelProductSync,
+        \Magento\Framework\Filesystem $magentoFrameworkFilesystem,
+        \Klevu\Search\Helper\Data $searchHelperData
+    ) {
+    
         $this->_modelProductSync = $modelProductSync;
         $this->_magentoFrameworkFilesystem = $magentoFrameworkFilesystem;
         $this->_searchHelperData = $searchHelperData;
     }
-
-
  
    /**
-     * Mark all of the products for update and then schedule a sync
-     * to run immediately.
-     *
-     * @param \Magento\Framework\Event\Observer $observer
-     */
-    public function execute(\Magento\Framework\Event\Observer $observer) {
+    * Mark all of the products for update and then schedule a sync
+    * to run immediately.
+    *
+    * @param \Magento\Framework\Event\Observer $observer
+    */
+    public function execute(\Magento\Framework\Event\Observer $observer)
+    {
 
         $store = null;
         $sync = $this->_modelProductSync;
 
         $attribute = $observer->getEvent()->getAttribute();
         if ($attribute instanceof \Magento\Catalog\Model\ResourceModel\Eav\Attribute) {
-        
             // On attribute change, sync only if the attribute was added
             // or removed from layered navigation
             if ($attribute->getOrigData("is_filterable_in_search") == $attribute->getData("is_filterable_in_search")) {
-
                 return;
             }
         }
@@ -77,5 +75,4 @@ class SyncAllProducts implements ObserverInterface{
         $sync->markAllProductsForUpdate($store);
         $sync->schedule();
     }
-    
 }
