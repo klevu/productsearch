@@ -23,7 +23,7 @@
         <!-- Log level default is set in the backend model and getter as it uses Zend_Log constants -->
       </developer>
 	  <searchlanding>
-		<landenabled>1</landenabled>
+		<landenabled>2</landenabled>
 	  </searchlanding>
     </klevu_search>
   </default>

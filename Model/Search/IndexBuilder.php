@@ -101,7 +101,7 @@ class IndexBuilder extends \Magento\CatalogSearch\Model\Search\IndexBuilder
             $searchIndexTable = $this->scopeResolver->resolve($request->getIndex(), $request->getDimensions());
                 $select = $this->resource->getConnection()->select()
                 ->from(
-                    ['search_index' => 'catalog_product_entity'],
+                    ['search_index' => $this->resource->getTableName('catalog_product_entity')],
                     ['entity_id' => 'entity_id']
                 );
                 
