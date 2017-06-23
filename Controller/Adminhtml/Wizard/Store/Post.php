@@ -1,6 +1,6 @@
 <?php
 
-namespace Klevu\Search\Controller\Adminhtml\Wizard\store;
+namespace Klevu\Search\Controller\Adminhtml\Wizard\Store;
 
 class Post extends \Magento\Backend\App\Action
 {
