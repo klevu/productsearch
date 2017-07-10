@@ -97,7 +97,10 @@ class IndexBuilder extends \Magento\CatalogSearch\Model\Search\IndexBuilder
     public function build(RequestInterface $request)
     {
         $config = \Magento\Framework\App\ObjectManager::getInstance()->get('Klevu\Search\Helper\Config');
-        if ($config->isLandingEnabled()==1 && $config->isExtensionConfigured()) {
+		$objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+		$requestInterface = $objectManager->get('Magento\Framework\App\RequestInterface');
+		$moduleName     = $requestInterface->getModuleName(); 
+        if ($config->isLandingEnabled()==1 && $config->isExtensionConfigured() && $moduleName == "catalogsearch") {
             $searchIndexTable = $this->scopeResolver->resolve($request->getIndex(), $request->getDimensions());
                 $select = $this->resource->getConnection()->select()
                 ->from(
@@ -141,7 +144,7 @@ class IndexBuilder extends \Magento\CatalogSearch\Model\Search\IndexBuilder
 
             $select = $this->tableMapper->addTables($select, $request);
 
-            $select = $this->processDimensions($request, $select);
+            $select = $this->processDimensions($request,$select);
 
             $isShowOutOfStock = $this->config->isSetFlag(
                 'cataloginventory/options/show_out_of_stock',
