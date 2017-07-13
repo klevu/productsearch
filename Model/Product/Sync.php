@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Class \Klevu\Search\Model\Product\Sync
  * @method \Magento\Framework\Db\Adapter\Interface getConnection()
@@ -7,7 +6,6 @@
  * @method string getSessionId()
  */
 namespace Klevu\Search\Model\Product;
-
 use \Magento\Framework\Db\Adapter\AdapterInterface;
 use \Magento\Catalog\Model\ResourceModel\Category\Collection;
 use \Magento\Store\Model\StoreManagerInterface;
@@ -34,7 +32,6 @@ use \Magento\Eav\Model\Entity\Attribute;
 use \Magento\Catalog\Model\Product\Action;
 use \Magento\CatalogUrlRewrite\Model\ProductUrlPathGenerator;
 use \Magento\CatalogRule\Model\Rule;
-
 class Sync extends \Klevu\Search\Model\Sync
 {
     
@@ -42,152 +39,122 @@ class Sync extends \Klevu\Search\Model\Sync
      * @var \Magento\Framework\Model\Resource
      */
     protected $_frameworkModelResource;
-
     /**
      * @var \Magento\Framework\Event\ManagerInterface
      */
     protected $_frameworkEventManagerInterface;
-
     /**
      * @var \Klevu\Search\Helper\Config
      */
     protected $_searchHelperConfig;
-
     /**
      * @var \Klevu\Search\Model\Session
      */
     protected $_searchModelSession;
-
     /**
      * @var \Klevu\Search\Helper\Data
      */
     protected $_searchHelperData;
-
     /**
      * @var \Magento\Cron\Model\Schedule
      */
     protected $_cronModelSchedule;
-
     /**
      * @var \Psr\Log\LoggerInterface
      */
     protected $_psrLogLoggerInterface;
-
     /**
      * @var \Magento\Store\Model\StoreManagerInterface
      */
     protected $_storeModelStoreManagerInterface;
-
     /**
      * @var \Magento\Eav\Model\Config
      */
     protected $_eavModelConfig;
-
     /**
      * @var \Klevu\Search\Model\Api\Action\Startsession
      */
     protected $_apiActionStartsession;
-
     /**
      * @var \Klevu\Search\Model\Api\Action\Deleterecords
      */
     protected $_apiActionDeleterecords;
-
     /**
      * @var \Klevu\Search\Model\Api\Action\Updaterecords
      */
     protected $_apiActionUpdaterecords;
-
     /**
      * @var \Klevu\Search\Helper\Compat
      */
     protected $_searchHelperCompat;
-
     /**
      * @var \Klevu\Search\Model\Api\Action\Addrecords
      */
     protected $_apiActionAddrecords;
-
     /**
      * @var \Magento\Catalog\Model\Product
      */
     protected $_catalogModelProduct;
-
     /**
      * @var \Magento\Catalog\Model\Product\Media\Config
      */
     protected $_productMediaConfig;
-
     /**
      * @var \Magento\Framework\Filesystem
      */
     protected $_magentoFrameworkFilesystem;
-
     /**
      * @var \Magento\Catalog\Helper\Product
      */
     protected $_catalogHelperProduct;
-
     /**
      * @var \Magento\Catalog\Model\Resource\Category\Collection
      */
     protected $_resourceCategoryCollection;
-
     /**
      * @var \Magento\Customer\Model\Group
      */
     protected $_customerModelGroup;
-
     /**
      * @var \Magento\Catalog\Model\Resource\Product\Attribute\Collection
      */
     protected $_productAttributeCollection;
-
     /**
      * @var \Magento\Tax\Model\Calculation
      */
     protected $_taxModelCalculation;
-
     /**
      * @var \Magento\Tax\Helper\Data
      */
     protected $_taxHelperData;
-
     /**
      * @var \Magento\Framework\App\Config\ScopeConfigInterface
      */
     protected $_appConfigScopeConfigInterface;
-
     /**
      * @var \Magento\CatalogInventory\Helper\Data
      */
     protected $_catalogInventoryHelperData;
-
     /**
      * @var \Magento\Tax\Model\Config
      */
     protected $_taxModelConfig;
-
     /**
      * @var \Magento\Framework\Stdlib\DateTime\DateTime
      */
     protected $_frameworkModelDate;
-
     /**
      * @var \Magento\Framework\App\Config\Value
      */
     protected $_modelConfigData;
-
     /**
      * @var \Magento\Eav\Model\Entity\Type
      */
     protected $_modelEntityType;
-
     /**
      * @var \Magento\Eav\Model\Entity\Attribute
      */
     protected $_modelEntityAttribute;
-
     /**
      * @var \Magento\Catalog\Model\Product\Action
      */
@@ -217,7 +184,6 @@ class Sync extends \Klevu\Search\Model\Sync
      * @var \Magento\Store\Model\Store
      */
     protected $_frameworkModelStore;
-
     protected $_klevu_features_response;
     
     protected $_klevu_enabled_feature_response;
@@ -325,22 +291,18 @@ class Sync extends \Klevu\Search\Model\Sync
             $this->_entity_value = "entity_id";
         }
     }
-
     /**
      * It has been determined during development that Product Sync uses around
      * 120kB of memory for each product it syncs, or around 10MB of memory for
      * each 100 product page.
      */
     const RECORDS_PER_PAGE = 100;
-
     const NOTIFICATION_GLOBAL_TYPE = "product_sync";
     const NOTIFICATION_STORE_TYPE_PREFIX = "product_sync_store_";
-
     public function getJobCode()
     {
         return "klevu_search_product_sync";
     }
-
     /**
      * Perform Product Sync on any configured stores, adding new products, updating modified and
      * deleting removed products since last sync.
@@ -353,7 +315,6 @@ class Sync extends \Klevu\Search\Model\Sync
             
             // Sync Data only for selected store from config wizard
             $firstSync = $this->_searchModelSession->getFirstSync();
-
             if (!empty($firstSync)) {
                 /** @var \Magento\Store\Model\Store $store */
                 $this->reset();
@@ -364,7 +325,6 @@ class Sync extends \Klevu\Search\Model\Sync
                 
                 $this->syncData($onestore);
                 $this->runCategory($onestore);
-
                 return;
             }
             
@@ -408,7 +368,6 @@ class Sync extends \Klevu\Search\Model\Sync
         $config = $this->_searchHelperConfig;
         $session = $this->_searchModelSession;
         $firstSync = $session->getFirstSync();
-
         try {
             $rating_upgrade_flag = $config->getRatingUpgradeFlag();
             if (!empty($firstSync) || $rating_upgrade_flag==0) {
@@ -505,7 +464,6 @@ class Sync extends \Klevu\Search\Model\Sync
                         'visible_both'   => \Magento\Catalog\Model\Product\Visibility::VISIBILITY_BOTH,
                         'visible_search' => \Magento\Catalog\Model\Product\Visibility::VISIBILITY_IN_SEARCH
                     ]),
-
                 'update' => $this->_frameworkModelResource->getConnection("core_write")
                     ->select()
                     ->union([
@@ -588,7 +546,6 @@ class Sync extends \Klevu\Search\Model\Sync
                         'status_attribute_id' => $this->getProductStatusAttribute()->getId(),
                         'status_enabled' => \Magento\Catalog\Model\Product\Attribute\Source\Status::STATUS_ENABLED,
                     ]),
-
                 'add' => $this->_frameworkModelResource->getConnection("core_write")
                     ->select()
                     ->union([
@@ -754,7 +711,6 @@ class Sync extends \Klevu\Search\Model\Sync
                 'visible_both'   => \Magento\Catalog\Model\Product\Visibility::VISIBILITY_BOTH,
                 'visible_search' => \Magento\Catalog\Model\Product\Visibility::VISIBILITY_IN_SEARCH
             ]),
-
             'update' => $this->_frameworkModelResource->getConnection("core_write")
             ->select()
             ->union([
@@ -837,7 +793,6 @@ class Sync extends \Klevu\Search\Model\Sync
                 'status_attribute_id' => $this->getProductStatusAttribute()->getId(),
                 'status_enabled' => \Magento\Catalog\Model\Product\Attribute\Source\Status::STATUS_ENABLED,
             ]),
-
             'add' => $this->_frameworkModelResource->getConnection("core_write")
             ->select()
             ->union([
@@ -912,9 +867,7 @@ class Sync extends \Klevu\Search\Model\Sync
             ])
             ];
         }
-
                 $errors = 0;
-
         foreach ($actions as $action => $statement) {
             if ($this->rescheduleIfOutOfMemory()) {
                 return;
@@ -929,10 +882,8 @@ class Sync extends \Klevu\Search\Model\Sync
                 if ($this->rescheduleIfOutOfMemory()) {
                     return;
                 }
-
                 $offset = ($page - 1) * static::RECORDS_PER_PAGE;
                 $result = $this->$method(array_slice($products, $offset, static::RECORDS_PER_PAGE));
-
                 if ($result !== true) {
                     $errors++;
                     $this->log(\Zend\Log\Logger::ERR, sprintf(
@@ -945,7 +896,6 @@ class Sync extends \Klevu\Search\Model\Sync
                 }
             }
         }
-
         $this->log(\Zend\Log\Logger::INFO, sprintf("Finished sync for %s (%s).", $store->getWebsite()->getName(), $store->getName()));
                 
         if (!$config->isExtensionEnabled($store)) {
@@ -960,14 +910,12 @@ class Sync extends \Klevu\Search\Model\Sync
             }
         }
     }
-
     /**
      * Run the product sync manually, creating a cron schedule entry
      * to prevent other syncs from running.
      */
     public function runManually()
     {
-
         $time = date_create("now")->format("Y-m-d H:i:s");
         $schedule = $this->_cronModelSchedule;
         $schedule
@@ -977,29 +925,23 @@ class Sync extends \Klevu\Search\Model\Sync
             ->setExecutedAt($time)
             ->setStatus(\Magento\Cron\Model\Schedule::STATUS_RUNNING)
             ->save();
-
         try {
             $this->run();
         } catch (\Exception $e) {
             $this->_psrLogLoggerInterface->error($e);
-
             $schedule
                 ->setMessages($e->getMessage())
                 ->setStatus(\Magento\Cron\Model\Schedule::STATUS_ERROR)
                 ->save();
-
             return;
         }
-
         $time = date_create("now")->format("Y-m-d H:i:s");
         $schedule
             ->setFinishedAt($time)
             ->setStatus(\Magento\Cron\Model\Schedule::STATUS_SUCCESS)
             ->save();
-
         return;
     }
-
     /**
      * Mark all products to be updated the next time Product Sync runs.
      *
@@ -1012,19 +954,15 @@ class Sync extends \Klevu\Search\Model\Sync
         $where = "";
         if ($store !== null) {
             $store = $this->_storeModelStoreManagerInterface->getStore($store);
-
             $where = $this->_frameworkModelResource->getConnection("core_write")->quoteInto("store_id =  ?", $store->getId());
         }
-
         $this->_frameworkModelResource->getConnection("core_write")->update(
             $this->_frameworkModelResource->getTableName('klevu_product_sync'),
             ['last_synced_at' => '0'],
             $where
         );
-
         return $this;
     }
-
     /**
      * Forget the sync status of all the products for the given Store and test mode.
      * If no store or test mode status is given, clear products for all stores and modes respectively.
@@ -1040,17 +978,14 @@ class Sync extends \Klevu\Search\Model\Sync
             ->from(
                 ["k" => $this->_frameworkModelResource->getTableName("klevu_product_sync")]
             );
-
         if ($store) {
             $store = $this->_storeModelStoreManagerInterface->getStore($store);
-
             $select->where("k.store_id = ?", $store->getId());
         }
         
         $result = $this->_frameworkModelResource->getConnection("core_write")->query($select->deleteFromSelect("k"));
         return $result->rowCount();
     }
-
     /**
      * Return the product status attribute model.
      *
@@ -1061,10 +996,8 @@ class Sync extends \Klevu\Search\Model\Sync
         if (!$this->hasData("status_attribute")) {
             $this->setData("status_attribute", $this->_eavModelConfig->getAttribute(\Magento\Catalog\Model\Product::ENTITY, 'status'));
         }
-
         return $this->getData("status_attribute");
     }
-
     /**
      * Return the product visibility attribute model.
      *
@@ -1075,10 +1008,8 @@ class Sync extends \Klevu\Search\Model\Sync
         if (!$this->hasData("visibility_attribute")) {
             $this->setData("visibility_attribute", $this->_eavModelConfig->getAttribute(\Magento\Catalog\Model\Product::ENTITY, 'visibility'));
         }
-
         return $this->getData("visibility_attribute");
     }
-
     /**
      * Setup an API session for the given store. Sets the store and session ID on self. Returns
      * true on success or false if Product Sync is disabled, store is not configured or the
@@ -1095,7 +1026,6 @@ class Sync extends \Klevu\Search\Model\Sync
             $this->log(\Zend\Log\Logger::INFO, sprintf("Disabled for %s (%s).", $store->getWebsite()->getName(), $store->getName()));
             return null;
         }
-
         $api_key = $config->getRestApiKey($store->getId());
         if (!$api_key) {
             $this->log(\Zend\Log\Logger::INFO, sprintf("No API key found for %s (%s).", $store->getWebsite()->getName(), $store->getName()));
@@ -1120,7 +1050,6 @@ class Sync extends \Klevu\Search\Model\Sync
                 $store->getName(),
                 $response->getMessage()
             ));
-
             if ($response instanceof \Klevu\Search\Model\Api\Response\Rempty) {
                 $this->log(\Zend\Log\Logger::ERR, sprintf(
                     "Product Sync failed for %s (%s): Could not contact Klevu.",
@@ -1135,11 +1064,9 @@ class Sync extends \Klevu\Search\Model\Sync
                     $response->getMessage()
                 ));
             }
-
             return false;
         }
     }
-
     /**
      * Delete the given products from Klevu Search. Returns true if the operation was
      * successful, or the error message if the operation failed.
@@ -1153,7 +1080,6 @@ class Sync extends \Klevu\Search\Model\Sync
     protected function deleteProducts(array $data)
     {
         $total = count($data);
-
         $response = $this->_apiActionDeleterecords
             ->setStore($this->_storeModelStoreManagerInterface->getStore())
             ->execute([
@@ -1162,22 +1088,18 @@ class Sync extends \Klevu\Search\Model\Sync
                 return ['id' => $this->_searchHelperData->getKlevuProductId($v['product_id'], $v['parent_id'])];
             }, $data)
             ]);
-
         if ($response->isSuccess()) {
             $resource = $this->_frameworkModelResource;
             $connection = $resource->getConnection("core_write");
-
             $select = $connection
                 ->select()
                 ->from(['k' => $resource->getTableName("klevu_product_sync")])
                 ->where("k.store_id = ?", $this->_storeModelStoreManagerInterface->getStore()->getId())
                 ->where("k.type = ?", "products");
-
             $skipped_record_ids = [];
             if ($skipped_records = $response->getSkippedRecords()) {
                 $skipped_record_ids = array_flip($skipped_records["index"]);
             }
-
             $or_where = [];
             for ($i = 0; $i < count($data); $i++) {
                 if (isset($skipped_record_ids[$i])) {
@@ -1191,9 +1113,7 @@ class Sync extends \Klevu\Search\Model\Sync
                 );
             }
             $select->where(implode(" OR ", $or_where));
-
             $connection->query($select->deleteFromSelect("k"));
-
             $skipped_count = count($skipped_record_ids);
             if ($skipped_count > 0) {
                 return sprintf(
@@ -1214,7 +1134,6 @@ class Sync extends \Klevu\Search\Model\Sync
             );
         }
     }
-
     /**
      * Update the given products on Klevu Search. Returns true if the operation was successful,
      * or the error message if it failed.
@@ -1234,23 +1153,19 @@ class Sync extends \Klevu\Search\Model\Sync
         if (!empty($dataToSend) && is_numeric($dataToSend)) {
             $data = array_slice($data, 0, $dataToSend);
         }
-
         $response = $this->_apiActionUpdaterecords
             ->setStore($this->_storeModelStoreManagerInterface->getStore())
             ->execute([
             'sessionId' => $this->getSessionId(),
             'records'   => $data
             ]);
-
         if ($response->isSuccess()) {
             $helper = $this->_searchHelperData;
             $connection = $this->_frameworkModelResource->getConnection("core_write");
-
             $skipped_record_ids = [];
             if ($skipped_records = $response->getSkippedRecords()) {
                 $skipped_record_ids = array_flip($skipped_records["index"]);
             }
-
             $where = [];
             for ($i = 0; $i < count($data); $i++) {
                 if (isset($skipped_record_ids[$i])) {
@@ -1276,14 +1191,12 @@ class Sync extends \Klevu\Search\Model\Sync
                     $connection->quoteInto("store_id = ?", $this->_storeModelStoreManagerInterface->getStore()->getId()),
                     implode(" OR ", $where)
                 );
-
                 $this->_frameworkModelResource->getConnection("core_write")->update(
                     $this->_frameworkModelResource->getTableName('klevu_product_sync'),
                     ['last_synced_at' => $this->_searchHelperCompat->now()],
                     $where
                 );
             }
-
             $skipped_count = count($skipped_record_ids);
             if ($skipped_count > 0) {
                 return sprintf(
@@ -1304,7 +1217,6 @@ class Sync extends \Klevu\Search\Model\Sync
             );
         }
     }
-
     /**
      * Add the given products to Klevu Search. Returns true if the operation was successful,
      * or the error message if it failed.
@@ -1318,7 +1230,6 @@ class Sync extends \Klevu\Search\Model\Sync
     protected function addProducts(array $data)
     {
         $total = count($data);
-
         $dataToSend = $this->addProductSyncData($data);
         if (!empty($dataToSend) && is_numeric($dataToSend)) {
             $data = array_slice($data, 0, $dataToSend);
@@ -1329,23 +1240,18 @@ class Sync extends \Klevu\Search\Model\Sync
             'sessionId' => $this->getSessionId(),
             'records'   => $data
             ]);
-
         if ($response->isSuccess()) {
             $skipped_record_ids = [];
             if ($skipped_records = $response->getSkippedRecords()) {
                 $skipped_record_ids = array_flip($skipped_records["index"]);
             }
-
             $sync_time = $this->_searchHelperCompat->now();
-
             foreach ($data as $i => &$record) {
                 if (isset($skipped_record_ids[$i])) {
                     unset($data[$i]);
                     continue;
                 }
-
                 $ids = $this->_searchHelperData->getMagentoProductId($data[$i]['id']);
-
                 $record = [
                     $ids["product_id"],
                     $ids["parent_id"],
@@ -1361,7 +1267,6 @@ class Sync extends \Klevu\Search\Model\Sync
                     $query = "replace into ".$this->_frameworkModelResource->getTableName('klevu_product_sync')
                            . "(product_id, parent_id, store_id, last_synced_at, type) values "
                            . "(:product_id, :parent_id, :store_id, :last_synced_at, :type)";
-
                     $binds = [
                         'product_id' => $value[0],
                         'parent_id' => $value[1],
@@ -1372,7 +1277,6 @@ class Sync extends \Klevu\Search\Model\Sync
                     $write->query($query, $binds);
                 }
             }
-
             $skipped_count = count($skipped_record_ids);
             if ($skipped_count > 0) {
                 return sprintf(
@@ -1393,7 +1297,6 @@ class Sync extends \Klevu\Search\Model\Sync
             );
         }
     }
-
     /**
      * Add the Product Sync data to each product in the given list. Updates the given
      * list directly to save memory.
@@ -1439,7 +1342,6 @@ class Sync extends \Klevu\Search\Model\Sync
         $check_pub = explode('/', $check_root_magento);
         $dir = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Framework\App\Filesystem\DirectoryList');
         $mediadir = $dir->getPath(\Magento\Framework\App\Filesystem\DirectoryList::MEDIA);
-
         // Get the stock,url,visibity of product from database
         $url_rewrite_data = $this->getUrlRewriteData($product_ids);
         //$visibility_data = $this->getVisibilityData($product_ids);
@@ -1492,12 +1394,9 @@ class Sync extends \Klevu\Search\Model\Sync
                     'product'=> &$product,
                     'store' => $this->_storeModelStoreManagerInterface->getStore()
                 ]);
-
                 // Add data from mapped attributes
-
                 foreach ($attribute_map as $key => $attributes) {
                     $product[$key] = null;
-
                     switch ($key) {
                         case "boostingAttribute":
                             foreach ($attributes as $attribute) {
@@ -1706,7 +1605,6 @@ class Sync extends \Klevu\Search\Model\Sync
                         case "salePrice":
                             // Default to 0 if price can't be determined
                             $product['salePrice'] = 0;
-
                             if ($parent && $parent->getData("type_id") == \Magento\ConfigurableProduct\Model\Product\Type\Configurable::TYPE_CODE) {
                                 // Calculate configurable product price based on option values
                                 $ruleprice = $this->calculateFinalPriceFront($parent, \Magento\Customer\Model\Group::NOT_LOGGED_IN_ID, $parent->getId(), $this->_storeModelStoreManagerInterface->getStore());
@@ -1715,9 +1613,7 @@ class Sync extends \Klevu\Search\Model\Sync
                                 } else {
                                     $fprice = $parent->getPriceInfo()->getPrice('final_price')->getAmount()->getValue(\Magento\Tax\Pricing\Adjustment::ADJUSTMENT_CODE);
                                 }
-
                                 $price = (isset($fprice)) ? $fprice: $parent->getPriceInfo()->getPrice('final_price')->getAmount()->getValue(\Magento\Tax\Pricing\Adjustment::ADJUSTMENT_CODE);
-
                                 // show low price for config products
                                 $product['startPrice'] = $this->processPrice($price, $parent);
                                 
@@ -1766,7 +1662,6 @@ class Sync extends \Klevu\Search\Model\Sync
                                 // Calculate configurable product price based on option values
                                 $orgPrice = $parent->getPriceInfo()->getPrice('regular_price')->getAmount()->getValue(\Magento\Tax\Pricing\Adjustment::ADJUSTMENT_CODE);
                                 $price = (isset($orgPrice)) ? $orgPrice: $parent->getData("price");
-
                                 // also send sale price for sorting and filters for klevu
                                 $product['price'] = $this->processPrice($price, $parent);
                             } else {
@@ -1806,10 +1701,8 @@ class Sync extends \Klevu\Search\Model\Sync
                             }
                     }
                 }
-
                 // Add non-attribute data
                 $product['currency'] = $currency;
-
                 if ($parent) {
                     $product['category'] = $this->getLongestPathCategoryName($parent->getCategoryIds());
                     $product['listCategory'] = $this->getCategoryNames($parent->getCategoryIds());
@@ -1830,7 +1723,6 @@ class Sync extends \Klevu\Search\Model\Sync
                 } else {
                     $product['groupPrices'] = "";
                 }
-
                 if ($parent) {
                     if (isset($url_rewrite_data[$product['parent_id']])) {
                         if ($url_rewrite_data[$product['parent_id']][0] == "/") {
@@ -1875,12 +1767,10 @@ class Sync extends \Klevu\Search\Model\Sync
                 } else {
                     $product['inStock'] = "yes";
                 }
-
                 // Configurable product relation
                 if ($product['parent_id'] != 0) {
                     $product['itemGroupId'] = $product['parent_id'];
                 }
-
                 // Set ID data
                 $product['id'] = $this->_searchHelperData->getKlevuProductId($product['product_id'], $product['parent_id']);
                 
@@ -1922,7 +1812,6 @@ class Sync extends \Klevu\Search\Model\Sync
    
         return $this;
     }
-
     /**
      * Return the URL rewrite data for the given products for the current store.
      *
@@ -1935,7 +1824,6 @@ class Sync extends \Klevu\Search\Model\Sync
         $stmt = $this->_frameworkModelResource->getConnection("core_write")->query(
             $this->_searchHelperCompat->getProductUrlRewriteSelect($product_ids, $this->_storeModelStoreManagerInterface->getStore()->getId())
         );
-
         $data = [];
         
         while ($row = $stmt->fetch()) {
@@ -1943,10 +1831,8 @@ class Sync extends \Klevu\Search\Model\Sync
                 $data[$row['entity_id']] = $row['request_path'];
             }
         }
-
         return $data;
     }
-
     /**
      * Return the visibility data for the given products for the current store.
      *
@@ -1984,15 +1870,12 @@ class Sync extends \Klevu\Search\Model\Sync
                 "default_store_id"        => \Magento\Store\Model\Store::DEFAULT_STORE_ID
             ]
         );
-
         $data = [];
         while ($row = $stmt->fetch()) {
             $data[$row['product_id']] = ($row['visibility'] != \Magento\Catalog\Model\Product\Visibility::VISIBILITY_NOT_VISIBLE) ? true : false;
         }
-
         return $data;
     }
-
     /**
      * Return the "Is in stock?" flags for the given products.
      * Considers if the stock is managed on the product or per store when deciding if a product
@@ -2033,9 +1916,6 @@ class Sync extends \Klevu\Search\Model\Sync
         }
         return $data;
     }
-
-
-
     /**
      * Return a map of Klevu attributes to Magento attributes.
      *
@@ -2045,9 +1925,7 @@ class Sync extends \Klevu\Search\Model\Sync
     {
         if (!$this->hasData('attribute_map')) {
             $attribute_map = [];
-
             $automatic_attributes = $this->getAutomaticAttributes();
-
             $attribute_map = $this->prepareAttributeMap($attribute_map, $automatic_attributes);
     
             // Add otherAttributeToIndex to $attribute_map.
@@ -2062,13 +1940,10 @@ class Sync extends \Klevu\Search\Model\Sync
                     $attribute_map['boostingAttribute'][] = $boosting_attribute;
                 }
             }
-
             $this->setData('attribute_map', $attribute_map);
         }
-
         return $this->getData('attribute_map');
     }
-
     /**
      * Returns an array of all automatically matched attributes. Includes defaults and filterable
      * in search attributes.
@@ -2087,24 +1962,19 @@ class Sync extends \Klevu\Search\Model\Sync
                     'magento_attribute' => $default_attributes['magento_attribute'][$i]
                 ];
             }
-
             // Get all layered navigation / filterable in search attributes
-
             foreach ($this->getLayeredNavigationAttributes() as $layeredAttribute) {
                 $attributes[] =  [
                     'klevu_attribute' => 'other',
                     'magento_attribute' => $layeredAttribute
                 ];
             }
-
             $this->setData('automatic_attributes', $attributes);
             // Update the store system config with the updated automatic attributes map.
             $this->_searchHelperConfig->setAutomaticAttributesMap($attributes, $this->_storeModelStoreManagerInterface->getStore());
         }
-
         return $this->getData('automatic_attributes');
     }
-
     /**
      * Takes system configuration attribute data and adds to $attribute_map
      *
@@ -2115,7 +1985,6 @@ class Sync extends \Klevu\Search\Model\Sync
      */
     protected function prepareAttributeMap($attribute_map, $additional_attributes)
     {
-
         foreach ($additional_attributes as $mapping) {
             if (!isset($attribute_map[$mapping['klevu_attribute']])) {
                 $attribute_map[$mapping['klevu_attribute']] = [];
@@ -2124,7 +1993,6 @@ class Sync extends \Klevu\Search\Model\Sync
         }
         return $attribute_map;
     }
-
     /**
      * Return the attribute codes for all filterable in search attributes.
      *
@@ -2150,10 +2018,8 @@ class Sync extends \Klevu\Search\Model\Sync
             // Make sure we exclude the attributes thar synced by default.
             ->where("a.attribute_code NOT IN(?)", array_unique($attributes['magento_attribute']))
             ->group(["attribute_code"]);
-
         return $this->_frameworkModelResource->getConnection("core_write")->fetchCol($select);
     }
-
     /**
      * Return the attribute codes for all attributes currently used in
      * configurable products.
@@ -2174,10 +2040,8 @@ class Sync extends \Klevu\Search\Model\Sync
                 ""
             )
             ->group(["a.attribute_code"]);
-
         return $this->_frameworkModelResource->getConnection("core_write")->fetchCol($select);
     }
-
     /**
      * Return a list of all Magento attributes that are used by Product Sync
      * when collecting product data.
@@ -2187,16 +2051,12 @@ class Sync extends \Klevu\Search\Model\Sync
     protected function getUsedMagentoAttributes()
     {
         $result = [];
-
         foreach ($this->getAttributeMap() as $attributes) {
             $result = array_merge($result, $attributes);
         }
-
         $result = array_merge($result, $this->getConfigurableAttributes());
-
         return array_unique($result);
     }
-
     /**
      * Return an array of category paths for all the categories in the
      * current store, not including the store root.
@@ -2218,7 +2078,6 @@ class Sync extends \Klevu\Search\Model\Sync
                 ->addFieldToFilter('path', ['like'=> "1/$rootId/%"])
                 ->addIsActiveFilter()
                 ->addNameToResult();
-
             foreach ($collection as $category) {
                     $category_paths[$category->getId()] = [];
                     $path_ids = $category->getPathIds();
@@ -2228,13 +2087,10 @@ class Sync extends \Klevu\Search\Model\Sync
                     }
                 }
             }
-
             $this->setData('category_paths', $category_paths);
         }
-
         return $category_paths;
     }
-
     /**
      * Return a list of the names of all the categories in the
      * paths of the given categories (including the given categories)
@@ -2247,17 +2103,14 @@ class Sync extends \Klevu\Search\Model\Sync
     protected function getCategoryNames(array $categories)
     {
         $category_paths = $this->getCategoryPaths();
-
         $result = ["KLEVU_PRODUCT"];
         foreach ($categories as $category) {
             if (isset($category_paths[$category])) {
                 $result = array_merge($result, $category_paths[$category]);
             }
         }
-
         return array_unique($result);
     }
-
     /**
      * Given a list of category IDs, return the name of the category
      * in that list that has the longest path.
@@ -2269,7 +2122,6 @@ class Sync extends \Klevu\Search\Model\Sync
     protected function getLongestPathCategoryName(array $categories)
     {
         $category_paths = $this->getCategoryPaths();
-
         $length = 0;
         $name = "";
         foreach ($categories as $id) {
@@ -2292,9 +2144,7 @@ class Sync extends \Klevu\Search\Model\Sync
      */
     protected function getGroupPrices($proData)
     {
-
         $groupPrices = $proData->getData('tier_price');
-
         if (is_null($groupPrices)) {
             $attribute = $proData->getResource()->getAttribute('tier_price');
             if ($attribute) {
@@ -2319,7 +2169,6 @@ class Sync extends \Klevu\Search\Model\Sync
             return $priceGroupData;
         }
     }
-
     /**
      * Returns either array containing the label and value(s) of an attribute, or just the given value
      *
@@ -2335,7 +2184,6 @@ class Sync extends \Klevu\Search\Model\Sync
         if (!empty($value)) {
             if (!$attribute_data = $this->getData('attribute_data')) {
                 $attribute_data = [];
-
                 $collection = $this->_productAttributeCollection
                     ->addFieldToFilter('attribute_code', ['in' => $this->getUsedMagentoAttributes()]);
       
@@ -2345,7 +2193,6 @@ class Sync extends \Klevu\Search\Model\Sync
                         'label' => $attr->getStoreLabel($this->_storeModelStoreManagerInterface->getStore()->getId()),
                         'values' => ''
                     ];
-
                     if ($attr->usesSource()) {
                         //$attribute_data[$attr->getAttributeCode()] = array();
                         foreach ($attr->setStoreId($this->_storeModelStoreManagerInterface->getStore()->getId())->getSource()->getAllOptions(false) as $option) {
@@ -2361,7 +2208,6 @@ class Sync extends \Klevu\Search\Model\Sync
                         }
                     }
                 }
-
                 $this->setData('attribute_data', $attribute_data);
             }
             // make sure the attribute exists
@@ -2389,7 +2235,6 @@ class Sync extends \Klevu\Search\Model\Sync
                             unset($values[$key]);
                         }
                     }
-
                     // If there was only one value in the array, return the first (select menu, single option), or if there was more, return them all (multi-select).
                     if (count($values) == 1) {
                         if (is_array($values)) {
@@ -2405,14 +2250,11 @@ class Sync extends \Klevu\Search\Model\Sync
                 }
                 return $attribute_data[$code];
             }
-
-
             $result['label'] = $code;
             $result['values'] = $value;
             return $result;
         }
     }
-
     /**
      * Convert the given price into the current store currency.
      *
@@ -2425,7 +2267,6 @@ class Sync extends \Klevu\Search\Model\Sync
         $convertPrice = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Framework\Pricing\PriceCurrencyInterface');
         return $convertPrice->convert($price, $store);
     }
-
     /**
      * Process the given product price for using in Product Sync.
      * Applies tax, if needed, and converts to the currency of the current store.
@@ -2451,7 +2292,6 @@ class Sync extends \Klevu\Search\Model\Sync
             return $price;
         }
     }
-
     /**
      * Remove any session specific data.
      *
@@ -2503,7 +2343,6 @@ class Sync extends \Klevu\Search\Model\Sync
      */
     public function thumbImageObj($imageUrl, $imageResized)
     {
-
         $imageObj = $this->imageFactory->create($imageUrl);
         $imageObj->constrainOnly(true);
         $imageObj->keepAspectRatio(true);
@@ -2610,7 +2449,6 @@ class Sync extends \Klevu\Search\Model\Sync
         }
         return $pro_ids;
     }
-
     /**
      * if special to price date expire then make that product for update
      *
@@ -2659,7 +2497,6 @@ class Sync extends \Klevu\Search\Model\Sync
         $entity_type = $this->_modelEntityType->loadByCode("catalog_product");
         $entity_typeid = $entity_type->getId();
         $attributecollection = $this->_modelEntityAttribute->getCollection()->addFieldToFilter("entity_type_id", $entity_typeid)->addFieldToFilter("attribute_code", "rating");
-
         if (count($attributecollection) > 0) {
             $sumColumn = "AVG(rating_vote.{$this->_frameworkModelResource->getConnection("core_write")->quoteIdentifier('percent')})";
             $select = $this->_frameworkModelResource->getConnection("core_write")->select()
@@ -2760,7 +2597,6 @@ class Sync extends \Klevu\Search\Model\Sync
                             'timestamp_before' => $timestamp_before,
                             'timestamp_after' => $timestamp_after
                     ]);
-
         $data = $this->_frameworkModelResource->getConnection()->fetchAll($query, $query->getBind());
         $pro_ids = [];
         
@@ -3092,14 +2928,12 @@ class Sync extends \Klevu\Search\Model\Sync
                     "categories"
                 ];
             }
-
             if (!empty($data)) {
                 foreach ($data as $key => $value) {
                     $write =  $this->_frameworkModelResource->getConnection("core_write");
                     $query = "replace into ".$this->_frameworkModelResource->getTableName('klevu_product_sync')
                            . "(product_id, parent_id, store_id, last_synced_at, type) values "
                            . "(:product_id, :parent_id, :store_id, :last_synced_at, :type)";
-
                     $binds = [
                         'product_id' => $value[0],
                         'parent_id' => $value[1],
@@ -3310,7 +3144,6 @@ class Sync extends \Klevu\Search\Model\Sync
         if (!$this->_klevu_enabled_feature_response) {
             $param =  ["restApiKey" => $restApi,"store" => $store->getId()];
             $features_request = $this->_apiActionFeatures->execute($param);
-
             if ($features_request->isSuccess()) {
                 $this->_klevu_enabled_feature_response = $features_request->getData();
                 $this->_searchHelperConfig->saveUpgradeFetaures(serialize($this->_klevu_enabled_feature_response), $store);
@@ -3321,7 +3154,6 @@ class Sync extends \Klevu\Search\Model\Sync
                 $this->_searchHelperData->log(\Zend\Log\Logger::INFO, sprintf("failed to fetch feature details (%s)", $features_request->getMessage()));
             }
         }
-
         return $this->_klevu_enabled_feature_response;
     }
     
@@ -3380,7 +3212,6 @@ class Sync extends \Klevu\Search\Model\Sync
         $stmt = $this->_frameworkModelResource->getConnection("core_write")->query(
             $this->_searchHelperCompat->getCategoryUrlRewriteSelect($category_ids, $this->_storeModelStoreManagerInterface->getStore()->getId())
         );
-
         $data = [];
         
         while ($row = $stmt->fetch()) {
@@ -3388,7 +3219,6 @@ class Sync extends \Klevu\Search\Model\Sync
                 $data[$row['entity_id']] = $row['request_path'];
             }
         }
-
         return $data;
     }
 }

@@ -105,7 +105,7 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     const XML_PATH_UPGRADE_TIRES_URL = "klevu_search/general/tiers_url";
     const XML_PATH_COLLECTION_METHOD = "klevu_search/developer/collection_method";
     const XML_PATH_CONFIG_IMAGE_FLAG = "klevu_search/image_setting/enabled";
-
+	const XML_PATH_TRIGGER_OPTIONS = "klevu_search/developer/trigger_options_info";
     const DATETIME_FORMAT = "Y-m-d H:i:s T";
 
     /**
@@ -908,4 +908,29 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     {
         return $this->_appConfigScopeConfigInterface->isSetFlag(static::XML_PATH_COLLECTION_METHOD);
     }
+    
+    /**
+     * Return the configuration flag for sync options.
+     *
+     *
+     * @return int
+     */
+    public function getTriggerOptionsFlag()
+    {
+        return $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_TRIGGER_OPTIONS);
+    }
+    
+    /**
+     * save Trigger option value
+     *
+     * @param string $value
+     *
+     * @return
+     */
+    public function saveTriggerOptions($value)
+    {
+        $this->setGlobalConfig(static::XML_PATH_TRIGGER_OPTIONS, $value);
+        return $this;
+    }
+	
 }

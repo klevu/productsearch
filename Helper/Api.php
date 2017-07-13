@@ -97,7 +97,7 @@ class Api extends \Magento\Framework\App\Helper\AbstractHelper
         $response = $this->_apiActionAdduser->execute([
             "email"    => $email,
             "password" => $password,
-            "userPlan" => $userPlan,
+            "userPlan" => urlencode($userPlan),
             "partnerAccount" => $partnerAccount,
             "url"      => $url,
             "merchantEmail" => $merchantEmail,

@@ -164,6 +164,14 @@
 		<field id="log_button" type="button" sortOrder="400" showInDefault="1" showInWebsite="1" showInStore="1">
             <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Image\Log</frontend_model>
         </field>
+        <field id="trigger_options_info" translate="label comment" sortOrder="420"  type="select" showInDefault="1">
+            <label>Using an ERP OR 3rd party tool for product updates</label>
+            <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+            <comment><![CDATA[If store is integrated with an ERP OR 3rd party tool for product updates (i.e stock or price data),set this value to 'Yes'.]]></comment>
+        </field>
+        <field id="trigger_button" type="button" sortOrder="430" showInDefault="1">
+            <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Trigger\Button</frontend_model>
+        </field>
       </group>
     </section>
   </system>

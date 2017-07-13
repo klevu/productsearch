@@ -32,96 +32,21 @@
         <table cellspacing="0" cellpadding="10" class="form-list kuPlanDetails">
             <tbody>
                 <tr>
-					
+				    <?php foreach($block->getPlans() as $key => $value) { ?>
                     <td>
 						<table class="kuPlanColumn" cellspacing="0">
 						<tbody>
 								<tr>
-									<td><input type="radio" name="userPlan" value="starter" id="kuStarter"/> <label for="kuStarter">Starter</label></td>
+									<td><input type="radio" name="userPlan" value="<?php echo $value['planName'];?>" id="kuStarter"/> <label for="kuStarter"><?php echo ucfirst($value['planName']);?></label></td>
 								</tr>
 								<tr>
-									<td><img src="http://www.klevu.com/support/magento-links/plans/m2-starter.jpg"/></td>
+									<td><img src="<?php echo $value['planImageUrl']; ?>"/></td>
 								</tr>
 						</tbody>
 						</table>
                     </td>
-					<td>
-						<table class="kuPlanColumn" cellspacing="0">
-						<tbody>
-								<tr>
-									<td><input type="radio" name="userPlan" value="plus" id="kuPlus"/> <label for="kuPlus">Plus</label></td>
-								</tr>
-								<tr>
-									<td><img src="http://www.klevu.com/support/magento-links/plans/m2-plus.jpg"/></td>
-								</tr>
-						</tbody>
-						</table>
-                    </td>
-					<td>
-						<table class="kuPlanColumn" cellspacing="0">
-						<tbody>
-								<tr>
-									<td><input type="radio" name="userPlan" value="growth" id="kuGrowth"/> <label for="kuGrowth">Growth</label></td>
-								</tr>
-								<tr>
-									<td><img src="http://www.klevu.com/support/magento-links/plans/m2-growth.jpg"/></td>
-								</tr>
-						</tbody>
-						</table>
-                    </td>
-					<td>
-						<table class="kuPlanColumn" cellspacing="0">
-						<tbody>
-								<tr>
-									<td><input type="radio" name="userPlan" value="premium" id="kuPremium"/> <label for="kuPremium">Premium</label></td>
-								</tr>
-								<tr>
-									<td><img src="http://www.klevu.com/support/magento-links/plans/m2-premium.jpg"/></td>
-								</tr>
-						</tbody>
-						</table>
-                    </td>
-                </tr>
-				
-				<tr>
-					<td colspan="4">
-						<table class="kuOtherPlan">
-							<tbody>
-								<tr>
-									<td>
-										<table class="kuOtherPlanBox" cellpadding="0" cellspacing="0">
-											<tbody>
-												<tr>
-													<td class="kuOtherPlanHeader"><input type="radio" name="userPlan" value="enterprise" id="kuEnterprise"/> <label for="kuEnterprise">Enterprise</label></td>
-													<td rowspan="2" class="kuOtherPlanDesc">The most advance search, unlimited data, dedicated cloud option.</td>
-												</tr>
-												<tr>
-													<td class="kuOtherPlanPrice"><span>Starts at</span> $1200/mo</td>
-												</tr>
-											</tbody>
-										</table>
-									</td>
-									<td>
-										<table class="kuOtherPlanBox" cellpadding="0" cellspacing="0">
-											<tbody>
-												<tr>
-													<td class="kuOtherPlanHeader"><div class="kuTooltip"><input type="radio"  name="userPlan" value="micro" id="kuMicro"/> <label for="kuMicro">Micro</label>
-													<span> In case total records or search terms exceed the permitted limit, the account will be moved to trial version of the applicable tier. A notification will be sent to registered email address. <b></b></span></div>
-													</td>
-													<td rowspan="2" class="kuOtherPlanDesc">Maximum 500 records and 1000 search terms per month.</td>
-												</tr>
-												<tr>
-													<td class="kuOtherPlanPrice">FREE</td>
-												</tr>
-											</tbody>
-										</table>
-									</td>
-								</tr>
-							</tbody>
-						</table>
-					</td>
+					<?php } ?>
 				</tr>
-				
             </tbody>
         </table>
     

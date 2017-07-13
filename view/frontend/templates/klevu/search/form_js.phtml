@@ -37,6 +37,7 @@ var allInputs = document.getElementsByTagName( 'input' );
         }
         
     })();
+
     <?php } elseif ($block->isLandingEnabled()== $block::KlEVUPRESERVELAYOUT) { ?>
     (function () {
         // Remove Magento event observers from the search box
@@ -49,8 +50,6 @@ var allInputs = document.getElementsByTagName( 'input' );
             }
         }
     })();
-    
-    var klevu_showQuickSearchOnEnter=false;
     <?php } ?>
     <?php
     if ($block->isLandingEnabled()== $block::KlEVUPRESERVELAYOUT) {?>

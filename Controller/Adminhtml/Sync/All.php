@@ -1,7 +1,5 @@
 <?php
-
 namespace Klevu\Search\Controller\Adminhtml\Sync;
-
 use Magento\Backend\App\Action;
 use Magento\Backend\App\Action\Context;
 use Magento\Framework\View\Result\PageFactory;
@@ -11,39 +9,32 @@ use Klevu\Search\Helper\Config;
 use Klevu\Search\Model\Product\Sync;
 use Klevu\Search\Helper\Data;
 use Magento\Framework\Event\ManagerInterface;
-
 class All extends \Magento\Backend\App\Action
 {
     /**
      * @var \Magento\Store\Model\StoreManagerInterface
      */
     protected $_storeModelStoreManagerInterface;
-
     /**
      * @var \Magento\Backend\Model\Session
      */
     protected $_backendModelSession;
-
     /**
      * @var \Klevu\Search\Helper\Config
      */
     protected $_searchHelperConfig;
-
     /**
      * @var \Klevu\Search\Model\Product\Sync
      */
     protected $_modelProductSync;
-
     /**
      * @var \Klevu\Search\Helper\Data
      */
     protected $_searchHelperData;
-
     /**
      * @var \Magento\Framework\Event\ManagerInterface
      */
     protected $_frameworkEventManagerInterface;
-
     public function __construct(
         \Magento\Backend\App\Action\Context $context,
         \Magento\Store\Model\StoreManagerInterface $storeModelStoreManagerInterface,
@@ -51,21 +42,17 @@ class All extends \Magento\Backend\App\Action
         \Klevu\Search\Model\Product\Sync $modelProductSync,
         \Klevu\Search\Helper\Data $searchHelperData
     ) {
-
         $this->_storeModelStoreManagerInterface = $storeModelStoreManagerInterface;
         $this->_backendModelSession = $context->getSession();
         $this->_searchHelperConfig = $searchHelperConfig;
         $this->_modelProductSync = $modelProductSync;
         $this->_searchHelperData = $searchHelperData;
         $this->_frameworkEventManagerInterface = $context->getEventManager();
-
         parent::__construct($context);
     }
-
     public function execute()
     {
         $store = $this->getRequest()->getParam("store");
-
         if ($store !== null) {
             try {
                 $store = $this->_storeModelStoreManagerInterface->getStore($store);
@@ -87,7 +74,6 @@ class All extends \Magento\Backend\App\Action
                         $store->getWebsite()->getName(),
                         $store->getName()
                     ));
-
                     $this->messageManager->addSuccess(sprintf(
                         "Klevu Search Product Sync scheduled to be run on the next cron run for ALL products in %s (%s).",
                         $store->getWebsite()->getName(),
@@ -108,7 +94,6 @@ class All extends \Magento\Backend\App\Action
         $this->_frameworkEventManagerInterface->dispatch('sync_all_external_data', [
             'store' => $store
         ]);
-
         return $this->_redirect($this->_redirect->getRefererUrl());
     }
     
