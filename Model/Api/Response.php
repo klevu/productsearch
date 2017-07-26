@@ -14,10 +14,19 @@ class Response extends \Magento\Framework\DataObject
      * @var \Klevu\Search\Helper\Data
      */
     protected $_searchHelperData;
+	
+	/**
+     * @var \Magento\AdminNotification\Model\InboxFactory
+     */
+    protected $_messageManager;
+	
+	
 
-    public function __construct(\Klevu\Search\Helper\Data $searchHelperData)
+    public function __construct(\Klevu\Search\Helper\Data $searchHelperData,
+	\Magento\AdminNotification\Model\InboxFactory $messageManager)
     {
         $this->_searchHelperData = $searchHelperData;
+		$this->_messageManager = $messageManager;
 
         parent::__construct();
     }
@@ -112,10 +121,37 @@ class Response extends \Magento\Framework\DataObject
                 case 503:
                     $message = "API server unavailable.";
                     break;
+				case 400:
+                    $message = "Klevu Product sync has issues indexing your products. <b>".$this->_searchHelperData->getBaseDomain()."</b> is not listed as an allowed base URL for the Klevu Search API key <b>'".$this->_searchHelperData->getJsApiKey()."'</b>. Please <a href='http://support.klevu.com/knowledgebase/base-urls
+' target='_blank'>click here</a> for more information.";
+					break;
                 default:
                     $message = "Unexpected error.";
             }
-            $this->setMessage(sprintf("Failed to connect to Klevu: %s", $message));
+            if($response->getStatusCode() == 400) {
+				$storefromscope = $this->_searchHelperData->storeFromScopeId();
+				
+				$datatest[] = [
+					'severity' => "1",
+					'title' => "Klevu : Product Sync failed",
+					'date_added' => date('Y-m-d H:i:s'),
+					'description' => sprintf("Product Sync failed for %s (%s): %s",
+						$storefromscope->getWebsite()->getName(),
+						$storefromscope->getName(),
+						$message),
+					'url' => "http://support.klevu.com/knowledgebase/base-urls/"
+				];
+				
+				$this->_messageManager->create()->parse($datatest);
+
+				
+				$this->setMessage(sprintf("Product Sync failed for %s (%s): %s",
+						$storefromscope->getWebsite()->getName(),
+						$storefromscope->getName(),
+						$message));
+			} else {
+				$this->setMessage(sprintf("Failed to connect to Klevu: %s", $message));
+			}
             $this->_searchHelperData->log(\Zend\Log\Logger::ERR, sprintf("Unsuccessful HTTP response: %s %s", $response->getStatusCode(), $response->toString()));
         }
 

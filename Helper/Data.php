@@ -7,6 +7,7 @@ use \Magento\Backend\Model\Url;
 use \Klevu\Search\Helper\Config;
 use \Psr\Log\LoggerInterface;
 use \Magento\Catalog\Model\Product;
+use Magento\Config\Model\ResourceModel\Config\Data\Collection;
 
 class Data extends \Magento\Framework\App\Helper\AbstractHelper
 {
@@ -59,6 +60,12 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      * @var Magento\Directory\Model\CurrencyFactory
      */
     protected $_currencyFactory;
+	
+	/**
+     * @var Magento\Config\Model\ResourceModel\Config\Data\Collection
+     */
+    protected $_configDataCollection;
+	
 
     public function __construct(
         \Magento\Store\Model\StoreManagerInterface $storeModelStoreManagerInterface,
@@ -70,7 +77,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         \Magento\Eav\Model\Entity\Type $modelEntityType,
         \Magento\Eav\Model\Entity\Attribute $modelEntityAttribute,
         \Magento\Directory\Model\CurrencyFactory $currencyFactory,
-        \Magento\Framework\Locale\CurrencyInterface $localeCurrency
+        \Magento\Framework\Locale\CurrencyInterface $localeCurrency,
+		\Magento\Config\Model\ResourceModel\Config\Data\Collection $configDataCollection
     ) {
     
         $this->_storeModelStoreManagerInterface = $storeModelStoreManagerInterface;
@@ -83,6 +91,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         $this->_modelEntityAttribute = $modelEntityAttribute;
         $this->_localeCurrency = $localeCurrency;
         $this->_currencyFactory = $currencyFactory;
+		$this->_configDataCollection = $configDataCollection;
     }
 
 
@@ -467,4 +476,43 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             }
         }
     }
+	
+	/**
+     * get for base domain
+     *
+     * @return string
+     */
+	public function getBaseDomain() {
+		$base_domain = $this->_storeModelStoreManagerInterface->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_LINK);
+		if(!empty($base_domain)) {
+			$base_url_value = parse_url($base_domain);
+			return $base_url_value['host'];
+		}
+    }
+	
+	/**
+     * return JsApiKey
+     *
+     * @return string
+     */
+	public function getJsApiKey() {
+		return $this->_searchHelperConfig->getJsApiKey();
+    }
+	
+	/**
+     * Return the value of store id from api key.
+     *
+     * @param $klevuApi
+     *
+     * @return int
+     */
+	public function storeFromScopeId(){
+		$configs =  $this->_configDataCollection->addFieldToFilter('value',$this->getJsApiKey())->load();
+        $scope_id = $configs->getData();
+		if(!empty($scope_id)) {
+			return $this->_storeModelStoreManagerInterface->getStore(intval($scope_id[0]['scope_id']));
+		}
+	}
+	
+	
 }

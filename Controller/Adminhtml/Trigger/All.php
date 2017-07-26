@@ -84,7 +84,7 @@ class All extends \Magento\Backend\App\Action
 		            ->setTable($resource->getTableName('catalog_product_index_price'));
 		        $trigger_cpip->addStatement("IF NEW.price <> OLD.price || NEW.final_price <> OLD.final_price THEN
                 IF (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = '".$dbname."' AND  table_name = '".$resource->getTableName('klevu_product_sync')."') <> 0 THEN
-                UPDATE klevu_product_sync
+                UPDATE `".$resource->getTableName('klevu_product_sync')."`
                 SET last_synced_at = '0000-00-00 00:00:00'
                 WHERE product_id = NEW.entity_id;
                 END IF ;
@@ -98,7 +98,7 @@ class All extends \Magento\Backend\App\Action
 		            ->setTable($resource->getTableName('cataloginventory_stock_status'));
 		        $trigger_lsa->addStatement("IF NEW.stock_status <> OLD.stock_status THEN
                 IF (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = '".$dbname."' AND table_name = '".$resource->getTableName('klevu_product_sync')."') <> 0 THEN
-                UPDATE klevu_product_sync
+                UPDATE `".$resource->getTableName('klevu_product_sync')."`
                 SET last_synced_at = '0000-00-00 00:00:00'
                 WHERE product_id = NEW.product_id;
                 END IF ;
@@ -112,7 +112,7 @@ class All extends \Magento\Backend\App\Action
 		            ->setTable($resource->getTableName('catalogrule_product_price'));
 		        $trigger_cpp->addStatement("IF NEW.rule_price <> OLD.rule_price THEN
                 IF (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = '".$dbname."' AND table_name = '".$resource->getTableName('klevu_product_sync')."') <> 0 THEN
-                UPDATE klevu_product_sync
+                UPDATE `".$resource->getTableName('klevu_product_sync')."`
                 SET last_synced_at = '0000-00-00 00:00:00'
                 WHERE product_id = NEW.product_id;
                 END IF ;

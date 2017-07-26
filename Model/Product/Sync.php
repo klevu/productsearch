@@ -278,14 +278,14 @@ class Sync extends \Klevu\Search\Model\Sync
         $this->_catalogModelCategory = $catalogModelCategory;
         $this->_ProductMetadataInterface = $productMetadataInterface;
         
-        if (version_compare($this->_ProductMetadataInterface->getVersion(), '2.0.13', '>')===true) {
+        if (version_compare($this->_ProductMetadataInterface->getVersion(), '2.1.0', '>=')===true) {
             // you're on 2.0.13 later version
             $this->_galleryReadHandler = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Catalog\Model\Product\Gallery\ReadHandler');
         } else {
             $this->_galleryReadHandler = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Catalog\Model\Product\Gallery\GalleryManagement');
         }
         
-        if ($this->_ProductMetadataInterface->getEdition() == "Enterprise" && version_compare($this->_ProductMetadataInterface->getVersion(), '2.0.8', '>')===true) {
+        if (in_array($this->_ProductMetadataInterface->getEdition(),array("Enterprise","B2B")) && version_compare($this->_ProductMetadataInterface->getVersion(), '2.1.0', '>=')===true) {
             $this->_entity_value = "row_id";
         } else {
             $this->_entity_value = "entity_id";
@@ -315,6 +315,8 @@ class Sync extends \Klevu\Search\Model\Sync
             
             // Sync Data only for selected store from config wizard
             $firstSync = $this->_searchModelSession->getFirstSync();
+			$this->_searchModelSession->setKlevuFailedFlag(0);
+
             if (!empty($firstSync)) {
                 /** @var \Magento\Store\Model\Store $store */
                 $this->reset();
@@ -382,8 +384,8 @@ class Sync extends \Klevu\Search\Model\Sync
         $this->log(\Zend\Log\Logger::INFO, sprintf("Starting sync for %s (%s).", $store->getWebsite()->getName(), $store->getName()));
         $resource = $this->_frameworkModelResource;
         
-        if ($this->_ProductMetadataInterface->getEdition() == "Enterprise" && version_compare($this->_ProductMetadataInterface->getVersion(), '2.0.8', '>')===true) {
-            $actions = [
+        if (in_array($this->_ProductMetadataInterface->getEdition(),array("Enterprise","B2B")) && version_compare($this->_ProductMetadataInterface->getVersion(), '2.1.0', '>=')===true) {
+			$actions = [
                 'delete' =>
                 $resource->getConnection()
                     ->select()
@@ -1126,6 +1128,7 @@ class Sync extends \Klevu\Search\Model\Sync
                 return true;
             }
         } else {
+			$this->_searchModelSession->setKlevuFailedFlag(1);
             return sprintf(
                 "%d product%s failed (%s)",
                 $total,
@@ -1146,7 +1149,7 @@ class Sync extends \Klevu\Search\Model\Sync
      */
     protected function updateProducts(array $data)
     {
-        
+		
         $total = count($data);
        
         $dataToSend = $this->addProductSyncData($data);
@@ -1209,6 +1212,7 @@ class Sync extends \Klevu\Search\Model\Sync
                 return true;
             }
         } else {
+			$this->_searchModelSession->setKlevuFailedFlag(1);
             return sprintf(
                 "%d product%s failed (%s)",
                 $total,
@@ -1289,6 +1293,7 @@ class Sync extends \Klevu\Search\Model\Sync
                 return true;
             }
         } else {
+			$this->_searchModelSession->setKlevuFailedFlag(1);
             return sprintf(
                 "%d product%s failed (%s)",
                 $total,
@@ -1464,7 +1469,7 @@ class Sync extends \Klevu\Search\Model\Sync
                                         $product[$key] = $parent->getData('small_image');
                                         $images = [];
                                         if (empty($product[$key]) || $product[$key] == "no_selection") {
-                                            if (version_compare($this->_ProductMetadataInterface->getVersion(), '2.0.13', '>')===true) {
+                                            if (version_compare($this->_ProductMetadataInterface->getVersion(), '2.1.0', '>=')===true) {
                                                 $this->_galleryReadHandler->execute($parent);
                                                 $images = $parent->getMediaGallery('images');
                                             } else {
@@ -1472,7 +1477,7 @@ class Sync extends \Klevu\Search\Model\Sync
                                                     $m_images = $parent->getMediaGalleryEntries();
                                                     if (!empty($m_images)) {
                                                         foreach ($m_images as $image) {
-                                                            $images = $image->getData();
+                                                            $images[] = $image->getData();
                                                         }
                                                     }
                                                 }
@@ -1495,7 +1500,7 @@ class Sync extends \Klevu\Search\Model\Sync
                                             $product[$key] = $item->getData('small_image');
                                             $images = [];
                                             if (empty($product[$key])) {
-                                                if (version_compare($this->_ProductMetadataInterface->getVersion(), '2.0.13', '>')===true) {
+                                                if (version_compare($this->_ProductMetadataInterface->getVersion(), '2.1.0', '>=')===true) {
                                                     $this->_galleryReadHandler->execute($item);
                                                     $images = $item->getMediaGallery('images');
                                                 } else {
@@ -1503,7 +1508,7 @@ class Sync extends \Klevu\Search\Model\Sync
                                                         $m_images = $item->getMediaGalleryEntries();
                                                         if (!empty($m_images)) {
                                                             foreach ($m_images as $image) {
-                                                                $images = $image->getData();
+                                                                $images[] = $image->getData();
                                                             }
                                                         }
                                                     }
@@ -1531,7 +1536,7 @@ class Sync extends \Klevu\Search\Model\Sync
                                         $product[$key] = $item->getData('small_image');
                                         $images = [];
                                         if (empty($product[$key]) || $product[$key] == "no_selection") {
-                                            if (version_compare($this->_ProductMetadataInterface->getVersion(), '2.0.13', '>')===true) {
+                                            if (version_compare($this->_ProductMetadataInterface->getVersion(), '2.1.0', '>=')===true) {
                                                 $this->_galleryReadHandler->execute($item);
                                                 $images = $item->getMediaGallery('images');
                                             } else {
@@ -1539,7 +1544,7 @@ class Sync extends \Klevu\Search\Model\Sync
                                                     $m_images = $item->getMediaGalleryEntries();
                                                     if ($m_images) {
                                                         foreach ($item->getMediaGalleryEntries() as $image) {
-                                                            $images = $image->getData();
+                                                            $images[] = $image->getData();
                                                         }
                                                     }
                                                 }
@@ -1562,7 +1567,7 @@ class Sync extends \Klevu\Search\Model\Sync
                                             $product[$key] = $parent->getData('small_image');
                                             $images = [];
                                             if (empty($product[$key]) || $product[$key] == "no_selection") {
-                                                if (version_compare($this->_ProductMetadataInterface->getVersion(), '2.0.13', '>')===true) {
+                                                if (version_compare($this->_ProductMetadataInterface->getVersion(), '2.1.0', '>=')===true) {
                                                     $this->_galleryReadHandler->execute($parent);
                                                     $images = $parent->getMediaGallery('images');
                                                 } else {
@@ -1570,7 +1575,7 @@ class Sync extends \Klevu\Search\Model\Sync
                                                         $m_images = $parent->getMediaGalleryEntries();
                                                         if (!empty($m_images)) {
                                                             foreach ($parent->getMediaGalleryEntries() as $image) {
-                                                                $images = $image->getData();
+                                                                $images[] = $image->getData();
                                                             }
                                                         }
                                                     }
@@ -1593,10 +1598,12 @@ class Sync extends \Klevu\Search\Model\Sync
                             if ($product[$key] != "" && strpos($product[$key], "http") !== 0) {
                                 // Prepend media base url for relative image locations
                                 //generate thumbnail image for each products
-                                $this->thumbImage($product[$key], $mediadir);
-                                $imageResized = $mediadir.DIRECTORY_SEPARATOR."klevu_images".$product[$key];
+								$resize_folder = $this->_searchHelperConfig->getImageWidth($this->_storeModelStoreManagerInterface->getStore())."X".$this->_searchHelperConfig->getImageHeight($this->_storeModelStoreManagerInterface->getStore());
+								
+                                $this->thumbImage($product[$key], $mediadir, $resize_folder);
+                                $imageResized = $mediadir.DIRECTORY_SEPARATOR."klevu_images/".$resize_folder.$product[$key];
                                 if (file_exists($imageResized)) {
-                                    $product[$key] =  $media_url."klevu_images".$product[$key];
+                                    $product[$key] =  $media_url."klevu_images/".$resize_folder.$product[$key];
                                 } else {
                                     $product[$key] = $media_url."catalog/product". $product[$key];
                                 }
@@ -2316,14 +2323,15 @@ class Sync extends \Klevu\Search\Model\Sync
      * @return $this
      */
         
-    public function thumbImage($image, $mediadir)
+    public function thumbImage($image, $mediadir, $resize_folder)
     {
         try {
             $baseImageUrl = $mediadir.DIRECTORY_SEPARATOR."catalog".DIRECTORY_SEPARATOR."product".$image;
             if (file_exists($baseImageUrl)) {
                 list($width, $height, $type, $attr)=getimagesize($baseImageUrl);
-                if ($width > 200 && $height > 200) {
-                    $imageResized = $mediadir.DIRECTORY_SEPARATOR."klevu_images".$image;
+                if ($width > $this->_searchHelperConfig->getImageWidth($this->_storeModelStoreManagerInterface->getStore()) && $height > $this->_searchHelperConfig->getImageHeight($this->_storeModelStoreManagerInterface->getStore())) {
+					
+                    $imageResized = $mediadir.DIRECTORY_SEPARATOR."klevu_images/".$resize_folder.$image;
                     if (!file_exists($imageResized)) {
                         $this->thumbImageObj($baseImageUrl, $imageResized);
                     }
@@ -2349,7 +2357,7 @@ class Sync extends \Klevu\Search\Model\Sync
         $imageObj->keepFrame(false);
         $imageObj->keepTransparency(true);
         $imageObj->backgroundColor([255, 255, 255]);
-        $imageObj->resize(200, 200);
+        $imageObj->resize($this->_searchHelperConfig->getImageHeight($this->_storeModelStoreManagerInterface->getStore()), $this->_searchHelperConfig->getImageHeight($this->_storeModelStoreManagerInterface->getStore()));
         $imageObj->save($imageResized);
     }
     
@@ -2622,7 +2630,7 @@ class Sync extends \Klevu\Search\Model\Sync
             $rootId = $this->getStore()->getRootCategoryId();
             $rootStoreCategory = "1/$rootId/";
             
-        if ($this->_ProductMetadataInterface->getEdition() == "Enterprise" && version_compare($this->_ProductMetadataInterface->getVersion(), '2.0.8', '>')===true) {
+        if (in_array($this->_ProductMetadataInterface->getEdition(),array("Enterprise","B2B")) && version_compare($this->_ProductMetadataInterface->getVersion(), '2.1.0', '>=')===true) {
             $actions = [
             'delete' => $this->_frameworkModelResource->getConnection()
                 ->select()
@@ -2952,6 +2960,7 @@ class Sync extends \Klevu\Search\Model\Sync
                 return true;
             }
         } else {
+			$this->_searchModelSession->setKlevuFailedFlag(1);
             return sprintf("%d category%s failed (%s)", $total, ($total > 1) ? "s" : "", $response->getMessage());
         }
     }
@@ -3053,6 +3062,7 @@ class Sync extends \Klevu\Search\Model\Sync
                 return true;
             }
         } else {
+			$this->_searchModelSession->setKlevuFailedFlag(1);
             return sprintf("%d category%s failed (%s)", $total, ($total > 1) ? "s" : "", $response->getMessage());
         }
     }
@@ -3104,6 +3114,7 @@ class Sync extends \Klevu\Search\Model\Sync
                 return true;
             }
         } else {
+			$this->_searchModelSession->setKlevuFailedFlag(1);
             return sprintf("%d category%s failed (%s)", $total, ($total > 1) ? "s" : "", $response->getMessage());
         }
     }

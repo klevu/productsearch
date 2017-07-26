@@ -144,6 +144,14 @@
               <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
               <comment><![CDATA[Choose Yes to use configurable product's image in search.Please make sure to resynchronize products by clicking on the "Sync Data for This Store" under the "Data Sync Settings."]]></comment>
             </field>
+			<field id="image_width" translate="label comment" sortOrder="128" showInStore="1" showInDefault="1">
+                <label>Image Width</label>
+                <comment><![CDATA[Image Width.]]></comment>
+            </field>
+			<field id="image_height" translate="label comment" sortOrder="128" showInStore="1" showInDefault="1">
+                <label>Image Height</label>
+                <comment><![CDATA[Image Hieght.]]></comment>
+            </field>
       </group>
       <group id="developer" translate="label comment" sortOrder="900" showInDefault="1">
         <label>Developer Settings</label>

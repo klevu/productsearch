@@ -1,7 +1,7 @@
 <?php $config = \Magento\Framework\App\ObjectManager::getInstance()->get('Klevu\Search\Helper\Config'); ?>
 <link rel="stylesheet" type="text/css" href="<?php echo $block->getViewFileUrl('Klevu_Search::css/klevu-landing-page-style.css')?>">
 <link rel="stylesheet" type="text/css" href="<?php echo $block->getViewFileUrl('Klevu_Search::css/klevu-landing-responsive.css')?>">
-<div class="kuContainer" id="kuMainContainer">
+<div class="kuContainer">
   <div id="loader" style="text-align:center"><img src="<?php echo $block->getViewFileUrl('Klevu_Search::images/klevu/ku-loader.gif'); ?>" alt="Loading..."/></div>
   <div class="kuNoRecordFound" id="kuNoRecordFound" style="display:none;">
     <p><?php echo __('No matching products found.');?></p>
@@ -30,7 +30,7 @@
         <div class="kuSortHeader">
           <div class="kuSortingOpt">
             <div class="kuSortby">
-              <label id="klevuSortLbl"><?php echo __('Sort by'); ?>:</label>
+              <label id="klevuSortLbl">Sort by:</label>
               <select name="kuSortby" id="kuSortby" onchange="klevu_changeSortingOptionsForLandigPage(this.value);">
                 <option id="klevuRelSort" value="rel"><?php echo __('Relevance');?></option>
                 <option id="klevuLthSort" value="lth"><?php echo __('Price').":".__('Low to high');?></option>
@@ -95,7 +95,7 @@
         <div class="kuSortHeader">
           <div class="kuSortingOpt">
             <div class="kuPerPage">
-              <label id="klevuItemsPerPageCms"><?php echo __('Items per page');?>:</label>
+              <label id="klevuItemsPerPageCms">Items per page:</label>
               <select onchange="klevu_changeCmsItemsPerPage(this.value);" id="noOfRecords3">
                 <option>12</option>
                 <option>24</option>
@@ -112,7 +112,7 @@
         <div class="kuSortHeader">
           <div class="kuSortingOpt">
             <div class="kuPerPage">
-              <label id="klevuItemsPerPageCmsFooter"><?php echo __('Items per page');?>:</label>
+              <label id="klevuItemsPerPageCmsFooter">Items per page:</label>
               <select onchange="klevu_changeCmsItemsPerPage(this.value);" id="noOfRecords4">
                 <option>12</option>
                 <option>24</option>
@@ -143,7 +143,8 @@ $isSecure = $block->getRequest()->isSecure();
 $protocol = ($isSecure) ? 'https://' : 'http://'; 
 $src = $protocol.$config->getJsUrl();
 ?>
-<script type="text/javascript" src="<?php echo $src; ?>/klevu-js-v1/js-1-1/klevu-landing.js"></script>
+<script type="text/javascript" src="<?php echo $src; ?>/klevu-js-v1/js-1-1/klevu-landing.js">// <![CDATA[
+// ]]></script>
 <script type="text/javascript">// <![CDATA[
 document.getElementById("searchedKeyword").value= klevu_getParamValue("q");
 // ]]></script>

@@ -106,6 +106,8 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     const XML_PATH_COLLECTION_METHOD = "klevu_search/developer/collection_method";
     const XML_PATH_CONFIG_IMAGE_FLAG = "klevu_search/image_setting/enabled";
 	const XML_PATH_TRIGGER_OPTIONS = "klevu_search/developer/trigger_options_info";
+	const XML_PATH_CONFIG_IMAGE_HEIGHT = "klevu_search/image_setting/image_height";
+	const XML_PATH_CONFIG_IMAGE_WIDHT = "klevu_search/image_setting/image_width";
     const DATETIME_FORMAT = "Y-m-d H:i:s T";
 
     /**
@@ -931,6 +933,27 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     {
         $this->setGlobalConfig(static::XML_PATH_TRIGGER_OPTIONS, $value);
         return $this;
+    }
+	
+	/**
+     * @param null $store
+     * @return string
+     */
+    public function getImageHeight($store = null)
+    {
+        $image_height = $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_CONFIG_IMAGE_HEIGHT, \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $store);
+		return  $image_height;
+    }
+	
+	
+	/**
+     * @param null $store
+     * @return string
+     */
+    public function getImageWidth($store = null)
+    {
+        $image_width = $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_CONFIG_IMAGE_WIDHT, \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $store);
+		return  $image_width;
     }
 	
 }

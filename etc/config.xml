@@ -25,6 +25,10 @@
 	  <searchlanding>
 		<landenabled>2</landenabled>
 	  </searchlanding>
+	  <image_setting>
+	    <image_width>200</image_width>
+		<image_height>200</image_height>
+	  </image_setting>
     </klevu_search>
   </default>
 </config>

@@ -58,10 +58,21 @@ class SyncCommand extends Command
             $syncOrder = ObjectManager::getInstance()->get(Order::class);
             $syncOrder->run();
             
+			$klevusession = \Magento\Framework\App\ObjectManager::getInstance()->get('Klevu\Search\Model\Session');
+			
             if ($input->hasParameterOption('--alldata')) {
+				
                 $output->writeln('<info>Data updates have been sent to Klevu</info>');
+				
             } elseif ($input->hasParameterOption('--updatesonly')) {
-                $output->writeln('<info>All Data have been sent to Klevu</info>');
+				
+				if($klevusession->getKlevuFailedFlag() == 1){
+					$output->writeln("<info>Product sync failed.Please consult klevu_search.log file for more information.</info>");
+					$klevusession->setKlevuFailedFlag(0);
+				} else {
+					$output->writeln('<info>All Data have been sent to Klevu</info>');
+					$klevusession->setKlevuFailedFlag(0);
+				}
             }
         } catch (LocalizedException $e) {
             $output->writeln('<error>' . $e->getMessage() . '</error>');
