@@ -109,6 +109,7 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
 	const XML_PATH_CONFIG_IMAGE_HEIGHT = "klevu_search/image_setting/image_height";
 	const XML_PATH_CONFIG_IMAGE_WIDHT = "klevu_search/image_setting/image_width";
     const DATETIME_FORMAT = "Y-m-d H:i:s T";
+	const XML_PATH_CONFIG_SYNC_FREQUENCY = "klevu_search/product_sync/frequency";
 
     /**
      * Set the Enable on Frontend flag in System Configuration for the given store.
@@ -149,6 +150,7 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
             $flag = $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_TAX_ENABLED, \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $store_id);
             return in_array($flag, [
                 \Klevu\Search\Model\System\Config\Source\Taxoptions::YES,
+				\Klevu\Search\Model\System\Config\Source\Taxoptions::ADMINADDED
             ]);
     }
     
@@ -955,5 +957,18 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
         $image_width = $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_CONFIG_IMAGE_WIDHT, \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $store);
 		return  $image_width;
     }
+	
+	/**
+     * Return the klevu cron stettings.
+     *
+     * @return bool
+     */
+	public function isExternalCronEnabled(){
+		if($this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_CONFIG_SYNC_FREQUENCY) == "0 5 31 2 *") {
+			return false;
+		} else {
+			return true;
+		}
+	}
 	
 }

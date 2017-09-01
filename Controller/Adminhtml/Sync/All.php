@@ -65,9 +65,14 @@ class All extends \Magento\Backend\App\Action
         if ($this->_searchHelperConfig->isProductSyncEnabled()) {
             if ($this->_searchHelperConfig->getSyncOptionsFlag() == "2") {
                 if ($store) {
-                    $this->_modelProductSync
-                    ->markAllProductsForUpdate($store)
-                    ->schedule();
+					if($this->_searchHelperConfig->isExternalCronEnabled()) {
+						$this->_modelProductSync
+						->markAllProductsForUpdate($store)
+						->schedule();
+					} else {
+						$this->_modelProductSync
+						->markAllProductsForUpdate($store);
+					}
                     
                     $this->_searchHelperData->log(\Zend\Log\Logger::INFO, sprintf(
                         "Product Sync scheduled to re-sync ALL products in %s (%s).",

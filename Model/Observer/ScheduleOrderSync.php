@@ -49,6 +49,7 @@ class ScheduleOrderSync implements ObserverInterface
         \Klevu\Search\Model\Product\Sync $modelProductSync,
         \Magento\Framework\Filesystem $magentoFrameworkFilesystem,
         \Klevu\Search\Helper\Data $searchHelperData,
+		\Klevu\Search\Helper\Config $searchHelperConfig,
         \Magento\Store\Model\StoreManagerInterface $storeModelStoreManagerInterface,
         \Klevu\Search\Model\Order\Sync $modelOrderSync
     ) {
@@ -58,6 +59,7 @@ class ScheduleOrderSync implements ObserverInterface
         $this->_searchHelperData = $searchHelperData;
         $this->_storeModelStoreManagerInterface = $storeModelStoreManagerInterface;
         $this->_modelOrderSync = $modelOrderSync;
+		$this->_searchHelperConfig = $searchHelperConfig;
     }
  
     /**
@@ -74,6 +76,9 @@ class ScheduleOrderSync implements ObserverInterface
         if ($order) {
             $model->addOrderToQueue($order);
         }
-        $model->schedule();
+		
+		if($this->_searchHelperConfig->isExternalCronEnabled()) {
+			$model->schedule();
+		}
     }
 }

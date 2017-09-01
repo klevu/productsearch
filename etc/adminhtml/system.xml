@@ -71,6 +71,10 @@
                   <source_model>Klevu\Search\Model\System\Config\Source\Yesnoforced</source_model>
                   <comment><![CDATA[Enable Product Sync.]]></comment>
                 </field>
+				<field id="frequency" translate="label comment" sortOrder="101" type="select" showInDefault="1">
+                  <label>Frequency</label>
+                  <source_model>Klevu\Search\Model\System\Config\Source\Frequency</source_model>
+                </field>
                 <field id="last_run" translate="label" sortOrder="300" showInDefault="1" showInWebsite="1" showInStore="1">
                   <label>Last Run</label>
                   <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Store\Level\Label</frontend_model>

@@ -2,8 +2,17 @@
 
 namespace Klevu\Search\Controller\Adminhtml\Manual;
 
-class sync extends \Magento\Backend\App\Action
+class Sync extends \Magento\Backend\App\Action
 {
+	
+	/**
+     * @param \Magento\Backend\App\Action\Context $context
+     */
+    public function __construct(
+        \Magento\Backend\App\Action\Context $context
+    ) {
+        parent::__construct($context);
+    }
 
     public function execute()
     {

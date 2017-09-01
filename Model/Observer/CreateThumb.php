@@ -46,6 +46,7 @@ class CreateThumb implements ObserverInterface
         \Klevu\Search\Model\Product\Sync $modelProductSync,
         \Magento\Framework\Filesystem $magentoFrameworkFilesystem,
         \Klevu\Search\Helper\Data $searchHelperData,
+		\Klevu\Search\Helper\Image $imageHelper,
 		\Magento\Store\Model\StoreManagerInterface $storeModelStoreManagerInterface
     ) {
     
@@ -53,6 +54,7 @@ class CreateThumb implements ObserverInterface
         $this->_magentoFrameworkFilesystem = $magentoFrameworkFilesystem;
         $this->_searchHelperData = $searchHelperData;
 		$this->_storeModelStoreManagerInterface = $storeModelStoreManagerInterface;
+		$this->_imageHelper = $imageHelper;
 
     }
  
@@ -91,7 +93,7 @@ class CreateThumb implements ObserverInterface
                                 $this->_searchHelperData->log(\Zend\Log\Logger::DEBUG, sprintf("Image Deleting Error:\n%s", $image));
                             }
                         }
-                        $this->_modelProductSync->thumbImageObj($baseImageUrl, $imageResized, $resize_folder);
+                        $this->_imageHelper->thumbImageObj($baseImageUrl, $imageResized, $resize_folder);
                     }
                 }
             } catch (\Exception $e) {

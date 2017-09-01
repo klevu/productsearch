@@ -119,8 +119,10 @@ class Post extends \Magento\Backend\App\Action
         $session->setConfiguredStoreCode($store_code);
 
         $this->messageManager->addSuccess("Store configured successfully. Saved API credentials.");
-
-        // Schedule a Product Sync
-        $this->_modelProductSync->schedule();
+		
+		if($config->isExternalCronEnabled()) {
+			// Schedule a Product Sync
+			$this->_modelProductSync->schedule();
+		}
     }
 }

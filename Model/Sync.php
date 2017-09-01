@@ -43,35 +43,38 @@ abstract class Sync extends AbstractModel
      */
     public function schedule($time = "now")
     {
-        if (! $time instanceof \DateTime) {
-            $time = new \DateTime($time);
-        } else {
-            // Don't modify the original parameter
-            $time = clone $time;
-        }
-        $time_str = $time->format("Y-m-d H:i:00");
-        $before_str = $time->modify("15 minutes ago")->format("Y-m-d H:i:00");
-        $after_str = $time->modify("30 minutes")->format("Y-m-d H:i:00"); // Modifying the same DateTime object, so it's -15 + 30 = +15 minutes
-        $collection_obj = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Cron\Model\ResourceModel\Schedule\Collection');
-        $collection = $collection_obj
-            ->addFieldToFilter("job_code", $this->getJobCode())
-            ->addFieldToFilter("status", \Magento\Cron\Model\Schedule::STATUS_PENDING)
-            ->addFieldToFilter("scheduled_at", [
-                "from" => $before_str,
-                "to" => $after_str
-            ]);
+		$cron_status = \Magento\Framework\App\ObjectManager::getInstance()->get('\Klevu\Search\Helper\Config')->isExternalCronEnabled();
+		if($cron_status) {
+			if (! $time instanceof \DateTime) {
+				$time = new \DateTime($time);
+			} else {
+				// Don't modify the original parameter
+				$time = clone $time;
+			}
+			$time_str = $time->format("Y-m-d H:i:00");
+			$before_str = $time->modify("15 minutes ago")->format("Y-m-d H:i:00");
+			$after_str = $time->modify("30 minutes")->format("Y-m-d H:i:00"); // Modifying the same DateTime object, so it's -15 + 30 = +15 minutes
+			$collection_obj = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Cron\Model\ResourceModel\Schedule\Collection');
+			$collection = $collection_obj
+				->addFieldToFilter("job_code", $this->getJobCode())
+				->addFieldToFilter("status", \Magento\Cron\Model\Schedule::STATUS_PENDING)
+				->addFieldToFilter("scheduled_at", [
+					"from" => $before_str,
+					"to" => $after_str
+				]);
 
-        if ($collection->getSize() == 0) {
-            $schedule = \Magento\Framework\App\ObjectManager::getInstance()->get('\Magento\Cron\Model\Schedule');
-            $schedule
-                ->setJobCode($this->getJobCode())
-                ->setCreatedAt($time_str)
-                ->setScheduledAt($time_str)
-                ->setStatus(\Magento\Cron\Model\Schedule::STATUS_PENDING)
-                ->save();
-        }
+			if ($collection->getSize() == 0) {
+				$schedule = \Magento\Framework\App\ObjectManager::getInstance()->get('\Magento\Cron\Model\Schedule');
+				$schedule
+					->setJobCode($this->getJobCode())
+					->setCreatedAt($time_str)
+					->setScheduledAt($time_str)
+					->setStatus(\Magento\Cron\Model\Schedule::STATUS_PENDING)
+					->save();
+			}
 
-        return $this;
+			return $this;
+		}
     }
 
     /**
@@ -106,7 +109,7 @@ abstract class Sync extends AbstractModel
      */
     protected function isBelowMemoryLimit()
     {
-        $helper = $this->_searchHelperData;
+        $helper = \Magento\Framework\App\ObjectManager::getInstance()->get('\Klevu\Search\Helper\Data');
         $php_memory_limit = ini_get('memory_limit');
         $usage = memory_get_usage(true);
 
@@ -143,8 +146,10 @@ abstract class Sync extends AbstractModel
     {
         if (!$this->isBelowMemoryLimit()) {
             $this->log(\Zend\Log\Logger::INFO, "Memory limit reached. Stopped and rescheduled.");
-            $this->schedule();
-
+			$cron_status = \Magento\Framework\App\ObjectManager::getInstance()->get('\Klevu\Search\Helper\Config')->isExternalCronEnabled();
+			if($cron_status) {
+				$this->schedule();
+			}
             return true;
         }
 
@@ -173,7 +178,7 @@ abstract class Sync extends AbstractModel
      */
     protected function log($level, $message)
     {
-        $this->_searchHelperData->log($level, sprintf("[%s] %s", $this->getJobCode(), $message));
+        \Magento\Framework\App\ObjectManager::getInstance()->get('\Klevu\Search\Helper\Data')->log($level, sprintf("[%s] %s", $this->getJobCode(), $message));
 
         return $this;
     }

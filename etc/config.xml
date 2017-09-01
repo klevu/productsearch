@@ -13,6 +13,7 @@
       </general>
       <product_sync>
         <enabled>1</enabled>
+		<frequency>0 */3 * * *</frequency>
         <last_run>Never</last_run>
         <sync_options>1</sync_options>
       </product_sync>
