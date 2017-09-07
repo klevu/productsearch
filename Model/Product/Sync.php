@@ -1469,7 +1469,7 @@ class Sync extends \Klevu\Search\Model\Sync
         // Get the stock,url,visibity of product from database
         $url_rewrite_data = $this->getUrlRewriteData($product_ids);
         //$visibility_data = $this->getVisibilityData($product_ids);
-        $stock_data = $this->getStockData($product_stock_ids);
+        //$stock_data = $this->getStockData($product_stock_ids);
         $attribute_map = $this->getAttributeMap();
         if ($config->isSecureUrlEnabled($this->_storeModelStoreManagerInterface->getStore()->getId())) {
             $base_url = $this->_storeModelStoreManagerInterface->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_LINK, true);
