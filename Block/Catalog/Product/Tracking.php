@@ -1,14 +1,10 @@
 <?php
-
 namespace Klevu\Search\Block\Catalog\Product;
-
 use Magento\Framework\View\Element\Template;
 use Magento\Framework\View\Element\Template\Context;
 use Magento\Framework\App\RequestInterface;
-
 class Tracking extends \Magento\Framework\View\Element\Template
 {
-
     /**
      * JSON of required tracking parameter for Klevu Product Click Tracking, based on current product
      * @return string
@@ -32,7 +28,6 @@ class Tracking extends \Magento\Framework\View\Element\Template
                 'klevu_productUrl' => $product_url,
                 'Klevu_typeOfRecord' => 'KLEVU_PRODUCT'
             ];
-
             return json_encode($product);
     }
     

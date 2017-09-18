@@ -15,6 +15,8 @@
         <arguments>
             <argument name="commands" xsi:type="array">
                 <item name="syncCommand" xsi:type="object">Klevu\Search\Console\Command\SyncCommand</item>
+				<item name="createCommand" xsi:type="object">Klevu\Search\Console\Command\UserCreation</item>
+				<item name="syncStoreViewData" xsi:type="object">Klevu\Search\Console\Command\SyncStoreView</item>
             </argument>
         </arguments>
     </type>

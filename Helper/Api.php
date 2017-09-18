@@ -91,7 +91,11 @@ class Api extends \Magento\Framework\App\Helper\AbstractHelper
     public function createUser($email, $password, $userPlan, $partnerAccount, $url, $merchantEmail, $contactNo)
     {
         $user = $this->_backendModelSession;
-        $userEmail = $user->getUser()->getEmail();
+		if(!empty($user->getUser())) {
+			$userEmail = $user->getUser()->getEmail();
+		} else {
+			$userEmail = "";
+		}
         $storePhone = $this->_appConfigScopeConfigInterface->getValue('general/store_information/phone');
         $mage_version = $this->_ProductMetadataInterface->getEdition().$this->_ProductMetadataInterface->getVersion();
         $response = $this->_apiActionAdduser->execute([

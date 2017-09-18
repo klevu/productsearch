@@ -36,7 +36,7 @@ class Button extends \Magento\Config\Block\System\Config\Form\Field
         $this->addData([
             "html_id"         => $element->getHtmlId(),
             "button_label"    => sprintf("Sync Data %s", $label_suffix),
-            "destination_url" => $this->getUrl("klevu_search/sync/all", $url_params)
+            "destination_url" => $this->getUrl("klevu_search/sync/all/store/".$this->getStoreId(), $url_params)
         ]);
 
         return $this->_toHtml();

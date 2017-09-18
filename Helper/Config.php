@@ -110,6 +110,7 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
 	const XML_PATH_CONFIG_IMAGE_WIDHT = "klevu_search/image_setting/image_width";
     const DATETIME_FORMAT = "Y-m-d H:i:s T";
 	const XML_PATH_CONFIG_SYNC_FREQUENCY = "klevu_search/product_sync/frequency";
+	const XML_PATH_PRICE_INCLUDES_TAX = "tax/calculation/price_includes_tax";
 
     /**
      * Set the Enable on Frontend flag in System Configuration for the given store.
@@ -970,5 +971,15 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
 			return true;
 		}
 	}
+	
+	/**
+     * Return the Price Includes Tax.
+     *
+     * @return bool
+     */
+	public function getPriceIncludesTax($store = null)
+    {
+        return $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_PRICE_INCLUDES_TAX,\Magento\Store\Model\ScopeInterface::SCOPE_STORE, $store);
+    }
 	
 }

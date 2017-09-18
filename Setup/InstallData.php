@@ -45,7 +45,7 @@ class InstallData implements InstallDataInterface
             $entity_type = \Magento\Framework\App\ObjectManager::getInstance()->get('\Magento\Eav\Model\Entity\Type')->loadByCode("catalog_product");
             $entity_typeid = $entity_type->getId();
             $attributecollection = \Magento\Framework\App\ObjectManager::getInstance()->get('\Magento\Eav\Model\Entity\Attribute')->getCollection()->addFieldToFilter("entity_type_id", $entity_typeid)->addFieldToFilter("attribute_code", "rating");
-        if (empty($attributecollection)) {
+        if (empty($attributecollection->getFirstItem()->getData())) {
             $attribute = $attributecollection->getFirstItem();
             $data = [];
             $data['id'] = null;

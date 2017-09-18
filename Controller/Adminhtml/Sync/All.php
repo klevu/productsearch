@@ -9,6 +9,8 @@ use Klevu\Search\Helper\Config;
 use Klevu\Search\Model\Product\Sync;
 use Klevu\Search\Helper\Data;
 use Magento\Framework\Event\ManagerInterface;
+use Magento\Framework\App\ObjectManager;
+
 class All extends \Magento\Backend\App\Action
 {
     /**
@@ -35,6 +37,11 @@ class All extends \Magento\Backend\App\Action
      * @var \Magento\Framework\Event\ManagerInterface
      */
     protected $_frameworkEventManagerInterface;
+	/**
+     * @var \Magento\Framework\App\RequestInterface
+     */
+    protected $_frameworkAppRequestInterface;
+	
     public function __construct(
         \Magento\Backend\App\Action\Context $context,
         \Magento\Store\Model\StoreManagerInterface $storeModelStoreManagerInterface,
@@ -110,7 +117,22 @@ class All extends \Magento\Backend\App\Action
     public function syncWithoutCron()
     {
         try {
-            $this->_modelProductSync->run();
+			$store = $this->getRequest()->getParam("store");
+			$onestore = $this->_storeModelStoreManagerInterface->getStore($store);
+			if($store != null) {
+				//Sync Data
+				if(is_object($onestore)) {
+					
+						$this->_modelProductSync->reset();
+						if (!$this->_modelProductSync->setupSession($onestore)) {
+							return;
+						}
+						$this->_modelProductSync->syncData($onestore);
+						$this->_modelProductSync->runCategory($onestore);
+				}
+			} else {
+				$this->_modelProductSync->run();
+			}
             /* Use event For other content sync */
             $this->_frameworkEventManagerInterface->dispatch('content_data_to_sync', []);
             \Magento\Framework\App\ObjectManager::getInstance()->get('Klevu\Search\Model\Session')->unsFirstSync();

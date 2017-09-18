@@ -45,13 +45,11 @@
 			</div>
 			<div class="admin__field field">
 					<label for="tax_enable" class="label admin__field-label"><?php echo __("How do you want to display product prices in search?") ?></label>
-					
 					<div class="admin__field-control control">
 					<select name="tax_enable" id="tax_enable" class="select admin__control-select">
-                            <option value="2" selected="selected"><?php echo __("Do not add tax in price as catalog prices entered by admin already include tax") ?></option>
-                            <option value="0"><?php echo __("Do not add tax in price as product prices are displayed without tax"); ?></option>
-                            <option value="1"><?php echo __("Add relevant tax in price as product prices need to be displayed with tax"); ?></option>
-                        </select>
+                            <option value="0"><?php echo __("Excluding Tax"); ?></option>
+                            <option value="1"><?php echo __("Including Tax"); ?></option>
+                    </select>
 					</div>
             </div>     
 			<div class="admin__field field">
