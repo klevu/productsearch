@@ -2033,7 +2033,12 @@ class Sync extends \Klevu\Search\Model\Sync
         $result = ["KLEVU_PRODUCT"];
         foreach ($categories as $category) {
             if (isset($category_paths[$category])) {
-                $result = array_merge($result, $category_paths[$category]);
+				if(count($category_paths[$category]) > 0) {
+					$cat_path[$category][] = implode(";",$category_paths[$category]);
+				} else {
+					$cat_path[$category] = $category_paths[$category];
+				}
+                $result = array_merge($result, $cat_path[$category]);
             }
         }
         return array_unique($result);

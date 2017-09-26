@@ -15,6 +15,7 @@ class Information extends \Magento\Config\Block\System\Config\Form\Fieldset
     {
         $html = $this->_getHeaderHtml($element);
         $html .= $this->_toHtml();
+		$html .='<p><b>Installed version</b>: '.$this->getModuleInfo().'</p>';
         $proSync = \Magento\Framework\App\ObjectManager::getInstance()->get('Klevu\Search\Model\Product\Sync');
         $check_plan = $proSync->getFeatures();
         if (empty($check_plan["errors"]) && !empty($check_plan)) {
@@ -35,5 +36,11 @@ class Information extends \Magento\Config\Block\System\Config\Form\Fieldset
 		  3. Products should be enabled and have the visibility set to catalog and search</p>';
         $html .= $this->_getFooterHtml($element);
         return $html;
+    }
+	
+	public function getModuleInfo()
+    {
+        $moduleInfo = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Framework\Module\ModuleList')->getOne('Klevu_Search');
+        return $moduleInfo['setup_version'];
     }
 }

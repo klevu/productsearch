@@ -72,9 +72,11 @@ class SyncStoreView extends Command
 			$stores = ObjectManager::getInstance()->get(StoreManagerInterface::class)->getStores();
             $storeCode = $input->getArgument(self::STORE_ARGUMENT);
 			if($storeCode == "list") {
+			    $codeList = array();
 				foreach ($stores as $store) {
-					echo $store->getCode().",";
+                    $codeList[] = $store->getCode();
 				}
+                $output->writeln("Available stores : ".implode(",",$codeList));
 			} else {
 				$array_store = explode(",",$storeCode);
 				foreach($array_store as $key => $value) {

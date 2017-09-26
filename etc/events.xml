@@ -48,4 +48,7 @@
 	<event name="catalog_category_save_commit_after">
       <observer name="updateLastSyncCategory" instance="Klevu\Search\Model\Observer\UpdateLastSyncCategory" />
     </event>
+	<event name="controller_action_predispatch_adminhtml_system_config_save">
+      <observer name="peformFullDataSync" instance="Klevu\Search\Model\Observer\PeformFullDataSync" />
+    </event>
 </config>

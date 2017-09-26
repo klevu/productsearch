@@ -98,6 +98,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     const LOG_FILE = "Klevu_Search.log";
 
     const ID_SEPARATOR = "-";
+	
+	const SKU_SEPARATOR = ";;;;";
 
     const SANITISE_STRING = "/:|,|;/";
 
@@ -302,7 +304,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     public function getKlevuProductSku($product_sku, $parent_sku = "")
     {
         if (!empty($parent_sku)) {
-            $parent_sku .= static::ID_SEPARATOR;
+            $parent_sku .= static::SKU_SEPARATOR;
         } else {
             $parent_sku = "";
         }
@@ -441,6 +443,5 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 			return $this->_storeModelStoreManagerInterface->getStore(intval($scope_id[0]['scope_id']));
 		}
 	}
-	
 	
 }

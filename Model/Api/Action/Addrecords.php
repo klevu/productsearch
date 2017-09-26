@@ -185,7 +185,7 @@ class Addrecords extends \Klevu\Search\Model\Api\Actionall
     {
         foreach ($parameters['records'] as &$record) {
             if (isset($record['listCategory']) && is_array($record['listCategory'])) {
-                $record['listCategory'] = implode(";", $record['listCategory']);
+                $record['listCategory'] = implode(";;", $record['listCategory']);
             }
 
             if (isset($record['other']) && is_array($record['other'])) {

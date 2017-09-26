@@ -177,7 +177,7 @@ class Price extends \Magento\Framework\App\Helper\AbstractHelper
         $product['price'] = 0;
         if ($parent && $parent->getData("type_id") == \Magento\ConfigurableProduct\Model\Product\Type\Configurable::TYPE_CODE)
         {
-			// Becuase of MAGENTO BUG we always take final price as price for configurable product
+			// becuase of magento bug we always take final price as price for configurable product
 			$price_code = "final_price";
             // Calculate configurable product price based on option values
             $ruleprice = $this->calculateFinalPriceFront($parent, \Magento\Customer\Model\Group::NOT_LOGGED_IN_ID,$parent->getId() , $store);
@@ -395,11 +395,13 @@ class Price extends \Magento\Framework\App\Helper\AbstractHelper
             foreach ($groupProductIds as $ids) {
                 foreach ($ids as $id) {
                     $groupProduct = \Magento\Framework\App\ObjectManager::getInstance()->create('\Magento\Catalog\Model\Product')->load($id);
-                    if ($config->isTaxEnabled($store->getId())) {
-                        $groupPrices[] = $this->getKlevuPrice(null,$groupProduct,$store);
-                    } else {
-                        $groupPrices[] = $groupProduct->getPriceInfo()->getPrice('regular_price')->getAmount()->getValue();
-                    }
+					if($groupProduct->getStatus() == 1) {
+						if ($config->isTaxEnabled($store->getId())) {
+							$groupPrices[] = $this->getKlevuPrice(null,$groupProduct,$store);
+						} else {
+							$groupPrices[] = $groupProduct->getPriceInfo()->getPrice('regular_price')->getAmount()->getValue();
+						}
+					}
                 }
             }
             asort($groupPrices);
@@ -424,11 +426,13 @@ class Price extends \Magento\Framework\App\Helper\AbstractHelper
         foreach ($groupProductIds as $ids) {
             foreach ($ids as $id) {
                 $groupProduct = \Magento\Framework\App\ObjectManager::getInstance()->create('\Magento\Catalog\Model\Product')->load($id);
-                if ($config->isTaxEnabled($store->getId()) || $this->_searchHelperConfig->getPriceIncludesTax($store)) {
-                     $groupPrices[] = $this->getKlevuSalePrice(null,$groupProduct,$store);
-                } else {
-                    $groupPrices[] = $groupProduct->getPriceInfo()->getPrice('final_price')->getAmount()->getValue();
-                }
+				if($groupProduct->getStatus() == 1) {
+					if ($config->isTaxEnabled($store->getId()) || $this->_searchHelperConfig->getPriceIncludesTax($store)) {
+						 $groupPrices[] = $this->getKlevuSalePrice(null,$groupProduct,$store);
+					} else {
+						$groupPrices[] = $groupProduct->getPriceInfo()->getPrice('final_price')->getAmount()->getValue();
+					}
+				}
             }
         }
         asort($groupPrices);

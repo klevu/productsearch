@@ -35,6 +35,7 @@
 
 #klevu_search_wizard .button-set {
     margin: 10px 5px;
+	width: 80%;
 }
 
 #klevu_search_wizard .button-set:before,
@@ -50,7 +51,7 @@
 #klevu_search_wizard .button-set button,
 #klevu_search_wizard .button-set a {
     float: right;
-    margin-left: 10px;
+    margin-right: 10px;
 }
 
 #klevu_search_wizard_configure_attributes_form .fieldset div.grid {
@@ -94,36 +95,43 @@
 
 .klevu_registeration{
 	width:100%;
+	position: relative;
+	padding-top: 30px;
+	padding-bottom: 30px;
 }
 
 .klevu_registeration .klevu_signup_form{
-	float:left;
-	width:50%;
-	margin-top:25px;
+	float: none;
+	width: 70%;
+	margin: 0 auto;
+	background: #f1f1f1;
+	padding-top: 30px;
+	margin-top: 0px;
 }
 
 .klevu_registeration .klevu_login_form{
-	float:right;
-	width: 41%;
+	float: none;
+	width: 70%;
 	background: #f1f1f1;
-	padding-top: 30px;
-	margin-top:25px;
-	margin-right: 10px;
+	padding-top: 0px;
+	margin: 0px auto;
+	margin-bottom: 0px;
 }
 
 .klevu_registeration  .klevu_terms{
 	    text-align: center;
-		margin-left:140px;
+		margin-left:115px;
 }
 
 .klevu_registeration legend{
 	margin-left: 30px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #cac3b4;
-    margin-bottom: 25px;
-    width: 90%;
-    font-size: 1.7rem;
-    font-weight: 600;
+	padding-bottom: 10px;
+	border-bottom: 1px solid #cac3b4;
+	margin-bottom: 25px;
+	width: 90%;
+	font-size: 1.7rem;
+	font-weight: 600;
+	padding-top: 20px;
 }
 
 .klevu_registeration legend p{
@@ -145,6 +153,7 @@
 
 .klevu_registeration .admin__field{
 	margin-bottom: 1.5rem;
+	margin-left:5px;
 }
 
 .klevu_registeration .admin__field-control{
@@ -182,4 +191,23 @@
     word-wrap: break-word !important;
     word-break: break-word !important;
     text-align: left !important;
+}
+
+.formLink
+{
+    padding: 5px;
+    color: #eb5202;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 11px;
+}
+
+
+.formLinkBlock {
+    width: 70%;
+    margin: 0 auto;
+    text-align: center;
+    background: #f1f1f1;
+    min-height: 40px;
+	font-size: 11px;
 }

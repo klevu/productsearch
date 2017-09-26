@@ -195,7 +195,7 @@ transition: background 200ms;
     border: 1px solid #414042;
 }
 
-.kuMulticheck .kuFilterNames ul li a:hover span.kuFilterLabel:after{
+.kuMulticheck .kuHover .kuFilterNames ul li a:hover span.kuFilterLabel:after{
     content: '';
     position: absolute;
     width: 9px;
