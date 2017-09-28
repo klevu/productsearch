@@ -1,18 +1,20 @@
 <?php
 namespace Klevu\Search\Helper;
-use \Magento\CatalogInventory\Api\StockStateInterface;
+
+use \Magento\CatalogInventory\Api\StockRegistryInterface;
+
 class Stock extends \Magento\Framework\App\Helper\AbstractHelper
 {
     /**
-     * @var \Magento\CatalogInventory\Api\StockStateInterface
+     * @var \Magento\CatalogInventory\Api\StockRegistryInterface
      */
-    protected $_stockStateInterface;
-   
+    protected $_stockRegistryInterface;
+
     public function __construct(
-	\Magento\CatalogInventory\Api\StockStateInterface $stockStateInterface
-	)
+        StockRegistryInterface $stockRegistryInterface
+    )
     {
-        $this->_stockStateInterface = $stockStateInterface;
+        $this->_stockRegistryInterface = $stockRegistryInterface;
     }
 
     /**
@@ -24,20 +26,20 @@ class Stock extends \Magento\Framework\App\Helper\AbstractHelper
     public function getKlevuStockStatus($parent, $item)
     {
         if($parent) {
-			$inStock = $this->_stockStateInterface->verifyStock($parent->getId(),$parent->getStore()->getWebsiteId());
-			if($inStock) {
-				$inStock = $this->_stockStateInterface->verifyStock($item->getId(),$item->getStore()->getWebsiteId());
-				$product_stock_status =  ($inStock) ? "yes" : "no";
-				return $product_stock_status;
-			} else {
-				$product_stock_status = "no";
-				return $product_stock_status;
-			}
-		} else {
-			$inStock = $this->_stockStateInterface->verifyStock($item->getId(),$item->getStore()->getWebsiteId());
-			$product_stock_status =  ($inStock) ? "yes" : "no";
-			return $product_stock_status;
-		}
+            $stockStatusRegistry = $this->_stockRegistryInterface->getStockStatus($parent->getId(), $parent->getStore()->getWebsiteId());
+            $inStock = $stockStatusRegistry->getStockStatus();
+            if($inStock) {
+                //get stock status of child if parent is not set
+                $stockStatusRegistry = $this->_stockRegistryInterface->getStockStatus($item->getId(), $item->getStore()->getWebsiteId());
+                $inStock = $stockStatusRegistry->getStockStatus();
+            }
+        } else {
+            $stockStatusRegistry = $this->_stockRegistryInterface->getStockStatus($item->getId(), $item->getStore()->getWebsiteId());
+            $inStock = $stockStatusRegistry->getStockStatus();
+        }
+
+        $product_stock_status =  ($inStock) ? "yes" : "no";
+        return $product_stock_status;
     }
 
 }
