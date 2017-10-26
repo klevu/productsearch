@@ -64,23 +64,29 @@ class PeformFullDataSync implements ObserverInterface
 		$store = $this->request->getParam("store");
 		if ($store !== null) {
 			$config_state = $this->request->getParam('groups');
-			$value_tax = $config_state['tax_setting']['fields']['enabled']['value'];
-			$new_value = (int)$value_tax?true:false;
-			if($this->_searchHelperConfig->isTaxEnabled($store) !== $new_value){
-				$this->_modelProductSync->markAllProductsForUpdate($store);
-			}
-			
-			$value_secureurl = $config_state['secureurl_setting']['fields']['enabled']['value'];
-			$new_value_secureurl = (int)$value_secureurl?true:false;
-			if($this->_searchHelperConfig->isSecureUrlEnabled($store) !== $new_value_secureurl){
-				$this->_modelProductSync->markAllProductsForUpdate($store);
-			}
-			
-			$value_image_setting = $config_state['image_setting']['fields']['enabled']['value'];
-			$new_value_image_setting = (int)$value_image_setting?true:false;
-			if($this->_searchHelperConfig->isUseConfigImage($store) !== $new_value_image_setting){
-				$this->_modelProductSync->markAllProductsForUpdate($store);
-			}
+			if(isset($config_state['tax_setting'])){
+                $value_tax = $config_state['tax_setting']['fields']['enabled']['value'];
+                $new_value = (int)$value_tax?true:false;
+                if($this->_searchHelperConfig->isTaxEnabled($store) !== $new_value){
+                    $this->_modelProductSync->markAllProductsForUpdate($store);
+                }
+            }
+
+            if(isset($config_state['secureurl_setting'])) {
+                $value_secureurl = $config_state['secureurl_setting']['fields']['enabled']['value'];
+                $new_value_secureurl = (int)$value_secureurl?true:false;
+                if($this->_searchHelperConfig->isSecureUrlEnabled($store) !== $new_value_secureurl){
+                    $this->_modelProductSync->markAllProductsForUpdate($store);
+                }
+            }
+
+            if(isset($config_state['image_setting'])) {
+                $value_image_setting = $config_state['image_setting']['fields']['enabled']['value'];
+                $new_value_image_setting = (int)$value_image_setting ? true : false;
+                if ($this->_searchHelperConfig->isUseConfigImage($store) !== $new_value_image_setting) {
+                    $this->_modelProductSync->markAllProductsForUpdate($store);
+                }
+            }
 		}
 
     }

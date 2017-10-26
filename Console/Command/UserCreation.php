@@ -61,6 +61,7 @@ class UserCreation extends Command
 					$config->setJsUrl($result['webstore']->getJsUrl(), $store);
 					$config->setRestHostname($result['webstore']->getRestHostname(), $store);
 					$config->setTiresUrl($result['webstore']->getTiresUrl(), $store);
+					$config->resetConfig();
 				} 
             }
             

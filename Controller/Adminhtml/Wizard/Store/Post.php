@@ -96,6 +96,7 @@ class Post extends \Magento\Backend\App\Action
             $config->setJsUrl($result['webstore']->getJsUrl(), $store);
             $config->setRestHostname($result['webstore']->getRestHostname(), $store);
             $config->setTiresUrl($result['webstore']->getTiresUrl(), $store);
+			$config->resetConfig();
             if (isset($result["message"])) {
                 $this->messageManager->addSuccess(__($result["message"]));
                 $this->_searchModelSession->setFirstSync($store_code);
@@ -108,6 +109,7 @@ class Post extends \Magento\Backend\App\Action
 
         $config->setTaxEnabledFlag($request->getPost("tax_enable"), $store);
         $config->setSecureUrlEnabledFlag($request->getPost("secureurl_setting"), $store);
+		$config->resetConfig();
         $this->_view->loadLayout();
         $this->_view->getLayout()->initMessages();
         $this->_view->renderLayout();

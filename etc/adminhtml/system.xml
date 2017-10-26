@@ -178,6 +178,10 @@
 		<field id="log_button" type="button" sortOrder="400" showInDefault="1" showInWebsite="1" showInStore="1">
             <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Image\Log</frontend_model>
         </field>
+		<field id="download_log_button" type="button" sortOrder="401" showInDefault="1" showInWebsite="1" showInStore="1">
+            <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Logdownload</frontend_model>
+			 <comment><![CDATA[If file size is less than 1GB then you can click on button to download klevu search log file from var/log folder]]></comment>
+        </field>
         <field id="trigger_options_info" translate="label comment" sortOrder="420"  type="select" showInDefault="1">
             <label>Using an ERP OR 3rd party tool for product updates</label>
             <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>

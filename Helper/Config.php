@@ -729,13 +729,11 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function setStoreConfig($key, $value, $store = null)
     {
-        $config = $this->_appConfigScopeConfigInterface;
 
         $config = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Config\Model\ResourceModel\Config');
         $scope_id = $this->_storeModelStoreManagerInterface->getStore($store)->getId();
         if ($scope_id !== null) {
             $config->saveConfig($key, $value, "stores", $scope_id);
-            $this->_resetConfig();
         }
         return $this;
     }
@@ -743,7 +741,7 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     /**
      * Clear config cache
      */
-    protected function _resetConfig()
+    public function resetConfig()
     {
         \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Framework\App\Config\ReinitableConfigInterface')->reinit();
     }

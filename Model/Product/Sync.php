@@ -364,7 +364,6 @@ class Sync extends \Klevu\Search\Model\Sync
             throw $e;
         }
     }
-    
 	
 	protected function getSyncDataSqlForEEDelete($store) 
 	{
@@ -426,17 +425,17 @@ class Sync extends \Klevu\Search\Model\Sync
                                 ['product_id' => "ks.product_id","parent_id" => 'ks.parent_id']
                             )
                             ->where(
-                                "(ks.parent_id !=0 AND ks.product_id NOT IN (?) AND ks.store_id = :store_id)",
-                                $resource->getConnection()
-                                ->select()
-                                /*
-                                 * Select products from catalog super link table
-                                 */
-                                ->from(
-                                    ['s' => $resource->getTableName("catalog_product_super_link")],
-                                    ['product_id' => "s.product_id"]
-                                )
-                            )
+								"(ks.parent_id !=0 AND CONCAT(ks.product_id,'-',ks.parent_id) NOT IN (?) AND ks.store_id = :store_id)",
+								$resource->getConnection()
+								->select()
+								/*
+								 * Select products from catalog super link table
+								 */
+								->from(
+									['s' => $resource->getTableName("catalog_product_super_link")],
+									['product_id' => "CONCAT(product_id,'-',parent_id)"]
+								)
+							)
                         ])
                     ->group(['k.product_id', 'k.parent_id'])
                     ->bind([
@@ -681,7 +680,7 @@ class Sync extends \Klevu\Search\Model\Sync
                         ['product_id' => "ks.product_id","parent_id" => 'ks.parent_id']
                     )
                     ->where(
-                        "(ks.parent_id !=0 AND ks.product_id NOT IN (?) AND ks.store_id = :store_id)",
+                        "(ks.parent_id !=0 AND CONCAT(ks.product_id,'-',ks.parent_id) NOT IN (?) AND ks.store_id = :store_id)",
                         $resource->getConnection()
                         ->select()
                         /*
@@ -689,7 +688,7 @@ class Sync extends \Klevu\Search\Model\Sync
                          */
                         ->from(
                             ['s' => $resource->getTableName("catalog_product_super_link")],
-                            ['product_id' => "s.product_id"]
+                            ['product_id' => "CONCAT(product_id,'-',parent_id)"]
                         )
                     )
                 ])
@@ -1481,7 +1480,8 @@ class Sync extends \Klevu\Search\Model\Sync
             $base_url = $this->_storeModelStoreManagerInterface->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_LINK);
         }
         $currency = $this->_storeModelStoreManagerInterface->getStore()->getDefaultCurrencyCode();
-      
+        $rejectedProducts = array();
+        $isOutOfStockVisible = $this->_appConfigScopeConfigInterface->getValue(\Magento\CatalogInventory\Model\Configuration::XML_PATH_SHOW_OUT_OF_STOCK,\Magento\Store\Model\ScopeInterface::SCOPE_STORE);
         $rc = 0;
         foreach ($products as $index => &$product) {
             try {
@@ -1504,7 +1504,11 @@ class Sync extends \Klevu\Search\Model\Sync
                 if (!$item) {
                     // Product data query did not return any data for this product
                     // Remove it from the list to skip syncing it
-                    $this->log(\Zend\Log\Logger::WARN, sprintf("Failed to retrieve data for product ID %d", $product['product_id']));
+                    if(!$isOutOfStockVisible &&  $config->isCollectionMethodEnabled()) {
+                        $rejectedProducts[] = $product['product_id'];
+                    } else {
+                        $this->log(\Zend\Log\Logger::WARN, sprintf("Failed to retrieve data for product ID %d", $product['product_id']));
+                    }
                     unset($products[$index]);
                     continue;
                 }
@@ -1736,7 +1740,10 @@ class Sync extends \Klevu\Search\Model\Sync
             unset($product['product_id']);
             unset($product['parent_id']);
         }
-   
+
+        if(!$isOutOfStockVisible && count($rejectedProducts) >0 &&  $config->isCollectionMethodEnabled()) {
+            $this->log(\Zend\Log\Logger::WARN, sprintf("Because of visibility of the out of stock products ( Admin > Stores > Configuration > Catalog > Inventory > Display Out of Stock Products ) we cannot synchronize using the collection mode the out of stock product IDs %d", implode(",",$rejectedProducts)));
+        }
         return $this;
     }
     /**
