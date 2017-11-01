@@ -1831,7 +1831,7 @@ class Sync extends \Klevu\Search\Model\Sync
                     [
                         'product_id'   => "s.product_id",
                         "parent_id" =>"ks.parent_id",
-                        'in_stock' => new \Zend_Db_Expr("(case when `ks`.`parent_id` > 0 then (select (case when `ss`.`stock_status` > 0 then `s`.`stock_status` else '0' End) FROM `{$this->_frameworkModelResource->getTableName("cataloginventory_stock_status")}` AS `ss`  where `ss`.`product_id` = `ks`.`parent_id`) else `s`.`stock_status` end)")
+                        'in_stock' => new \Zend_Db_Expr("(case when `ks`.`parent_id` > 0 then (select (case when `ss`.`stock_status` > 0 then `s`.`stock_status` else '0' End) FROM `{$this->_frameworkModelResource->getTableName("cataloginventory_stock_status")}` AS `ss`  where `ss`.`product_id` = `ks`.`parent_id` AND `ss`.`website_id` = ':default_website_id') else `s`.`stock_status` end)")
                     ]
                 )
                 ->joinLeft(
@@ -1842,6 +1842,9 @@ class Sync extends \Klevu\Search\Model\Sync
                 ->where("s.product_id IN (?)", $product_stock_id_keys)
                 ->where("ks.type = 'products'")
                 ->group('ks.product_id')
+                ->bind([
+                    'default_website_id' => 0
+                ])
         );
         $data = [];
         
