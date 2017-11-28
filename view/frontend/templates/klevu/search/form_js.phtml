@@ -81,10 +81,13 @@ var allInputs = document.getElementsByTagName( 'input' );
 ?>
 <?php
 if ($block->isPubInUse()) { ?>
-<script type="text/javascript">
-    function klevu_uc_productCustomizations( product ){
-        product.productImage = product.productImage.replace( 'pub/', '');
-        return product;
-    }
-</script>
-<?php } ?>  
+    <script type="text/javascript">
+        if(!(typeof klevu_uc_productCustomizations === "function" && typeof klevu_uc_productCustomizations.nodeType !== "number")) {
+            function klevu_uc_productCustomizations( product ){
+                product.productImage = product.productImage.replace( 'pub/', '');
+                return product;
+            }
+        }
+
+    </script>
+<?php } ?>

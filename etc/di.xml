@@ -1,16 +1,14 @@
 <?xml version="1.0"?>
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../../../../lib/internal/Magento/Framework/ObjectManager/etc/config.xsd">
     <preference for="Magento\Config\Block\System\Config\Form\Field" type="Klevu\Search\Block\Adminhtml\System\Config\Form\Field"/>
-	<preference for="Magento\CatalogSearch\Model\Search\IndexBuilder" 
-				type="Klevu\Search\Model\Search\IndexBuilder"/>	
-	<preference for="Magento\Framework\Search\Adapter\Mysql\Query\Builder\Match" 
-				type="Klevu\Search\Adapter\Mysql\Query\Builder\Match"/>
-	<type name="Magento\CatalogSearch\Model\ResourceModel\Fulltext\Collection">
-        <plugin name="klevu_search" type="Klevu\Search\Model\ResourceModel\Fulltext\Collection" disabled="false" sortOrder="101"/>
-    </type>
-	<type name="Magento\Catalog\Block\Product\ProductList\Toolbar">
-		<plugin name="Klevu_Search::setRelevance" type="Klevu\Search\Model\ResourceModel\Fulltext\Collection" sortOrder="101" />
-	</type>
+	<preference for="Magento\Framework\Search\Request\Cleaner"
+				type="Klevu\Search\Framework\Request\Cleaner"/>
+	<preference for="Magento\Framework\Search\Dynamic\EntityStorage"
+				type="Klevu\Search\Framework\Dynamic\EntityStorage"/>
+	<preference for="Magento\Framework\Search\Adapter\Mysql\ScoreBuilder"
+				type="Klevu\Search\Adapter\Mysql\ScoreBuilder"/>
+	<preference for="Magento\CatalogSearch\Model\Search\TableMapper"
+				type="Klevu\Search\Model\Search\TableMapper"/>
 	<type name="Magento\Framework\Console\CommandList">
         <arguments>
             <argument name="commands" xsi:type="array">
