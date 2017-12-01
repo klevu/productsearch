@@ -431,10 +431,20 @@ class Sync extends \Klevu\Search\Model\Sync
 								/*
 								 * Select products from catalog super link table
 								 */
-								->from(
-									['s' => $resource->getTableName("catalog_product_super_link")],
-									['product_id' => "CONCAT(product_id,'-',parent_id)"]
-								)
+                                ->from(
+                                    ['e1' => $resource->getTableName("catalog_product_entity")],
+                                    ['product_id' => "CONCAT(e2.entity_id,'-',e1.entity_id)"]
+                                )
+                                ->join(
+                                    ['s1' => $resource->getTableName("catalog_product_super_link")],
+                                    "e1.row_id= s1.parent_id",
+                                    ""
+                                )
+                                ->join(
+                                    ['e2' => $resource->getTableName("catalog_product_entity")],
+                                    "e2.entity_id = s1.product_id",
+                                    ""
+                                )
 							)
                         ])
                     ->group(['k.product_id', 'k.parent_id'])
@@ -591,6 +601,11 @@ class Sync extends \Klevu\Search\Model\Sync
                                 "e2.entity_id = s1.product_id",
                                 ""
                             )
+                            ->join(
+                                ['wb' => $resource->getTableName("catalog_product_website")],
+                                "wb.product_id = s1.product_id and wb.website_id = :website_id",
+                                ""
+                            )
                             ->joinLeft(
                                 ['k' => $resource->getTableName("klevu_product_sync")],
                                 "e1.entity_id = k.parent_id AND s1.product_id = k.product_id AND k.store_id = :store_id AND k.type = :type",
@@ -612,6 +627,7 @@ class Sync extends \Klevu\Search\Model\Sync
                     ->bind([
                         'type' => "products",
                         'store_id' => $store->getId(),
+                        'website_id' => $store->getWebsiteId(),
                         'default_store_id' => \Magento\Store\Model\Store::DEFAULT_STORE_ID,
                         'configurable' => \Magento\ConfigurableProduct\Model\Product\Type\Configurable::TYPE_CODE,
                         'visible_both' => \Magento\Catalog\Model\Product\Visibility::VISIBILITY_BOTH,
@@ -836,6 +852,11 @@ class Sync extends \Klevu\Search\Model\Sync
                         "s.parent_id = i.product_id AND i.store_id = :store_id AND i.visibility IN (:visible_both, :visible_search)",
                         ""
                     )
+                    ->join(
+                        ['wb' => $resource->getTableName("catalog_product_website")],
+                        "wb.product_id = s.product_id and wb.website_id = :website_id",
+                        ""
+                    )
                     ->joinLeft(
                         ['ss' => $this->getProductStatusAttribute()->getBackendTable()],
                         "ss.attribute_id = :status_attribute_id AND ss.".$this->_entity_value." = s.product_id AND ss.store_id = :store_id",
@@ -857,6 +878,7 @@ class Sync extends \Klevu\Search\Model\Sync
             ->bind([
                 'type' => "products",
                 'store_id' => $store->getId(),
+                'website_id' => $store->getWebsiteId(),
                 'default_store_id' => \Magento\Store\Model\Store::DEFAULT_STORE_ID,
                 'configurable' => \Magento\ConfigurableProduct\Model\Product\Type\Configurable::TYPE_CODE,
                 'visible_both' => \Magento\Catalog\Model\Product\Visibility::VISIBILITY_BOTH,
