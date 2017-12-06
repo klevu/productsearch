@@ -6,6 +6,7 @@
  * @method string getKlevuSessionId()
  */
 namespace Klevu\Search\Model\Product;
+
 use \Magento\Framework\Db\Adapter\AdapterInterface;
 use \Magento\Catalog\Model\ResourceModel\Category\Collection;
 use \Magento\Store\Model\StoreManagerInterface;
@@ -201,6 +202,11 @@ class Sync extends \Klevu\Search\Model\Sync
     protected $_klevu_enabled_feature_response;
     protected $_entity_value;
     
+    /**
+     * @var \Magento\Framework\App\ProductMetadataInterface|\Magento\Framework\App\ProductMetadata
+     */
+    private $_ProductMetadataInterface;
+
     public function __construct(
         \Magento\Framework\App\ResourceConnection $frameworkModelResource,
         \Magento\Framework\Event\ManagerInterface $frameworkEventManagerInterface,
@@ -502,7 +508,7 @@ class Sync extends \Klevu\Search\Model\Sync
                             )
                             ->join(
                                 ['s1' => $resource->getTableName("catalog_product_super_link")],
-                                "e1.row_id= s1.parent_id",
+                                "e1." . $this->_entity_value . "= s1.parent_id",
                                 ""
                             )
                             ->join(
@@ -522,12 +528,12 @@ class Sync extends \Klevu\Search\Model\Sync
                             )
                             ->joinLeft(
                                 ['ss' => $this->getProductStatusAttribute()->getBackendTable()],
-                                "ss.attribute_id = :status_attribute_id AND e2.row_id = ss.row_id AND ss.store_id = :default_store_id",
+                                "ss.attribute_id = :status_attribute_id AND e2." . $this->_entity_value . " = ss." . $this->_entity_value . " AND ss.store_id = :default_store_id",
                                 ""
                             )
                             ->joinLeft(
                                 ['sd' => $this->getProductStatusAttribute()->getBackendTable()],
-                                "sd.attribute_id = :status_attribute_id AND sd.row_id = e2.row_id AND sd.store_id = :store_id",
+                                "sd.attribute_id = :status_attribute_id AND sd." . $this->_entity_value . " = e2." . $this->_entity_value . " AND sd.store_id = :store_id",
                                 ""
                             )
                             ->where("(CASE WHEN sd.value_id > 1 THEN sd.value ELSE ss.value END = :status_enabled) AND ((e1.updated_at > k.last_synced_at) OR (e2.updated_at > k.last_synced_at))")
@@ -588,7 +594,7 @@ class Sync extends \Klevu\Search\Model\Sync
                             )
                             ->join(
                                 ['s1' => $resource->getTableName("catalog_product_super_link")],
-                                "e1.row_id= s1.parent_id",
+                                "e1." . $this->_entity_value . "= s1.parent_id",
                                 ""
                             )
                             ->join(
@@ -613,12 +619,12 @@ class Sync extends \Klevu\Search\Model\Sync
                             )
                             ->joinLeft(
                                 ['ss' => $this->getProductStatusAttribute()->getBackendTable()],
-                                "ss.attribute_id = :status_attribute_id AND e2.row_id = ss.row_id AND ss.store_id = :default_store_id",
+                                "ss.attribute_id = :status_attribute_id AND e2." . $this->_entity_value . " = ss." . $this->_entity_value . " AND ss.store_id = :default_store_id",
                                 ""
                             )
                             ->joinLeft(
                                 ['sd' => $this->getProductStatusAttribute()->getBackendTable()],
-                                "sd.attribute_id = :status_attribute_id AND sd.row_id = e2.row_id AND sd.store_id = :store_id",
+                                "sd.attribute_id = :status_attribute_id AND sd." . $this->_entity_value . " = e2." . $this->_entity_value . " AND sd.store_id = :store_id",
                                 ""
                             )
                             ->where("(CASE WHEN sd.value_id > 1 THEN sd.value ELSE ss.value END = :status_enabled) AND (k.product_id IS NULL)")
@@ -666,12 +672,12 @@ class Sync extends \Klevu\Search\Model\Sync
                 )
                 ->joinLeft(
                     ['ss' => $this->getProductStatusAttribute()->getBackendTable()],
-                    "ss.attribute_id = :status_attribute_id AND ss.".$this->_entity_value." = k.product_id AND ss.store_id = :store_id",
+                    "ss.attribute_id = :status_attribute_id AND ss.".$this->_entity_value." = p.".$this->_entity_value." AND ss.store_id = :store_id",
                     ""
                 )
                 ->joinLeft(
                     ['sd' => $this->getProductStatusAttribute()->getBackendTable()],
-                    "sd.attribute_id = :status_attribute_id AND sd.".$this->_entity_value." = k.product_id AND sd.store_id = :default_store_id",
+                    "sd.attribute_id = :status_attribute_id AND sd.".$this->_entity_value." = p.".$this->_entity_value." AND sd.store_id = :default_store_id",
                     ""
                 )
                 ->where(
@@ -783,12 +789,12 @@ class Sync extends \Klevu\Search\Model\Sync
                     )
                     ->joinLeft(
                         ['ss' => $this->getProductStatusAttribute()->getBackendTable()],
-                        "ss.attribute_id = :status_attribute_id AND ss.".$this->_entity_value." = k.product_id AND ss.store_id = :store_id",
+                        "ss.attribute_id = :status_attribute_id AND ss.".$this->_entity_value." = p1.".$this->_entity_value." AND ss.store_id = :store_id",
                         ""
                     )
                     ->joinLeft(
                         ['sd' => $this->getProductStatusAttribute()->getBackendTable()],
-                        "sd.attribute_id = :status_attribute_id AND sd.".$this->_entity_value." = k.product_id AND sd.store_id = :default_store_id",
+                        "sd.attribute_id = :status_attribute_id AND sd.".$this->_entity_value." = p1.".$this->_entity_value." AND sd.store_id = :default_store_id",
                         ""
                     )
                     ->where("(k.store_id = :store_id) AND (k.type = :type) AND (CASE WHEN ss.value_id > 0 OR ss.value = NULL THEN ss.value ELSE sd.value END = :status_enabled) AND ((p1.updated_at > k.last_synced_at) OR (p2.updated_at > k.last_synced_at))")
@@ -848,6 +854,11 @@ class Sync extends \Klevu\Search\Model\Sync
                         ['product_id' => "s.product_id", 'parent_id' => "s.parent_id"]
                     )
                     ->join(
+                        ['p1' => $resource->getTableName("catalog_product_entity")],
+                        "p1.entity_id = s.product_id",
+                        ""
+                    )
+                    ->join(
                         ['i' => $resource->getTableName("catalog_category_product_index")],
                         "s.parent_id = i.product_id AND i.store_id = :store_id AND i.visibility IN (:visible_both, :visible_search)",
                         ""
@@ -859,12 +870,12 @@ class Sync extends \Klevu\Search\Model\Sync
                     )
                     ->joinLeft(
                         ['ss' => $this->getProductStatusAttribute()->getBackendTable()],
-                        "ss.attribute_id = :status_attribute_id AND ss.".$this->_entity_value." = s.product_id AND ss.store_id = :store_id",
+                        "ss.attribute_id = :status_attribute_id AND ss.".$this->_entity_value." = p1.".$this->_entity_value." AND ss.store_id = :store_id",
                         ""
                     )
                     ->joinLeft(
                         ['sd' => $this->getProductStatusAttribute()->getBackendTable()],
-                        "sd.attribute_id = :status_attribute_id AND sd.".$this->_entity_value." = s.product_id AND sd.store_id = :default_store_id",
+                        "sd.attribute_id = :status_attribute_id AND sd.".$this->_entity_value." = p1.".$this->_entity_value." AND sd.store_id = :default_store_id",
                         ""
                     )
                     ->joinLeft(
@@ -1809,12 +1820,12 @@ class Sync extends \Klevu\Search\Model\Sync
                 )
                 ->joinLeft(
                     ['vs' => $this->getProductVisibilityAttribute()->getBackendTable()],
-                    "vs.attribute_id = :visibility_attribute_id AND vs.".$this->_entity_value." = p.entity_id AND vs.store_id = :store_id",
+                    "vs.attribute_id = :visibility_attribute_id AND vs." . $this->_entity_value . " = p." . $this->_entity_value . " AND vs.store_id = :store_id",
                     ""
                 )
                 ->joinLeft(
                     ['vd' => $this->getProductVisibilityAttribute()->getBackendTable()],
-                    "vd.attribute_id = :visibility_attribute_id AND vs.".$this->_entity_value." = p.entity_id AND vd.store_id = :default_store_id",
+                    "vd.attribute_id = :visibility_attribute_id AND vs." . $this->_entity_value . " = p." . $this->_entity_value . " AND vd.store_id = :default_store_id",
                     [
                         "visibility" => "IF(vs.value IS NOT NULL, vs.value, vd.value)"
                     ]
@@ -2327,6 +2338,7 @@ class Sync extends \Klevu\Search\Model\Sync
      */
     public function deleteTestmodeData($store)
     {
+        $resource = $this->_frameworkModelResource;
         $condition = ["store_id"=> $store->getId()];
         $this->_frameworkModelResource->getConnection("core_write")->delete($resource->getTableName("klevu_product_sync"), $condition);
     }
@@ -2544,22 +2556,22 @@ class Sync extends \Klevu\Search\Model\Sync
                 )
                 ->joinLeft(
                     ['ci' => $this->_frameworkModelResource->getTableName("catalog_category_entity_int")],
-                    "ci.row_id = ce.row_id AND ci.attribute_id = :is_active AND ci.store_id = 0",
+                    "ci." . $this->_entity_value . " = ce." . $this->_entity_value . " AND ci.attribute_id = :is_active AND ci.store_id = 0",
                     ""
                 )
                 ->joinLeft(
                     ['cs' => $this->_frameworkModelResource->getTableName("catalog_category_entity_int")],
-                    "cs.row_id = ci.row_id AND cs.attribute_id = :is_active AND cs.store_id = :store_id",
+                    "cs." . $this->_entity_value . " = ci." . $this->_entity_value . " AND cs.attribute_id = :is_active AND cs.store_id = :store_id",
                     ""
                 )
                 ->joinLeft(
                     ['cie' => $this->_frameworkModelResource->getTableName("catalog_category_entity_int")],
-                    "cie.row_id = ce.row_id AND cie.attribute_id = :is_exclude AND cie.store_id = 0",
+                    "cie." . $this->_entity_value . " = ce." . $this->_entity_value . " AND cie.attribute_id = :is_exclude AND cie.store_id = 0",
                     ""
                 )
                 ->joinLeft(
                     ['cse' => $this->_frameworkModelResource->getTableName("catalog_category_entity_int")],
-                    "cse.row_id = cie.row_id AND cse.attribute_id = :is_exclude AND cse.store_id = :store_id",
+                    "cse." . $this->_entity_value . " = cie." . $this->_entity_value . " AND cse.attribute_id = :is_exclude AND cse.store_id = :store_id",
                     ""
                 )
                 ->where(
@@ -2611,22 +2623,22 @@ class Sync extends \Klevu\Search\Model\Sync
                         )
                         ->joinLeft(
                             ['ci' => $this->_frameworkModelResource->getTableName("catalog_category_entity_int")],
-                            "ci.row_id = c.row_id AND ci.attribute_id = :is_active AND ci.store_id = 0",
+                            "ci." . $this->_entity_value . " = c." . $this->_entity_value . " AND ci.attribute_id = :is_active AND ci.store_id = 0",
                             ""
                         )
                         ->joinLeft(
                             ['cs' => $this->_frameworkModelResource->getTableName("catalog_category_entity_int")],
-                            "cs.row_id = c.row_id AND cs.attribute_id = :is_active AND cs.store_id = :store_id",
+                            "cs." . $this->_entity_value . " = c." . $this->_entity_value . " AND cs.attribute_id = :is_active AND cs.store_id = :store_id",
                             ""
                         )
                         ->joinLeft(
                             ['cie' => $this->_frameworkModelResource->getTableName("catalog_category_entity_int")],
-                            "cie.row_id = c.row_id AND cie.attribute_id = :is_exclude AND cie.store_id = 0",
+                            "cie." . $this->_entity_value . " = c." . $this->_entity_value . " AND cie.attribute_id = :is_exclude AND cie.store_id = 0",
                             ""
                         )
                         ->joinLeft(
                             ['cse' => $this->_frameworkModelResource->getTableName("catalog_category_entity_int")],
-                            "cse.row_id = c.row_id AND cse.attribute_id = :is_exclude AND cse.store_id = :store_id",
+                            "cse." . $this->_entity_value . " = c." . $this->_entity_value . " AND cse.attribute_id = :is_exclude AND cse.store_id = :store_id",
                             ""
                         )
                         ->joinLeft(
@@ -2664,22 +2676,22 @@ class Sync extends \Klevu\Search\Model\Sync
                 )
                 ->joinLeft(
                     ['ci' => $this->_frameworkModelResource->getTableName("catalog_category_entity_int")],
-                    "ci.entity_id = ce.entity_id AND ci.attribute_id = :is_active AND ci.store_id = 0",
+                    "ci." . $this->_entity_value . " = ce." . $this->_entity_value . " AND ci.attribute_id = :is_active AND ci.store_id = 0",
                     ""
                 )
                 ->joinLeft(
                     ['cs' => $this->_frameworkModelResource->getTableName("catalog_category_entity_int")],
-                    "cs.entity_id = ci.entity_id AND cs.attribute_id = :is_active AND cs.store_id = :store_id",
+                    "cs." . $this->_entity_value . " = ci." . $this->_entity_value . " AND cs.attribute_id = :is_active AND cs.store_id = :store_id",
                     ""
                 )
                  ->joinLeft(
                      ['cie' => $this->_frameworkModelResource->getTableName("catalog_category_entity_int")],
-                     "cie.entity_id = ce.entity_id AND cie.attribute_id = :is_exclude AND cie.store_id = 0",
+                     "cie." . $this->_entity_value . " = ce." . $this->_entity_value . " AND cie.attribute_id = :is_exclude AND cie.store_id = 0",
                      ""
                  )
                 ->joinLeft(
                     ['cse' => $this->_frameworkModelResource->getTableName("catalog_category_entity_int")],
-                    "cse.entity_id = cie.entity_id AND cse.attribute_id = :is_exclude AND cse.store_id = :store_id",
+                    "cse." . $this->_entity_value . " = cie." . $this->_entity_value . " AND cse.attribute_id = :is_exclude AND cse.store_id = :store_id",
                     ""
                 )
                 ->where(
@@ -2732,22 +2744,22 @@ class Sync extends \Klevu\Search\Model\Sync
                         )
                         ->joinLeft(
                             ['ci' => $this->_frameworkModelResource->getTableName("catalog_category_entity_int")],
-                            "ci.entity_id = c.entity_id AND ci.attribute_id = :is_active AND ci.store_id = 0",
+                            "ci." . $this->_entity_value . " = c." . $this->_entity_value . " AND ci.attribute_id = :is_active AND ci.store_id = 0",
                             ""
                         )
                         ->joinLeft(
                             ['cs' => $this->_frameworkModelResource->getTableName("catalog_category_entity_int")],
-                            "cs.entity_id = c.entity_id AND cs.attribute_id = :is_active AND cs.store_id = :store_id",
+                            "cs." . $this->_entity_value . " = c." . $this->_entity_value . " AND cs.attribute_id = :is_active AND cs.store_id = :store_id",
                             ""
                         )
                         ->joinLeft(
                             ['cie' => $this->_frameworkModelResource->getTableName("catalog_category_entity_int")],
-                            "cie.entity_id = c.entity_id AND cie.attribute_id = :is_exclude AND cie.store_id = 0",
+                            "cie." . $this->_entity_value . " = c." . $this->_entity_value . " AND cie.attribute_id = :is_exclude AND cie.store_id = 0",
                             ""
                         )
                         ->joinLeft(
                             ['cse' => $this->_frameworkModelResource->getTableName("catalog_category_entity_int")],
-                            "cse.entity_id = c.entity_id AND cse.attribute_id = :is_exclude AND cse.store_id = :store_id",
+                            "cse." . $this->_entity_value . " = c." . $this->_entity_value . " AND cse.attribute_id = :is_exclude AND cse.store_id = :store_id",
                             ""
                         )
                         ->joinLeft(
