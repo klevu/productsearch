@@ -1,7 +1,6 @@
 <?php
 /**
- * Copyright © 2017 Klevu. All rights reserved.
- * See www.klevu.com for details
+ * Klevu override of the request Cleaner for use on preserve layout
  */
 namespace Klevu\Search\Framework\Request;
 
@@ -11,7 +10,7 @@ use Magento\Framework\App\Config\MutableScopeConfigInterface as MutableScopeConf
 use Magento\Framework\Registry as MagentoRegistry;
 use Magento\Store\Model\ScopeInterface as ScopeInterface;
 use Magento\CatalogSearch\Model\ResourceModel\EngineInterface as EngineInterface;
-use Klevu\Search\Search\Request\Klevu as KlevuRequest;
+use Klevu\Search\Model\Api\Magento\Request\ProductInterface as KlevuProductApi;
 use Klevu\Search\Helper\Config as KlevuConfig;
 
 class Cleaner extends \Magento\Framework\Search\Request\Cleaner
@@ -30,7 +29,7 @@ class Cleaner extends \Magento\Framework\Search\Request\Cleaner
      * @param SessionManagerInterface $sessionManagerInterface
      * @param MutableScopeConfigInterface $mutableScopeConfigInterface
      * @param MagentoRegistry $magentoRegistry
-     * @param KlevuRequest $klevuRequest
+     * @param KlevuProductApi $klevuRequest
      * @param KlevuConfig $klevuConfig
      */
     public function __construct(
@@ -38,7 +37,7 @@ class Cleaner extends \Magento\Framework\Search\Request\Cleaner
         SessionManagerInterface $sessionManagerInterface,
         MutableScopeConfigInterface $mutableScopeConfigInterface,
         MagentoRegistry $magentoRegistry,
-        KlevuRequest $klevuRequest,
+        KlevuProductApi $klevuRequest,
         KlevuConfig $klevuConfig
     )
     {
@@ -49,7 +48,7 @@ class Cleaner extends \Magento\Framework\Search\Request\Cleaner
         $this->klevuConfig = $klevuConfig;
 
         if (is_callable('parent::__construct')) {
-            parent::__construct(...func_get_args());
+            parent::__construct($aggregationStatus);
         }
     }
 

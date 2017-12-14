@@ -1,21 +1,22 @@
 <?xml version="1.0"?>
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../../../../lib/internal/Magento/Framework/ObjectManager/etc/config.xsd">
-    <preference for="Magento\Config\Block\System\Config\Form\Field" type="Klevu\Search\Block\Adminhtml\System\Config\Form\Field"/>
-	<preference for="Magento\Framework\Search\Request\Cleaner"
-				type="Klevu\Search\Framework\Request\Cleaner"/>
-	<preference for="Magento\Framework\Search\Dynamic\EntityStorage"
-				type="Klevu\Search\Framework\Dynamic\EntityStorage"/>
-	<preference for="Magento\Framework\Search\Adapter\Mysql\ScoreBuilder"
-				type="Klevu\Search\Adapter\Mysql\ScoreBuilder"/>
-	<preference for="Magento\CatalogSearch\Model\Search\TableMapper"
-				type="Klevu\Search\Model\Search\TableMapper"/>
+	<preference for="Magento\Config\Block\System\Config\Form\Field" type="Klevu\Search\Block\Adminhtml\System\Config\Form\Field"/>
+	<preference for="Magento\Framework\Search\Request\Cleaner" type="Klevu\Search\Framework\Request\Cleaner"/>
+	<preference for="Magento\Framework\Search\Dynamic\EntityStorage" type="Klevu\Search\Framework\Dynamic\EntityStorage"/>
+	<preference for="Magento\Framework\Search\Adapter\Mysql\ScoreBuilder" type="Klevu\Search\Adapter\Mysql\ScoreBuilder"/>
+	<preference for="Magento\CatalogSearch\Model\Search\TableMapper" type="Klevu\Search\Model\Search\TableMapper"/>
+
+	<preference for="Klevu\Search\Model\Klevu\Cron\SchedulerInterface" type="Klevu\Search\Model\Klevu\Cron\Scheduler" />
+	<preference for="Klevu\Search\Model\Klevu\Category\CategoryInterface" type="Klevu\Search\Model\Klevu\Category\Category" />
+	<preference for="Klevu\Search\Model\Api\Magento\Request\ProductInterface" type="Klevu\Search\Model\Api\Magento\Request\Product" />
+
 	<type name="Magento\Framework\Console\CommandList">
-        <arguments>
-            <argument name="commands" xsi:type="array">
-                <item name="syncCommand" xsi:type="object">Klevu\Search\Console\Command\SyncCommand</item>
+		<arguments>
+			<argument name="commands" xsi:type="array">
+				<item name="syncCommand" xsi:type="object">Klevu\Search\Console\Command\SyncCommand</item>
 				<item name="createCommand" xsi:type="object">Klevu\Search\Console\Command\UserCreation</item>
 				<item name="syncStoreViewData" xsi:type="object">Klevu\Search\Console\Command\SyncStoreView</item>
-            </argument>
-        </arguments>
-    </type>
+			</argument>
+		</arguments>
+	</type>
 </config>

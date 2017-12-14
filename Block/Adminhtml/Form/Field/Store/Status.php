@@ -6,9 +6,9 @@ class Status extends \Magento\Config\Block\System\Config\Form\Field
 
     protected function _getElementHtml(\Magento\Framework\Data\Form\Element\AbstractElement $element)
     {
-            $status = \Magento\Framework\App\ObjectManager::getInstance()->get('Klevu\Search\Model\Product\Sync')->getKlevuCronStatus();
+            $status = \Magento\Framework\App\ObjectManager::getInstance()->get('Klevu\Search\Model\Sync')->getKlevuCronStatus();
         if (!empty($status)) {
-            $html = \Magento\Framework\App\ObjectManager::getInstance()->get('Klevu\Search\Model\Product\Sync')->getKlevuCronStatus();
+            $html = $status;
         } else {
             $html = __("-");
         }

@@ -1,4 +1,7 @@
 <?php
+/**
+ * Klevu override of the table mapper for use on preserve layout
+ */
 namespace Klevu\Search\Model\Search;
 
 use Magento\Framework\DB\Select;

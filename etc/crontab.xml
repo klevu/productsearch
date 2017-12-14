@@ -7,7 +7,7 @@
 	<job name="updateruleinfo" instance="Klevu\Search\Model\Product\Sync" method="catalogruleupdateinfo">
         <schedule>0 2 * * *</schedule>
 	</job>
-	<job name="sendOrderTrackingToKlevu" instance="Klevu\Search\Model\Order\Sync" method="run">
+	<job name="klevu_search_order_sync" instance="Klevu\Search\Model\Order\Sync" method="run">
         <schedule>0 2 * * *</schedule>  
 	</job>
   </group>

@@ -1,15 +1,21 @@
 <?php
-
+/**
+ * Klevu main sync model
+ */
 namespace Klevu\Search\Model;
 
-use Magento\Framework\App\Filesystem\DirectoryList;
-use Magento\Framework\Filesystem;
+use Klevu\Search\Model\Klevu\Cron\SchedulerInterface as SchedulerInterface;
+use Klevu\Search\Model\Klevu\Category\CategoryInterface as CategoryInterface;
+use Klevu\Search\Model\Klevu\HelperManager as KlevuHelperManager;
+use Magento\Framework\Data\Collection\AbstractDb;
 use Magento\Framework\Model\AbstractModel;
-use Magento\Framework\App\ResourceConnection;
-use Magento\Framework\DB\Adapter\AdapterInterface;
-use Magento\Cron\Model\ResourceModel\Schedule\Collection;
+use Magento\Framework\Model\Context as Magento_Context;
+use Magento\Framework\Model\ResourceModel\AbstractResource;
+use Magento\Framework\Registry as Magento_Registry;
+use Magento\Framework\UrlInterface as Magento_UrlInterface;
+use Zend\Log\Logger;
 
-abstract class Sync extends AbstractModel
+class Sync extends AbstractModel
 {
 
     /**
@@ -20,61 +26,28 @@ abstract class Sync extends AbstractModel
      */
     const MEMORY_LIMIT = 0.7;
 
-    /**
-     * Return the cron job code used for the sync model.
-     *
-     * @return string
-     */
-    abstract protected function getJobCode();
+    protected $_klevuHelperManager;
+    protected $_klevuSchedulerInterface;
+    protected $_klevuCategoryInterface;
+    protected $_urlInterface;
 
-    /**
-     * Perform the sync.
-     */
-    abstract protected function run();
-
-    /**
-     * Run a sync from cron at the specified time. Checks that a cron is not already
-     * scheduled to run in the 15 minute interval before or after the given time first.
-     *
-     * @param DateTime|string $time The scheduled time as a DateTime object or a string
-     *                              that is going to be passed into DateTime. Default is "now".
-     *
-     * @return $this
-     */
-    public function schedule($time = "now")
+    public function __construct(
+        Magento_Context $context,
+        Magento_Registry $registry,
+        KlevuHelperManager $klevuHelperManager,
+        SchedulerInterface $klevuSchedulerInterface,
+        CategoryInterface $klevuCategoryInterface,
+        Magento_UrlInterface $urlInterface,
+        AbstractResource $resource = null,
+        AbstractDb $resourceCollection = null,
+        array $data = []
+    )
     {
-		$cron_status = \Magento\Framework\App\ObjectManager::getInstance()->get('\Klevu\Search\Helper\Config')->isExternalCronEnabled();
-		if($cron_status) {
-			if (! $time instanceof \DateTime) {
-				$time = new \DateTime($time);
-			} else {
-				// Don't modify the original parameter
-				$time = clone $time;
-			}
-			$time_str = $time->format("Y-m-d H:i:00");
-			$before_str = $time->modify("15 minutes ago")->format("Y-m-d H:i:00");
-			$after_str = $time->modify("30 minutes")->format("Y-m-d H:i:00"); // Modifying the same DateTime object, so it's -15 + 30 = +15 minutes
-			$collection_obj = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Cron\Model\ResourceModel\Schedule\Collection');
-			$collection = $collection_obj
-				->addFieldToFilter("job_code", $this->getJobCode())
-				->addFieldToFilter("status", \Magento\Cron\Model\Schedule::STATUS_PENDING)
-				->addFieldToFilter("scheduled_at", [
-					"from" => $before_str,
-					"to" => $after_str
-				]);
-
-			if ($collection->getSize() == 0) {
-				$schedule = \Magento\Framework\App\ObjectManager::getInstance()->get('\Magento\Cron\Model\Schedule');
-				$schedule
-					->setJobCode($this->getJobCode())
-					->setCreatedAt($time_str)
-					->setScheduledAt($time_str)
-					->setStatus(\Magento\Cron\Model\Schedule::STATUS_PENDING)
-					->save();
-			}
-
-			return $this;
-		}
+        parent::__construct($context, $registry, $resource, $resourceCollection, $data);
+        $this->_klevuHelperManager = $klevuHelperManager;
+        $this->_klevuSchedulerInterface = $klevuSchedulerInterface;
+        $this->_klevuCategoryInterface = $klevuCategoryInterface;
+        $this->_urlInterface = $urlInterface;
     }
 
     /**
@@ -91,15 +64,115 @@ abstract class Sync extends AbstractModel
      */
     public function isRunning($copies = 1)
     {
-        $time = new \Datetime("1 hour ago");
-        $time = $time->format("Y-m-d H:i:00");
-        $collection_obj = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Cron\Model\ResourceModel\Schedule\Collection');
-        $collection = $collection_obj
-            ->addFieldToFilter("job_code", $this->getJobCode())
-            ->addFieldToFilter("status", \Magento\Cron\Model\Schedule::STATUS_RUNNING)
-            ->addFieldToFilter("executed_at", ["gteq" => $time]);
+        return $this->_klevuSchedulerInterface->isRunning($this->getJobCode(), $copies);
 
-        return $collection->getSize() >= $copies;
+    }
+
+    /**
+     * Get the klevu cron entry which is running mode
+     *
+     * @param string|null $jobCode
+     * @return string|void
+     */
+    public function getKlevuCronStatus($jobCode = null)
+    {
+        if (is_null($jobCode)) {
+            if ($this->getJobCode()) $jobCode = $this->getJobCode();
+            $jobCode = $this->getDefaultJobCode();
+        }
+        $scheduler = $this->getScheduler();
+        $filters = array(
+            "job_code" => $jobCode,
+            "status" => $scheduler->getStatusByCode('running')
+        );
+        $operations = array(
+            "setPageSize" => 1
+
+        );
+        $runningSchedules = $scheduler->getScheduleCollection($filters, $operations);
+        if ($runningSchedules->getSize()) {
+            $url = $this->_urlInterface->getUrl("klevu_search/sync/clearcron");
+            return $scheduler->getStatusByCode('running') . " Since " . $runningSchedules->getFirstItem()->getData("executed_at") . " <a href='" . $url . "'>Clear Klevu Cron</a>";
+        } else {
+            $filters = array(
+                "job_code" => $jobCode,
+                "status" => $scheduler->getStatusByCode('success')
+            );
+            $operations = array(
+                "setOrder" => array(
+                    'finished_at',
+                    'desc'
+                ),
+                "setPageSize" => 1
+
+            );
+            $doneSchedules = $scheduler->getScheduleCollection($filters, $operations);
+            if ($doneSchedules->getSize()) {
+                return $scheduler->getStatusByCode('success') . " " . $doneSchedules->getFirstItem()->getData("finished_at");
+            }
+        }
+        return false;
+    }
+
+    /**
+     * @return string
+     */
+    private function getDefaultJobCode()
+    {
+        return 'klevu_search_product_sync';
+    }
+
+    /**
+     * @return SchedulerInterface
+     */
+    public function getScheduler()
+    {
+        return $this->_klevuSchedulerInterface;
+    }
+
+    /**
+     * Remove the cron which is in running state
+     *
+     * @param string|null $jobCode
+     * @return void
+     */
+    public function clearKlevuCron($jobCode = null)
+    {
+        if (is_null($jobCode)) {
+            if ($this->getJobCode()) $jobCode = $this->getJobCode();
+            $jobCode = $this->getDefaultJobCode();
+        }
+        $scheduler = $this->getScheduler();
+        $filters = array(
+            "job_code" => $jobCode,
+            "status" => $scheduler->getStatusByCode('running')
+        );
+        $runningSchedules = $scheduler->getScheduleCollection($filters);
+        if ($runningSchedules->getSize()) {
+            foreach ($runningSchedules as $record) {
+                $record->delete();
+            }
+        }
+    }
+
+    /**
+     * Check if the memory limit has been reached and reschedule to run
+     * again immediately if so.
+     *
+     * @return bool true if a new process was scheduled, false otherwise.
+     */
+    public function rescheduleIfOutOfMemory()
+    {
+        if (!$this->isBelowMemoryLimit()) {
+            $this->log(Logger::INFO, "Memory limit reached. Stopped and rescheduled.");
+            $cron_status = $this->_klevuHelperManager->getConfigHelper()->isExternalCronEnabled();
+            if ($cron_status) {
+                $this->schedule();
+            }
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -109,24 +182,23 @@ abstract class Sync extends AbstractModel
      */
     protected function isBelowMemoryLimit()
     {
-        $helper = \Magento\Framework\App\ObjectManager::getInstance()->get('\Klevu\Search\Helper\Data');
         $php_memory_limit = ini_get('memory_limit');
         $usage = memory_get_usage(true);
 
         if ($php_memory_limit < 0) {
-            $this->log(\Zend\Log\Logger::DEBUG, sprintf(
+            $this->log(Logger::DEBUG, sprintf(
                 "Memory usage: %s of %s.",
-                $helper->bytesToHumanReadable($usage),
+                $this->_klevuHelperManager->getDataHelper()->bytesToHumanReadable($usage),
                 $php_memory_limit
             ));
             return true;
         }
-        $limit = $helper->humanReadableToBytes($php_memory_limit);
+        $limit = $this->_klevuHelperManager->getDataHelper()->humanReadableToBytes($php_memory_limit);
 
-        $this->log(\Zend\Log\Logger::DEBUG, sprintf(
+        $this->log(Logger::DEBUG, sprintf(
             "Memory usage: %s of %s.",
-            $helper->bytesToHumanReadable($usage),
-            $helper->bytesToHumanReadable($limit)
+            $this->_klevuHelperManager->getDataHelper()->bytesToHumanReadable($usage),
+            $this->_klevuHelperManager->getDataHelper()->bytesToHumanReadable($limit)
         ));
 
         if ($usage / $limit > static::MEMORY_LIMIT) {
@@ -137,49 +209,43 @@ abstract class Sync extends AbstractModel
     }
 
     /**
-     * Check if the memory limit has been reached and reschedule to run
-     * again immediately if so.
-     *
-     * @return bool true if a new process was scheduled, false otherwise.
-     */
-    protected function rescheduleIfOutOfMemory()
-    {
-        if (!$this->isBelowMemoryLimit()) {
-            $this->log(\Zend\Log\Logger::INFO, "Memory limit reached. Stopped and rescheduled.");
-			$cron_status = \Magento\Framework\App\ObjectManager::getInstance()->get('\Klevu\Search\Helper\Config')->isExternalCronEnabled();
-			if($cron_status) {
-				$this->schedule();
-			}
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * Return the table name for the given model entity.
-     *
-     * @param string $entity
-     *
-     * @return string
-     */
-    protected function getTableName($entity)
-    {
-        return $this->_frameworkModelResource->getTableName($entity);
-    }
-
-    /**
      * Write a message to the log file.
      *
-     * @param int    $level
+     * @param int $level
      * @param string $message
      *
      * @return $this
      */
-    protected function log($level, $message)
+    public function log($level, $message)
     {
-        \Magento\Framework\App\ObjectManager::getInstance()->get('\Klevu\Search\Helper\Data')->log($level, sprintf("[%s] %s", $this->getJobCode(), $message));
+        $this->_klevuHelperManager->getDataHelper()->log($level, sprintf("[%s] %s", $this->getJobCode(), $message));
 
         return $this;
     }
+
+    /**
+     * Run a sync from cron at the specified time. Checks that a cron is not already
+     * scheduled to run in the 15 minute interval before or after the given time first.
+     *
+     *
+     * @return $this
+     */
+    public function schedule()
+    {
+        $this->_klevuSchedulerInterface->scheduleNow($this->getJobCode());
+        return $this;
+    }
+
+    //TODO: replace these functions with actions to also select data
+    public function getCategoryToDelete($storeId = null){
+        return $this->_klevuCategoryInterface->categoryDelete($storeId);
+    }
+    public function getCategoryToUpdate($storeId = null){
+        return $this->_klevuCategoryInterface->categoryUpdate($storeId);
+    }
+    public function getCategoryToAdd($storeId = null){
+        return $this->_klevuCategoryInterface->categoryAdd($storeId);
+    }
+
+
 }

@@ -1,5 +1,7 @@
 <?php
-
+/**
+ * Klevu override of the entity storage for use on preserve layout
+ */
 namespace Klevu\Search\Framework\Dynamic;
 
 use Magento\Framework\Registry as MagentoRegistry;

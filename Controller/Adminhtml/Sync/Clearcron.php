@@ -28,9 +28,9 @@ class Clearcron extends \Magento\Backend\App\Action
     protected $_searchHelperConfig;
 
     /**
-     * @var \Klevu\Search\Model\Product\Sync
+     * @var \Klevu\Search\Model\Sync
      */
-    protected $_modelProductSync;
+    protected $_modelSync;
 
     /**
      * @var \Klevu\Search\Helper\Data
@@ -44,10 +44,10 @@ class Clearcron extends \Magento\Backend\App\Action
 
     public function __construct(
         \Magento\Backend\App\Action\Context $context,
-        \Klevu\Search\Model\Product\Sync $modelProductSync
+        \Klevu\Search\Model\Sync $modelSync
     ) {
 
-        $this->_modelProductSync = $modelProductSync;
+        $this->_modelSync = $modelSync;
         $this->_frameworkEventManagerInterface = $context->getEventManager();
 
         parent::__construct($context);
@@ -61,7 +61,7 @@ class Clearcron extends \Magento\Backend\App\Action
     /* clear the cron entry */
     public function execute()
     {
-        $this->_modelProductSync->clearKlevuCron();
+        $this->_modelSync->clearKlevuCron();
         $this->messageManager->addSuccess(__("Running Klevu product Sync entry cleared from cron_schedule table."));
         $this->_redirect($this->_redirect->getRefererUrl());
     }

@@ -5,7 +5,9 @@
  */
 namespace Klevu\Search\Model\Order;
 
-class Sync extends \Klevu\Search\Model\Sync
+use \Klevu\Search\Model\Sync as KlevuSync;
+use \Magento\Framework\Model\AbstractModel;
+class Sync extends AbstractModel
 {
     
     /**
@@ -39,7 +41,9 @@ class Sync extends \Klevu\Search\Model\Sync
     protected $_frameworkModelDate;
     
     const NOTIFICATION_TYPE = "order_sync";
-    
+
+    protected $_klevuSyncModel;
+
     public function __construct(
         \Magento\Framework\App\ResourceConnection $frameworkModelResource,
         \Magento\Store\Model\StoreManagerInterface $storeModelStoreManagerInterface,
@@ -47,9 +51,19 @@ class Sync extends \Klevu\Search\Model\Sync
         \Magento\Sales\Model\Order\Item $modelOrderItem,
         \Klevu\Search\Helper\Data $searchHelperData,
         \Klevu\Search\Model\Api\Action\Producttracking $apiActionProducttracking,
-        \Magento\Framework\Stdlib\DateTime\DateTime $frameworkModelDate
+        \Magento\Framework\Stdlib\DateTime\DateTime $frameworkModelDate,
+        KlevuSync $klevuSyncModel,
+         // abstract parent
+        \Magento\Framework\Model\Context $context,
+        \Magento\Framework\Registry $registry,
+        \Magento\Framework\Model\ResourceModel\AbstractResource $resource = null,
+        \Magento\Framework\Data\Collection\AbstractDb $resourceCollection = null,
+        array $data = []
     ) {
-    
+        parent::__construct($context, $registry, $resource, $resourceCollection, $data);
+        $this->_klevuSyncModel = $klevuSyncModel;
+        $this->_klevuSyncModel->setJobCode($this->getJobCode());
+
         $this->_frameworkModelResource = $frameworkModelResource;
         $this->_storeModelStoreManagerInterface = $storeModelStoreManagerInterface;
         $this->_searchHelperConfig = $searchHelperConfig;
@@ -400,5 +414,21 @@ class Sync extends \Klevu\Search\Model\Sync
             ["type" => static::NOTIFICATION_TYPE]
         );
         return $this;
+    }
+
+
+
+    //compatibility
+    public function schedule($time = "now"){
+       return $this->_klevuSyncModel->schedule();
+    }
+    public function isRunning($copies = 1){
+        return $this->_klevuSyncModel->isRunning($copies);
+    }
+    public function rescheduleIfOutOfMemory(){
+        return $this->_klevuSyncModel->rescheduleIfOutOfMemory();
+    }
+    public function log($level, $message){
+        return $this->_klevuSyncModel->log($level, $message);
     }
 }

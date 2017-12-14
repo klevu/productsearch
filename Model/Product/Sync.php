@@ -31,8 +31,9 @@ use \Magento\Eav\Model\Entity\Type;
 use \Magento\Eav\Model\Entity\Attribute;
 use \Magento\Catalog\Model\Product\Action;
 use \Magento\CatalogUrlRewrite\Model\ProductUrlPathGenerator;
+use \Klevu\Search\Model\Sync as KlevuSync;
 
-class Sync extends \Klevu\Search\Model\Sync
+class Sync extends AbstractModel
 {
     
     /**
@@ -200,15 +201,14 @@ class Sync extends \Klevu\Search\Model\Sync
 	protected $_klevu_features_response;
     protected $_klevu_enabled_feature_response;
     protected $_entity_value;
+    protected $_klevuSyncModel;
     
     public function __construct(
         \Magento\Framework\App\ResourceConnection $frameworkModelResource,
-        \Magento\Framework\Event\ManagerInterface $frameworkEventManagerInterface,
         \Klevu\Search\Helper\Config $searchHelperConfig,
         \Magento\Backend\Model\Session $searchModelSession,
         \Klevu\Search\Helper\Data $searchHelperData,
         \Magento\Cron\Model\Schedule $cronModelSchedule,
-        \Psr\Log\LoggerInterface $psrLogLoggerInterface,
         \Magento\Store\Model\StoreManagerInterface $storeModelStoreManagerInterface,
         \Magento\Eav\Model\Config $eavModelConfig,
         \Klevu\Search\Model\Api\Action\Startsession $apiActionStartsession,
@@ -241,19 +241,30 @@ class Sync extends \Klevu\Search\Model\Sync
 		\Magento\Framework\App\ProductMetadataInterface $productMetadataInterface,
 		\Klevu\Search\Helper\Image $imageHelper,
 		\Klevu\Search\Helper\Price $priceHelper,
-		\Klevu\Search\Helper\Stock $stockHelper
+		\Klevu\Search\Helper\Stock $stockHelper,
+        KlevuSync $klevuSyncModel,
+        // abstract parent
+        \Magento\Framework\Model\Context $context,
+        \Magento\Framework\Registry $registry,
+        \Magento\Framework\Model\ResourceModel\AbstractResource $resource = null,
+        \Magento\Framework\Data\Collection\AbstractDb $resourceCollection = null,
+        array $data = []
     ) {
-    
+        parent::__construct($context, $registry, $resource, $resourceCollection, $data);
+        $this->_klevuSyncModel = $klevuSyncModel;
+        $this->_klevuSyncModel->setJobCode($this->getJobCode());
+
+
         $this->_apiActionFeatures = $apiActionFeatures;
         $this->_frameworkModelStore = $frameworkModelStore;
         $this->_frameworkAppRequestInterface = $frameworkAppRequestInterface;
         $this->_frameworkModelResource = $frameworkModelResource;
-        $this->_frameworkEventManagerInterface = $frameworkEventManagerInterface;
+        $this->_frameworkEventManagerInterface = $context->getEventDispatcher();
         $this->_searchHelperConfig = $searchHelperConfig;
         $this->_searchModelSession = $searchModelSession;
         $this->_searchHelperData = $searchHelperData;
         $this->_cronModelSchedule = $cronModelSchedule;
-        $this->_psrLogLoggerInterface = $psrLogLoggerInterface;
+        $this->_psrLogLoggerInterface = $context->getLogger();
         $this->_storeModelStoreManagerInterface = $storeModelStoreManagerInterface;
         $this->_eavModelConfig = $eavModelConfig;
         $this->_apiActionStartsession = $apiActionStartsession;
@@ -293,9 +304,9 @@ class Sync extends \Klevu\Search\Model\Sync
         }
         
         if (in_array($this->_ProductMetadataInterface->getEdition(),array("Enterprise","B2B")) && version_compare($this->_ProductMetadataInterface->getVersion(), '2.1.0', '>=')===true) {
-            $this->_entity_value = "row_id";
+            $this->_klevuSyncModel->setData("entity_value","row_id");
         } else {
-            $this->_entity_value = "entity_id";
+            $this->_klevuSyncModel->setData("entity_value","entity_id");
         }
     }
     /**
@@ -333,6 +344,7 @@ class Sync extends \Klevu\Search\Model\Sync
                 
                 $this->syncData($onestore);
                 $this->runCategory($onestore);
+                $this->reset();
                 return;
             }
             
@@ -351,6 +363,7 @@ class Sync extends \Klevu\Search\Model\Sync
                 }
                 $this->syncData($store);
                 $this->runCategory($store);
+                $this->reset();
             }
             
             // update rating flag after all store view sync
@@ -367,11 +380,10 @@ class Sync extends \Klevu\Search\Model\Sync
 	
 	protected function getSyncDataSqlForEEDelete($store) 
 	{
-        $resource = $this->_frameworkModelResource;
-		return  $resource->getConnection()
+		return  $this->_frameworkModelResource->getConnection()
                     ->select()
                     ->union([
-                        $resource->getConnection()
+                        $this->_frameworkModelResource->getConnection()
                         ->select()
                         /*
                          * Select synced products in the current store/mode that are no longer enabled
@@ -380,40 +392,40 @@ class Sync extends \Klevu\Search\Model\Sync
                          * (in the case of configurable products, check the parent visibility instead).
                          */
                         ->from(
-                            ['k' => $resource->getTableName("klevu_product_sync")],
+                            ['k' => $this->_frameworkModelResource->getTableName("klevu_product_sync")],
                             ['product_id' => "k.product_id", 'parent_id' => "k.parent_id"]
                         )
                         ->joinLeft(
-                            ['v' => $resource->getTableName("catalog_category_product_index")],
+                            ['v' => $this->_frameworkModelResource->getTableName("catalog_category_product_index")],
                             "v.product_id = k.product_id AND v.store_id = :store_id",
                             ""
                         )
                         ->joinLeft(
-                            ['p' => $resource->getTableName("catalog_product_entity")],
+                            ['p' => $this->_frameworkModelResource->getTableName("catalog_product_entity")],
                             "p.entity_id = k.product_id",
                             ""
                         )
                         ->joinLeft(
                             ['ss' => $this->getProductStatusAttribute()->getBackendTable()],
-                            "ss.attribute_id = :status_attribute_id AND ss.".$this->_entity_value." = p.".$this->_entity_value." AND ss.store_id = :store_id",
+                            "ss.attribute_id = :status_attribute_id AND ss.".$this->_klevuSyncModel->getData("entity_value")." = p.".$this->_klevuSyncModel->getData("entity_value")." AND ss.store_id = :store_id",
                             ""
                         )
                         ->joinLeft(
                             ['sd' => $this->getProductStatusAttribute()->getBackendTable()],
-                            "sd.attribute_id = :status_attribute_id AND sd.".$this->_entity_value." = p.".$this->_entity_value." AND sd.store_id = :default_store_id",
+                            "sd.attribute_id = :status_attribute_id AND sd.".$this->_klevuSyncModel->getData("entity_value")." = p.".$this->_klevuSyncModel->getData("entity_value")." AND sd.store_id = :default_store_id",
                             ""
                         )
                         ->where(
                             "(k.store_id = :store_id) AND (k.type = :type) AND ((p.entity_id IS NULL) OR (CASE WHEN ss.value_id > 0 THEN ss.value ELSE sd.value END != :status_enabled) OR (CASE WHEN k.parent_id = 0 THEN k.product_id ELSE k.parent_id END NOT IN (?)) )",
-                            $resource->getConnection()
+                            $this->_frameworkModelResource->getConnection()
                                 ->select()
                                 ->from(
-                                    ['i' => $resource->getTableName("catalog_category_product_index")],
+                                    ['i' => $this->_frameworkModelResource->getTableName("catalog_category_product_index")],
                                     ['id' => "i.product_id"]
                                 )
                                 ->where("(i.store_id = :store_id) AND (i.visibility IN (:visible_both, :visible_search))")
                         ),
-                        $resource->getConnection()
+                        $this->_frameworkModelResource->getConnection()
                             ->select()
                             /*
                              * Select products which are not associated with parent 
@@ -421,27 +433,27 @@ class Sync extends \Klevu\Search\Model\Sync
                              * 
                              */
                             ->from(
-                                ['ks' => $resource->getTableName("klevu_product_sync")],
+                                ['ks' => $this->_frameworkModelResource->getTableName("klevu_product_sync")],
                                 ['product_id' => "ks.product_id","parent_id" => 'ks.parent_id']
                             )
                             ->where(
 								"(ks.parent_id !=0 AND CONCAT(ks.product_id,'-',ks.parent_id) NOT IN (?) AND ks.store_id = :store_id)",
-								$resource->getConnection()
+								$this->_frameworkModelResource->getConnection()
 								->select()
 								/*
 								 * Select products from catalog super link table
 								 */
                                 ->from(
-                                    ['e1' => $resource->getTableName("catalog_product_entity")],
+                                    ['e1' => $this->_frameworkModelResource->getTableName("catalog_product_entity")],
                                     ['product_id' => "CONCAT(e2.entity_id,'-',e1.entity_id)"]
                                 )
                                 ->join(
-                                    ['s1' => $resource->getTableName("catalog_product_super_link")],
+                                    ['s1' => $this->_frameworkModelResource->getTableName("catalog_product_super_link")],
                                     "e1.row_id= s1.parent_id",
                                     ""
                                 )
                                 ->join(
-                                    ['e2' => $resource->getTableName("catalog_product_entity")],
+                                    ['e2' => $this->_frameworkModelResource->getTableName("catalog_product_entity")],
                                     "e2.entity_id = s1.product_id",
                                     ""
                                 )
@@ -460,7 +472,6 @@ class Sync extends \Klevu\Search\Model\Sync
 	}
 	protected function getSyncDataSqlForEEUpdate($store) 
 	{
-        $resource = $this->_frameworkModelResource;
 		return $this->_frameworkModelResource->getConnection("core_write")
                     ->select()
                     ->union([
@@ -473,16 +484,16 @@ class Sync extends \Klevu\Search\Model\Sync
                              * updated since last sync.
                              */
                             ->from(
-                                ['k' => $resource->getTableName("klevu_product_sync")],
+                                ['k' => $this->_frameworkModelResource->getTableName("klevu_product_sync")],
                                 ['product_id' => "k.product_id", 'parent_id' => "k.parent_id"]
                             )
                             ->join(
-                                ['p' => $resource->getTableName("catalog_product_entity")],
+                                ['p' => $this->_frameworkModelResource->getTableName("catalog_product_entity")],
                                 "p.entity_id = k.product_id",
                                 ""
                             )
                             ->join(
-                                ['i' => $resource->getTableName("catalog_category_product_index")],
+                                ['i' => $this->_frameworkModelResource->getTableName("catalog_category_product_index")],
                                 "i.product_id = k.product_id AND k.store_id = i.store_id AND i.visibility IN (:visible_both, :visible_search)",
                                 ""
                             )
@@ -497,26 +508,26 @@ class Sync extends \Klevu\Search\Model\Sync
                              * the current parent.
                              */
                             ->from(
-                                ['e1' => $resource->getTableName("catalog_product_entity")],
+                                ['e1' => $this->_frameworkModelResource->getTableName("catalog_product_entity")],
                                 ['product_id' => "s1.product_id", 'parent_id' => "e1.entity_id"]
                             )
                             ->join(
-                                ['s1' => $resource->getTableName("catalog_product_super_link")],
+                                ['s1' => $this->_frameworkModelResource->getTableName("catalog_product_super_link")],
                                 "e1.row_id= s1.parent_id",
                                 ""
                             )
                             ->join(
-                                ['i' => $resource->getTableName("catalog_category_product_index")],
+                                ['i' => $this->_frameworkModelResource->getTableName("catalog_category_product_index")],
                                 "i.product_id= e1.entity_id AND i.store_id = :store_id AND i.visibility IN (:visible_both, :visible_search)",
                                 ""
                             )
                             ->join(
-                                ['e2' => $resource->getTableName("catalog_product_entity")],
+                                ['e2' => $this->_frameworkModelResource->getTableName("catalog_product_entity")],
                                 "e2.entity_id = s1.product_id",
                                 ""
                             )
                             ->joinLeft(
-                                ['k' => $resource->getTableName("klevu_product_sync")],
+                                ['k' => $this->_frameworkModelResource->getTableName("klevu_product_sync")],
                                 "e1.entity_id = k.parent_id AND s1.product_id = k.product_id AND k.store_id = :store_id AND k.type = :type",
                                 ""
                             )
@@ -546,7 +557,6 @@ class Sync extends \Klevu\Search\Model\Sync
 	}
     protected function getSyncDataSqlForEEAdd($store) 
 	{
-        $resource = $this->_frameworkModelResource;
 		return $this->_frameworkModelResource->getConnection("core_write")
                     ->select()
                     ->union([
@@ -559,16 +569,16 @@ class Sync extends \Klevu\Search\Model\Sync
                              * for this store yet.
                              */
                             ->from(
-                                ['p' => $resource->getTableName("catalog_product_entity")],
+                                ['p' => $this->_frameworkModelResource->getTableName("catalog_product_entity")],
                                 ['product_id' => "p.entity_id", 'parent_id' => "k.parent_id"]
                             )
                             ->join(
-                                ['i' => $resource->getTableName("catalog_category_product_index")],
+                                ['i' => $this->_frameworkModelResource->getTableName("catalog_category_product_index")],
                                 "p.entity_id = i.product_id AND i.store_id = :store_id AND i.visibility IN (:visible_both, :visible_search)",
                                 ""
                             )
                             ->joinLeft(
-                                ['k' => $resource->getTableName("klevu_product_sync")],
+                                ['k' => $this->_frameworkModelResource->getTableName("klevu_product_sync")],
                                 "p.entity_id = k.product_id AND k.parent_id = 0 AND i.store_id = k.store_id AND k.type = :type",
                                 ""
                             )
@@ -583,31 +593,31 @@ class Sync extends \Klevu\Search\Model\Sync
                              * the current parent.
                              */
                             ->from(
-                                ['e1' => $resource->getTableName("catalog_product_entity")],
+                                ['e1' => $this->_frameworkModelResource->getTableName("catalog_product_entity")],
                                 ['product_id' => "s1.product_id", 'parent_id' => "e1.entity_id"]
                             )
                             ->join(
-                                ['s1' => $resource->getTableName("catalog_product_super_link")],
+                                ['s1' => $this->_frameworkModelResource->getTableName("catalog_product_super_link")],
                                 "e1.row_id= s1.parent_id",
                                 ""
                             )
                             ->join(
-                                ['i' => $resource->getTableName("catalog_category_product_index")],
+                                ['i' => $this->_frameworkModelResource->getTableName("catalog_category_product_index")],
                                 "i.product_id= e1.entity_id AND i.store_id = :store_id AND i.visibility IN (:visible_both, :visible_search)",
                                 ""
                             )
                             ->join(
-                                ['e2' => $resource->getTableName("catalog_product_entity")],
+                                ['e2' => $this->_frameworkModelResource->getTableName("catalog_product_entity")],
                                 "e2.entity_id = s1.product_id",
                                 ""
                             )
                             ->join(
-                                ['wb' => $resource->getTableName("catalog_product_website")],
+                                ['wb' => $this->_frameworkModelResource->getTableName("catalog_product_website")],
                                 "wb.product_id = s1.product_id and wb.website_id = :website_id",
                                 ""
                             )
                             ->joinLeft(
-                                ['k' => $resource->getTableName("klevu_product_sync")],
+                                ['k' => $this->_frameworkModelResource->getTableName("klevu_product_sync")],
                                 "e1.entity_id = k.parent_id AND s1.product_id = k.product_id AND k.store_id = :store_id AND k.type = :type",
                                 ""
                             )
@@ -638,11 +648,10 @@ class Sync extends \Klevu\Search\Model\Sync
 	}
 	protected function getSyncDataSqlForCEDelete($store) 
 	{
-        $resource = $this->_frameworkModelResource;
-		return $resource->getConnection()
+		return $this->_frameworkModelResource->getConnection()
             ->select()
             ->union([
-                $resource->getConnection()
+                $this->_frameworkModelResource->getConnection()
                 ->select()
                 /*
                  * Select synced products in the current store/mode that are no longer enabled
@@ -651,40 +660,40 @@ class Sync extends \Klevu\Search\Model\Sync
                  * (in the case of configurable products, check the parent visibility instead).
                  */
                 ->from(
-                    ['k' => $resource->getTableName("klevu_product_sync")],
+                    ['k' => $this->_frameworkModelResource->getTableName("klevu_product_sync")],
                     ['product_id' => "k.product_id", 'parent_id' => "k.parent_id"]
                 )
                 ->joinLeft(
-                    ['v' => $resource->getTableName("catalog_category_product_index")],
+                    ['v' => $this->_frameworkModelResource->getTableName("catalog_category_product_index")],
                     "v.product_id = k.product_id AND v.store_id = :store_id",
                     ""
                 )
                 ->joinLeft(
-                    ['p' => $resource->getTableName("catalog_product_entity")],
+                    ['p' => $this->_frameworkModelResource->getTableName("catalog_product_entity")],
                     "p.entity_id = k.product_id",
                     ""
                 )
                 ->joinLeft(
                     ['ss' => $this->getProductStatusAttribute()->getBackendTable()],
-                    "ss.attribute_id = :status_attribute_id AND ss.".$this->_entity_value." = k.product_id AND ss.store_id = :store_id",
+                    "ss.attribute_id = :status_attribute_id AND ss.".$this->_klevuSyncModel->getData("entity_value")." = k.product_id AND ss.store_id = :store_id",
                     ""
                 )
                 ->joinLeft(
                     ['sd' => $this->getProductStatusAttribute()->getBackendTable()],
-                    "sd.attribute_id = :status_attribute_id AND sd.".$this->_entity_value." = k.product_id AND sd.store_id = :default_store_id",
+                    "sd.attribute_id = :status_attribute_id AND sd.".$this->_klevuSyncModel->getData("entity_value")." = k.product_id AND sd.store_id = :default_store_id",
                     ""
                 )
                 ->where(
                     "(k.store_id = :store_id) AND (k.type = :type) AND ((p.entity_id IS NULL) OR (CASE WHEN ss.value_id > 0 THEN ss.value ELSE sd.value END != :status_enabled) OR (CASE WHEN k.parent_id = 0 THEN k.product_id ELSE k.parent_id END NOT IN (?)) )",
-                    $resource->getConnection()
+                    $this->_frameworkModelResource->getConnection()
                         ->select()
                         ->from(
-                            ['i' => $resource->getTableName("catalog_category_product_index")],
+                            ['i' => $this->_frameworkModelResource->getTableName("catalog_category_product_index")],
                             ['id' => "i.product_id"]
                         )
                         ->where("(i.store_id = :store_id) AND (i.visibility IN (:visible_both, :visible_search))")
                 ),
-                $resource->getConnection()
+                $this->_frameworkModelResource->getConnection()
                     ->select()
                     /*
                      * Select products which are not associated with parent 
@@ -692,18 +701,18 @@ class Sync extends \Klevu\Search\Model\Sync
                      * 
                      */
                     ->from(
-                        ['ks' => $resource->getTableName("klevu_product_sync")],
+                        ['ks' => $this->_frameworkModelResource->getTableName("klevu_product_sync")],
                         ['product_id' => "ks.product_id","parent_id" => 'ks.parent_id']
                     )
                     ->where(
                         "(ks.parent_id !=0 AND CONCAT(ks.product_id,'-',ks.parent_id) NOT IN (?) AND ks.store_id = :store_id)",
-                        $resource->getConnection()
+                        $this->_frameworkModelResource->getConnection()
                         ->select()
                         /*
                          * Select products from catalog super link table
                          */
                         ->from(
-                            ['s' => $resource->getTableName("catalog_product_super_link")],
+                            ['s' => $this->_frameworkModelResource->getTableName("catalog_product_super_link")],
                             ['product_id' => "CONCAT(product_id,'-',parent_id)"]
                         )
                     )
@@ -721,7 +730,6 @@ class Sync extends \Klevu\Search\Model\Sync
 	}
 	protected function getSyncDataSqlForCEUpdate($store) 
 	{
-        $resource = $this->_frameworkModelResource;
 		return $this->_frameworkModelResource->getConnection("core_write")
             ->select()
             ->union([
@@ -734,16 +742,16 @@ class Sync extends \Klevu\Search\Model\Sync
                      * updated since last sync.
                      */
                     ->from(
-                        ['k' => $resource->getTableName("klevu_product_sync")],
+                        ['k' => $this->_frameworkModelResource->getTableName("klevu_product_sync")],
                         ['product_id' => "k.product_id", 'parent_id' => "k.parent_id"]
                     )
                     ->join(
-                        ['p' => $resource->getTableName("catalog_product_entity")],
+                        ['p' => $this->_frameworkModelResource->getTableName("catalog_product_entity")],
                         "p.entity_id = k.product_id",
                         ""
                     )
                     ->join(
-                        ['i' => $resource->getTableName("catalog_category_product_index")],
+                        ['i' => $this->_frameworkModelResource->getTableName("catalog_category_product_index")],
                         "i.product_id = k.product_id AND k.store_id = i.store_id AND i.visibility IN (:visible_both, :visible_search)",
                         ""
                     )
@@ -758,37 +766,37 @@ class Sync extends \Klevu\Search\Model\Sync
                      * index) and, either the product or the parent, have been updated since last sync.
                      */
                     ->from(
-                        ['k' => $resource->getTableName("klevu_product_sync")],
+                        ['k' => $this->_frameworkModelResource->getTableName("klevu_product_sync")],
                         ['product_id' => "k.product_id", 'parent_id' => "k.parent_id"]
                     )
                     ->join(
-                        ['s' => $resource->getTableName("catalog_product_super_link")],
+                        ['s' => $this->_frameworkModelResource->getTableName("catalog_product_super_link")],
                         "k.parent_id = s.parent_id AND k.product_id = s.product_id",
                         ""
                     )
                     ->join(
-                        ['i' => $resource->getTableName("catalog_category_product_index")],
+                        ['i' => $this->_frameworkModelResource->getTableName("catalog_category_product_index")],
                         "k.parent_id = i.product_id AND k.store_id = i.store_id AND i.visibility IN (:visible_both, :visible_search)",
                         ""
                     )
                     ->join(
-                        ['p1' => $resource->getTableName("catalog_product_entity")],
+                        ['p1' => $this->_frameworkModelResource->getTableName("catalog_product_entity")],
                         "k.product_id = p1.entity_id",
                         ""
                     )
                     ->join(
-                        ['p2' => $resource->getTableName("catalog_product_entity")],
+                        ['p2' => $this->_frameworkModelResource->getTableName("catalog_product_entity")],
                         "k.parent_id = p2.entity_id",
                         ""
                     )
                     ->joinLeft(
                         ['ss' => $this->getProductStatusAttribute()->getBackendTable()],
-                        "ss.attribute_id = :status_attribute_id AND ss.".$this->_entity_value." = k.product_id AND ss.store_id = :store_id",
+                        "ss.attribute_id = :status_attribute_id AND ss.".$this->_klevuSyncModel->getData("entity_value")." = k.product_id AND ss.store_id = :store_id",
                         ""
                     )
                     ->joinLeft(
                         ['sd' => $this->getProductStatusAttribute()->getBackendTable()],
-                        "sd.attribute_id = :status_attribute_id AND sd.".$this->_entity_value." = k.product_id AND sd.store_id = :default_store_id",
+                        "sd.attribute_id = :status_attribute_id AND sd.".$this->_klevuSyncModel->getData("entity_value")." = k.product_id AND sd.store_id = :default_store_id",
                         ""
                     )
                     ->where("(k.store_id = :store_id) AND (k.type = :type) AND (CASE WHEN ss.value_id > 0 OR ss.value = NULL THEN ss.value ELSE sd.value END = :status_enabled) AND ((p1.updated_at > k.last_synced_at) OR (p2.updated_at > k.last_synced_at))")
@@ -807,7 +815,6 @@ class Sync extends \Klevu\Search\Model\Sync
 	}
 	protected function getSyncDataSqlForCEAdd($store) 
 	{
-        $resource = $this->_frameworkModelResource;
 		return $this->_frameworkModelResource->getConnection("core_write")
             ->select()
             ->union([
@@ -820,16 +827,16 @@ class Sync extends \Klevu\Search\Model\Sync
                      * for this store yet.
                      */
                     ->from(
-                        ['p' => $resource->getTableName("catalog_product_entity")],
+                        ['p' => $this->_frameworkModelResource->getTableName("catalog_product_entity")],
                         ['product_id' => "p.entity_id", 'parent_id' => "k.parent_id"]
                     )
                     ->join(
-                        ['i' => $resource->getTableName("catalog_category_product_index")],
+                        ['i' => $this->_frameworkModelResource->getTableName("catalog_category_product_index")],
                         "p.entity_id = i.product_id AND i.store_id = :store_id AND i.visibility IN (:visible_both, :visible_search)",
                         ""
                     )
                     ->joinLeft(
-                        ['k' => $resource->getTableName("klevu_product_sync")],
+                        ['k' => $this->_frameworkModelResource->getTableName("klevu_product_sync")],
                         "p.entity_id = k.product_id AND k.parent_id = 0 AND i.store_id = k.store_id AND k.type = :type",
                         ""
                     )
@@ -844,31 +851,31 @@ class Sync extends \Klevu\Search\Model\Sync
                      * the current parent.
                      */
                     ->from(
-                        ['s' => $resource->getTableName("catalog_product_super_link")],
+                        ['s' => $this->_frameworkModelResource->getTableName("catalog_product_super_link")],
                         ['product_id' => "s.product_id", 'parent_id' => "s.parent_id"]
                     )
                     ->join(
-                        ['i' => $resource->getTableName("catalog_category_product_index")],
+                        ['i' => $this->_frameworkModelResource->getTableName("catalog_category_product_index")],
                         "s.parent_id = i.product_id AND i.store_id = :store_id AND i.visibility IN (:visible_both, :visible_search)",
                         ""
                     )
                     ->join(
-                        ['wb' => $resource->getTableName("catalog_product_website")],
+                        ['wb' => $this->_frameworkModelResource->getTableName("catalog_product_website")],
                         "wb.product_id = s.product_id and wb.website_id = :website_id",
                         ""
                     )
                     ->joinLeft(
                         ['ss' => $this->getProductStatusAttribute()->getBackendTable()],
-                        "ss.attribute_id = :status_attribute_id AND ss.".$this->_entity_value." = s.product_id AND ss.store_id = :store_id",
+                        "ss.attribute_id = :status_attribute_id AND ss.".$this->_klevuSyncModel->getData("entity_value")." = s.product_id AND ss.store_id = :store_id",
                         ""
                     )
                     ->joinLeft(
                         ['sd' => $this->getProductStatusAttribute()->getBackendTable()],
-                        "sd.attribute_id = :status_attribute_id AND sd.".$this->_entity_value." = s.product_id AND sd.store_id = :default_store_id",
+                        "sd.attribute_id = :status_attribute_id AND sd.".$this->_klevuSyncModel->getData("entity_value")." = s.product_id AND sd.store_id = :default_store_id",
                         ""
                     )
                     ->joinLeft(
-                        ['k' => $resource->getTableName("klevu_product_sync")],
+                        ['k' => $this->_frameworkModelResource->getTableName("klevu_product_sync")],
                         "s.parent_id = k.parent_id AND s.product_id = k.product_id AND k.store_id = :store_id AND k.type = :type",
                         ""
                     )
@@ -963,7 +970,6 @@ class Sync extends \Klevu\Search\Model\Sync
         //set current store so will get proper bundle price
         $this->_storeModelStoreManagerInterface->setCurrentStore($store->getId());
         $this->log(\Zend\Log\Logger::INFO, sprintf("Starting sync for %s (%s).", $store->getWebsite()->getName(), $store->getName()));
-        $resource = $this->_frameworkModelResource;
         
 		$actions = $this->getSyncDataActions($store);
 
@@ -1017,30 +1023,32 @@ class Sync extends \Klevu\Search\Model\Sync
      */
     public function runManually()
     {
-        $time = date_create("now")->format("Y-m-d H:i:s");
-        $schedule = $this->_cronModelSchedule;
-        $schedule
-            ->setJobCode($this->getJobCode())
-            ->setCreatedAt($time)
-            ->setScheduledAt($time)
-            ->setExecutedAt($time)
-            ->setStatus(\Magento\Cron\Model\Schedule::STATUS_RUNNING)
-            ->save();
+        $scheduler = $this->_klevuSyncModel->getScheduler();
+
+        $operations = array(
+            "setJobCode"    =>  $this->getJobCode(),
+            "setStatus"     =>  $scheduler->getStatusByCode('running'),
+            "setExecutedAt" =>  $scheduler->getSchedulerTimeMysql()
+        );
+        $schedule = $scheduler->manageSchedule($operations);
+
         try {
             $this->run();
         } catch (\Exception $e) {
             $this->_psrLogLoggerInterface->error($e);
-            $schedule
-                ->setMessages($e->getMessage())
-                ->setStatus(\Magento\Cron\Model\Schedule::STATUS_ERROR)
-                ->save();
+            $operations = array(
+                "setMessages"    =>  $e->getMessage(),
+                "setStatus"     =>  $scheduler->getStatusByCode('error')
+            );
+            $scheduler->manageSchedule($operations,$schedule);
             return;
         }
-        $time = date_create("now")->format("Y-m-d H:i:s");
-        $schedule
-            ->setFinishedAt($time)
-            ->setStatus(\Magento\Cron\Model\Schedule::STATUS_SUCCESS)
-            ->save();
+        $operations = array(
+            "setFinishedAt"    =>  $scheduler->getSchedulerTimeMysql(),
+            "setStatus"     =>  $scheduler->getStatusByCode('success')
+        );
+        $scheduler->manageSchedule($operations,$schedule);
+
         return;
     }
     /**
@@ -1176,11 +1184,10 @@ class Sync extends \Klevu\Search\Model\Sync
 	*/
 	protected function getDeleteProductsSuccessSql(array $data, $skipped_record_ids)
 	{
-		$resource = $this->_frameworkModelResource;
-		$connection = $resource->getConnection("core_write");
+		$connection = $this->_frameworkModelResource->getConnection("core_write");
 		$select = $connection
                 ->select()
-                ->from(['k' => $resource->getTableName("klevu_product_sync")])
+                ->from(['k' => $this->_frameworkModelResource->getTableName("klevu_product_sync")])
                 ->where("k.store_id = ?", $this->_storeModelStoreManagerInterface->getStore()->getId())
                 ->where("k.type = ?", "products");
 
@@ -1205,14 +1212,13 @@ class Sync extends \Klevu\Search\Model\Sync
 	*/
 	protected function executeDeleteProductsSuccess(array $data, $response)
 	{
-		$resource = $this->_frameworkModelResource;
 			
 		$skipped_record_ids = [];
 		if ($skipped_records = $response->getSkippedRecords()) {
 			$skipped_record_ids = array_flip($skipped_records["index"]);
 		}
 		
-		$connection = $resource->getConnection("core_write");
+		$connection = $this->_frameworkModelResource->getConnection("core_write");
 
 		$select = $this->getDeleteProductsSuccessSql($data, $skipped_record_ids);
 
@@ -1809,12 +1815,12 @@ class Sync extends \Klevu\Search\Model\Sync
                 )
                 ->joinLeft(
                     ['vs' => $this->getProductVisibilityAttribute()->getBackendTable()],
-                    "vs.attribute_id = :visibility_attribute_id AND vs.".$this->_entity_value." = p.entity_id AND vs.store_id = :store_id",
+                    "vs.attribute_id = :visibility_attribute_id AND vs.".$this->_klevuSyncModel->getData("entity_value")." = p.entity_id AND vs.store_id = :store_id",
                     ""
                 )
                 ->joinLeft(
                     ['vd' => $this->getProductVisibilityAttribute()->getBackendTable()],
-                    "vd.attribute_id = :visibility_attribute_id AND vs.".$this->_entity_value." = p.entity_id AND vd.store_id = :default_store_id",
+                    "vd.attribute_id = :visibility_attribute_id AND vs.".$this->_klevuSyncModel->getData("entity_value")." = p.entity_id AND vd.store_id = :default_store_id",
                     [
                         "visibility" => "IF(vs.value IS NOT NULL, vs.value, vd.value)"
                     ]
@@ -1957,15 +1963,14 @@ class Sync extends \Klevu\Search\Model\Sync
     protected function getLayeredNavigationAttributes()
     {
         $attributes = $this->_searchHelperConfig->getDefaultMappedAttributes();
-        $resource = $this->_frameworkModelResource;
         $select = $this->_frameworkModelResource->getConnection("core_write")
             ->select()
             ->from(
-                ["a" => $resource->getTableName("eav_attribute")],
+                ["a" => $this->_frameworkModelResource->getTableName("eav_attribute")],
                 ["attribute" => "a.attribute_code"]
             )
             ->join(
-                ["ca" => $resource->getTableName("catalog_eav_attribute")],
+                ["ca" => $this->_frameworkModelResource->getTableName("catalog_eav_attribute")],
                 "ca.attribute_id = a.attribute_id",
                 ""
             )
@@ -2277,7 +2282,7 @@ class Sync extends \Klevu\Search\Model\Sync
     public function debugsIds()
     {
         $select = $this->_frameworkModelResource->getConnection("core_write")->select()
-                ->from($resource->getTableName("catalog_product_entity"), ['entity_id','updated_at'])->limit(500)->order('updated_at');
+                ->from($this->_frameworkModelResource->getTableName("catalog_product_entity"), ['entity_id','updated_at'])->limit(500)->order('updated_at');
         $data = $this->_frameworkModelResource->getConnection("core_write")->fetchAll($select);
         return $data;
     }
@@ -2328,7 +2333,7 @@ class Sync extends \Klevu\Search\Model\Sync
     public function deleteTestmodeData($store)
     {
         $condition = ["store_id"=> $store->getId()];
-        $this->_frameworkModelResource->getConnection("core_write")->delete($resource->getTableName("klevu_product_sync"), $condition);
+        $this->_frameworkModelResource->getConnection("core_write")->delete($this->_frameworkModelResource->getTableName("klevu_product_sync"), $condition);
     }
     
     /**
@@ -2338,9 +2343,8 @@ class Sync extends \Klevu\Search\Model\Sync
      */
     public function getExpiryDateAttributeId()
     {
-        $resource = $this->_frameworkModelResource;
-        $query = $resource->getConnection("core_write")->select()
-                    ->from($resource->getTableName("eav_attribute"), ['attribute_id'])
+        $query = $this->_frameworkModelResource->getConnection("core_write")->select()
+                    ->from($this->_frameworkModelResource->getTableName("eav_attribute"), ['attribute_id'])
                     ->where('attribute_code=?', 'special_to_date');
         $data = $query->query()->fetchAll();
         return $data[0]['attribute_id'];
@@ -2355,9 +2359,8 @@ class Sync extends \Klevu\Search\Model\Sync
     {
         $attribute_id = $this->getExpiryDateAttributeId();
         $current_date = date_create("now")->format("Y-m-d");
-        $resource = $this->_frameworkModelResource;
-        $query = $resource->getConnection("core_write")->select()
-                    ->from($resource->getTableName("catalog_product_entity_datetime"), [$this->_entity_value])
+        $query = $this->_frameworkModelResource->getConnection("core_write")->select()
+                    ->from($this->_frameworkModelResource->getTableName("catalog_product_entity_datetime"), [$this->_klevuSyncModel->getData("entity_value")])
                     ->where("attribute_id=:attribute_id AND DATE_ADD(value,INTERVAL 1 DAY)=:current_date")
                     ->bind([
                             'attribute_id' => $attribute_id,
@@ -2366,7 +2369,7 @@ class Sync extends \Klevu\Search\Model\Sync
         $data = $this->_frameworkModelResource->getConnection("core_write")->fetchAll($query, $query->getBind());
         $pro_ids = [];
         foreach ($data as $key => $value) {
-            $pro_ids[] = $value[$this->_entity_value];
+            $pro_ids[] = $value[$this->_klevuSyncModel->getData("entity_value")];
         }
         return $pro_ids;
     }
@@ -2397,10 +2400,9 @@ class Sync extends \Klevu\Search\Model\Sync
     public function updateSpecificProductIds($ids)
     {
         $pro_ids = implode(',', $ids);
-        $resource = $this->_frameworkModelResource;
-        $where = sprintf("(product_id IN(%s) OR parent_id IN(%s)) AND %s", $pro_ids, $pro_ids, $resource->getConnection('core_write')->quoteInto('type = ?', "products"));
-        $resource->getConnection('core_write')->update(
-            $resource->getTableName('klevu_product_sync'),
+        $where = sprintf("(product_id IN(%s) OR parent_id IN(%s)) AND %s", $pro_ids, $pro_ids, $this->_frameworkModelResource->getConnection('core_write')->quoteInto('type = ?', "products"));
+        $this->_frameworkModelResource->getConnection('core_write')->update(
+            $this->_frameworkModelResource->getTableName('klevu_product_sync'),
             ['last_synced_at' => '0'],
             $where
         );
@@ -2519,254 +2521,14 @@ class Sync extends \Klevu\Search\Model\Sync
      */
     public function runCategory($store)
     {
-            $isActiveAttributeId =  $this->_searchHelperData->getIsActiveAttributeId();
-            $isExcludeAttributeId =  $this->_searchHelperData->getIsExcludeAttributeId();
-            $this->log(\Zend\Log\Logger::INFO, sprintf("Starting sync for category %s (%s).", $store->getWebsite()->getName(), $store->getName()));
-            $rootId = $store->getRootCategoryId();
-            $rootStoreCategory = "1/$rootId/";
-            
-        if (in_array($this->_ProductMetadataInterface->getEdition(),array("Enterprise","B2B")) && version_compare($this->_ProductMetadataInterface->getVersion(), '2.1.0', '>=')===true) {
-            $actions = [
-            'delete' => $this->_frameworkModelResource->getConnection()
-                ->select()
-                /*
-                 * Select synced categories in the current store/mode that 
-                 * are no longer enabled
-                 */
-                ->from(
-                    ['ce' => $this->getTableName("catalog_category_entity")],
-                    ['category_id' => "ce.entity_id"]
-                )
-                ->join(
-                    ['k' => $this->getTableName("klevu_product_sync")],
-                    "k.product_id = ce.entity_id AND k.type = :type AND store_id=:store_id AND k.parent_id=0",
-                    ""
-                )
-                ->joinLeft(
-                    ['ci' => $this->_frameworkModelResource->getTableName("catalog_category_entity_int")],
-                    "ci.row_id = ce.row_id AND ci.attribute_id = :is_active AND ci.store_id = 0",
-                    ""
-                )
-                ->joinLeft(
-                    ['cs' => $this->_frameworkModelResource->getTableName("catalog_category_entity_int")],
-                    "cs.row_id = ci.row_id AND cs.attribute_id = :is_active AND cs.store_id = :store_id",
-                    ""
-                )
-                ->joinLeft(
-                    ['cie' => $this->_frameworkModelResource->getTableName("catalog_category_entity_int")],
-                    "cie.row_id = ce.row_id AND cie.attribute_id = :is_exclude AND cie.store_id = 0",
-                    ""
-                )
-                ->joinLeft(
-                    ['cse' => $this->_frameworkModelResource->getTableName("catalog_category_entity_int")],
-                    "cse.row_id = cie.row_id AND cse.attribute_id = :is_exclude AND cse.store_id = :store_id",
-                    ""
-                )
-                ->where(
-                    "(CASE WHEN cs.value_id > 0 THEN cs.value ELSE ci.value END = 0 OR CASE WHEN cse.value_id > 0 THEN cse.value ELSE cie.value END = 1 OR k.product_id NOT IN ?)",
-                    $this->_frameworkModelResource->getConnection()
-                        ->select()
-                        ->from(
-                            ['i' => $this->getTableName("catalog_category_entity")],
-                            ['category_id' => "i.entity_id"]
-                        )
-                )
-                ->group(['k.product_id', 'k.parent_id'])
-                ->bind([
-                    'type'=>"categories",
-                    'is_active' => $isActiveAttributeId,
-                    'is_exclude' => $isExcludeAttributeId,
-                    'store_id' => $store->getId()
-                ]),
-            'update' =>
-                    $this->_frameworkModelResource->getConnection()
-                        ->select()
-                        /*
-                         * Select categories for the current store/mode
-                         * have been updated since last sync.
-                         */
-                         ->from(
-                             ['k' => $this->getTableName("klevu_product_sync")],
-                             ['category_id' => "k.product_id"]
-                         )
-                        ->join(
-                            ['ce' => $this->getTableName("catalog_category_entity")],
-                            "k.product_id = ce.entity_id",
-                            ""
-                        )
-                        ->where("(k.type = :type) AND (k.store_id = :store_id) AND (ce.updated_at > k.last_synced_at)")
-                        ->bind([
-                            'store_id' => $store->getId(),
-                            'type'=> "categories",
-                        ]),
-                    'add' =>  $this->_frameworkModelResource->getConnection()
-                        ->select()
-                        /*
-                         * Select categories for the current store/mode
-                         * have been updated since last sync.
-                         */
-                        ->from(
-                            ['c' => $this->_frameworkModelResource->getTableName("catalog_category_entity")],
-                            ['category_id' => "c.entity_id"]
-                        )
-                        ->joinLeft(
-                            ['ci' => $this->_frameworkModelResource->getTableName("catalog_category_entity_int")],
-                            "ci.row_id = c.row_id AND ci.attribute_id = :is_active AND ci.store_id = 0",
-                            ""
-                        )
-                        ->joinLeft(
-                            ['cs' => $this->_frameworkModelResource->getTableName("catalog_category_entity_int")],
-                            "cs.row_id = c.row_id AND cs.attribute_id = :is_active AND cs.store_id = :store_id",
-                            ""
-                        )
-                        ->joinLeft(
-                            ['cie' => $this->_frameworkModelResource->getTableName("catalog_category_entity_int")],
-                            "cie.row_id = c.row_id AND cie.attribute_id = :is_exclude AND cie.store_id = 0",
-                            ""
-                        )
-                        ->joinLeft(
-                            ['cse' => $this->_frameworkModelResource->getTableName("catalog_category_entity_int")],
-                            "cse.row_id = c.row_id AND cse.attribute_id = :is_exclude AND cse.store_id = :store_id",
-                            ""
-                        )
-                        ->joinLeft(
-                            ['k' => $this->_frameworkModelResource->getTableName("klevu_product_sync")],
-                            "k.product_id = c.entity_id AND k.type = :type AND k.store_id = :store_id AND k.parent_id=0",
-                            ""
-                        )
-                        ->where("CASE WHEN cs.value_id > 0 THEN cs.value ELSE ci.value END = 1")
-                        ->where("CASE WHEN cse.value_id > 0 THEN cse.value ELSE cie.value END = 0 OR CASE WHEN cse.value_id > 0 THEN cse.value ELSE cie.value END IS NULL")
-                        ->where("k.product_id IS NULL")
-                        ->where("c.path LIKE ?", "{$rootStoreCategory}%")
-                ->bind([
-                    'type' => "categories",
-                    'store_id' => $store->getId(),
-                    'is_active' => $isActiveAttributeId,
-                    'is_exclude' => $isExcludeAttributeId,
-                    ]),
-            ];
-        } else {
-            $actions = [
-            'delete' => $this->_frameworkModelResource->getConnection()
-                ->select()
-                /*
-                 * Select synced categories in the current store/mode that 
-                 * are no longer enabled
-                 */
-                ->from(
-                    ['ce' => $this->getTableName("catalog_category_entity")],
-                    ['category_id' => "ce.entity_id"]
-                )
-                ->join(
-                    ['k' => $this->getTableName("klevu_product_sync")],
-                    "k.product_id = ce.entity_id AND k.type = :type AND store_id=:store_id AND k.parent_id=0",
-                    ""
-                )
-                ->joinLeft(
-                    ['ci' => $this->_frameworkModelResource->getTableName("catalog_category_entity_int")],
-                    "ci.entity_id = ce.entity_id AND ci.attribute_id = :is_active AND ci.store_id = 0",
-                    ""
-                )
-                ->joinLeft(
-                    ['cs' => $this->_frameworkModelResource->getTableName("catalog_category_entity_int")],
-                    "cs.entity_id = ci.entity_id AND cs.attribute_id = :is_active AND cs.store_id = :store_id",
-                    ""
-                )
-                 ->joinLeft(
-                     ['cie' => $this->_frameworkModelResource->getTableName("catalog_category_entity_int")],
-                     "cie.entity_id = ce.entity_id AND cie.attribute_id = :is_exclude AND cie.store_id = 0",
-                     ""
-                 )
-                ->joinLeft(
-                    ['cse' => $this->_frameworkModelResource->getTableName("catalog_category_entity_int")],
-                    "cse.entity_id = cie.entity_id AND cse.attribute_id = :is_exclude AND cse.store_id = :store_id",
-                    ""
-                )
-                ->where(
-                    "(CASE WHEN cs.value_id > 0 THEN cs.value ELSE ci.value END = 0 OR 
-						CASE WHEN cse.value_id > 0 THEN cse.value ELSE cie.value END = 1 OR k.product_id NOT IN ?)",
-                    $this->_frameworkModelResource->getConnection()
-                        ->select()
-                        ->from(
-                            ['i' => $this->getTableName("catalog_category_entity")],
-                            ['category_id' => "i.entity_id"]
-                        )
-                )
-                ->group(['k.product_id', 'k.parent_id'])
-                ->bind([
-                    'type'=>"categories",
-                    'is_active' => $isActiveAttributeId,
-                    'is_exclude' => $isExcludeAttributeId,
-                    'store_id' => $store->getId()
-                ]),
-            'update' =>
-                    $this->_frameworkModelResource->getConnection()
-                        ->select()
-                        /*
-                         * Select categories for the current store/mode
-                         * have been updated since last sync.
-                         */
-                         ->from(
-                             ['k' => $this->getTableName("klevu_product_sync")],
-                             ['category_id' => "k.product_id"]
-                         )
-                        ->join(
-                            ['ce' => $this->getTableName("catalog_category_entity")],
-                            "k.product_id = ce.entity_id",
-                            ""
-                        )
-                        ->where("(k.type = :type) AND (k.store_id = :store_id) AND (ce.updated_at > k.last_synced_at)")
-                        ->bind([
-                            'store_id' => $store->getId(),
-                            'type'=> "categories",
-                        ]),
-                    'add' =>  $this->_frameworkModelResource->getConnection()
-                        ->select()
-                        /*
-                         * Select categories for the current store/mode
-                         * have been updated since last sync.
-                         */
-                        ->from(
-                            ['c' => $this->_frameworkModelResource->getTableName("catalog_category_entity")],
-                            ['category_id' => "c.entity_id"]
-                        )
-                        ->joinLeft(
-                            ['ci' => $this->_frameworkModelResource->getTableName("catalog_category_entity_int")],
-                            "ci.entity_id = c.entity_id AND ci.attribute_id = :is_active AND ci.store_id = 0",
-                            ""
-                        )
-                        ->joinLeft(
-                            ['cs' => $this->_frameworkModelResource->getTableName("catalog_category_entity_int")],
-                            "cs.entity_id = c.entity_id AND cs.attribute_id = :is_active AND cs.store_id = :store_id",
-                            ""
-                        )
-                        ->joinLeft(
-                            ['cie' => $this->_frameworkModelResource->getTableName("catalog_category_entity_int")],
-                            "cie.entity_id = c.entity_id AND cie.attribute_id = :is_exclude AND cie.store_id = 0",
-                            ""
-                        )
-                        ->joinLeft(
-                            ['cse' => $this->_frameworkModelResource->getTableName("catalog_category_entity_int")],
-                            "cse.entity_id = c.entity_id AND cse.attribute_id = :is_exclude AND cse.store_id = :store_id",
-                            ""
-                        )
-                        ->joinLeft(
-                            ['k' => $this->_frameworkModelResource->getTableName("klevu_product_sync")],
-                            "k.product_id = c.entity_id AND k.type = :type AND k.store_id = :store_id AND k.parent_id=0",
-                            ""
-                        )
-                        ->where("CASE WHEN cs.value_id > 0 THEN cs.value ELSE ci.value END = 1")
-                        ->where("CASE WHEN cse.value_id > 0 THEN cse.value ELSE cie.value END = 0 OR CASE WHEN cse.value_id > 0 THEN cse.value ELSE cie.value END IS NULL")
-                        ->where("k.product_id IS NULL")
-                        ->where("c.path LIKE ?", "{$rootStoreCategory}%")
-                ->bind([
-                    'type' => "categories",
-                    'store_id' => $store->getId(),
-                    'is_active' => $isActiveAttributeId,
-                    'is_exclude' => $isExcludeAttributeId,
-                    ]),
-            ];
-        }
+        $this->log(\Zend\Log\Logger::INFO, sprintf("Starting sync for category %s (%s).", $store->getWebsite()->getName(), $store->getName()));
+
+        $actions = array(
+            "delete" => $this->_klevuSyncModel->getCategoryToDelete($store->getId()),
+            "update" => $this->_klevuSyncModel->getCategoryToUpdate($store->getId()),
+            "add" => $this->_klevuSyncModel->getCategoryToAdd($store->getId()),
+        );
+
         $errors = 0;
         foreach ($actions as $action => $statement) {
             if ($this->rescheduleIfOutOfMemory()) {
@@ -2774,7 +2536,7 @@ class Sync extends \Klevu\Search\Model\Sync
             }
                 
             $method = $action . "Category";
-            $category_pages = $this->_frameworkModelResource->getConnection()->fetchAll($statement, $statement->getBind());
+            $category_pages = $statement;
             $total = count($category_pages);
             $this->log(\Zend\Log\Logger::INFO, sprintf("Found %d category Pages to %s.", $total, $action));
             $pages = ceil($total / static ::RECORDS_PER_PAGE);
@@ -3062,50 +2824,7 @@ class Sync extends \Klevu\Search\Model\Sync
         }
         return $this->_klevu_enabled_feature_response;
     }
-    
-    
-    /**
-     * Get the klevu cron entry which is running mode
-     *
-     * @return int
-     */
-    public function getKlevuCronStatus()
-    {
-        $collection = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Cron\Model\ResourceModel\Schedule\Collection')
-        ->addFieldToFilter("job_code", $this->getJobCode())
-        ->addFieldToFilter("status", \Magento\Cron\Model\Schedule::STATUS_RUNNING);
-        if ($collection->getSize()) {
-            $data = $collection->getData();
-            $url_builder = \Magento\Framework\App\ObjectManager::getInstance()->get('\Magento\Framework\UrlInterface');
-            $url = $url_builder->getUrl("klevu_search/sync/clearcron");
-            return \Magento\Cron\Model\Schedule::STATUS_RUNNING." Since ".$data[0]['executed_at']." <a href='".$url."'>Clear Klevu Cron</a>";
-        } else {
-            $collection = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Cron\Model\ResourceModel\Schedule\Collection')
-            ->addFieldToFilter("job_code", $this->getJobCode())
-            ->addFieldToFilter("status", \Magento\Cron\Model\Schedule::STATUS_SUCCESS)
-            ->setOrder('finished_at', 'desc');
-            if ($collection->getSize()) {
-                $data = $collection->getData();
-                return \Magento\Cron\Model\Schedule::STATUS_SUCCESS." ".$data[0]["finished_at"];
-            }
-        }
-        return;
-    }
-    
-    /**
-     * Remove the cron which is in running state
-     *
-     * @return void
-     *
-     */
-    public function clearKlevuCron()
-    {
-        $condition = [];
-        $condition[] = $this->_frameworkModelResource->getConnection()->quoteInto('status = ?', \Magento\Cron\Model\Schedule::STATUS_RUNNING);
-        $condition[] = $this->_frameworkModelResource->getConnection()->quoteInto('job_code = ?', $this->getJobCode());
-        $this->_frameworkModelResource->getConnection()->delete($this->_frameworkModelResource->getTableName("cron_schedule"), $condition);
-    }
-    
+
     /**
      * Return the URL rewrite data for the given products for the current store.
      *
@@ -3126,5 +2845,19 @@ class Sync extends \Klevu\Search\Model\Sync
             }
         }
         return $data;
+    }
+
+    //compatibility
+    public function schedule($time = "now"){
+        return $this->_klevuSyncModel->schedule();
+    }
+    public function isRunning($copies = 1){
+        return $this->_klevuSyncModel->isRunning($copies);
+    }
+    public function rescheduleIfOutOfMemory(){
+        return $this->_klevuSyncModel->rescheduleIfOutOfMemory();
+    }
+    public function log($level, $message){
+        return $this->_klevuSyncModel->log($level, $message);
     }
 }

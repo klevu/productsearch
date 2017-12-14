@@ -101,7 +101,8 @@ class SyncStoreView extends Command
 								continue;
 							}
 							$sync->syncData($onestore);
-							$sync->runCategory($onestore);
+                            $sync->runCategory($onestore);
+                            $sync->reset();
 						}
 						$output->writeln("Sync was done for store code :".$value);
 					} catch (\Exception $e) {

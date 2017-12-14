@@ -1,7 +1,6 @@
 <?php
 /**
- * Copyright © 2013-2017 Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Klevu override of the score builder for use on preserve layout
  */
 namespace Klevu\Search\Adapter\Mysql;
 
@@ -9,6 +8,7 @@ use Magento\Framework\Registry as MagentoRegistry;
 /**
  * Class for generating sql condition for calculating store manager
  */
+
 class ScoreBuilder extends \Magento\Framework\Search\Adapter\Mysql\ScoreBuilder
 {
     private $magentoRegistry;
@@ -18,7 +18,7 @@ class ScoreBuilder extends \Magento\Framework\Search\Adapter\Mysql\ScoreBuilder
     ) {
         $this->magentoRegistry = $magentoRegistry;
         if (is_callable('parent::__construct')) {
-            parent::__construct(...func_get_args() );
+            parent::__construct();
         }
     }
 
