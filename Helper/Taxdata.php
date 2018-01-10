@@ -286,4 +286,85 @@ class Taxdata extends \Magento\Framework\App\Helper\AbstractHelper
 			$product_price_data['exclude_tax'] = $taxDetailsItem->getPrice();
 			return $product_price_data;
     }
+	
+	/**
+     * Get product price with all tax settings processing
+     *
+     * @param   \Magento\Catalog\Model\Product $product
+     * @param   float $price inputted product price
+     * @param   bool $includingTax return price include tax flag
+     */
+    public function getTaxPriceForCollection(
+        $product,
+        $price,
+        $store
+    ) {
+		
+        if (!$price) {
+            return $price;
+        }
+		$priceIncludesTax = null;
+		if ($priceIncludesTax === null) {
+                $priceIncludesTax = $this->_taxConfig->priceIncludesTax($store);
+        }
+		
+        $store = $this->_storeManager->getStore($store);
+			$shippingAddress = null;
+            $shippingAddressDataObject = null;
+            if ($shippingAddress === null) {
+                $shippingAddressDataObject =
+                    $this->convertDefaultTaxAddress($this->_customerSession->getDefaultTaxShippingAddress());
+            } elseif ($shippingAddress instanceof \Magento\Customer\Model\Address\AbstractAddress) {
+                $shippingAddressDataObject = $shippingAddress->getDataModel();
+            }
+			$billingAddress = null;
+            $billingAddressDataObject = null;
+            if ($billingAddress === null) {
+                $billingAddressDataObject =
+                    $this->convertDefaultTaxAddress($this->_customerSession->getDefaultTaxBillingAddress());
+            } elseif ($billingAddress instanceof \Magento\Customer\Model\Address\AbstractAddress) {
+                $billingAddressDataObject = $billingAddress->getDataModel();
+            }
+
+            $taxClassKey = $this->_taxClassKeyFactory->create();
+            $taxClassKey->setType(TaxClassKeyInterface::TYPE_ID)
+                ->setValue($product->getTaxClassId());
+			$ctc = null;
+            if ($ctc === null && $this->_customerSession->getCustomerGroupId() != null) {
+                $ctc = $this->customerGroupRepository->getById($this->_customerSession->getCustomerGroupId())
+                    ->getTaxClassId();
+            }
+
+            $customerTaxClassKey = $this->_taxClassKeyFactory->create();
+            $customerTaxClassKey->setType(TaxClassKeyInterface::TYPE_ID)
+                ->setValue($ctc);
+
+            $item = $this->_quoteDetailsItemFactory->create();
+            $item->setQuantity(1)
+                ->setCode($product->getSku())
+                ->setShortDescription($product->getShortDescription())
+                ->setTaxClassKey($taxClassKey)
+                ->setIsTaxIncluded($priceIncludesTax)
+                ->setType('product')
+                ->setUnitPrice($price);
+			
+
+            $quoteDetails = $this->_quoteDetailsFactory->create();
+            $quoteDetails->setShippingAddress($shippingAddressDataObject)
+                ->setBillingAddress($billingAddressDataObject)
+                ->setCustomerTaxClassKey($customerTaxClassKey)
+                ->setItems([$item])
+                ->setCustomerId($this->_customerSession->getCustomerId());
+
+            $storeId = null;
+            if ($store) {
+                $storeId = $store->getId();
+            }
+            $taxDetails = $this->_taxCalculationService->calculateTax($quoteDetails, $storeId,false);
+            $items = $taxDetails->getItems();
+            $taxDetailsItem = array_shift($items);
+			$product_price_data['include_tax'] = $taxDetailsItem->getPriceInclTax();
+			$product_price_data['exclude_tax'] = $taxDetailsItem->getPrice();
+			return $product_price_data;
+    }
 }

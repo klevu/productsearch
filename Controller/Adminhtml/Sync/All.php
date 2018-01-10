@@ -106,6 +106,7 @@ class All extends \Magento\Backend\App\Action
         $this->_frameworkEventManagerInterface->dispatch('sync_all_external_data', [
             'store' => $store
         ]);
+        $this->_storeModelStoreManagerInterface->setCurrentStore(0);
         return $this->_redirect($this->_redirect->getRefererUrl());
     }
     

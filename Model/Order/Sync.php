@@ -168,7 +168,7 @@ class Sync extends AbstractModel
                     $this->log(\Zend\Log\Logger::INFO, "Starting sync.");
                     $items_synced = 0;
                     $errors = 0;
-                    $item = $this->_modelOrderItem;
+                    $item = \Magento\Framework\App\ObjectManager::getInstance()->create('Magento\Sales\Model\Order\Item');
                     $stmt = $this->_frameworkModelResource->getConnection()->query($this->getSyncQueueSelect());
                     $itemsToSend = $stmt->fetchAll();
                 foreach ($itemsToSend as $key => $value) {
@@ -221,14 +221,26 @@ class Sync extends AbstractModel
         }
         $parent = null;
         if ($item->getParentItemId()) {
-            $parent = $this->_modelOrderItem->load($item->getParentItemId());
+            $parent =  \Magento\Framework\App\ObjectManager::getInstance()->create('Magento\Sales\Model\Order\Item')->load($item->getParentItemId());
         }
+		if($item->getProductType() == "grouped")
+		{
+			$objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+			$groupProductObject = $objectManager->create('Magento\GroupedProduct\Model\Product\Type\Grouped');
+			$groupProduct = $groupProductObject->getParentIdsByChild($item->getProductId());
+			$itemId = $groupProduct[0];
+		}
+		else
+		{
+			$itemId = $item->getProductId();
+		}
+		
         $response = $this->_apiActionProducttracking
             ->setStore($this->_storeModelStoreManagerInterface->getStore($item->getStoreId()))
             ->execute([
             "klevu_apiKey"    => $this->getApiKey($item->getStoreId()),
             "klevu_type"      => "checkout",
-            "klevu_productId" => $this->_searchHelperData->getKlevuProductId($item->getProductId(), ($parent) ? $parent->getProductId() : 0),
+            "klevu_productId" => $this->_searchHelperData->getKlevuProductId($itemId, ($parent) ? $parent->getProductId() : 0),
             "klevu_unit"      => $item->getQtyOrdered() ? $item->getQtyOrdered() : ($parent ? $parent->getQtyOrdered() : null),
             "klevu_salePrice" => $item->getPriceInclTax() ? $item->getPriceInclTax() : ($parent ? $parent->getPriceInclTax() : null),
             "klevu_currency"  => $this->getStoreCurrency($item->getStoreId()),

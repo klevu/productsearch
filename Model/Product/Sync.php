@@ -1487,11 +1487,15 @@ class Sync extends AbstractModel
         
         if ($config->isCollectionMethodEnabled()) {
             $data = \Magento\Framework\App\ObjectManager::getInstance()->create('Magento\Catalog\Model\ResourceModel\Product\Collection')
+			    ->addAttributeToSelect($this->getUsedMagentoAttributes())
                 ->addIdFilter($product_ids)
                 ->setStore($this->_storeModelStoreManagerInterface->getStore())
                 ->addStoreFilter()
-                //->addFinalPrice()
-                ->addAttributeToSelect($this->getUsedMagentoAttributes());
+				->addMinimalPrice() 
+				->addFinalPrice()
+				->addTaxPercents();
+            $data->load()
+                ->addCategoryIds();
          
             $data->load()
                 ->addCategoryIds();
@@ -1500,7 +1504,13 @@ class Sync extends AbstractModel
         // Get the stock,url,visibity of product from database
         $url_rewrite_data = $this->getUrlRewriteData($product_ids);
         //$visibility_data = $this->getVisibilityData($product_ids);
-        //$stock_data = $this->getStockData($product_stock_ids);
+        //$stock_data = $this->getStockData($product_stock_ids);]
+		if (in_array($this->_ProductMetadataInterface->getEdition(),array("Enterprise","B2B")) && version_compare($this->_ProductMetadataInterface->getVersion(), '2.1.0', '>=')===true) {
+			$configProductData = $this->getConfigProductPriceDataEE($parent_ids,$this->_storeModelStoreManagerInterface->getStore()->getWebsiteId());
+		} else {
+			$configProductData = $this->getConfigProductPriceDataCE($parent_ids,$this->_storeModelStoreManagerInterface->getStore()->getWebsiteId());
+		}
+		
         $attribute_map = $this->getAttributeMap();
         if ($config->isSecureUrlEnabled($this->_storeModelStoreManagerInterface->getStore()->getId())) {
             $base_url = $this->_storeModelStoreManagerInterface->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_LINK, true);
@@ -1630,11 +1640,30 @@ class Sync extends AbstractModel
 							
 							$salePrice = $this->_priceHelper->getKlevuSalePrice($parent, $item, $this->_storeModelStoreManagerInterface->getStore());
 							
-                            // show low price for config products
-                            $product['startPrice'] = $salePrice['startPrice'];
-                                
-                            // also send sale price for sorting and filters for klevu
-                            $product['salePrice'] = $salePrice['startPrice'];
+							if($parent){
+								$childSalePrice = $this->_priceHelper->getKlevuSalePrice(null, $item, $this->_storeModelStoreManagerInterface->getStore());
+								
+								// show low price for config products
+								//$product['startPrice'] = $salePrice['salePrice'];
+									
+								// also send sale price for sorting and filters for klevu
+								$product['salePrice'] = $childSalePrice['salePrice'];
+							} else {
+								$product['startPrice'] = $salePrice['salePrice'];
+								$product['salePrice'] = $salePrice['salePrice'];
+							}
+							
+							
+							if($parent){
+								$salePrice = '';
+								if(isset($configProductData[$parent->getId()])) {
+									// get min final price from db 
+									$salePrice = $configProductData[$parent->getId()];
+								}
+								// process for tax calculation
+								$price_code = "final_price";
+								$product['startPrice'] = $this->_priceHelper->processPriceForCollection($salePrice, $price_code, $item, $this->_storeModelStoreManagerInterface->getStore());
+						    }
 							
 							if(isset($salePrice['toPrice'])){
 								$product['toPrice'] = $salePrice['toPrice'];
@@ -1646,10 +1675,13 @@ class Sync extends AbstractModel
 						
                             // Default to 0 if price can't be determined
                             $product['price'] = 0;
-							
-							$price = $this->_priceHelper->getKlevuPrice($parent, $item, $this->_storeModelStoreManagerInterface->getStore());
-							
-							$product['price'] = $price['price'];
+							if($parent){
+								$childSalePrice = $this->_priceHelper->getKlevuPrice($item, $item, $this->_storeModelStoreManagerInterface->getStore());
+								$product['price'] = $childSalePrice['price'];
+							} else {
+								$price = $this->_priceHelper->getKlevuPrice($parent, $item, $this->_storeModelStoreManagerInterface->getStore());
+								$product['price'] = $price['price'];
+							}
                             
                             break;
                         default:
@@ -1678,10 +1710,7 @@ class Sync extends AbstractModel
                 }
                 
                 
-                if ($parent) {
-                    //Get the price based on customer group
-                    $product['groupPrices'] = $this->getGroupPrices($parent);
-                } elseif ($item) {
+                if ($item) {
                     $product['groupPrices'] = $this->getGroupPrices($item);
                 } else {
                     $product['groupPrices'] = "";
@@ -2860,4 +2889,83 @@ class Sync extends AbstractModel
     public function log($level, $message){
         return $this->_klevuSyncModel->log($level, $message);
     }
+	
+	/**
+     * Return the min price data for the given products for the current website for CE.
+     *
+     * @param array $parent_ids A list of product IDs and website_id.
+     *
+     * @return array A list with product IDs as keys and request min price of parent as values.
+     */
+	public function getConfigProductPriceDataCE($parent_ids,$website_id){
+		
+		$stmt = $this->_frameworkModelResource->getConnection()->query(
+			$this->_frameworkModelResource->getConnection()
+				->select()
+				/*
+				* Select products from catalog super link table
+				*/
+				->from(
+					['s1' => $this->_frameworkModelResource->getTableName("catalog_product_super_link")],
+					['final_price' => "MIN(final_price)", 'parent_id' => "parent_id"]
+				)
+				->join(
+					['p1' => $this->_frameworkModelResource->getTableName("catalog_product_index_price")],
+					"s1.product_id= p1.entity_id",
+					""
+				)
+				->where("p1.customer_group_id = 0 AND p1.website_id =".$website_id)
+				->where("s1.parent_id IN (?)", $parent_ids)
+		);
+		$data = array();
+		while ($row = $stmt->fetch()) {
+			 $data[$row["parent_id"]] = $row["final_price"];
+		}
+		return $data;
+			
+	}
+	
+	/**
+     * Return the min price data for the given products for the current website for EE.
+     *
+     * @param array $parent_ids A list of product IDs and website_id.
+     *
+     * @return array A list with product IDs as keys and request min price of parent as values.
+     */	
+	public function getConfigProductPriceDataEE($parent_ids,$website_id){
+		$stmt = $this->_frameworkModelResource->getConnection()->query(
+			$this->_frameworkModelResource->getConnection()
+				->select()
+				/*
+				* Select products from catalog super link table
+				*/
+				->from(
+					['s1' => $this->_frameworkModelResource->getTableName("catalog_product_entity")],
+					['final_price' => "MIN(final_price)", 'parent_id' => "s1.entity_id", 'e2.entity_id' => "e2.entity_id"]
+				)
+				->join(
+					['e1' => $this->_frameworkModelResource->getTableName("catalog_product_super_link")],
+					"s1.row_id = e1.parent_id",
+					""
+				)
+				->join(
+					['e2' => $this->_frameworkModelResource->getTableName("catalog_product_entity")],
+					"e2.row_id = e1.product_id",
+					""
+				)
+				->join(
+					['p1' => $this->_frameworkModelResource->getTableName("catalog_product_index_price")],
+					"p1.entity_id = e2.entity_id",
+					""
+				)
+				->where("p1.customer_group_id = 0 AND p1.website_id =".$website_id)
+				->where("s1.entity_id IN (?)", $parent_ids)
+		);
+		$data = array();
+		while ($row = $stmt->fetch()) {
+			 $data[$row["parent_id"]] = $row["final_price"];
+		}
+		return $data;
+			
+	}
 }

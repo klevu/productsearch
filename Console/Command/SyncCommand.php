@@ -62,7 +62,7 @@ class SyncCommand extends Command
 			
             if ($input->hasParameterOption('--alldata')) {
 				
-                $output->writeln('<info>Data updates have been sent to Klevu</info>');
+                 $output->writeln('<info>All Data have been sent to Klevu</info>');
 				
             } elseif ($input->hasParameterOption('--updatesonly')) {
 				
@@ -70,7 +70,7 @@ class SyncCommand extends Command
 					$output->writeln("<info>Product sync failed.Please consult klevu_search.log file for more information.</info>");
 					$klevusession->setKlevuFailedFlag(0);
 				} else {
-					$output->writeln('<info>All Data have been sent to Klevu</info>');
+					$output->writeln('<info>Data updates have been sent to Klevu</info>');
 					$klevusession->setKlevuFailedFlag(0);
 				}
             }

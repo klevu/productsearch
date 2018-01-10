@@ -254,18 +254,25 @@ class Addrecords extends \Klevu\Search\Model\Api\Actionall
             $key = $this->sanitiseOtherAttribute($key);
             
             if (is_array($value)) {
-                $label = $this->sanitiseOtherAttribute($value['label']);
-                $value = $this->sanitiseOtherAttribute($value['values']);
+				if(isset($value['label'])) {
+					$label = $this->sanitiseOtherAttribute($value['label']);
+				}
+				if(isset($value['values'])) {
+					$value = $this->sanitiseOtherAttribute($value['values']);
+				}
             } else {
                 $label = $this->sanitiseOtherAttribute($key);
                 $value = $this->sanitiseOtherAttribute($value);
             }
             
-            if (is_array($value)) {
-                $value = implode(",", $value);
-            }
-
-            $value = sprintf("%s:%s:%s", $key, $label, $value);
+			if(!empty($value)) {
+				if (is_array($value)) {
+					$value = @implode(",", $value);
+				}
+			}
+			if(!empty($value)) {
+				$value = sprintf("%s:%s:%s", $key, $label, $value);
+			}
         }
         $record['otherAttributeToIndex'] = implode(";", $record['otherAttributeToIndex']);
     }

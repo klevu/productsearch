@@ -397,9 +397,10 @@ class Price extends \Magento\Framework\App\Helper\AbstractHelper
                     $groupProduct = \Magento\Framework\App\ObjectManager::getInstance()->create('\Magento\Catalog\Model\Product')->load($id);
 					if($groupProduct->getStatus() == 1) {
 						if ($config->isTaxEnabled($store->getId())) {
-							$groupPrices[] = $this->getKlevuPrice(null,$groupProduct,$store);
+							$gPrice = $this->getKlevuPrice(null,$groupProduct,$store);
+							$groupPrices[] = $gPrice['price'];
 						} else {
-							$groupPrices[] = $groupProduct->getPriceInfo()->getPrice('regular_price')->getAmount()->getValue();
+							$groupPrices[] = $groupProduct->getPriceInfo()->getPrice('regular_price')->getAmount()->getValue(\Magento\Tax\Pricing\Adjustment::ADJUSTMENT_CODE);
 						}
 					}
                 }
@@ -428,9 +429,10 @@ class Price extends \Magento\Framework\App\Helper\AbstractHelper
                 $groupProduct = \Magento\Framework\App\ObjectManager::getInstance()->create('\Magento\Catalog\Model\Product')->load($id);
 				if($groupProduct->getStatus() == 1) {
 					if ($config->isTaxEnabled($store->getId()) || $this->_searchHelperConfig->getPriceIncludesTax($store)) {
-						 $groupPrices[] = $this->getKlevuSalePrice(null,$groupProduct,$store);
+						$gPrice = $this->getKlevuSalePrice(null,$groupProduct,$store);
+						$groupPrices[] = $gPrice['salePrice'];
 					} else {
-						$groupPrices[] = $groupProduct->getPriceInfo()->getPrice('final_price')->getAmount()->getValue();
+						$groupPrices[] = $groupProduct->getPriceInfo()->getPrice('final_price')->getAmount()->getValue(\Magento\Tax\Pricing\Adjustment::ADJUSTMENT_CODE);
 					}
 				}
             }
@@ -454,6 +456,90 @@ class Price extends \Magento\Framework\App\Helper\AbstractHelper
         } else {
                 return $item->getPriceModel()->getTotalPrices($item, null, false, false);
         }
+    }
+	
+	/**
+     * Process the given product price for using in Product Sync.
+     * Applies tax, if needed, and converts to the currency of the current store.
+     *
+     * @param $price
+     * @param $tax_class_id
+     * @param product object
+     *
+     * @return float
+     */
+    public function processPriceForCollection($price, $price_code, $pro, $store)
+    {
+		
+		$taxPrice = $this->_catalogTaxHelper->getTaxPriceForCollection($pro,$price,$store->getId());
+		if($this->_searchHelperConfig->isTaxEnabled($store->getId())) {
+			if(isset($taxPrice['exclude_tax'])) {
+				return round($taxPrice['exclude_tax'],2);
+			}
+		} else {
+			if(isset($taxPrice['include_tax'])) {
+				return round($taxPrice['include_tax'],2);
+			}
+		}
+    }
+	
+	
+	/**
+     * Get the secure and unsecure media url
+     *
+     * @return string
+     */
+
+    public function getKlevuSalePriceForCollection($parent, $item, $store)
+    {
+		$price_code = "final_price";
+            // Use price index prices to set the product price and start/end prices if available
+            // Falling back to product price attribute if not
+            if ($item)
+            {
+                $ruleprice = $this->calculateFinalPriceFront($item, \Magento\Customer\Model\Group::NOT_LOGGED_IN_ID, $item->getId() , $store);
+                if ($item->getData('type_id') == "grouped")
+                {
+                    $this->getGroupProductMinPrice($item, $store);
+                    if (!empty($ruleprice))
+                    {
+                        $sPrice = min($ruleprice, $item->getFinalPrice());
+                    }
+                    else
+                    {
+                        $sPrice = $item->getFinalPrice();
+                    }
+                    $productPrice['startPrice'] = $sPrice;
+                    $productPrice["salePrice"] = $sPrice;
+                }
+                elseif ($item->getData('type_id') == \Magento\Catalog\Model\Product\Type::TYPE_BUNDLE)
+                {
+                    list($minimalPrice, $maximalPrice) = $this->getBundleProductPrices($item, $store);
+
+                    $productPrice["salePrice"] = $minimalPrice;
+                    $productPrice['startPrice'] = $minimalPrice;
+                    $productPrice['toPrice'] = $maximalPrice;
+                }
+                else
+                {
+                    
+                    $sPrice = $item->getFinalPrice();
+                    $productPrice['salePrice'] = $this->processPriceForCollection($sPrice, $price_code, $item,$store);
+					$productPrice['startPrice'] = $this->processPriceForCollection($sPrice, $price_code, $item,$store);
+                }
+            }
+            else
+            {
+                if ($item->getData("price") !== null)
+                {
+					$price = $item->getPrice();
+                    $productPrice["salePrice"] = $this->processPriceForCollection($price ,$price_code, $item,$store);
+
+                }
+            }
+        
+		
+		return $productPrice;
     }
     
 }

@@ -111,6 +111,7 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     const DATETIME_FORMAT = "Y-m-d H:i:s T";
 	const XML_PATH_CONFIG_SYNC_FREQUENCY = "klevu_search/product_sync/frequency";
 	const XML_PATH_PRICE_INCLUDES_TAX = "tax/calculation/price_includes_tax";
+	const XML_PATH_TAG_METHOD = "klevu_search/developer/tagging_options";
 
     /**
      * Set the Enable on Frontend flag in System Configuration for the given store.
@@ -655,7 +656,12 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
                 "price",
                 "tax_class_id",
                 "weight",
-                "rating"],
+                "rating",
+				"special_price",
+				"special_from_date",
+				"special_to_date",
+				"visibility",
+				"status"],
             "klevu_attribute" => [
                 "name",
                 "sku",
@@ -669,7 +675,12 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
                 "salePrice",
                 "salePrice",
                 "weight",
-                "rating"
+                "rating",
+				"special_price",
+				"special_from_date",
+				"special_to_date",
+				"visibility",
+				"status"
             ]
         ];
     }
@@ -910,6 +921,17 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     public function isCollectionMethodEnabled()
     {
         return $this->_appConfigScopeConfigInterface->isSetFlag(static::XML_PATH_COLLECTION_METHOD);
+    }
+	
+	
+	/**
+     * Check if default Magento log settings should be overridden to force logging for this module.
+     *
+     * @return bool
+     */
+    public function isTagMethodEnabled()
+    {
+        return $this->_appConfigScopeConfigInterface->isSetFlag(static::XML_PATH_TAG_METHOD);
     }
     
     /**
