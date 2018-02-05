@@ -1,22 +1,29 @@
 <?php /** @var \Klevu\Search\Block\Adminhtml\Form\Field\Sync\Button $block */ ?>
 <button id="<?php echo $block->getHtmlId() ?>" class="scalable" type="button">
-    <span><?php echo __($block->getButtonLabel()) ?></span>
+    <span><?php echo __($block->getButtonLabel()); ?></span>
 </button>
 <script type="text/javascript">
     require(["prototype"], function(){
         $("<?php echo $block->getHtmlId() ?>").observe("click", function () {
             if(document.getElementById('klevu_search_product_sync_sync_options')) {
                 var syncoptions = document.getElementById('klevu_search_product_sync_sync_options').value;
+                <?php
+                $store = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Store\Model\StoreManagerInterface');
+                ?>
                 new Ajax.Request("<?php echo $block->getUrl('klevu_search/savesyncoption/option'); ?>" + '?sync_options=' + syncoptions, {
                     method: 'POST',
                     onComplete: function(data) {
-                        setLocation("<?php echo $block->getDestinationUrl() ?>");
+                        if(syncoptions ==1) {
+                            window.open("<?php echo $block->getSyncUrlForStore(); ?>","_blank");
+                        } else {
+                            setLocation("<?php echo $block->getDestinationUrl() ?>");
+                        }
                     }
                 });
             } else {
                 setLocation("<?php echo $block->getDestinationUrl() ?>");
             }
-            
+
         });
     });
 </script>

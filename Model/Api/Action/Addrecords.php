@@ -274,7 +274,15 @@ class Addrecords extends \Klevu\Search\Model\Api\Actionall
 				$value = sprintf("%s:%s:%s", $key, $label, $value);
 			}
         }
-        $record['otherAttributeToIndex'] = implode(";", $record['otherAttributeToIndex']);
+        $recordOtherAttributeToIndex = $record['otherAttributeToIndex'];
+        if(count($recordOtherAttributeToIndex) > 0){
+            foreach ($recordOtherAttributeToIndex as $key => $element)
+            {
+                    if(is_array($element) || is_object($element)) unset($recordOtherAttributeToIndex[$key]);
+            }
+        }
+
+        $record['otherAttributeToIndex'] = @implode(";", $recordOtherAttributeToIndex);
     }
     
     /**

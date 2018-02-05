@@ -83,17 +83,12 @@
                   <label>Cron Status</label>
                   <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Store\Status</frontend_model>
                 </field>
-                <field id="sync_options" translate="label comment" sortOrder="398" type="select" showInDefault="1">
+                <field id="sync_options" translate="label comment" sortOrder="398" type="select" showInDefault="1" showInStore="1">
                   <label>Sync</label>
                   <source_model>Klevu\Search\Model\System\Config\Source\Syncoptions</source_model>
                 </field>
-                <field id="sync_options_info" translate="label comment" sortOrder="399" showInStore="1">
-                  <label>Sync</label>
-                  <frontend_model>Klevu\Search\Block\Adminhtml\Form\Syncoptionsinfo</frontend_model>
-                  <comment><![CDATA[To change the mode of sync (i.e. All data vs updates only), Please change the mode from the "Default config".]]></comment>
-                </field>
                 <field id="sync_button" type="button" sortOrder="400" showInDefault="1" showInWebsite="1" showInStore="1">
-                <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Sync\Button</frontend_model>
+					<frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Sync\Button</frontend_model>
                 </field>
             </group>
             <group id="attributes" translate="label" sortOrder="104" showInDefault="1" showInWebsite="1" showInStore="1">

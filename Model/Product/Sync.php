@@ -328,6 +328,7 @@ class Sync extends AbstractModel
     public function run()
     {
         try {
+			
             /* mark for update special price product */
             $this->markProductForUpdate();
             
@@ -378,9 +379,99 @@ class Sync extends AbstractModel
         }
     }
 	
-	protected function getSyncDataSqlForEEDelete($store) 
+	/**
+     * Sync store view data.
+     *
+     * @param \Magento\Store\Model\Store|int $store If passed, will only update products for the given store.
+     *
+     * @return $this
+     */
+	public function syncStoreView($store){
+		if (!$this->setupSession($store)) {
+            return;
+        }
+		
+		$this->syncData($store);
+        $this->runCategory($store);
+        $this->reset();
+		$records_count['numberOfRecord_add'] =  $this->_klevuSyncModel->getRegistry()->registry("numberOfRecord_add");
+		$records_count['numberOfRecord_update'] =  $this->_klevuSyncModel->getRegistry()->registry("numberOfRecord_update");
+		$records_count['numberOfRecord_delete'] =  $this->_klevuSyncModel->getRegistry()->registry("numberOfRecord_delete");
+		return $records_count;
+	}
+
+    public function runStore($store)
+    {
+        try{
+            if (!$this->setupSession($store)) {
+                return false;
+            }
+
+            $this->syncData($store);
+            $this->runCategory($store);
+            $this->reset();
+            return true;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+    public function runCron(){
+        try {
+            /* mark for update special price product */
+            $this->markProductForUpdate();
+
+            // Sync Data only for selected store from config wizard
+            $firstSync = $this->_searchModelSession->getFirstSync();
+            $this->_searchModelSession->setKlevuFailedFlag(0);
+
+            if (!empty($firstSync)) {
+                /** @var \Magento\Store\Model\Store $store */
+                $oneStore = $this->_storeModelStoreManagerInterface->getStore($firstSync);
+                if (!$this->setupSession($oneStore)) {
+                    return;
+                }
+
+                $this->syncData($oneStore);
+                $this->runCategory($oneStore);
+                $this->reset();
+                return;
+            }
+
+            if ($this->isRunning(2)) {
+                // Stop if another copy is already running
+                $this->log(\Zend\Log\Logger::INFO, "Stopping because another copy is already running.");
+                return;
+            }
+
+            $config = $this->_searchHelperConfig;
+
+            $storeList = $this->storeInterface->getStores();
+            $websiteList = array();
+            foreach ($storeList as $store) {
+                if(!isset($websiteList[$store->getWebsiteId()])) $websiteList[$store->getWebsiteId()] = array();
+                $websiteList[$store->getWebsiteId()] = array_unique(array_merge($websiteList[$store->getWebsiteId()], array($store->getCode())));
+            }
+
+            foreach ($websiteList as $storeList){
+                $this->_klevuSyncModel->executeSubProcess('klevu:syncstore:storecode '.implode(",",$storeList));
+            }
+
+            // update rating flag after all store view sync
+            $rating_upgrade_flag = $config->getRatingUpgradeFlag();
+            if ($rating_upgrade_flag==0) {
+                $config->saveRatingUpgradeFlag(1);
+            }
+        } catch (\Exception $e) {
+            // Catch the exception that was thrown, log it, then throw a new exception to be caught the Magento cron.
+            $this->_searchHelperData->log(\Zend\Log\Logger::CRIT, sprintf("Exception thrown in %s::%s - %s", __CLASS__, __METHOD__, $e->getMessage()));
+            throw $e;
+        }
+    }
+
+    protected function getSyncDataSqlForEEDelete($store)
 	{
-		return  $this->_frameworkModelResource->getConnection()
+		$limit = $this->_klevuSyncModel->getSessionVariable("limit");
+		$smtp =   $this->_frameworkModelResource->getConnection()
                     ->select()
                     ->union([
                         $this->_frameworkModelResource->getConnection()
@@ -458,9 +549,12 @@ class Sync extends AbstractModel
                                     ""
                                 )
 							)
-                        ])
-                    ->group(['k.product_id', 'k.parent_id'])
-                    ->bind([
+                        ]);
+                    $smtp->group(['k.product_id', 'k.parent_id']);
+					if(!empty($limit)){
+						$smtp->limit($limit);
+					}
+                    $smtp->bind([
                         'type'          => "products",
                         'store_id'       => $store->getId(),
                         'default_store_id' => \Magento\Store\Model\Store::DEFAULT_STORE_ID,
@@ -469,10 +563,12 @@ class Sync extends AbstractModel
                         'visible_both'   => \Magento\Catalog\Model\Product\Visibility::VISIBILITY_BOTH,
                         'visible_search' => \Magento\Catalog\Model\Product\Visibility::VISIBILITY_IN_SEARCH
                     ]);
+					return $smtp;
 	}
 	protected function getSyncDataSqlForEEUpdate($store) 
 	{
-		return $this->_frameworkModelResource->getConnection("core_write")
+		$limit = $this->_klevuSyncModel->getSessionVariable("limit");
+		$smtp = $this->_frameworkModelResource->getConnection("core_write")
                     ->select()
                     ->union([
                         // Select products without parents that need to be updated
@@ -543,8 +639,11 @@ class Sync extends AbstractModel
                             )
                             ->where("(CASE WHEN sd.value_id > 1 THEN sd.value ELSE ss.value END = :status_enabled) AND ((e1.updated_at > k.last_synced_at) OR (e2.updated_at > k.last_synced_at))")
                     ])
-                    ->group(['k.product_id', 'k.parent_id'])
-                    ->bind([
+                    ->group(['k.product_id', 'k.parent_id']);
+					if(!empty($limit)){
+						$smtp->limit($limit);
+					}
+                    $smtp->bind([
                         'type'          => "products",
                         'store_id' => $store->getId(),
                         'default_store_id' => \Magento\Store\Model\Store::DEFAULT_STORE_ID,
@@ -554,10 +653,12 @@ class Sync extends AbstractModel
                         'status_attribute_id' => $this->getProductStatusAttribute()->getId(),
                         'status_enabled' => \Magento\Catalog\Model\Product\Attribute\Source\Status::STATUS_ENABLED,
                     ]);
+			return $smtp;
 	}
     protected function getSyncDataSqlForEEAdd($store) 
 	{
-		return $this->_frameworkModelResource->getConnection("core_write")
+		$limit = $this->_klevuSyncModel->getSessionVariable("limit");
+		$smtp = $this->_frameworkModelResource->getConnection("core_write")
                     ->select()
                     ->union([
                         // Select non-configurable products that need to be added
@@ -633,8 +734,11 @@ class Sync extends AbstractModel
                             )
                             ->where("(CASE WHEN sd.value_id > 1 THEN sd.value ELSE ss.value END = :status_enabled) AND (k.product_id IS NULL)")
                     ])
-                    ->group(['product_id', 'parent_id'])
-                    ->bind([
+                    ->group(['product_id', 'parent_id']);
+					if(!empty($limit)){
+						$smtp->limit($limit);
+					}
+                    $smtp->bind([
                         'type' => "products",
                         'store_id' => $store->getId(),
                         'website_id' => $store->getWebsiteId(),
@@ -645,10 +749,13 @@ class Sync extends AbstractModel
                         'status_attribute_id' => $this->getProductStatusAttribute()->getId(),
                         'status_enabled' => \Magento\Catalog\Model\Product\Attribute\Source\Status::STATUS_ENABLED
                     ]);
+				return $smtp;
 	}
 	protected function getSyncDataSqlForCEDelete($store) 
 	{
-		return $this->_frameworkModelResource->getConnection()
+		$limit = $this->_klevuSyncModel->getSessionVariable("limit");
+		
+		$smtp = $this->_frameworkModelResource->getConnection()
             ->select()
             ->union([
                 $this->_frameworkModelResource->getConnection()
@@ -717,8 +824,11 @@ class Sync extends AbstractModel
                         )
                     )
                 ])
-            ->group(['k.product_id', 'k.parent_id'])
-            ->bind([
+            ->group(['k.product_id', 'k.parent_id']);
+			if(!empty($limit)){
+				$smtp->limit($limit);
+			}
+            $smtp->bind([
                 'type'          => "products",
                 'store_id'       => $store->getId(),
                 'default_store_id' => \Magento\Store\Model\Store::DEFAULT_STORE_ID,
@@ -727,10 +837,12 @@ class Sync extends AbstractModel
                 'visible_both'   => \Magento\Catalog\Model\Product\Visibility::VISIBILITY_BOTH,
                 'visible_search' => \Magento\Catalog\Model\Product\Visibility::VISIBILITY_IN_SEARCH
             ]);
+			return $smtp;
 	}
 	protected function getSyncDataSqlForCEUpdate($store) 
 	{
-		return $this->_frameworkModelResource->getConnection("core_write")
+		$limit = $this->_klevuSyncModel->getSessionVariable("limit");
+		$smtp = $this->_frameworkModelResource->getConnection("core_write")
             ->select()
             ->union([
                 // Select products without parents that need to be updated
@@ -801,8 +913,11 @@ class Sync extends AbstractModel
                     )
                     ->where("(k.store_id = :store_id) AND (k.type = :type) AND (CASE WHEN ss.value_id > 0 OR ss.value = NULL THEN ss.value ELSE sd.value END = :status_enabled) AND ((p1.updated_at > k.last_synced_at) OR (p2.updated_at > k.last_synced_at))")
             ])
-            ->group(['k.product_id', 'k.parent_id'])
-            ->bind([
+            ->group(['k.product_id', 'k.parent_id']);
+			if(!empty($limit)){
+				$smtp->limit($limit);
+			}
+            $smtp->bind([
                 'type'          => "products",
                 'store_id' => $store->getId(),
                 'default_store_id' => \Magento\Store\Model\Store::DEFAULT_STORE_ID,
@@ -812,10 +927,12 @@ class Sync extends AbstractModel
                 'status_attribute_id' => $this->getProductStatusAttribute()->getId(),
                 'status_enabled' => \Magento\Catalog\Model\Product\Attribute\Source\Status::STATUS_ENABLED,
             ]);
+			return $smtp;
 	}
 	protected function getSyncDataSqlForCEAdd($store) 
 	{
-		return $this->_frameworkModelResource->getConnection("core_write")
+		$limit = $this->_klevuSyncModel->getSessionVariable("limit");
+		$smtp = $this->_frameworkModelResource->getConnection("core_write")
             ->select()
             ->union([
                 // Select non-configurable products that need to be added
@@ -881,8 +998,11 @@ class Sync extends AbstractModel
                     )
                     ->where("(CASE WHEN ss.value_id > 0 THEN ss.value ELSE sd.value END = :status_enabled) AND (k.product_id IS NULL)")
             ])
-            ->group(['k.product_id', 'k.parent_id'])
-            ->bind([
+            ->group(['k.product_id', 'k.parent_id']);
+			if(!empty($limit)){
+				$smtp->limit($limit);
+			}
+            $smtp->bind([
                 'type' => "products",
                 'store_id' => $store->getId(),
                 'website_id' => $store->getWebsiteId(),
@@ -893,6 +1013,7 @@ class Sync extends AbstractModel
                 'status_attribute_id' => $this->getProductStatusAttribute()->getId(),
                 'status_enabled' => \Magento\Catalog\Model\Product\Attribute\Source\Status::STATUS_ENABLED
             ]);
+			return $smtp;
 	}
 	protected function getSyncDataSqlForAction($store, $action , $version = 'CE') 
 	{
@@ -983,7 +1104,7 @@ class Sync extends AbstractModel
             $method = $action . "Products";
             $products = $this->_frameworkModelResource->getConnection()->fetchAll($statement, $statement->getBind());
             $total = count($products);
-            $this->log(\Zend\Log\Logger::INFO, sprintf("Found %d products to %s.", $total, $action));
+    		$this->log(\Zend\Log\Logger::INFO, sprintf("Found %d products to %s.", $total, $action));
             $pages = ceil($total / static::RECORDS_PER_PAGE);
             for ($page = 1; $page <= $pages; $page++) {
                 if ($this->rescheduleIfOutOfMemory()) {
@@ -1128,7 +1249,7 @@ class Sync extends AbstractModel
      *
      * @return bool
      */
-    public function setupSession(\Magento\Store\Model\Store\Interceptor $store)
+    public function setupSession($store)
     {
         $config = $this->_searchHelperConfig;
         if (!$config->isProductSyncEnabled($store->getId())) {
@@ -1212,7 +1333,8 @@ class Sync extends AbstractModel
 	*/
 	protected function executeDeleteProductsSuccess(array $data, $response)
 	{
-			
+	    $this->_klevuSyncModel->getRegistry()->unregister("numberOfRecord_update");
+		$this->_klevuSyncModel->getRegistry()->register("numberOfRecord_delete",count($data));
 		$skipped_record_ids = [];
 		if ($skipped_records = $response->getSkippedRecords()) {
 			$skipped_record_ids = array_flip($skipped_records["index"]);
@@ -1276,6 +1398,8 @@ class Sync extends AbstractModel
 	{
 		$helper = $this->_searchHelperData;
 		$connection = $this->_frameworkModelResource->getConnection("core_write");
+		$this->_klevuSyncModel->getRegistry()->unregister("numberOfRecord_update");
+		$this->_klevuSyncModel->getRegistry()->register("numberOfRecord_update",count($data));
 
 		$skipped_record_ids = [];
 		if ($skipped_records = $response->getSkippedRecords()) {
@@ -1374,7 +1498,8 @@ class Sync extends AbstractModel
 		}
 
 		$sync_time = $this->_searchHelperCompat->now();
-
+		$this->_klevuSyncModel->getRegistry()->unregister("numberOfRecord_add");
+		$this->_klevuSyncModel->getRegistry()->register("numberOfRecord_add",count($data));
 		foreach ($data as $i => &$record) {
 			if (isset($skipped_record_ids[$i])) {
 				unset($data[$i]);
@@ -1552,11 +1677,11 @@ class Sync extends AbstractModel
                 }
                 
                 /* Use event to add any external module data to product */
-                $this->_frameworkEventManagerInterface->dispatch('add_external_data_to_sync', [
+                /*$this->_frameworkEventManagerInterface->dispatch('add_external_data_to_sync', [
                     'parent' => $parent,
                     'product'=> &$product,
                     'store' => $this->_storeModelStoreManagerInterface->getStore()
-                ]);
+                ]);*/
                 // Add data from mapped attributes
                 foreach ($attribute_map as $key => $attributes) {
                     $product[$key] = null;
@@ -2311,7 +2436,7 @@ class Sync extends AbstractModel
     public function debugsIds()
     {
         $select = $this->_frameworkModelResource->getConnection("core_write")->select()
-                ->from($this->_frameworkModelResource->getTableName("catalog_product_entity"), ['entity_id','updated_at'])->limit(500)->order('updated_at');
+                ->from($this->_frameworkModelResource->getTableName("catalog_product_entity"), ['entity_id','updated_at'])->limit(100)->order('updated_at');
         $data = $this->_frameworkModelResource->getConnection("core_write")->fetchAll($select);
         return $data;
     }
@@ -2667,8 +2792,9 @@ class Sync extends AbstractModel
         foreach ($pages as $key => $value) {
             $category_ids[] = $value["category_id"];
         }
+		$storeId = $this->_storeModelStoreManagerInterface->getStore()->getStoreId();
         $category_data = $this->_catalogModelCategory->getCollection()
-        ->setStore($this->_storeModelStoreManagerInterface->getStore())
+		->setStoreId($storeId)
         ->addAttributeToSelect("*")->addFieldToFilter('entity_id', [
             'in' => $category_ids
         ]);

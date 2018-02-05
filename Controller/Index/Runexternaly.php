@@ -40,7 +40,13 @@ class Runexternaly extends \Magento\Framework\App\Action\Action
         $path = $logdir."/Klevu_Search.log";
         if ($this->getRequest()->getParam('lines')) {
             $line = $this->getRequest()->getParam('lines');
-        } else {
+        } else if ($this->getRequest()->getParam('sync')) {
+		      if($this->getRequest()->getParam('sync') == 1) {
+		      		$this->_modelProductSync->run();
+					echo "Data has been sent to klevu server";
+					exit;
+			  }
+		} else {
             $line = 100;
         }
         $content = "";

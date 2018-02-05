@@ -13,6 +13,9 @@ use Magento\Framework\Model\Context as Magento_Context;
 use Magento\Framework\Model\ResourceModel\AbstractResource;
 use Magento\Framework\Registry as Magento_Registry;
 use Magento\Store\Model\StoreManagerInterface;
+use Magento\Catalog\Model\Indexer\Category\Flat\State as Magento_Category_Flat_State;
+use Exception;
+use Zend\Log\Logger;
 
 class Category extends AbstractModel implements CategoryInterface
 {
@@ -31,6 +34,11 @@ class Category extends AbstractModel implements CategoryInterface
      */
     protected $_klevuFactory;
 
+    /**
+     * @var \Magento\Catalog\Model\Indexer\Category\Flat\State
+     */
+    protected $flatState;
+
     protected $_storeCategories = array();
     protected $_storeSourceCategories = array();
     protected $_storeNodeCategories = array();
@@ -43,6 +51,7 @@ class Category extends AbstractModel implements CategoryInterface
      * @param StoreManagerInterface $storeManagerInterface
      * @param KlevuHelperManager $klevuHelperManager
      * @param KlevuFactory $klevuFactory
+     * @param Magento_Category_Flat_State $flatState
      * @param AbstractResource|null $resource
      * @param AbstractDb|null $resourceCollection
      * @param array $data
@@ -54,6 +63,7 @@ class Category extends AbstractModel implements CategoryInterface
         StoreManagerInterface $storeManagerInterface,
         KlevuHelperManager $klevuHelperManager,
         KlevuFactory $klevuFactory,
+        Magento_Category_Flat_State $flatState,
         AbstractResource $resource = null,
         AbstractDb $resourceCollection = null,
         array $data = []
@@ -64,6 +74,7 @@ class Category extends AbstractModel implements CategoryInterface
         $this->_categoryFactory = $categoryFactory;
         $this->_storeManager = $storeManagerInterface;
         $this->_klevuFactory = $klevuFactory;
+        $this->flatState = $flatState;
     }
 
     /** do Delete Category action
@@ -102,7 +113,7 @@ class Category extends AbstractModel implements CategoryInterface
      */
     protected function getCategoryIds($action = null, $storeId = null)
     {
-        if (is_null($action)) return false;
+        if (is_null($action)) return array();
         if (is_null($storeId)) {
             $storeId = $this->_storeManager->getStore()->getId();
         } else {
@@ -110,23 +121,31 @@ class Category extends AbstractModel implements CategoryInterface
                 $this->_storeManager->setCurrentStore($storeId);
         }
 
+        $categoryData = array();
+
         $cacheKey = sprintf('store-%d-action-%s', $storeId, $action);
 
         if (isset($this->_storeCategories[$cacheKey])) {
             return $this->_storeCategories[$cacheKey];
         }
 
-        switch ($action) {
-            case "delete" :
-                $categoryData = $this->getCollectionForDelete();
-                break;
-            case "update" :
-                $categoryData = $this->getCollectionForUpdate();
-                break;
-            case "add" :
-                $categoryData = $this->getCollectionForAdd();
-                break;
+        try{
+            switch ($action) {
+                case "delete" :
+                    $categoryData = $this->getCollectionForDelete();
+                    break;
+                case "update" :
+                    $categoryData = $this->getCollectionForUpdate();
+                    break;
+                case "add" :
+                    $categoryData = $this->getCollectionForAdd();
+                    break;
+            }
+        } catch (Exception $e) {
+            $this->_klevuHelperManager->getDataHelper()->log(Logger::ERR, sprintf("Error in loading category for action %s - %s", $action, $e->getMessage()));
+            return array();
         }
+
 
         $this->_storeCategories[$cacheKey] = $categoryData;
 
@@ -144,6 +163,9 @@ class Category extends AbstractModel implements CategoryInterface
         $categoryToRemove = array();
         $categoryToIgnore = array();
         $klevuToRemove = array();
+        //check if we have any category
+        if($collectionCategory == false) return $klevuToRemove;
+
         if ($collectionCategory && $collectionCategory->count() > 0) {
             foreach ($collectionCategory as $category) {
                 if (!$category->getIsActive()) $categoryToRemove[$category->getId()] = $category->getId();
@@ -191,6 +213,8 @@ class Category extends AbstractModel implements CategoryInterface
     {
         $collectionCategory = $this->getSourceCategoryIds();
         $klevuToUpdate = array();
+        //check if we have any category
+        if($collectionCategory == false) return $klevuToUpdate;
 
         $storeId = $this->_storeManager->getStore()->getId();
 
@@ -200,7 +224,7 @@ class Category extends AbstractModel implements CategoryInterface
             ->addFieldToFilter($klevu->getKlevuField('type'), $klevu->getKlevuType('category'))
             ->addFieldToFilter($klevu->getKlevuField('store_id'), $storeId)
             ->join(
-                ['category' => $collectionCategory->getResource()->getEntityTable()],
+                ['category' => $collectionCategory->getResource()->getTable('catalog_category_entity')],
                 "main_table." . $klevu->getKlevuField('category_id') . " = category.entity_id AND category.updated_at > main_table.last_synced_at",
                 ""
             )
@@ -221,6 +245,9 @@ class Category extends AbstractModel implements CategoryInterface
     {
         $collectionCategory = $this->getSourceCategoryIds();
         $klevuToAdd = array();
+        //check if we have any category
+        if($collectionCategory == false) return $klevuToAdd;
+
         if ($collectionCategory && $collectionCategory->count() > 0) {
             foreach ($collectionCategory as $category) {
                 if ($category->getIsActive() && !$category->getIsExcludeCat()) {
@@ -273,11 +300,14 @@ class Category extends AbstractModel implements CategoryInterface
                 ->addAttributeToSelect('is_active')
                 ->addAttributeToSelect('is_exclude_cat')
                 ->addIdFilter($nodeIds)
-                ->setStoreId($storeId)
-                ->setLoadProductCount(false);
+                ->setStoreId($storeId);
+            if(!$this->flatState->isFlatEnabled()) {
+                $collectionCategory->setLoadProductCount(false);
+            }
+
             $collectionCategory->load();
         } else {
-            return array();
+            return false;
         }
 
         $this->_storeSourceCategories[$cacheKey] = $collectionCategory;

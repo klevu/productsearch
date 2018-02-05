@@ -61,6 +61,44 @@ class Index extends \Magento\Framework\View\Element\Template
         $store = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Store\Model\StoreManagerInterface')->getStore();
         return \Magento\Framework\App\ObjectManager::getInstance()->get('Klevu\Search\Helper\Data')->getCurrencyData($store);
     }
+	
+	public function getKlevuSync()
+    {
+        return \Magento\Framework\App\ObjectManager::getInstance()->get('Klevu\Search\Model\Sync');
+    }
+	public function getKlevuRequestParam($key)
+    {
+		$om = \Magento\Framework\App\ObjectManager::getInstance();
+		$request = $om->get('Magento\Framework\App\RequestInterface');
+		$store_id = $request->getParam('store');
+		$store = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Store\Model\StoreManagerInterface');
+		$store_view = $store->getStore($store_id);
+		$value = $request->getParam($key);
+		return $value;
+	}
+	
+	public function getStoreParam()
+    {
+		$om = \Magento\Framework\App\ObjectManager::getInstance();
+		$request = $om->get('Magento\Framework\App\RequestInterface');
+		$store_id = $request->getParam('store');
+		return $store_id;
+	}
+	
+	public function getRestApiParam()
+    {
+		$om = \Magento\Framework\App\ObjectManager::getInstance();
+		$request = $om->get('Magento\Framework\App\RequestInterface');
+		$restapi = $request->getParam('restapi');
+		return $restapi;
+	}
+	
+	public function getRestApi($store_id)
+    {
+		$om = \Magento\Framework\App\ObjectManager::getInstance();
+		$rest_api = $om->get('\Klevu\Search\Model\Sync')->getHelper()->getConfigHelper()->getRestApiKey($store_id);
+		return $rest_api;
+	}
     
     public function isPubInUse()
     {

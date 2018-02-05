@@ -1,47 +1,64 @@
 <?php
 namespace Klevu\Search\Console\Command;
-use Magento\Framework\Exception\LocalizedException;
+
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Klevu\Search\Model\Product\Sync as Sync;
+use Magento\Framework\App\Filesystem\DirectoryList as DirectoryList;
+use Magento\Store\Model\StoreManagerInterface as StoreManagerInterface;
+use Magento\Framework\App\State as AppState;
 use Magento\Framework\ObjectManagerInterface;
 use Magento\Framework\App\ObjectManager;
-use Magento\Framework\App\State;
-use Exception;
-use Klevu\Search\Model\Product\Sync as Sync;
-use Klevu\Search\Model\Order\Sync as Order;
-use Klevu\Content\Model\Content;
-use Magento\Framework\App\Filesystem\DirectoryList;
-use Klevu\Search\Helper\Api as Api;
-use Klevu\Search\Model\Session as Session;
-use Klevu\Search\Helper\Config as Config;
-use Magento\Store\Model\StoreManagerInterface as StoreManagerInterface;
-   
+
 class SyncStoreView extends Command
 {
-	 
-	const LOCK_FILE = 'klevu_running_index.lock';
+
+    const LOCK_FILE = 'klevu_running_index.lock';
     /**
      * Input arguments for mode setter command
      */
     const STORE_ARGUMENT = 'storecode';
-    
+
     /**
-     * Object manager factory
-     *
-     * @var ObjectManagerInterface
+     * @var AppState
      */
-    private $objectManager;
+    protected $appState;
+    /**
+     * @var StoreManagerInterface
+     */
+    protected $storeInterface;
+    /**
+     * @var DirectoryList
+     */
+    protected $directoryList;
+    /**
+     * @var DirectoryList
+     */
+    protected $sync;
+
+    protected $websiteList = array();
+    protected $allStoreList = array();
+    protected $runStoreList = array();
+
     /**
      * Inject dependencies
      *
-     * @param ObjectManagerInterface $objectManager
+     * @param AppState $appState
+     * @param StoreManagerInterface $storeInterface
+     * @param DirectoryList $directoryList
+     * @param Sync $sync
      */
-    public function __construct(ObjectManagerInterface $objectManager)
+    public function __construct(
+        AppState $appState,
+        StoreManagerInterface $storeInterface,
+        DirectoryList $directoryList
+    )
     {
-        $this->objectManager = $objectManager;
+        $this->appState = $appState;
+        $this->directoryList = $directoryList;
+        $this->storeInterface = $storeInterface;
         parent::__construct();
     }
     /**
@@ -66,60 +83,106 @@ class SyncStoreView extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        try {
-			$state = ObjectManager::getInstance()->get('\Magento\Framework\App\State');
-            $state->setAreaCode('frontend');
-			$stores = ObjectManager::getInstance()->get(StoreManagerInterface::class)->getStores();
-            $storeCode = $input->getArgument(self::STORE_ARGUMENT);
-			if($storeCode == "list") {
-			    $codeList = array();
-				foreach ($stores as $store) {
-                    $codeList[] = $store->getCode();
-				}
-                $output->writeln("Available stores : ".implode(",",$codeList));
-			} else {
-				$array_store = explode(",",$storeCode);
-				foreach($array_store as $key => $value) {
-					$directoryList = ObjectManager::getInstance()->get(DirectoryList::class);
-					$logDir = $directoryList->getPath(DirectoryList::VAR_DIR);
-					$dir = $logDir."/".$value."_".self::LOCK_FILE;
-					if (file_exists($dir)) {
-						$output->writeln('<info>Klevu indexing process is in running state</info>');
-                        continue;
-					}
-					fopen($dir, 'w');
-					
-					try {
-						$onestore = ObjectManager::getInstance()->get(StoreManagerInterface::class)->getStore($value);
-						//Sync Data
-						if(is_object($onestore)) {
-							$sync = ObjectManager::getInstance()->get(Sync::class);
-							if (!$sync->setupSession($onestore)) {
-                                if (file_exists($dir)) {
-                                    unlink($dir);
-                                }
-								continue;
-							}
-							$sync->syncData($onestore);
-                            $sync->runCategory($onestore);
-                            $sync->reset();
-						}
-						$output->writeln("Sync was done for store code :".$value);
-					} catch (\Exception $e) {
-						 $output->writeln('<error>' . $e->getMessage() ." :".$value. '</error>');
-					}
-					
-					if (file_exists($dir)) {
-						unlink($dir);
-					}
-				}
-			}
-            
-        } catch (\Exception $e) {
-            $output->writeln('<error>' . $e->getMessage() . '</error>');
-            
-            // we must have an exit code higher than zero to indicate something was wrong
-            return \Magento\Framework\Console\Cli::RETURN_FAILURE;
+        $this->appState->setAreaCode('frontend');
+        $storeList = $this->storeInterface->getStores();
+
+        foreach ($storeList as $store) {
+            if(!isset($this->websiteList[$store->getWebsiteId()])) $this->websiteList[$store->getWebsiteId()] = array();
+            $this->websiteList[$store->getWebsiteId()] = array_unique(array_merge($this->websiteList[$store->getWebsiteId()], array($store->getCode())));
+            $this->allStoreList[$store->getCode()] = $store->getWebsiteId();
         }
+        $storeCode = $input->getArgument(self::STORE_ARGUMENT);
+        if($storeCode == "list") {
+            $output->writeln("<info>Available stores grouped by website: </info>");
+            foreach ($this->websiteList as $websiteId => $websiteStores) {
+                $output->writeln("<info>Website ID ".$websiteId." : ".implode(",",$websiteStores)." </info>");
+            }
+
+        } else {
+            try {
+                $array_store = explode(",",$storeCode);
+                $rejectedSites = $this->validateStoreCodes($array_store);
+                $logDir = $this->directoryList->getPath(DirectoryList::VAR_DIR);
+
+                $this->sync = ObjectManager::getInstance()->get(Sync::class);
+
+                if(!empty($rejectedSites))
+                    $output->writeln("<error>Sync can not be done for store codes. Please check if that following codes belong to one website: ".implode(",",$rejectedSites)."</error>");
+                if(count($this->runStoreList) > 0 ) {
+                    foreach($this->runStoreList as $value) {
+                        $file = $logDir."/".$value."_".self::LOCK_FILE;
+                        if (file_exists($file)) {
+                            $output->writeln('<info>Klevu indexing process is in running state for store code '.$value.'</info>');
+                            continue;
+                        }
+                        fopen($file, 'w');
+
+                        try {
+                            $oneStore = $this->storeInterface->getStore($value);
+                            //Sync Data
+                            if(is_object($oneStore)) {
+                                if (!$this->sync->setupSession($oneStore)) {
+                                    if (file_exists($file)) {
+                                        unlink($file);
+                                    }
+                                    continue;
+                                }
+                                $this->sync->runStore($oneStore);
+                            }
+                            $output->writeln("<info>Sync was done for store code : ".$oneStore->getCode()."</info>");
+                        } catch (\Exception $e) {
+                            $output->writeln('<error>' . $e->getMessage() ." :".$value. '</error>');
+                        }
+
+                        if (file_exists($file)) {
+                            unlink($file);
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                $output->writeln('<error>' . $e->getMessage() . '</error>');
+                if(isset($file)) {
+                    if (file_exists($file)) {
+                        unlink($file);
+                    }
+                }
+
+                // we must have an exit code higher than zero to indicate something was wrong
+                return \Magento\Framework\Console\Cli::RETURN_FAILURE;
+            }
+            $output->write("\n");
+            $output->writeln("<info>Sync was completed.</info>");
+        }
+    }
+
+    /**
+     * @param $storeList
+     * @return array
+     */
+    private function validateStoreCodes($storeList)
+    {
+        $firstWebsite = null;
+        $rejectedStores = array();
+        if(!is_array($storeList)) return $storeList;
+        foreach ($storeList as $storeCode){
+            //check if store code is valid
+            if(isset($this->allStoreList[$storeCode])){
+                //if it is the first website
+                if(is_null($firstWebsite)) {
+                    $firstWebsite = $this->allStoreList[$storeCode];
+                    $this->runStoreList[] = $storeCode;
+                } else {
+                    if( !isset($this->allStoreList[$storeCode]) || $firstWebsite != $this->allStoreList[$storeCode] ) {
+                        $rejectedStores[] = $storeCode;
+                    } else {
+                        $this->runStoreList[] = $storeCode;
+                    }
+                }
+            } else {
+                $rejectedStores[] = $storeCode;
+            }
+        }
+        return $rejectedStores;
+
     }
 }

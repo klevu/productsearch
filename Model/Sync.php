@@ -13,7 +13,10 @@ use Magento\Framework\Model\Context as Magento_Context;
 use Magento\Framework\Model\ResourceModel\AbstractResource;
 use Magento\Framework\Registry as Magento_Registry;
 use Magento\Framework\UrlInterface as Magento_UrlInterface;
+
 use Zend\Log\Logger;
+use Symfony\Component\Process\PhpExecutableFinder as PhpExecutableFinderFactory;
+use Magento\Framework\Shell;
 
 class Sync extends AbstractModel
 {
@@ -25,6 +28,15 @@ class Sync extends AbstractModel
      * like a sensible default.
      */
     const MEMORY_LIMIT = 0.7;
+    /**
+     * @var Shell
+     */
+    protected $_shell;
+    /**
+     * @var \Symfony\Component\Process\PhpExecutableFinder
+     */
+    protected $_phpExecutableFinder;
+    protected $_phpPath = null;
 
     protected $_klevuHelperManager;
     protected $_klevuSchedulerInterface;
@@ -38,16 +50,21 @@ class Sync extends AbstractModel
         SchedulerInterface $klevuSchedulerInterface,
         CategoryInterface $klevuCategoryInterface,
         Magento_UrlInterface $urlInterface,
+        Shell $shell,
+        PhpExecutableFinderFactory $phpExecutableFinderFactory,
         AbstractResource $resource = null,
         AbstractDb $resourceCollection = null,
+		
         array $data = []
     )
     {
-        parent::__construct($context, $registry, $resource, $resourceCollection, $data);
+        parent::__construct($context, $registry, $resource, $resourceCollection,$data);
         $this->_klevuHelperManager = $klevuHelperManager;
         $this->_klevuSchedulerInterface = $klevuSchedulerInterface;
         $this->_klevuCategoryInterface = $klevuCategoryInterface;
         $this->_urlInterface = $urlInterface;
+        $this->_shell = $shell;
+        $this->_phpExecutableFinder = $phpExecutableFinderFactory;
     }
 
     /**
@@ -67,7 +84,22 @@ class Sync extends AbstractModel
         return $this->_klevuSchedulerInterface->isRunning($this->getJobCode(), $copies);
 
     }
-
+    public function executeSubProcess($command){
+       if(is_null($this->_phpPath)) $this->_phpPath = $this->_phpExecutableFinder->find() ?: 'php';
+       try{
+           $this->_shell->execute(
+               $this->_phpPath . ' %s '.$command,
+               [
+                   BP . '/bin/magento'
+               ]
+           );
+           return true;
+       } catch (\Exception $e) {
+           // Catch the exception that was thrown, log it, then throw a new exception to be caught the Magento cron.
+           $this->log(Logger::CRIT, "can not execute subprocess $command");
+           return false;
+       }
+    }
     /**
      * Get the klevu cron entry which is running mode
      *
@@ -246,6 +278,23 @@ class Sync extends AbstractModel
     public function getCategoryToAdd($storeId = null){
         return $this->_klevuCategoryInterface->categoryAdd($storeId);
     }
+	
+	// Get registry variable
+	public function getRegistry(){
+		return $this->_registry;
+	}
+	
+	public function getHelper() {
+		return $this->_klevuHelperManager;
+	}
 
+	public function setSessionVariable($key,$value){
+		$objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+		$objectManager->get('Magento\Framework\Session\SessionManagerInterface')->setData($key, $value);
+	}
 
+	public function getSessionVariable($key){
+		$objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+		return $objectManager->get('Magento\Framework\Session\SessionManagerInterface')->getData($key);
+	}
 }

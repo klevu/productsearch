@@ -38,7 +38,7 @@ class Log extends \Magento\Config\Block\System\Config\Form\Field
         $this->addData([
             "html_id"         => $element->getHtmlId(),
             "button_label"    => sprintf("Send Log"),
-            "destination_url" => $store->getStore($storeId)->getBaseUrl()."search/index/Runexternaly"
+            "destination_url" => $store->getStore($storeId)->getBaseUrl()."search/index/runexternaly"
         ]);
 
         return $this->_toHtml();

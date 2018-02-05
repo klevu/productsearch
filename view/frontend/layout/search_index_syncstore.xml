@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" layout="1column" xsi:noNamespaceSchemaLocation="../../../../../lib/internal/Magento/Framework/View/Layout/etc/page_configuration.xsd">
+    <body>
+<referenceBlock name="minicart" remove="true" />
+        <referenceContainer name="header.panel" remove="true" />
+        <referenceBlock name="top.search" remove="true" />
+        <referenceBlock name="catalog.compare.link" remove="true" />
+        <referenceBlock name="catalog.topnav" remove="true"/>
+        <referenceContainer name="footer-container"  remove="true"/> 
+		<referenceBlock name="content">
+			<block class="Klevu\Search\Block\Search\Index" template="klevu/search/ajaxsync.phtml" name="search_index"/>
+		</referenceBlock>
+    </body>
+</config>
