@@ -41,7 +41,7 @@ class Image extends \Magento\Framework\App\Helper\AbstractHelper
         \Magento\Framework\Image\Factory $imageFactory,
         \Magento\Backend\Block\Page\RequireJs $requireJs,
         \Magento\Framework\App\Filesystem\DirectoryList $directoryList,
-		\Magento\Framework\App\ProductMetadataInterface $productMetadataInterface,
+		\Magento\Framework\App\ProductMetadataInterface $productMetadataInterface
     ) {
     
         $this->_storeModelStoreManagerInterface = $storeModelStoreManagerInterface;
