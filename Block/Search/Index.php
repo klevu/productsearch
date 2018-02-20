@@ -7,12 +7,23 @@ namespace Klevu\Search\Block\Search;
 use Magento\Framework\View\Element\Template;
 use Magento\Framework\View\Element\Template\Context;
 use Magento\Framework\App\RequestInterface;
+use Magento\Framework\App\Filesystem\DirectoryList;
 
 class Index extends \Magento\Framework\View\Element\Template
 {
     const KlEVUPRESERVELAYOUT    = 1;
     const DISABLE     = 0;
     const KlEVUTEMPLATE = 2;
+    protected $_directoryList;
+    
+    public function __construct(
+        \Magento\Framework\View\Element\Template\Context $context,
+        DirectoryList $directorylist,
+        array $data = []
+    ) {
+    	$this->_directoryList = $directorylist;
+        parent::__construct($context, $data);
+    }
     
     public function _prepareLayout()
     {
@@ -102,12 +113,10 @@ class Index extends \Magento\Framework\View\Element\Template
     
     public function isPubInUse()
     {
-        $check_pub = explode('/', $_SERVER["DOCUMENT_ROOT"]);
-        $filter = array_filter($check_pub);
-        $folder_name = end($filter);
-        if ($folder_name == "pub") {
-            return true;
+		$pub = $this->_directoryList->getUrlPath("pub");
+        if ($pub == "pub") {
+            return false;
         }
-        return false;
+        return true;
     }
 }

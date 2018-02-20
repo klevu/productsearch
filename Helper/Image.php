@@ -34,7 +34,6 @@ class Image extends \Magento\Framework\App\Helper\AbstractHelper
      */
     protected $_productMetadataInterface;
 	
-	
     public function __construct(
         \Magento\Store\Model\StoreManagerInterface $storeModelStoreManagerInterface,
         \Klevu\Search\Helper\Config $searchHelperConfig,
@@ -42,8 +41,7 @@ class Image extends \Magento\Framework\App\Helper\AbstractHelper
         \Magento\Framework\Image\Factory $imageFactory,
         \Magento\Backend\Block\Page\RequireJs $requireJs,
         \Magento\Framework\App\Filesystem\DirectoryList $directoryList,
-		\Magento\Framework\App\ProductMetadataInterface $productMetadataInterface
-
+		\Magento\Framework\App\ProductMetadataInterface $productMetadataInterface,
     ) {
     
         $this->_storeModelStoreManagerInterface = $storeModelStoreManagerInterface;
@@ -75,13 +73,13 @@ class Image extends \Magento\Framework\App\Helper\AbstractHelper
         } else {
             $media_url = $this->_storeModelStoreManagerInterface->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_MEDIA);
         }
-        
-        $check_root_magento = $this->_requireJs->getViewFileUrl('requirejs/require.js');
-        $check_pub = explode('/', $check_root_magento);
-        if (!in_array('pub', $check_pub)) {
-            $media_url = str_replace('/pub', '/', $media_url);
-        }
-        
+        $pos = strpos($media_url, "/pub");
+        if ($pos === false) {
+		    $media_url = str_replace('/media', '/needtochange/media', $media_url);
+		} else {
+		    $media_url = str_replace('/pub', '/needtochange', $media_url);
+		}
+
         return $media_url;
     }
     

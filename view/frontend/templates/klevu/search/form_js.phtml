@@ -79,15 +79,18 @@ var allInputs = document.getElementsByTagName( 'input' );
 <?php
     }
 ?>
-<?php
-if ($block->isPubInUse()) { ?>
-    <script type="text/javascript">
-        if(!(typeof klevu_uc_productCustomizations === "function" && typeof klevu_uc_productCustomizations.nodeType !== "number")) {
-            function klevu_uc_productCustomizations( product ){
-                product.productImage = product.productImage.replace( 'pub/', '');
-                return product;
-            }
-        }
+<script type="text/javascript">
+	klevu_pubIsInUse = <?php echo ($block->isPubInUse())?"true":"false"; ?> ;
+	if(!(typeof klevu_uc_productCustomizations === "function" && typeof klevu_uc_productCustomizations.nodeType !== "number")) {
+		function klevu_uc_productCustomizations( product ){
+			if(klevu_pubIsInUse){
+				product.productImage = product.productImage.replace( 'pub/', '');
+				product.productImage = product.productImage.replace( 'needtochange/', '');
+			} else {
+				product.productImage = product.productImage.replace( 'needtochange/', 'pub/');
+			}
+			return product;
+		}
+	}
 
-    </script>
-<?php } ?>
+</script>

@@ -445,7 +445,7 @@ class Sync extends AbstractModel
 
             $config = $this->_searchHelperConfig;
 
-            $storeList = $this->storeInterface->getStores();
+            $storeList = $this->_storeModelStoreManagerInterface->getStores();
             $websiteList = array();
             foreach ($storeList as $store) {
                 if(!isset($websiteList[$store->getWebsiteId()])) $websiteList[$store->getWebsiteId()] = array();
@@ -1769,7 +1769,7 @@ class Sync extends AbstractModel
 								$childSalePrice = $this->_priceHelper->getKlevuSalePrice(null, $item, $this->_storeModelStoreManagerInterface->getStore());
 								
 								// show low price for config products
-								//$product['startPrice'] = $salePrice['salePrice'];
+								$product['startPrice'] = $salePrice['salePrice'];
 									
 								// also send sale price for sorting and filters for klevu
 								$product['salePrice'] = $childSalePrice['salePrice'];
@@ -1777,19 +1777,7 @@ class Sync extends AbstractModel
 								$product['startPrice'] = $salePrice['salePrice'];
 								$product['salePrice'] = $salePrice['salePrice'];
 							}
-							
-							
-							if($parent){
-								$salePrice = '';
-								if(isset($configProductData[$parent->getId()])) {
-									// get min final price from db 
-									$salePrice = $configProductData[$parent->getId()];
-								}
-								// process for tax calculation
-								$price_code = "final_price";
-								$product['startPrice'] = $this->_priceHelper->processPriceForCollection($salePrice, $price_code, $item, $this->_storeModelStoreManagerInterface->getStore());
-						    }
-							
+
 							if(isset($salePrice['toPrice'])){
 								$product['toPrice'] = $salePrice['toPrice'];
 							}
