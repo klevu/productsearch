@@ -1333,7 +1333,7 @@ class Sync extends AbstractModel
 	*/
 	protected function executeDeleteProductsSuccess(array $data, $response)
 	{
-	    $this->_klevuSyncModel->getRegistry()->unregister("numberOfRecord_update");
+	    $this->_klevuSyncModel->getRegistry()->unregister("numberOfRecord_delete");
 		$this->_klevuSyncModel->getRegistry()->register("numberOfRecord_delete",count($data));
 		$skipped_record_ids = [];
 		if ($skipped_records = $response->getSkippedRecords()) {
@@ -1619,8 +1619,7 @@ class Sync extends AbstractModel
 				->addMinimalPrice() 
 				->addFinalPrice()
 				->addTaxPercents();
-            $data->load()
-                ->addCategoryIds();
+            $data->setFlag('has_stock_status_filter', false);
          
             $data->load()
                 ->addCategoryIds();

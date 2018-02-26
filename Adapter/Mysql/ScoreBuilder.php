@@ -31,7 +31,7 @@ class ScoreBuilder extends \Magento\Framework\Search\Adapter\Mysql\ScoreBuilder
     {
         $scoreAlias = parent::getScoreAlias();
         $sessionOrder = $this->magentoRegistry->registry('search_ids');
-        if(is_array($sessionOrder)) return "FIELD(search_index.entity_id,".implode(",",array_reverse($sessionOrder)).") AS {$scoreAlias}";
+        if(is_array($sessionOrder)) return new \Zend_Db_Expr("FIELD(search_index.entity_id,".implode(",",array_reverse($sessionOrder)).") AS {$scoreAlias}");
         return parent::build();
     }
 
