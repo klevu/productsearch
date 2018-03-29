@@ -13,7 +13,7 @@ class Price extends \Magento\Framework\App\Helper\AbstractHelper
     protected $priceCurrency;
 	
 	/**
-     * @var \Klevu\Search\Helper\Taxdata
+     * @var \Magento\Catalog\Helper\Data
      */
     protected $_catalogTaxHelper;
 	
@@ -41,15 +41,21 @@ class Price extends \Magento\Framework\App\Helper\AbstractHelper
      * @var \Magento\CatalogRule\Model\ResourceModel\RuleFactory
      */
     protected $_resourceRuleFactory;
+	
+	/**
+     * @var \Klevu\Search\Helper\Stock
+     */
+	protected $_stockHelper;
 
     public function __construct(
 	\Magento\Framework\Stdlib\DateTime\TimezoneInterface $localeDate,
 	\Klevu\Search\Helper\Config $searchHelperConfig, 
 	\Klevu\Search\Helper\Data $searchHelperData,
 	\Magento\CatalogRule\Observer\RulePricesStorage $rulePricesStorage,
-	\Klevu\Search\Helper\Taxdata $catalogTaxHelper,
+	\Magento\Catalog\Helper\Data $catalogTaxHelper,
 	PriceCurrencyInterface $priceCurrency,
-	\Magento\CatalogRule\Model\ResourceModel\RuleFactory $resourceRuleFactory)
+	\Magento\CatalogRule\Model\ResourceModel\RuleFactory $resourceRuleFactory,
+	\Klevu\Search\Helper\Stock $stockHelper)
     {
         $this->_searchHelperConfig = $searchHelperConfig;
         $this->_searchHelperData = $searchHelperData;
@@ -57,7 +63,8 @@ class Price extends \Magento\Framework\App\Helper\AbstractHelper
 		$this->_rulePricesStorage = $rulePricesStorage;
 		$this->_resourceRuleFactory = $resourceRuleFactory;
 		$this->_catalogTaxHelper = $catalogTaxHelper;
-		 $this->priceCurrency = $priceCurrency;
+		$this->priceCurrency = $priceCurrency;
+		$this->_stockHelper = $stockHelper;
     }
 
     /**
@@ -68,56 +75,31 @@ class Price extends \Magento\Framework\App\Helper\AbstractHelper
 
     public function getKlevuSalePrice($parent, $item, $store)
     {
-		$price_code = "final_price";
-        // Default to 0 if price can't be determined
+		// Default to 0 if price can't be determined
         $productPrice['salePrice'] = 0;
-        if ($parent && $parent->getData("type_id") == \Magento\ConfigurableProduct\Model\Product\Type\Configurable::TYPE_CODE)
-        {
-            // Calculate configurable product price based on option values
-            $ruleprice = $this->calculateFinalPriceFront($parent, \Magento\Customer\Model\Group::NOT_LOGGED_IN_ID,$parent->getId() , $store);
-            if (!empty($ruleprice))
-            {
-                $fprice = min($ruleprice, $parent->getPriceInfo()
+		if($parent && $parent->getData("type_id") == \Magento\ConfigurableProduct\Model\Product\Type\Configurable::TYPE_CODE) {
+			$final_price = $parent->getPriceInfo()
                     ->getPrice('final_price')
                     ->getAmount()
-                    ->getValue(\Magento\Tax\Pricing\Adjustment::ADJUSTMENT_CODE));
-            }
-            else
-            {
-                $fprice = $parent->getPriceInfo()
+                    ->getValue();
+			$processed_final_price = $this->processPrice($final_price,'final_price',$parent,$store);
+			$productPrice['salePrice'] = $processed_final_price;
+			$productPrice['startPrice'] = $processed_final_price;
+		} else {
+			$final_price = $item->getPriceInfo()
                     ->getPrice('final_price')
                     ->getAmount()
-                    ->getValue(\Magento\Tax\Pricing\Adjustment::ADJUSTMENT_CODE);
-            }
-            
-            // show low price for config products
-            $productPrice['startPrice'] = $this->processPrice($fprice, $price_code, $parent,$store);
-
-            // also send sale price for sorting and filters for klevu
-            $productPrice['salePrice'] = $this->processPrice($fprice, $price_code, $parent, $store);
-        }
-        else
-        {
-            // Use price index prices to set the product price and start/end prices if available
-            // Falling back to product price attribute if not
-            if ($item)
-            {
-                $ruleprice = $this->calculateFinalPriceFront($item, \Magento\Customer\Model\Group::NOT_LOGGED_IN_ID, $item->getId() , $store);
-                if ($item->getData('type_id') == "grouped")
+                    ->getValue();
+			$processed_final_price = $this->processPrice($final_price,'final_price',$item,$store);
+			$productPrice['salePrice'] = $processed_final_price;
+			$productPrice['startPrice'] = $processed_final_price;
+			if ($item->getData('type_id') == "grouped")
                 {
                     $this->getGroupProductMinPrice($item, $store);
-                    if (!empty($ruleprice))
-                    {
-                        $sPrice = min($ruleprice, $item->getFinalPrice());
-                    }
-                    else
-                    {
-                        $sPrice = $item->getFinalPrice();
-                    }
-                    $productPrice['startPrice'] = $sPrice;
-                    $productPrice["salePrice"] = $sPrice;
+                    $productPrice['startPrice'] = $item->getFinalPrice();
+                    $productPrice["salePrice"] = $item->getFinalPrice();
                 }
-                elseif ($item->getData('type_id') == \Magento\Catalog\Model\Product\Type::TYPE_BUNDLE)
+            elseif ($item->getData('type_id') == \Magento\Catalog\Model\Product\Type::TYPE_BUNDLE)
                 {
                     list($minimalPrice, $maximalPrice) = $this->getBundleProductPrices($item, $store);
 
@@ -125,42 +107,7 @@ class Price extends \Magento\Framework\App\Helper\AbstractHelper
                     $productPrice['startPrice'] = $minimalPrice;
                     $productPrice['toPrice'] = $maximalPrice;
                 }
-                else
-                {
-                    // Always use minimum price as the sale price as it's the most accurate
-                    if (!empty($ruleprice))
-                    {
-                        $sPrice = min($ruleprice, $item->getPriceInfo()
-                            ->getPrice('final_price')
-                            ->getAmount()
-                            ->getValue(\Magento\Tax\Pricing\Adjustment::ADJUSTMENT_CODE));
-                    }
-                    else
-                    {
-                        $sPrice = $item->getPriceInfo()
-                            ->getPrice('final_price')
-                            ->getAmount()
-                            ->getValue(\Magento\Tax\Pricing\Adjustment::ADJUSTMENT_CODE);
-                    }
- 
-                    $productPrice['salePrice'] = $this->processPrice($sPrice, $price_code, $item,$store);
-					$productPrice['startPrice'] = $this->processPrice($sPrice, $price_code, $item,$store);
-                }
-            }
-            else
-            {
-                if ($item->getData("price") !== null)
-                {
-					$price = $item->getPriceInfo()
-                        ->getPrice('regular_price')
-                        ->getAmount()
-                        ->getValue(\Magento\Tax\Pricing\Adjustment::ADJUSTMENT_CODE);
-                    $productPrice["salePrice"] = $this->processPrice($price ,$price_code, $item,$store);
-
-                }
-            }
-        }
-		
+		}
 		return $productPrice;
     }
 
@@ -172,74 +119,38 @@ class Price extends \Magento\Framework\App\Helper\AbstractHelper
 
     public function getKlevuPrice($parent, $item, $store)
     {
-		$price_code = "regular_price";
-        // Default to 0 if price can't be determined
-        $product['price'] = 0;
-        if ($parent && $parent->getData("type_id") == \Magento\ConfigurableProduct\Model\Product\Type\Configurable::TYPE_CODE)
-        {
-			// becuase of magento bug we always take final price as price for configurable product
-			$price_code = "final_price";
-            // Calculate configurable product price based on option values
-            $ruleprice = $this->calculateFinalPriceFront($parent, \Magento\Customer\Model\Group::NOT_LOGGED_IN_ID,$parent->getId() , $store);
-            if (!empty($ruleprice))
-            {
-                $price = min($ruleprice, $parent->getPriceInfo()
-                    ->getPrice('final_price')
+		/* getPrice */
+		if($parent && $parent->getData("type_id") == \Magento\ConfigurableProduct\Model\Product\Type\Configurable::TYPE_CODE) {
+			$price = $parent->getPriceInfo()
+                    ->getPrice('regular_price')
                     ->getAmount()
-                    ->getValue(\Magento\Tax\Pricing\Adjustment::ADJUSTMENT_CODE));
-            }
-            else
-            {
-                $price = $parent->getPriceInfo()
-                    ->getPrice('final_price')
-                    ->getAmount()
-                    ->getValue(\Magento\Tax\Pricing\Adjustment::ADJUSTMENT_CODE);
-            }
-           
-            // also send sale price for sorting and filters for klevu
-            $productPrice['price'] = $this->processPrice($price, $price_code, $parent,$store);
-        }
-        else
-        {
-            // Use price index prices to set the product price and start/end prices if available
-            // Falling back to product price attribute if not
-            if ($item)
-            {
-                if ($item->getData('type_id') == "grouped")
+                    ->getValue();
+			$processed_price = $this->processPrice($price,'regular_price',$parent,$store);
+			$productPrice['price'] = $processed_price;
+		} else {
+			if ($item->getData('type_id') == "grouped")
                 {
                     // Get the group product original price
                     $this->getGroupProductOriginalPrice($item, $store);
                     $sPrice = $item->getPrice();
                     $productPrice["price"] = $sPrice;
                 }
-                elseif ($item->getData('type_id') == \Magento\Catalog\Model\Product\Type::TYPE_BUNDLE)
+            elseif ($item->getData('type_id') == \Magento\Catalog\Model\Product\Type::TYPE_BUNDLE)
                 {
                     // product detail page always shows final price as price so we also taken final price as original price only for bundle product
                     list($minimalPrice, $maximalPrice) = $this->getBundleProductPrices($item, $store);
 
                     $productPrice["price"] = $minimalPrice;
-                }
-                else
-                {
-                    // Always use minimum price as the sale price as it's the most accurate
-					$price = $item->getPriceInfo()
-                        ->getPrice('regular_price')
-                        ->getAmount()
-                        ->getValue(\Magento\Tax\Pricing\Adjustment::ADJUSTMENT_CODE);
-                    $productPrice['price'] = $this->processPrice($price, $price_code, $item,$store);
-                }
-            }
-            else
-            {
-                if ($item->getData("price") !== null)
-                {
-                    $productPrice["price"] = $this->processPrice($item->getPriceInfo()
-                        ->getPrice('regular_price')
-                        ->getAmount()
-                        ->getValue(\Magento\Tax\Pricing\Adjustment::ADJUSTMENT_CODE) , $price_code, $item, $store);
-                }
-            }
-        }
+            } else {
+				$price = $item->getPriceInfo()
+                    ->getPrice('regular_price')
+                    ->getAmount()
+                    ->getValue();
+				$processed_price = $this->processPrice($price,'regular_price',$item,$store);
+				$productPrice['price'] = $processed_price;
+			}
+	
+		}
 		return $productPrice;
     }
 
@@ -269,39 +180,29 @@ class Price extends \Magento\Framework\App\Helper\AbstractHelper
     {
         if ($price < 0) {
             $price = 0;
-        } else {
-            $price = $price;
         }
 		
-		if ($this->_searchHelperConfig->getPriceIncludesTax($store)) {
-			$taxPrice = $this->_catalogTaxHelper->getTaxPrice($pro,$price,$store->getId());
-			if($this->_searchHelperConfig->isTaxEnabled($store->getId())) {
-				$admin_price = $pro->getPriceInfo()
-							->getPrice($price_code)
-							->getAmount()
-							->getValue();
-				if($admin_price > $taxPrice['include_tax']){
-					$f_price = round($admin_price,2);
-				} else if($admin_price < $taxPrice['include_tax']) {
-					$f_price = floor($admin_price * 100)/100;
-				} else {
-					$f_price = round($taxPrice['include_tax'],2);
+		if($this->_searchHelperConfig->getPriceIncludesTax($store) == 1) {
+			if($this->_searchHelperConfig->getPriceDisplaySettings($store) == \Magento\Tax\Model\Config::DISPLAY_TYPE_BOTH){
+				if($this->_searchHelperConfig->isTaxCalRequired($store)){
+					$price = $this->_catalogTaxHelper->getTaxPrice($pro, $price,true);
 				}
-				return $f_price;
 			} else {
-				$taxPrice = $this->_catalogTaxHelper->getTaxPrice($pro,$price,$store->getId());
-				return round($taxPrice['exclude_tax'],2);
-			}
+				$price = $this->_catalogTaxHelper->getTaxPrice($pro, $price);
+		    }
+		    return $price;
 		} else {
-			
-			if($this->_searchHelperConfig->isTaxEnabled($store->getId())) {
-				$taxPrice = $this->_catalogTaxHelper->getTaxPrice($pro,$price,$store->getId());
-				$f_price = round($taxPrice['include_tax'],2);
-				return $f_price;
-			} else {
-				return round($price,2);
+			if($this->_searchHelperConfig->getPriceDisplaySettings($store) == \Magento\Tax\Model\Config::DISPLAY_TYPE_BOTH){
+				if(!$this->_searchHelperConfig->isTaxCalRequired($store)){
+					$price = $pro->getPriceInfo()
+                    ->getPrice($price_code)
+                    ->getAmount()->getValue(\Magento\Tax\Pricing\Adjustment::ADJUSTMENT_CODE);
+				}
 			}
 		}
+		
+		return $this->priceCurrency->round($price);
+		
     }
 
     /**
@@ -395,12 +296,16 @@ class Price extends \Magento\Framework\App\Helper\AbstractHelper
             foreach ($groupProductIds as $ids) {
                 foreach ($ids as $id) {
                     $groupProduct = \Magento\Framework\App\ObjectManager::getInstance()->create('\Magento\Catalog\Model\Product')->load($id);
+					
 					if($groupProduct->getStatus() == 1) {
-						if ($config->isTaxEnabled($store->getId())) {
+						if(!$this->_searchHelperConfig->displayOutofstock()){
+							if($this->_stockHelper->getKlevuStockStatus(null,$groupProduct) == "yes") {
+								$gPrice = $this->getKlevuPrice(null,$groupProduct,$store);
+								$groupPrices[] = $gPrice['price'];
+							}
+						} else {
 							$gPrice = $this->getKlevuPrice(null,$groupProduct,$store);
 							$groupPrices[] = $gPrice['price'];
-						} else {
-							$groupPrices[] = $groupProduct->getPriceInfo()->getPrice('regular_price')->getAmount()->getValue(\Magento\Tax\Pricing\Adjustment::ADJUSTMENT_CODE);
 						}
 					}
                 }
@@ -424,19 +329,24 @@ class Price extends \Magento\Framework\App\Helper\AbstractHelper
         $groupProductIds = $product->getTypeInstance()->getChildrenIds($product->getId());
         $config = $this->_searchHelperConfig;
         $groupPrices = [];
+		
         foreach ($groupProductIds as $ids) {
             foreach ($ids as $id) {
                 $groupProduct = \Magento\Framework\App\ObjectManager::getInstance()->create('\Magento\Catalog\Model\Product')->load($id);
 				if($groupProduct->getStatus() == 1) {
-					if ($config->isTaxEnabled($store->getId()) || $this->_searchHelperConfig->getPriceIncludesTax($store)) {
+					if(!$this->_searchHelperConfig->displayOutofstock()){
+						if($this->_stockHelper->getKlevuStockStatus(null,$groupProduct) == "yes") {
+							$gPrice = $this->getKlevuSalePrice(null,$groupProduct,$store);
+							$groupPrices[] = $gPrice['salePrice'];
+						}
+					} else {
 						$gPrice = $this->getKlevuSalePrice(null,$groupProduct,$store);
 						$groupPrices[] = $gPrice['salePrice'];
-					} else {
-						$groupPrices[] = $groupProduct->getPriceInfo()->getPrice('final_price')->getAmount()->getValue(\Magento\Tax\Pricing\Adjustment::ADJUSTMENT_CODE);
 					}
 				}
             }
         }
+		
         asort($groupPrices);
         $product->setFinalPrice(array_shift($groupPrices));
     }
@@ -450,12 +360,34 @@ class Price extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function getBundleProductPrices($item, $store)
     {
-        $config = $this->_searchHelperConfig;
-        if ($config->isTaxEnabled($store->getId())) {
-                return $item->getPriceModel()->getTotalPrices($item, null, true, false);
-        } else {
-                return $item->getPriceModel()->getTotalPrices($item, null, false, false);
-        }
+		if($this->_searchHelperConfig->getPriceIncludesTax($store)) {
+			//exluding
+			if($this->_searchHelperConfig->getPriceDisplaySettings($store) == \Magento\Tax\Model\Config::DISPLAY_TYPE_EXCLUDING_TAX){
+				return $item->getPriceModel()->getTotalPrices($item, null, false, false);
+			} else if($this->_searchHelperConfig->getPriceDisplaySettings($store) == \Magento\Tax\Model\Config::DISPLAY_TYPE_INCLUDING_TAX){
+				return $item->getPriceModel()->getTotalPrices($item, null, true, false);
+			}else if($this->_searchHelperConfig->getPriceDisplaySettings($store) == \Magento\Tax\Model\Config::DISPLAY_TYPE_BOTH){
+				if(!$this->_searchHelperConfig->isTaxCalRequired($store)){
+					return $item->getPriceModel()->getTotalPrices($item, null, false, false);
+				}else {
+					return $item->getPriceModel()->getTotalPrices($item, null, true, false);
+				}
+			}
+			
+		}else {
+			//including
+			if($this->_searchHelperConfig->getPriceDisplaySettings($store) == \Magento\Tax\Model\Config::DISPLAY_TYPE_INCLUDING_TAX){
+				return $item->getPriceModel()->getTotalPrices($item, null, true, false);
+			}else if($this->_searchHelperConfig->getPriceDisplaySettings($store) == \Magento\Tax\Model\Config::DISPLAY_TYPE_EXCLUDING_TAX){
+				return $item->getPriceModel()->getTotalPrices($item, null, false, false);
+			}else if($this->_searchHelperConfig->getPriceDisplaySettings($store) == \Magento\Tax\Model\Config::DISPLAY_TYPE_BOTH){
+				if(!$this->_searchHelperConfig->isTaxCalRequired($store)){
+					return $item->getPriceModel()->getTotalPrices($item, null, false, false);
+				}else {
+					return $item->getPriceModel()->getTotalPrices($item, null, true, false);
+				}
+			}
+		}
     }
 	
 }

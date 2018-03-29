@@ -32,5 +32,10 @@
 		<image_height>200</image_height>
 	  </image_setting>
     </klevu_search>
+	<tax>
+		<display>
+			<typeinsearch>1</typeinsearch>
+		</display>
+	</tax>
   </default>
 </config>

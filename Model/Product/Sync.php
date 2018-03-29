@@ -1305,6 +1305,7 @@ class Sync extends AbstractModel
 	*/
 	protected function getDeleteProductsSuccessSql(array $data, $skipped_record_ids)
 	{
+		
 		$connection = $this->_frameworkModelResource->getConnection("core_write");
 		$select = $connection
                 ->select()
@@ -1617,11 +1618,9 @@ class Sync extends AbstractModel
                 ->setStore($this->_storeModelStoreManagerInterface->getStore())
                 ->addStoreFilter()
 				->addMinimalPrice() 
-				->addFinalPrice()
-				->addTaxPercents();
+				->addFinalPrice();
             $data->setFlag('has_stock_status_filter', false);
-         
-            $data->load()
+		    $data->load()
                 ->addCategoryIds();
         }
 
@@ -1645,7 +1644,9 @@ class Sync extends AbstractModel
         $rejectedProducts = array();
         $isOutOfStockVisible = $this->_appConfigScopeConfigInterface->getValue(\Magento\CatalogInventory\Model\Configuration::XML_PATH_SHOW_OUT_OF_STOCK,\Magento\Store\Model\ScopeInterface::SCOPE_STORE);
         $rc = 0;
+		$rp = 0;
         foreach ($products as $index => &$product) {
+			
             try {
                 if ($rc % 5 == 0) {
                     if ($this->rescheduleIfOutOfMemory()) {
@@ -1666,12 +1667,19 @@ class Sync extends AbstractModel
                 if (!$item) {
                     // Product data query did not return any data for this product
                     // Remove it from the list to skip syncing it
-                    if(!$isOutOfStockVisible &&  $config->isCollectionMethodEnabled()) {
-                        $rejectedProducts[] = $product['product_id'];
-                    } else {
-                        $this->log(\Zend\Log\Logger::WARN, sprintf("Failed to retrieve data for product ID %d", $product['product_id']));
-                    }
+                    $rejectedProducts[$rp]['product_id'] = $product['product_id'];
+					$rejectedProducts[$rp]['parent_id'] = $product['parent_id'];
+                    $this->log(\Zend\Log\Logger::WARN, sprintf("Failed to retrieve data for product ID %d", $product['product_id']));
                     unset($products[$index]);
+                    $rp++;
+                    continue;
+                }
+                if((!isset($parent) || is_null($parent)) && $product['parent_id'] != 0){
+                    $rejectedProducts[$rp]['product_id'] = $product['product_id'];
+                    $rejectedProducts[$rp]['parent_id'] = $product['parent_id'];
+                    $this->log(\Zend\Log\Logger::WARN, sprintf("Failed to retrieve data for parent ID %d", $product['parent_id']));
+                    unset($products[$index]);
+                    $rp++;
                     continue;
                 }
                 
@@ -1776,15 +1784,12 @@ class Sync extends AbstractModel
 								$product['startPrice'] = $salePrice['salePrice'];
 								$product['salePrice'] = $salePrice['salePrice'];
 							}
-
 							if(isset($salePrice['toPrice'])){
 								$product['toPrice'] = $salePrice['toPrice'];
 							}
-							
                             break;
 							
                         case "price":
-						
                             // Default to 0 if price can't be determined
                             $product['price'] = 0;
 							if($parent){
@@ -1794,7 +1799,6 @@ class Sync extends AbstractModel
 								$price = $this->_priceHelper->getKlevuPrice($parent, $item, $this->_storeModelStoreManagerInterface->getStore());
 								$product['price'] = $price['price'];
 							}
-                            
                             break;
                         default:
                             foreach ($attributes as $attribute) {
@@ -1875,7 +1879,9 @@ class Sync extends AbstractModel
                 $product['id'] = $this->_searchHelperData->getKlevuProductId($product['product_id'], $product['parent_id']);
                 
                 if ($item) {
-                    $item->clearInstance();
+                    if (!$config->isCollectionMethodEnabled()) {
+                        $item->clearInstance();
+                    }
                     $item = null;
                 }
                 if ($parent) {
@@ -1910,9 +1916,11 @@ class Sync extends AbstractModel
             unset($product['parent_id']);
         }
 
-        if(!$isOutOfStockVisible && count($rejectedProducts) >0 &&  $config->isCollectionMethodEnabled()) {
-            $this->log(\Zend\Log\Logger::WARN, sprintf("Because of visibility of the out of stock products ( Admin > Stores > Configuration > Catalog > Inventory > Display Out of Stock Products ) we cannot synchronize using the collection mode the out of stock product IDs %d", implode(",",$rejectedProducts)));
+        if(count($rejectedProducts) > 0) {
+            $this->log(\Zend\Log\Logger::WARN, sprintf("Because of indexing issue or invalid data we cannot synchronize product IDs %d", implode(',', array_map(function($el){ return $el['product_id']; }, $rejectedProducts))));
+			$this->deleteProducts($rejectedProducts);
         }
+
         return $this;
     }
     /**

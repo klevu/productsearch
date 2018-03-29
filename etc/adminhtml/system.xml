@@ -108,20 +108,7 @@
                   <comment><![CDATA[By default, Klevu uses the following attributes in search: name, sku, description, short_description, price and rating. To add more attributes to search, please select one or more attributes from the list above. Once you have selected the respective attributes, please make sure to resynchronize all the products.]]></comment>
                 </field>
           </group>
-		<group id="tax_setting" translate="label comment" sortOrder="105" showInDefault="1" showInStore="1">
-            <label>Tax Settings</label>
-            <field id="info_enabled" translate="label comment" sortOrder="100" type="label" showInDefault="1">
-              <label>Display Price In search</label>
-              <comment><![CDATA[Switch to store view scope to set]]></comment>
-            </field>
-            <field id="enabled" translate="label comment" sortOrder="100" type="select" showInStore="1">
-              <label>Display Price In search</label>
-                <source_model>Klevu\Search\Model\System\Config\Source\Taxoptions</source_model>
-              <comment><![CDATA[
-			  - This setting affects how the product prices are displayed in search results. It depends on the catalog price configuration set in Sales > Tax > Calculation Settings > Catalog Prices </br>
-			  - Please make sure to resynchronize products by choosing the "All data" option and clicking on the "Sync Data for This Store" button under the "Data Sync Settings".]]></comment>
-            </field>
-		</group>
+		
       <group id="secureurl_setting" translate="label comment" sortOrder="106" showInDefault="1" showInStore="1">
             <label>Secure Url Settings</label>
             <field id="info_enabled" translate="label comment" sortOrder="100" type="label" showInDefault="1">
@@ -192,5 +179,16 @@
         </field>
       </group>
     </section>
+	<section id="tax" translate="label" sortOrder="303" showInDefault="1" showInWebsite="1" showInStore="1">
+		<group id="display" translate="label" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
+				<field id="typeinsearch" translate="label" type="select" sortOrder="12" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+					<label>Display Product Prices In Klevu Search</label>
+					<depends>
+						<field id="type">3</field>
+					</depends>
+					<source_model>Klevu\Search\Model\System\Config\Source\Tax\Display\Type</source_model>
+				</field>
+		</group>
+	</section>
   </system>
 </config>

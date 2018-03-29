@@ -48,6 +48,11 @@ class Api extends \Magento\Framework\App\Helper\AbstractHelper
      * @var \Klevu\Search\Model\Api\Action\Checkuserdetail
      */
     protected $_apiActionCheckuserdetail;
+	
+	/**
+     * @var \Klevu\Search\Model\Session
+     */
+    protected $_searchModelSession;
 
     public function __construct(
         \Magento\Backend\Model\Auth\Session $backendModelSession,
@@ -59,7 +64,8 @@ class Api extends \Magento\Framework\App\Helper\AbstractHelper
         \Klevu\Search\Model\Api\Action\Gettimezone $apiActionGettimezone,
         \Klevu\Search\Helper\Config $searchHelperConfig,
         \Klevu\Search\Model\Api\Action\Checkuserdetail $apiActionCheckuserdetail,
-        \Magento\Framework\App\ProductMetadataInterface $productMetadataInterface
+        \Magento\Framework\App\ProductMetadataInterface $productMetadataInterface,
+		\Klevu\Search\Model\Session $searchModelSession
     ) {
     
         $this->_backendModelSession = $backendModelSession;
@@ -72,6 +78,7 @@ class Api extends \Magento\Framework\App\Helper\AbstractHelper
         $this->_searchHelperConfig = $searchHelperConfig;
         $this->_apiActionCheckuserdetail = $apiActionCheckuserdetail;
         $this->_ProductMetadataInterface = $productMetadataInterface;
+		$this->_searchModelSession = $searchModelSession;
     }
 
     const ENDPOINT_PROTOCOL = 'https://';
@@ -264,7 +271,8 @@ class Api extends \Magento\Framework\App\Helper\AbstractHelper
                 "tires_url"            => $response->getTiersUrl(),
 
             ]);
-
+			$this->_searchModelSession->setCurrentKlevuStoreId($store->getId());
+			$this->_searchModelSession->setCurrentKlevuRestApiKlevu($response->getRestApiKey());
             return [
                 "success"  => true,
                 "webstore" => $webstore,

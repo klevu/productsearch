@@ -43,15 +43,17 @@
 					</select>
 				</div>
 			</div>
+			<?php if($block->showTaxSettings()) { ?>
 			<div class="admin__field field">
 					<label for="tax_enable" class="label admin__field-label"><?php echo __("How do you want to display product prices in search?") ?></label>
 					<div class="admin__field-control control">
 					<select name="tax_enable" id="tax_enable" class="select admin__control-select">
-                            <option value="0"><?php echo __("Excluding Tax"); ?></option>
-                            <option value="1"><?php echo __("Including Tax"); ?></option>
+                            <option value="1"><?php echo __("Excluding Tax"); ?></option>
+                            <option value="2"><?php echo __("Including Tax"); ?></option>
                     </select>
 					</div>
-            </div>     
+            </div>
+			<?php } ?>
 			<div class="admin__field field">
 					<label for="secure_baseurl_enable" class="label admin__field-label"><?php echo __("Which 'base URL' would you like to use for products in search results?"); ?><br/>
 					<span class="note">(from System > Configuration > Web > Secure OR Unsecure > Base URL)") </span></label>

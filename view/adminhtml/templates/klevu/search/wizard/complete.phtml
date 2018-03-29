@@ -22,7 +22,7 @@
 </div>
 
 <div class="kuFinishSyncInfo">
-	<h3><?php echo __('Please click the "Finish and Sync" button below to synchronise your products to Klevu.');?></h3>
+	<h3><?php echo __('Please click the "Finish and Sync" button below to synchronise your products to Klevu.Sync will start in new tab');?></h3>
 	
 	<ul>
 		<li><?php echo __('Klevu Search will be automatically enabled on frontend after the first synchronisation completes.');?></li>
@@ -35,7 +35,7 @@
 	<div class="button-set">
     <button id="sync-button" class="action-default primary"><span><?php echo __("Finish and Sync") ?></span></button><br/>
 </div>
-<h4 class="kuCompleteWarning"><?php echo __('Please do not close or refresh the page after clicking the button until the page has finished loading.');?></h4>
+<h4 class="kuCompleteWarning"><?php echo __('Sync will start in new tab.Please close the wizard when sync starts in new tab.');?></h4>
 <script type="text/javascript">
 require([
     "jquery",
@@ -46,8 +46,7 @@ require([
     'Magento_Ui/js/modal/modal'
 ], function($, alert){
     $("#sync-button").on("click", function (e) {
-        $('.loading-mask').show();
-        window.location = "<?php echo $block->getUrl("klevu_search/manual/sync") ?>";
+			window.open("<?php echo $block->getSyncUrlForStore(); ?>","_blank");
     });
 });
 </script>

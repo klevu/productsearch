@@ -49,4 +49,24 @@ class Store extends \Magento\Backend\Block\Template
         }
         return $data;
     }
+	
+	/**
+     * Return flag to display tax settings in wizard based on price display setting in magento.
+     *
+     * @return string
+     */
+    public function showTaxSettings()
+    {
+		$config = \Magento\Framework\App\ObjectManager::getInstance()->get('\Klevu\Search\Helper\Config');
+		if($config->getPriceDisplaySettings() == 3){
+			return true;
+		}
+        return false;
+    }
+	
+	public function getSyncUrlForStore(){
+        $store_id = \Magento\Framework\App\ObjectManager::getInstance()->get('\Klevu\Search\Model\Session')->getCurrentKlevuStoreId();
+        $rest_api = \Magento\Framework\App\ObjectManager::getInstance()->get('\Klevu\Search\Model\Session')->getCurrentKlevuRestApiKlevu();
+        return $this->_storeManager->getStore($store_id)->getBaseUrl()."search/index/syncstore/store/".$store_id."/restapi/".$rest_api;
+    }
 }

@@ -74,7 +74,8 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
     const XML_PATH_EXTENSION_ENABLED = "klevu_search/general/enabled";
-    const XML_PATH_TAX_ENABLED       = "klevu_search/tax_setting/enabled";
+    //const XML_PATH_TAX_ENABLED       = "klevu_search/tax_setting/enabled";
+	const XML_PATH_TAX_ENABLED       = "tax/display/typeinsearch";
     const XML_PATH_SECUREURL_ENABLED = "klevu_search/secureurl_setting/enabled";
     const XML_PATH_LANDING_ENABLED   = "klevu_search/searchlanding/landenabled";
     const XML_PATH_JS_API_KEY        = "klevu_search/general/js_api_key";
@@ -112,6 +113,10 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
 	const XML_PATH_CONFIG_SYNC_FREQUENCY = "klevu_search/product_sync/frequency";
 	const XML_PATH_PRICE_INCLUDES_TAX = "tax/calculation/price_includes_tax";
 	const XML_PATH_TAG_METHOD = "klevu_search/developer/tagging_options";
+	const XML_PATH_PRICE_DISPLAY_METHOD = "tax/display/type";
+	const XML_PATH_PRICE_TYPEINSEARCH_METHOD = "tax/display/typeinsearch";
+	const XML_PATH_CATALOGINVENTRY_OPTIONS_STOCK ="cataloginventory/options/show_out_of_stock";
+	
 
     /**
      * Set the Enable on Frontend flag in System Configuration for the given store.
@@ -993,13 +998,53 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
 	}
 	
 	/**
-     * Return the Price Includes Tax.
+     * Return admin already included tax in price or not.
      *
      * @return bool
      */
 	public function getPriceIncludesTax($store = null)
     {
-        return $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_PRICE_INCLUDES_TAX,\Magento\Store\Model\ScopeInterface::SCOPE_STORE, $store);
+        return (bool)$this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_PRICE_INCLUDES_TAX,\Magento\Store\Model\ScopeInterface::SCOPE_STORE, $store);
     }
+	
+	/**
+     * Check if the Tax is include/exclude in the system configuration for the current store.
+     *
+     * @param $store_id
+     *
+     * @return bool
+     */
+    public function isTaxCalRequired($store = null)
+    {
+			$flag = $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_PRICE_TYPEINSEARCH_METHOD,\Magento\Store\Model\ScopeInterface::SCOPE_STORE, $store);
+			if(in_array($flag, [
+				\Magento\Tax\Model\Config::DISPLAY_TYPE_INCLUDING_TAX
+			])){
+				return true;
+			} else {
+				return false;
+			} 
+		return;
+    }
+	
+	/**
+     * Return the Price Include/Exclude Tax.
+     *
+     * @return bool
+     */
+	public function getPriceDisplaySettings($store = null)
+    {
+        return $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_PRICE_DISPLAY_METHOD,\Magento\Store\Model\ScopeInterface::SCOPE_STORE, $store);
+    }
+	
+	/**
+     * Return display out of stock on or off in magento setting at global level.
+     *
+     * @return bool
+     */
+	public function displayOutofstock()
+	{
+		return $this->_appConfigScopeConfigInterface->isSetFlag(static::XML_PATH_CATALOGINVENTRY_OPTIONS_STOCK);
+	}
 	
 }
