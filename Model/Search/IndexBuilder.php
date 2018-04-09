@@ -6,7 +6,7 @@
 
 namespace Klevu\Search\Model\Search;
 
-use Magento\CatalogSearch\Model\Search\TableMapper;
+use Magento\CatalogSearch\Model\Search\TableMapper as CatalogSearchTableMapper;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\DB\Select;
@@ -54,7 +54,7 @@ class IndexBuilder extends \Magento\CatalogSearch\Model\Search\IndexBuilder
     private $conditionManager;
 
     /**
-     * @var TableMapper
+     * @var CatalogSearchTableMapper
      */
     private $tableMapper;
     
@@ -69,7 +69,7 @@ class IndexBuilder extends \Magento\CatalogSearch\Model\Search\IndexBuilder
      * @param StoreManagerInterface $storeManager
      * @param ConditionManager $conditionManager
      * @param IndexScopeResolver $scopeResolver
-     * @param TableMapper $tableMapper
+     * @param CatalogSearchTableMapper $tableMapper
      */
     public function __construct(
         ResourceConnection $resource,
@@ -77,7 +77,7 @@ class IndexBuilder extends \Magento\CatalogSearch\Model\Search\IndexBuilder
         StoreManagerInterface $storeManager,
         ConditionManager $conditionManager,
         IndexScopeResolver $scopeResolver,
-        TableMapper $tableMapper
+        CatalogSearchTableMapper $tableMapper
     ) {
         $this->resource = $resource;
         $this->config = $config;
