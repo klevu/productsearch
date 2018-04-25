@@ -666,7 +666,8 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
 				"special_from_date",
 				"special_to_date",
 				"visibility",
-				"status"],
+				"created_at"
+				],
             "klevu_attribute" => [
                 "name",
                 "sku",
@@ -685,7 +686,7 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
 				"special_from_date",
 				"special_to_date",
 				"visibility",
-				"status"
+				"dateAdded"
             ]
         ];
     }

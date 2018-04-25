@@ -118,8 +118,6 @@ class Product implements ProductInterface
 
             $this->_klevu_product_ids = array_unique($this->_klevu_product_ids);
             $this->_searchHelperData->log(Logger::DEBUG, sprintf("Products count returned: %s", count($this->_klevu_product_ids)));
-            $response_meta = $this->getKlevuResponse($query)->getData('meta');
-            $this->_apiActionSearchtermtracking->execute($this->getSearchTracking(count($this->_klevu_product_ids), $query, $response_meta['typeOfQuery']));
         }
         $this->_klevu_product_ids = array_values($this->_klevu_product_ids);
         return $this->_klevu_product_ids;
@@ -161,28 +159,6 @@ class Product implements ProductInterface
         return $this->_klevu_parameters;
     }
 
-    /**
-     * Return the Klevu api search filters
-     * @param $noOfTrackingResults
-     * @param $query
-     * @param $queryType
-     * @return array
-     */
-    private function getSearchTracking($noOfTrackingResults, $query, $queryType)
-    {
-
-        $this->_klevu_tracking_parameters = [
-            'klevu_apiKey' => $this->_searchHelperConfig->getJsApiKey(),
-            'klevu_term' => $query,
-            'klevu_totalResults' => $noOfTrackingResults,
-            'klevu_shopperIP' => $this->_searchHelperData->getIp(),
-            'klevu_typeOfQuery' => $queryType,
-            'klevu_sessionId' => md5(session_id()),
-            'Klevu_typeOfRecord' => 'KLEVU_PRODUCT'
-        ];
-        $this->_searchHelperData->log(Logger::DEBUG, sprintf("Search tracking for term: %s", $query));
-        return $this->_klevu_tracking_parameters;
-    }
 
     /**
      * This method resets the saved $_klevu_product_ids.

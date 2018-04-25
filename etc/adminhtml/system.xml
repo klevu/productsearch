@@ -104,6 +104,7 @@
                 </field>
                 <field id="other" translate="label comment" sortOrder="600" type="multiselect" showInStore="1">
                   <label>Other Attributes To Use In Search</label>
+                  <can_be_empty>1</can_be_empty>
                   <source_model>Klevu\Search\Model\System\Config\Source\Product\Attributes</source_model>
                   <comment><![CDATA[By default, Klevu uses the following attributes in search: name, sku, description, short_description, price and rating. To add more attributes to search, please select one or more attributes from the list above. Once you have selected the respective attributes, please make sure to resynchronize all the products.]]></comment>
                 </field>

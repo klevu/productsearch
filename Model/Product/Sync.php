@@ -1719,10 +1719,12 @@ class Sync extends AbstractModel
                         case "other":
                             $product[$key] = [];
                             foreach ($attributes as $attribute) {
-                                if ($item) {
-                                    $product[$key][$attribute] = $this->getAttributeData($attribute, $item->getData($attribute));
+                                if ($item && $item->getData($attribute)) {
+                                        $product[$key][$attribute] = $this->getAttributeData($attribute, $item->getData($attribute));
                                 } elseif ($parent) {
-                                    $product[$key][$attribute] = $this->getAttributeData($attribute, $parent->getData($attribute));
+									if($parent->getData($attribute)) {
+                                        $product[$key][$attribute] = $this->getAttributeData($attribute, $parent->getData($attribute));
+									}
                                 }
                             }
                             break;
@@ -1800,6 +1802,11 @@ class Sync extends AbstractModel
 								$product['price'] = $price['price'];
 							}
                             break;
+						case "dateAdded":
+						    foreach ($attributes as $attribute) {
+								$product[$key] = substr($item->getData($attribute),0,10);
+							}
+                            break;
                         default:
                             foreach ($attributes as $attribute) {
                                 if ($item->getData($attribute)) {
@@ -1813,6 +1820,24 @@ class Sync extends AbstractModel
                     }
                 }
                 // Add non-attribute data
+                //Syncing product type details
+                if($parent){
+                    $product['product_type'] = $parent->getData('type_id');
+                }else{
+                    $product['product_type'] = $item->getData('type_id');
+                }
+                //Syncing value if product has custom option or not
+                $productType = array("grouped", "configurable", "bundle", "downloadable");
+                if($parent){
+                    $product['isCustomOptionsAvailable'] = "yes";
+                }else if(in_array($item->getData('type_id'), $productType)){
+                    $product['isCustomOptionsAvailable'] = "yes";
+                }else if ($item->getData('has_options')){
+                    $product['isCustomOptionsAvailable'] = "yes";
+                }else{
+                    $product['isCustomOptionsAvailable'] = "no";
+                }
+
                 $product['currency'] = $currency;
                 if ($parent) {
                     $product['category'] = $this->getLongestPathCategoryName($parent->getCategoryIds());
@@ -2041,6 +2066,7 @@ class Sync extends AbstractModel
     
             // Add otherAttributeToIndex to $attribute_map.
             $otherAttributeToIndex = $this->_searchHelperConfig->getOtherAttributesToIndex($this->_storeModelStoreManagerInterface->getStore());
+
             if (!empty($otherAttributeToIndex)) {
                 $attribute_map['otherAttributeToIndex'] = $otherAttributeToIndex;
             }
@@ -2306,10 +2332,9 @@ class Sync extends AbstractModel
                     $attr->setStoreId($this->_storeModelStoreManagerInterface->getStore()->getId());
                     $attribute_data[$attr->getAttributeCode()] = [
                         'label' => $attr->getStoreLabel($this->_storeModelStoreManagerInterface->getStore()->getId()),
-                        'values' => ''
+                        'values' =>  array() // compatibility with php 7.1.x versions
                     ];
                     if ($attr->usesSource()) {
-                        //$attribute_data[$attr->getAttributeCode()] = array();
                         foreach ($attr->setStoreId($this->_storeModelStoreManagerInterface->getStore()->getId())->getSource()->getAllOptions(false) as $option) {
                             if (is_array($option['value'])) {
                                 foreach ($option['value'] as $sub_option) {

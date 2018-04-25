@@ -228,18 +228,31 @@ class Addrecords extends \Klevu\Search\Model\Api\Actionall
         foreach ($record['other'] as $key => &$value) {
             $key = $this->sanitiseOtherAttribute($key);
             if (is_array($value)) {
-                $label = $this->sanitiseOtherAttribute($value['label']);
-                $value = $this->sanitiseOtherAttribute($value['values']);
+            	if(isset($value['label'])) {
+                	$label = $this->sanitiseOtherAttribute($value['label']);
+				}
+				if(isset($value['values'])) {
+                	$value = $this->sanitiseOtherAttribute($value['values']);
+				}
             } else {
-                $label = $this->sanitiseOtherAttribute($key);
-                $value = $this->sanitiseOtherAttribute($value);
+            	if(isset($key)){
+					$label = $this->sanitiseOtherAttribute($key);
+				}
+                if(isset($value)){
+					$value = $this->sanitiseOtherAttribute($value);
+				}
             }
 
             if (is_array($value)) {
                 $value = implode(",", $value);
             }
-
-            $value = sprintf("%s:%s:%s", $key, $label, $value);
+			if(isset($label)){
+				$value = sprintf("%s:%s:%s", $key, $label, $value);
+			}
+			else{
+				$value = sprintf("%s:%s:%s", $key, $key, $value);
+			}
+            
         }
         $record['other'] = implode(";", $record['other']);
     }
@@ -251,6 +264,9 @@ class Addrecords extends \Klevu\Search\Model\Api\Actionall
     protected function prepareOtherAttributeToIndexParameters(&$record)
     {
         foreach ($record['otherAttributeToIndex'] as $key => &$value) {
+        	if($key == 'created_at') {
+                $value = date('Y-m-d', strtotime($value));
+            }
             $key = $this->sanitiseOtherAttribute($key);
             
             if (is_array($value)) {
@@ -261,8 +277,12 @@ class Addrecords extends \Klevu\Search\Model\Api\Actionall
 					$value = $this->sanitiseOtherAttribute($value['values']);
 				}
             } else {
-                $label = $this->sanitiseOtherAttribute($key);
+            	if($key){
+					$label = $this->sanitiseOtherAttribute($key);
+				}
+                if($value){
                 $value = $this->sanitiseOtherAttribute($value);
+				}
             }
             
 			if(!empty($value)) {
@@ -270,7 +290,7 @@ class Addrecords extends \Klevu\Search\Model\Api\Actionall
 					$value = @implode(",", $value);
 				}
 			}
-			if(!empty($value)) {
+			if(!empty($value) && !empty($label)) {
 				$value = sprintf("%s:%s:%s", $key, $label, $value);
 			}
         }

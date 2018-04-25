@@ -75,9 +75,9 @@ class Image extends \Magento\Framework\App\Helper\AbstractHelper
         }
         $pos = strpos($media_url, "/pub");
         if ($pos === false) {
-		    $media_url = str_replace('/media', '/needtochange/media', $media_url);
+		    $media_url = str_replace('/media/', '/needtochange/media/', $media_url);
 		} else {
-		    $media_url = str_replace('/pub', '/needtochange', $media_url);
+		    $media_url = str_replace('/pub/', '/needtochange/', $media_url);
 		}
 
         return $media_url;

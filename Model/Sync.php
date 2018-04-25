@@ -13,6 +13,7 @@ use Magento\Framework\Model\Context as Magento_Context;
 use Magento\Framework\Model\ResourceModel\AbstractResource;
 use Magento\Framework\Registry as Magento_Registry;
 use Magento\Framework\UrlInterface as Magento_UrlInterface;
+use Magento\Framework\App\Filesystem\DirectoryList as DirectoryList;
 
 use Zend\Log\Logger;
 use Symfony\Component\Process\PhpExecutableFinder as PhpExecutableFinderFactory;
@@ -50,6 +51,7 @@ class Sync extends AbstractModel
         SchedulerInterface $klevuSchedulerInterface,
         CategoryInterface $klevuCategoryInterface,
         Magento_UrlInterface $urlInterface,
+		DirectoryList $directoryList,
         Shell $shell,
         PhpExecutableFinderFactory $phpExecutableFinderFactory,
         AbstractResource $resource = null,
@@ -65,6 +67,7 @@ class Sync extends AbstractModel
         $this->_urlInterface = $urlInterface;
         $this->_shell = $shell;
         $this->_phpExecutableFinder = $phpExecutableFinderFactory;
+		$this->directoryList = $directoryList;
     }
 
     /**
@@ -121,10 +124,22 @@ class Sync extends AbstractModel
             "setPageSize" => 1
 
         );
+		
+		$files = glob($this->directoryList->getPath(DirectoryList::VAR_DIR).'/*.lock');
+		$messagestr = '';
+		if(!empty($files)) {
+			foreach($files as $key => $value) {
+				$params['filename'] = basename($value);
+				$url_lock = $this->_urlInterface->getUrl("klevu_search/sync/clearlock",$params);
+				$messagestr.=  "Lock File exits since ".date ("Y-m-d H:i:s", filemtime($value)) ." <a href='" . $url_lock . "'>Clear Klevu Lock File </a>".$params['filename']."</br>";
+			}
+		}
+		
         $runningSchedules = $scheduler->getScheduleCollection($filters, $operations);
         if ($runningSchedules->getSize()) {
             $url = $this->_urlInterface->getUrl("klevu_search/sync/clearcron");
-            return $scheduler->getStatusByCode('running') . " Since " . $runningSchedules->getFirstItem()->getData("executed_at") . " <a href='" . $url . "'>Clear Klevu Cron</a>";
+			
+            $messagestr.= $scheduler->getStatusByCode('running') . " Since " . $runningSchedules->getFirstItem()->getData("executed_at") . " <a href='" . $url . "'>Clear Klevu Cron</a></br>";
         } else {
             $filters = array(
                 "job_code" => $jobCode,
@@ -140,10 +155,10 @@ class Sync extends AbstractModel
             );
             $doneSchedules = $scheduler->getScheduleCollection($filters, $operations);
             if ($doneSchedules->getSize()) {
-                return $scheduler->getStatusByCode('success') . " " . $doneSchedules->getFirstItem()->getData("finished_at");
+                $messagestr.= $scheduler->getStatusByCode('success') . " " . $doneSchedules->getFirstItem()->getData("finished_at");
             }
         }
-        return false;
+        return $messagestr;
     }
 
     /**
@@ -185,6 +200,26 @@ class Sync extends AbstractModel
                 $record->delete();
             }
         }
+    }
+	
+	/**
+     * Remove lock file
+     *
+     * @param string|null $filename
+     * @return void
+     */
+    public function clearKlevuLockFile($filename = null)
+    {
+		$fname = $this->directoryList->getPath(DirectoryList::VAR_DIR)."/".$filename;
+		if(is_writable($fname)) {
+			if(!unlink($fname)) {
+			  return "Error deleting $filename";
+			} else {
+			  return "Deleted $filename";
+			}
+		} else {
+			return "permissions denied for $filename";
+		}
     }
 
     /**

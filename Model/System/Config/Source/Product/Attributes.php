@@ -73,17 +73,7 @@ class Attributes extends \Magento\Backend\Helper\Data
     public function toOptionArray()
     {
     
-        $boost_option = [
-            'value' => null,
-            'label' => ''
-        ];
-        $options = [
-            [
-                'value' => null,
-                'label' => '--- No Attribute Selected ---'
-            ],
-            $boost_option
-        ];
+        $options = array();
         if ($this->_attributes === null) {
             $this->_attributes = $this->_eavConfig->getEntityType(
                 \Magento\Catalog\Model\Product::ENTITY
