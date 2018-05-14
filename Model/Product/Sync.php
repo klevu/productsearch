@@ -2210,6 +2210,7 @@ class Sync extends AbstractModel
             $collection = \Magento\Framework\App\ObjectManager::getInstance()
                 ->create('\Magento\Catalog\Model\ResourceModel\Category\Collection')
                 ->setStoreId($this->_storeModelStoreManagerInterface->getStore()->getId())
+                ->addAttributeToSelect('is_exclude_cat')
                 ->addFieldToFilter('level', ['gt' => 1])
                 ->addFieldToFilter('path', ['like'=> "1/$rootId/%"])
                 ->addIsActiveFilter()
@@ -2219,7 +2220,9 @@ class Sync extends AbstractModel
                     $path_ids = $category->getPathIds();
                 foreach ($path_ids as $id) {
                     if ($item = $collection->getItemById($id)) {
-                        $category_paths[$category->getId()][] = $item->getName();
+                        if($category->getIsExcludeCat() != 1) {
+                            $category_paths[$category->getId()][] = $item->getName();
+                        }
                     }
                 }
             }
