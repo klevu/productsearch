@@ -182,7 +182,7 @@
     </section>
 	<section id="tax" translate="label" sortOrder="303" showInDefault="1" showInWebsite="1" showInStore="1">
 		<group id="display" translate="label" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
-				<field id="typeinsearch" translate="label" type="select" sortOrder="12" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+				<field id="typeinsearch" translate="label" type="select" sortOrder="12" showInDefault="1" showInWebsite="1" showInStore="1">
 					<label>Display Product Prices In Klevu Search</label>
 					<depends>
 						<field id="type">3</field>

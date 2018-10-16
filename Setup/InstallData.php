@@ -90,6 +90,5 @@ class InstallData implements InstallDataInterface
                 $write->commit();
             }
         }
-            \Magento\Framework\App\ObjectManager::getInstance()->get('\Klevu\Search\Helper\Config')->saveRatingUpgradeFlag(0);
     }
 }

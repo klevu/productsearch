@@ -9,6 +9,13 @@
 	<preference for="Klevu\Search\Model\Klevu\Cron\SchedulerInterface" type="Klevu\Search\Model\Klevu\Cron\Scheduler" />
 	<preference for="Klevu\Search\Model\Klevu\Category\CategoryInterface" type="Klevu\Search\Model\Klevu\Category\Category" />
 	<preference for="Klevu\Search\Model\Api\Magento\Request\ProductInterface" type="Klevu\Search\Model\Api\Magento\Request\Product" />
+	<preference for="Klevu\Search\Model\Product\MagentoProductActionsInterface" type="Klevu\Search\Model\Product\MagentoProductActions"/>
+	<preference for="Klevu\Search\Model\Product\LoadAttributeInterface" type="Klevu\Search\Model\Product\LoadAttribute"/>
+	<preference for="Klevu\Search\Model\Product\KlevuProductActionsInterface" type="Klevu\Search\Model\Product\KlevuProductActions"/>
+	<preference for="Klevu\Search\Model\Product\ProductInterface" type="Klevu\Search\Model\Product\Product"/>
+	<preference for="Klevu\Search\Model\Category\MagentoCategoryActionsInterface" type="Klevu\Search\Model\Category\MagentoCategoryActions"/>
+	<preference for="Klevu\Search\Model\Category\LoadAttributeInterface" type="Klevu\Search\Model\Category\LoadAttribute"/>
+	<preference for="Klevu\Search\Model\Category\KlevuCategoryActionsInterface" type="Klevu\Search\Category\Product\KlevuCategoryActions"/>
 
 	<type name="Magento\Framework\Console\CommandList">
 		<arguments>
@@ -16,6 +23,8 @@
 				<item name="syncCommand" xsi:type="object">Klevu\Search\Console\Command\SyncCommand</item>
 				<item name="createCommand" xsi:type="object">Klevu\Search\Console\Command\UserCreation</item>
 				<item name="syncStoreViewData" xsi:type="object">Klevu\Search\Console\Command\SyncStoreView</item>
+				<item name="RatingGeneration" xsi:type="object">Klevu\Search\Console\Command\RatingGeneration</item>
+				<item name="ImageGeneration" xsi:type="object">Klevu\Search\Console\Command\ImageGeneration</item>
 			</argument>
 		</arguments>
 	</type>

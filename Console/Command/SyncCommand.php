@@ -11,12 +11,13 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Exception;
 use Klevu\Search\Model\Product\Sync;
-use Klevu\Search\Model\Order\Sync as Order;
 use Klevu\Content\Model\Content;
+use Klevu\Search\Model\Order\Sync as Order;
+use Klevu\Content\Model\ContentInterface;
 use Magento\Framework\App\Filesystem\DirectoryList as DirectoryList;
 use Magento\Store\Model\StoreManagerInterface as StoreManagerInterface;
 use Magento\Framework\App\State as AppState;
-
+use Klevu\Search\Model\Product\MagentoProductActionsInterface as MagentoProductActions;
 class SyncCommand extends Command
 {
     const LOCK_FILE = 'klevu_running_index.lock';
@@ -92,10 +93,10 @@ class SyncCommand extends Command
             }
             $this->appState->setAreaCode('frontend');
             // sync cms data
-            $sync = ObjectManager::getInstance()->get(Sync::class);
+            $magentoProductActions = ObjectManager::getInstance()->get(MagentoProductActions::class);
 
             if ($input->hasParameterOption('--alldata')) {
-                $sync->markAllProductsForUpdate();
+                $magentoProductActions->markAllProductsForUpdate();
             }
             //get php executable
             $phpPath = $this->_phpExecutableFinder->find() ?: 'php';

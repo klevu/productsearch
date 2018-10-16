@@ -11,6 +11,7 @@ namespace Klevu\Search\Model\Observer;
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\View\Layout\Interceptor;
+use Klevu\Search\Model\Product\MagentoProductActionsInterface as MagentoProductActions;
 
 class SyncAllProducts implements ObserverInterface
 {
@@ -34,18 +35,25 @@ class SyncAllProducts implements ObserverInterface
      * @var \Magento\Catalog\Model\Product\Action
      */
     protected $_modelProductAction;
+	
+	/**
+     * @var \Klevu\Search\Model\Product\MagentoProductActionsInterface
+     */
+    protected $_magentoProductActions;
 
     public function __construct(
         \Klevu\Search\Model\Product\Sync $modelProductSync,
         \Magento\Framework\Filesystem $magentoFrameworkFilesystem,
         \Klevu\Search\Helper\Data $searchHelperData,
-		\Klevu\Search\Helper\Config $searchHelperConfig
+		\Klevu\Search\Helper\Config $searchHelperConfig,
+		\Klevu\Search\Model\Product\MagentoProductActionsInterface $magentoProductActions
     ) {
     
         $this->_modelProductSync = $modelProductSync;
         $this->_magentoFrameworkFilesystem = $magentoFrameworkFilesystem;
         $this->_searchHelperData = $searchHelperData;
 		$this->_searchHelperConfig = $searchHelperConfig;
+		$this->_magentoProductActions = $magentoProductActions;
     }
  
    /**
@@ -58,7 +66,6 @@ class SyncAllProducts implements ObserverInterface
     {
 
         $store = null;
-        $sync = $this->_modelProductSync;
 
         $attribute = $observer->getEvent()->getAttribute();
         if ($attribute instanceof \Magento\Catalog\Model\ResourceModel\Eav\Attribute) {
@@ -74,10 +81,10 @@ class SyncAllProducts implements ObserverInterface
             $store = $this->_storeModelStoreManagerInterface->getStore($observer->getEvent()->getStore());
         }
 
-        $sync->markAllProductsForUpdate($store);
+        $this->_magentoProductActions->markAllProductsForUpdate($store);
 		
 		if($this->_searchHelperConfig->isExternalCronEnabled()) {
-			$sync->schedule();
+			$this->_modelProductSync->schedule();
 		}
     }
 }

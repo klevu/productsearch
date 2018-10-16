@@ -10,7 +10,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Exception;
 use Klevu\Search\Model\Product\Sync;
 use Klevu\Search\Model\Order\Sync as Order;
-use Klevu\Content\Model\Content;
+use Klevu\Content\Model\ContentInterface;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Klevu\Search\Helper\Api as Api;
 use Klevu\Search\Model\Session as Session;

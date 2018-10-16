@@ -12,6 +12,7 @@ use Magento\Store\Model\ScopeInterface as ScopeInterface;
 use Magento\CatalogSearch\Model\ResourceModel\EngineInterface as EngineInterface;
 use Klevu\Search\Model\Api\Magento\Request\ProductInterface as KlevuProductApi;
 use Klevu\Search\Helper\Config as KlevuConfig;
+use \Magento\Framework\App\Request\Http as Magento_Request;
 
 class Cleaner extends \Magento\Framework\Search\Request\Cleaner
 {
@@ -21,6 +22,7 @@ class Cleaner extends \Magento\Framework\Search\Request\Cleaner
     private $klevuConfig;
     private $mutableScopeConfigInterface;
     private $magentoRegistry;
+    private $magentoRequest;
 
     /**
      * Cleaner constructor
@@ -31,6 +33,7 @@ class Cleaner extends \Magento\Framework\Search\Request\Cleaner
      * @param MagentoRegistry $magentoRegistry
      * @param KlevuProductApi $klevuRequest
      * @param KlevuConfig $klevuConfig
+     * @param Magento_Request $magentoRequest
      */
     public function __construct(
         AggregationStatus $aggregationStatus,
@@ -38,7 +41,8 @@ class Cleaner extends \Magento\Framework\Search\Request\Cleaner
         MutableScopeConfigInterface $mutableScopeConfigInterface,
         MagentoRegistry $magentoRegistry,
         KlevuProductApi $klevuRequest,
-        KlevuConfig $klevuConfig
+        KlevuConfig $klevuConfig,
+        Magento_Request $magentoRequest
     )
     {
         $this->sessionManager = $sessionManagerInterface;
@@ -46,6 +50,7 @@ class Cleaner extends \Magento\Framework\Search\Request\Cleaner
         $this->magentoRegistry = $magentoRegistry;
         $this->klevuRequest = $klevuRequest;
         $this->klevuConfig = $klevuConfig;
+        $this->magentoRequest = $magentoRequest;
 
         if (is_callable('parent::__construct')) {
             parent::__construct($aggregationStatus);
@@ -91,7 +96,8 @@ class Cleaner extends \Magento\Framework\Search\Request\Cleaner
      * @return array
      */
     public function klevuQueryCleanup($requestData){
-
+        $categoryFilter = $this->magentoRequest->getParam('productFilter');
+        $categoryFilter = isset($categoryFilter) ? $categoryFilter : '';
         // check if we are in search page
         if(!isset($requestData['queries']['quick_search_container'])) return $requestData;
         //check if klevu is supposed to be on
@@ -99,11 +105,11 @@ class Cleaner extends \Magento\Framework\Search\Request\Cleaner
         //save data in session so we do not request via api for filters
         $queryTerm = $requestData['queries']['search']['value'];
         $queryScope = $requestData['dimensions']['scope']['value'];
-        $idList = $this->sessionManager->getData('ids_'.$queryScope.'_'.$queryTerm);
+        $idList = $this->sessionManager->getData('ids_'.$queryScope.'_'.$queryTerm.$categoryFilter);
         if(!$idList){
             $idList = $this->klevuRequest->_getKlevuProductIds($queryTerm);
             if(empty($idList)) $idList = array(0);
-            $this->sessionManager->setData('ids_'.$queryScope.'_'.$queryTerm,$idList );
+            $this->sessionManager->setData('ids_'.$queryScope.'_'.$queryTerm.$categoryFilter,$idList );
         }
         //register the id list so it will be used when ordering
         $this->magentoRegistry->unregister('search_ids');

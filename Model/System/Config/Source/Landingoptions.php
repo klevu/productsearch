@@ -11,7 +11,7 @@ class Landingoptions
     
     public function toOptionArray()
     {
-        $check_preserve = \Magento\Framework\App\ObjectManager::getInstance()->get('Klevu\Search\Model\Product\Sync')->getFeatures();
+        $check_preserve = \Magento\Framework\App\ObjectManager::getInstance()->get('Klevu\Search\Helper\Config')->getFeatures();
         if (!empty($check_preserve['disabled'])) {
             if (strpos($check_preserve['disabled'], "preserves_layout") !== false) {
                 return [

@@ -8,6 +8,9 @@ use Klevu\Search\Helper\Config as KlevuHelperConfig;
 use Klevu\Search\Helper\Data as KlevuHelperData;
 use Klevu\Search\Model\Api\Action\Idsearch as KlevuApiIdsearch;
 use Klevu\Search\Model\Api\Action\Searchtermtracking as KlevuApiSearchtermtracking;
+use \Magento\Framework\App\Request\Http as Magento_Request;
+use \Magento\Catalog\Model\CategoryFactory as Magento_CategoryFactory;
+use \Magento\Catalog\Model\Category as Category_Model;
 use Zend\Log\Logger as Logger;
 
 class Product implements ProductInterface
@@ -67,13 +70,20 @@ class Product implements ProductInterface
         KlevuHelperConfig $searchHelperConfig,
         KlevuHelperData $searchHelperData,
         KlevuApiIdsearch $apiActionIdsearch,
-        KlevuApiSearchtermtracking $apiActionSearchtermtracking
+        KlevuApiSearchtermtracking $apiActionSearchtermtracking,
+        Magento_Request $magentoRequest,
+        Magento_CategoryFactory $magentoCategoryFactory,
+        Category_Model $categoryModel
+
     )
     {
         $this->_searchHelperConfig = $searchHelperConfig;
         $this->_searchHelperData = $searchHelperData;
         $this->_apiActionIdsearch = $apiActionIdsearch;
         $this->_apiActionSearchtermtracking = $apiActionSearchtermtracking;
+        $this->_magentoRequest = $magentoRequest;
+        $this->_magentoCategoryFactory = $magentoCategoryFactory;
+        $this->_categoryModel = $categoryModel;
     }
 
     /**
@@ -144,6 +154,44 @@ class Product implements ProductInterface
      */
     private function getSearchFilters($query)
     {
+        $category = $this->_klevu_type_of_records;
+        try {
+            $categoryFilter = $this->_magentoRequest->getParam('productFilter');
+            $categoryFilter = isset($categoryFilter) ? $categoryFilter : '';
+            $categoryFilterValue = explode(":",$categoryFilter);
+            if(is_array($categoryFilterValue)) {
+                if(isset($categoryFilterValue[1])) {
+                    $category_name = $categoryFilterValue[1];
+                    $currentCategory  = $this->_magentoCategoryFactory->create()->loadByAttribute('name',$category_name);
+                    $catNames = array();
+                    foreach ($currentCategory->getParentCategories() as $parent) {
+                        $catNames[] = $parent->getName();
+                    }
+                    $allCategoryNames = implode(";",$catNames);
+                    $catNames = array();
+                    $pathIds = array();
+                    $pathIds = $currentCategory->getPathIds();
+                    if(!empty($pathIds)) {
+                        unset($pathIds[0]);
+                        unset($pathIds[1]);
+                        foreach ($pathIds as $key => $value){
+                            $catNames[] = $this->_categoryModel->load($value)->getName();
+                        }
+                        $allCategoryNames = implode(";",$catNames);
+                    }
+
+                    $category = $this->_klevu_type_of_records." ".$allCategoryNames;
+
+                }
+            } else {
+                $category = $this->_klevu_type_of_records;
+            }
+        } catch (\Exception $e) {
+            // Catch the exception that was thrown, log it
+            $this->_searchHelperData->log(Logger::CRIT, sprintf("Exception thrown in %s::%s - %s", __CLASS__, __METHOD__, $e->getMessage()));
+            $category = $this->_klevu_type_of_records;
+        }
+
         if (empty($this->_klevu_parameters)) {
             $this->_klevu_parameters = [
                 'ticket' => $this->_searchHelperConfig->getJsApiKey(),
@@ -152,7 +200,7 @@ class Product implements ProductInterface
                 'paginationStartsFrom' => 0,
                 'enableFilters' => 'false',
                 'klevuShowOutOfStockProducts' => 'true',
-                'category' => $this->_klevu_type_of_records
+                'category' => $category
             ];
         }
 

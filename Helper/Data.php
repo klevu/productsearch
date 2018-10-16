@@ -8,6 +8,9 @@ use \Klevu\Search\Helper\Config;
 use \Psr\Log\LoggerInterface;
 use \Magento\Catalog\Model\Product;
 use Magento\Config\Model\ResourceModel\Config\Data\Collection;
+use \Magento\Framework\App\RequestInterface;
+
+
 
 class Data extends \Magento\Framework\App\Helper\AbstractHelper
 {
@@ -65,7 +68,15 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      * @var Magento\Config\Model\ResourceModel\Config\Data\Collection
      */
     protected $_configDataCollection;
-	
+
+    /**
+     * @var \Magento\Store\Model\Store
+     */
+    protected $_frameworkModelStore;
+
+    protected $_klevu_features_response;
+
+    protected $_klevu_enabled_feature_response;
 
     public function __construct(
         \Magento\Store\Model\StoreManagerInterface $storeModelStoreManagerInterface,
@@ -92,6 +103,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         $this->_localeCurrency = $localeCurrency;
         $this->_currencyFactory = $currencyFactory;
 		$this->_configDataCollection = $configDataCollection;
+
     }
 
 
@@ -304,11 +316,17 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     public function getKlevuProductSku($product_sku, $parent_sku = "")
     {
         if (!empty($parent_sku)) {
-            $parent_sku .= static::SKU_SEPARATOR;
+            if(!is_array($parent_sku)) {
+                $parent_sku .= static::SKU_SEPARATOR;
+            }
         } else {
             $parent_sku = "";
         }
-        return sprintf("%s%s", $parent_sku, $product_sku);
+        if(!is_array($parent_sku)) {
+            return sprintf("%s%s", $parent_sku, $product_sku);
+        } else {
+            return $product_sku;
+        }
     }
     
 
@@ -443,5 +461,5 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 			return $this->_storeModelStoreManagerInterface->getStore(intval($scope_id[0]['scope_id']));
 		}
 	}
-	
+
 }

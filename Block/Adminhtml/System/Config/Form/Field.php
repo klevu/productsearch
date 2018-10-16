@@ -1,10 +1,23 @@
 <?php
 
 namespace Klevu\Search\Block\Adminhtml\System\Config\Form;
+use Klevu\Search\Model\Klevu\HelperManager as Klevu_HelperManager;
 
 class Field extends \Magento\Config\Block\System\Config\Form\Field
 {
- /**
+
+    public function __construct(
+        \Magento\Backend\Block\Template\Context $context,
+        Klevu_HelperManager $helperManager,
+        array $data = []
+
+
+    ) {
+        $this->_helperManager = $helperManager;
+        parent::__construct($context,$data);
+    }
+
+    /**
   * Retrieve element HTML markup
   *
   * @param \Magento\Framework\Data\Form\Element\AbstractElement $element
@@ -32,6 +45,15 @@ class Field extends \Magento\Config\Block\System\Config\Form\Field
         
         $config = \Magento\Framework\App\ObjectManager::getInstance()->get('Klevu\Search\Helper\Config');
         $features = $config->getFeaturesUpdate($element->getHtmlId());
+		$store_manager = \Magento\Framework\App\ObjectManager::getInstance()->get('\Magento\Store\Model\StoreManagerInterface');
+		$store_mode = \Magento\Framework\App\ObjectManager::getInstance()->get('\Magento\Store\Model\StoreManagerInterface')->isSingleStoreMode();
+		if($store_mode) {
+			$configScope = \Magento\Framework\App\ObjectManager::getInstance()->get('\Magento\Framework\App\Config\ScopeConfigInterface');
+			$jsApiValue = $config->getJsApiKey($store_manager->getStore());
+			$jsRestValue = $config->getRestApiKey($store_manager->getStore());
+			$config->setStoreConfig('klevu_search/general/js_api_key', $jsApiValue,$store_manager->getStore());
+			$config->setStoreConfig('klevu_search/general/rest_api_key', $jsRestValue,$store_manager->getStore());
+		}
         if (!empty($features)) {
             $style        = 'class="klevu-disabled"';
             $upgrade_text = '';
@@ -93,7 +115,7 @@ class Field extends \Magento\Config\Block\System\Config\Form\Field
         }
         if ($element->getHtmlId() == "klevu_search_searchlanding_landenabled") {
             $klevu_html ='';
-                $check_preserve = \Magento\Framework\App\ObjectManager::getInstance()->get('Klevu\Search\Model\Product\Sync')->getFeatures();
+                $check_preserve = \Magento\Framework\App\ObjectManager::getInstance()->get('Klevu\Search\Helper\Config')->getFeatures();
             if (!empty($check_preserve)) {
                 if (isset($check_preserve['disabled']) && !empty($check_preserve['disabled'])) {
                     if (strpos($check_preserve['disabled'], "preserves_layout") !== false) {

@@ -98,8 +98,11 @@ class Sync extends AbstractModel
            );
            return true;
        } catch (\Exception $e) {
-           // Catch the exception that was thrown, log it, then throw a new exception to be caught the Magento cron.
-           $this->log(Logger::CRIT, "can not execute subprocess $command");
+		   $logDir = $this->directoryList->getPath(DirectoryList::VAR_DIR);
+		   $subprocess_file = $logDir."/subprocess.lock";
+		   fopen($subprocess_file, 'w');
+		   $this->log(Logger::CRIT, "can not execute subprocess $command ".$e->getMessage());
+		   throw new \Exception($e->getMessage()); 
            return false;
        }
     }

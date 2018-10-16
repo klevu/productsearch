@@ -29,7 +29,7 @@ class Get extends \Klevu\Search\Model\Api\Request
         $client = parent::build();
 
         $client
-            ->setMethod("GET")
+            ->setMethod(\Zend\Http\Request::METHOD_GET)
             ->setParameterGet($this->getData());
 
         return $client;

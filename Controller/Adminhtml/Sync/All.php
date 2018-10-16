@@ -10,7 +10,7 @@ use Klevu\Search\Model\Product\Sync;
 use Klevu\Search\Helper\Data;
 use Magento\Framework\Event\ManagerInterface;
 use Magento\Framework\App\ObjectManager;
-
+use Klevu\Search\Model\Product\MagentoProductActionsInterface as MagentoProductActions;
 class All extends \Magento\Backend\App\Action
 {
     /**
@@ -41,13 +41,18 @@ class All extends \Magento\Backend\App\Action
      * @var \Magento\Framework\App\RequestInterface
      */
     protected $_frameworkAppRequestInterface;
+	/**
+     * @var \Klevu\Search\Model\Product\MagentoProductActionsInterface
+     */
+    protected $_magentoProductActions;
 	
     public function __construct(
         \Magento\Backend\App\Action\Context $context,
         \Magento\Store\Model\StoreManagerInterface $storeModelStoreManagerInterface,
         \Klevu\Search\Helper\Config $searchHelperConfig,
         \Klevu\Search\Model\Product\Sync $modelProductSync,
-        \Klevu\Search\Helper\Data $searchHelperData
+        \Klevu\Search\Helper\Data $searchHelperData,
+		\Klevu\Search\Model\Product\MagentoProductActionsInterface $magentoProductActions
     ) {
         $this->_storeModelStoreManagerInterface = $storeModelStoreManagerInterface;
         $this->_backendModelSession = $context->getSession();
@@ -55,6 +60,7 @@ class All extends \Magento\Backend\App\Action
         $this->_modelProductSync = $modelProductSync;
         $this->_searchHelperData = $searchHelperData;
         $this->_frameworkEventManagerInterface = $context->getEventManager();
+		$this->_magentoProductActions = $magentoProductActions;
         parent::__construct($context);
     }
     public function execute()
@@ -73,11 +79,10 @@ class All extends \Magento\Backend\App\Action
             if ($this->_searchHelperConfig->getSyncOptionsFlag() == "2") {
                 if ($store) {
 					if($this->_searchHelperConfig->isExternalCronEnabled()) {
-						$this->_modelProductSync
-						->markAllProductsForUpdate($store)
-						->schedule();
+						$this->_magentoProductActions
+						->markAllProductsForUpdate($store);
 					} else {
-						$this->_modelProductSync
+						$this->_magentoProductActions
 						->markAllProductsForUpdate($store);
 					}
                     
@@ -92,7 +97,7 @@ class All extends \Magento\Backend\App\Action
                         $store->getName()
                     ));
                 } else {
-                    $this->_modelProductSync->markAllProductsForUpdate();
+                    $this->_magentoProductActions->markAllProductsForUpdate();
                     $this->_searchHelperData->log(\Zend\Log\Logger::INFO, "Product Sync scheduled to re-sync ALL products.");
                     $this->messageManager->addSuccess(__("Klevu Search Sync scheduled to be run on the next cron run for ALL products."));
                 }

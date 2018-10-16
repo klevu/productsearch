@@ -45,13 +45,15 @@ class PeformFullDataSync implements ObserverInterface
         \Magento\Framework\Filesystem $magentoFrameworkFilesystem,
         \Klevu\Search\Helper\Config $searchHelperConfig,
         \Magento\Framework\App\ResourceConnection $frameworkModelResource,
-		\Magento\Framework\App\Request\Http $request
+		\Magento\Framework\App\Request\Http $request,
+		\Klevu\Search\Model\Product\MagentoProductActionsInterface $magentoProductActions
     ) {
     
         $this->_modelProductSync = $modelProductSync;
         $this->_magentoFrameworkFilesystem = $magentoFrameworkFilesystem;
         $this->_searchHelperConfig = $searchHelperConfig;
         $this->_frameworkModelResource = $frameworkModelResource;
+		$this->_magentoProductActions = $magentoProductActions;
 		$this->request = $request;
     }
 
@@ -68,7 +70,7 @@ class PeformFullDataSync implements ObserverInterface
                 $value_tax = $config_state['tax_setting']['fields']['enabled']['value'];
                 $new_value = (int)$value_tax?true:false;
                 if($this->_searchHelperConfig->isTaxEnabled($store) !== $new_value){
-                    $this->_modelProductSync->markAllProductsForUpdate($store);
+                    $this->_magentoProductActions->markAllProductsForUpdate($store);
                 }
             }
 
@@ -76,7 +78,7 @@ class PeformFullDataSync implements ObserverInterface
                 $value_secureurl = $config_state['secureurl_setting']['fields']['enabled']['value'];
                 $new_value_secureurl = (int)$value_secureurl?true:false;
                 if($this->_searchHelperConfig->isSecureUrlEnabled($store) !== $new_value_secureurl){
-                    $this->_modelProductSync->markAllProductsForUpdate($store);
+                    $this->_magentoProductActions->markAllProductsForUpdate($store);
                 }
             }
 
@@ -84,7 +86,7 @@ class PeformFullDataSync implements ObserverInterface
                 $value_image_setting = $config_state['image_setting']['fields']['enabled']['value'];
                 $new_value_image_setting = (int)$value_image_setting ? true : false;
                 if ($this->_searchHelperConfig->isUseConfigImage($store) !== $new_value_image_setting) {
-                    $this->_modelProductSync->markAllProductsForUpdate($store);
+                    $this->_magentoProductActions->markAllProductsForUpdate($store);
                 }
             }
 		}

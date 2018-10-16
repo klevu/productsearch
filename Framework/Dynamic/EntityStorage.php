@@ -27,7 +27,7 @@ class EntityStorage extends \Magento\Framework\Search\Dynamic\EntityStorage
 		{
 			$result = array();
 			foreach($sessionOrder as $val){
-				if(array_search($val, $source)) $result[] = $val; // adding values
+				if(array_search($val, $source) !== false) $result[] = $val; // adding values
 			}
 		} else {
 			$result = $source;

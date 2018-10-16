@@ -69,8 +69,15 @@ class Button extends \Magento\Config\Block\System\Config\Form\Field
 	}
 
 	public function getSyncUrlForStore(){
-        $store_id = $this->getRequest()->getParam('store');
-        $rest_api = $this->getRestApi($store_id);
+		
+		$store = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Store\Model\StoreManagerInterface');
+		if($store->isSingleStoreMode())
+		{
+			$store_id = $store->getStore()->getId();
+		} else {
+			$store_id = $this->getRequest()->getParam('store');
+		}
+		$rest_api = $this->getRestApi($store_id);
         return $this->_storeManager->getStore($store_id)->getBaseUrl()."search/index/syncstore/store/".$store_id."/restapi/".$rest_api;
     }
 }

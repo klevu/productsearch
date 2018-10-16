@@ -33,6 +33,11 @@ class Post extends \Magento\Backend\App\Action
      * @var \Klevu\Search\Model\Order\Sync
      */
     protected $_modelOrderSync;
+	
+	/**
+     * @var \Klevu\Search\Model\Product\MagentoProductActionsInterface
+     */
+    protected $_magentoProductActions;
 
     public function __construct(
         \Magento\Backend\App\Action\Context $context,
@@ -40,7 +45,8 @@ class Post extends \Magento\Backend\App\Action
         \Klevu\Search\Helper\Api $searchHelperApi,
         \Magento\Store\Model\StoreManagerInterface $storeModelStoreManagerInterface,
         \Klevu\Search\Model\Product\Sync $modelProductSync,
-        \Klevu\Search\Model\Order\Sync $modelOrderSync
+        \Klevu\Search\Model\Order\Sync $modelOrderSync,
+		\Klevu\Search\Model\Product\MagentoProductActionsInterface $magentoProductActions
     ) {
     
         $this->_searchHelperConfig = $searchHelperConfig;
@@ -49,6 +55,7 @@ class Post extends \Magento\Backend\App\Action
         $this->_storeModelStoreManagerInterface = $storeModelStoreManagerInterface;
         $this->_modelProductSync = $modelProductSync;
         $this->_modelOrderSync = $modelOrderSync;
+		$this->_magentoProductActions = $magentoProductActions;
 
         parent::__construct($context);
     }
@@ -96,9 +103,10 @@ class Post extends \Magento\Backend\App\Action
             $config->setJsUrl($result['webstore']->getJsUrl(), $store);
             $config->setRestHostname($result['webstore']->getRestHostname(), $store);
             $config->setTiresUrl($result['webstore']->getTiresUrl(), $store);
+			$config->saveRatingUpgradeFlag(0,$store);
 			$config->resetConfig();
             if (isset($result["message"])) {
-                $this->messageManager->addSuccess(__($result["message"]));
+                $this->messageManager->addSuccess(__($result["message"]));	
                 $this->_searchModelSession->setFirstSync($store_code);
             }
         } else {
@@ -115,7 +123,7 @@ class Post extends \Magento\Backend\App\Action
         $this->_view->renderLayout();
 
         // Clear Product Sync and Order Sync data for the newly configured store
-        $this->_modelProductSync->clearAllProducts($store);
+        $this->_magentoProductActions->clearAllProducts($store);
         //$this->_modelOrderSync->clearQueue($store);
 
         $session->setConfiguredStoreCode($store_code);
