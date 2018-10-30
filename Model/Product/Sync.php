@@ -272,7 +272,6 @@ class Sync extends AbstractModel
         $this->_storeModelStoreManagerInterface->setCurrentStore($store->getId());
         $this->_searchHelperData->log(\Zend\Log\Logger::INFO, sprintf("Starting sync for %s (%s).", $store->getWebsite()->getName(), $store->getName()));
 
-        $actions = $this->_magentoProductActions->getSyncDataActions($store);
         $actions = array('delete','update','add');
         $errors = 0;
 
