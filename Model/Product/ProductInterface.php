@@ -1,9 +1,6 @@
 <?php
 /**
- * Created by PhpStorm.
- * User: Administrator
- * Date: 9/19/2018
- * Time: 11:54 AM
+ * ProductInterface
  */
 
 namespace Klevu\Search\Model\Product;

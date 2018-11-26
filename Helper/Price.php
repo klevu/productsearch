@@ -67,6 +67,9 @@ class Price extends \Magento\Framework\App\Helper\AbstractHelper
 		$this->_stockHelper = $stockHelper;
     }
 
+    public function getParentType(){
+        return \Magento\ConfigurableProduct\Model\Product\Type\Configurable::TYPE_CODE;
+    }
     /**
      * Get the secure and unsecure media url
      *
@@ -77,7 +80,7 @@ class Price extends \Magento\Framework\App\Helper\AbstractHelper
     {
 		// Default to 0 if price can't be determined
         $productPrice['salePrice'] = 0;
-		if($parent && $parent->getData("type_id") == \Magento\ConfigurableProduct\Model\Product\Type\Configurable::TYPE_CODE) {
+		if($parent && $parent->getData("type_id") == $this->getParentType()) {
 			$final_price = $parent->getPriceInfo()
                     ->getPrice('final_price')
                     ->getAmount()
@@ -120,7 +123,7 @@ class Price extends \Magento\Framework\App\Helper\AbstractHelper
     public function getKlevuPrice($parent, $item, $store)
     {
 		/* getPrice */
-		if($parent && $parent->getData("type_id") == \Magento\ConfigurableProduct\Model\Product\Type\Configurable::TYPE_CODE) {
+		if($parent && $parent->getData("type_id") == $this->getParentType()) {
 			$price = $parent->getPriceInfo()
                     ->getPrice('regular_price')
                     ->getAmount()
@@ -163,8 +166,7 @@ class Price extends \Magento\Framework\App\Helper\AbstractHelper
      */
     protected function convertPrice($price, $store)
     {
-        $convertPrice = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Framework\Pricing\PriceCurrencyInterface');
-        return $convertPrice->convert($price, $store);
+        return $this->priceCurrency->convert($price, $store);
     }
     /**
      * Process the given product price for using in Product Sync.
@@ -176,7 +178,7 @@ class Price extends \Magento\Framework\App\Helper\AbstractHelper
      *
      * @return float
      */
-    protected function processPrice($price, $price_code, $pro, $store)
+    public function processPrice($price, $price_code, $pro, $store)
     {
         if ($price < 0) {
             $price = 0;
@@ -241,7 +243,7 @@ class Price extends \Magento\Framework\App\Helper\AbstractHelper
      *
      * @return array
      */
-    protected function getGroupPrices($proData, $store)
+    public function getGroupPrices($proData, $store)
     {
         $groupPrices = $proData->getData('tier_price');
         if (is_null($groupPrices))

@@ -285,7 +285,7 @@ class LoadAttribute extends  AbstractModel implements LoadAttributeInterface
      *
      * @return array
      */
-    protected function getConfigurableAttributes()
+    public function getConfigurableAttributes()
     {
         $select = $this->_frameworkModelResource->getConnection("core_write")
             ->select()

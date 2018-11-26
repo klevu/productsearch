@@ -17,7 +17,8 @@ class Product extends DataObject implements ProductInterface
     protected $_customerModelGroup;
 
     public function __construct(
-        \Klevu\Search\Model\Context $context
+        \Klevu\Search\Model\Context $context,
+        array $data = []
     ){
         $this->_storeModelStoreManagerInterface = $context->getStoreManagerInterface();
         $this->_searchHelperData = $context->getHelperManager()->getDataHelper();
@@ -26,6 +27,7 @@ class Product extends DataObject implements ProductInterface
         $this->_configHelper = $context->getHelperManager()->getConfigHelper();
         $this->_searchHelperCompat = $context->getHelperManager()->getCompatHelper();
         $this->_customerModelGroup = $context->getKlevuCustomerGroup();
+        parent::__construct($data);
 
     }
 

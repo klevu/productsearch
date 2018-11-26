@@ -10,8 +10,8 @@ use \Magento\Eav\Model\Config as Eav_Config;
 use Klevu\Search\Model\Product\LoadAttributeInterface as Klevu_LoadAttribute;
 use Klevu\Search\Model\Klevu\KlevuFactory as Klevu_Factory;
 use \Magento\Catalog\Model\ResourceModel\Product\CollectionFactory as Magento_CollectionFactory;
-use \Magento\ConfigurableProduct\Model\ResourceModel\Product\Type\Configurable as Klevu_ConfigurableProduct_Type;
 use \Klevu\Search\Model\Klevu\HelperManager as Klevu_HelperManager;
+use Klevu\Search\Model\Product\ProductParentInterface as  Klevu_Product_Parent;
 use Klevu\Search\Model\Context as Klevu_Context;
 use \Magento\Eav\Model\Entity\Type as Klevu_Entity_Type;
 use \Magento\Eav\Model\Entity\Attribute as Klevu_Entity_Attribute;
@@ -33,20 +33,20 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
     protected $_loadAttribute;
     protected $_klevuFactory;
     protected $_magentoCollectionFactory;
-    protected $_klevuconfigurableProductType;
     protected $_searchHelperData;
 	protected $_klevuEntityType;
 	protected $_klevuEntityAttribute;
+	protected $_klevuProductParentInterface;
 
     public function __construct(
 		 \Magento\Framework\Model\Context $mcontext,
          Klevu_Context $context,
          Eav_Config $eavConfig,
+         Klevu_Product_Parent $klevuProductParent,
          Klevu_Product_Actions $klevuProductAction,
          Klevu_LoadAttribute $loadAttribute,
          Klevu_Factory $klevuFactory,
          Magento_CollectionFactory $magentoCollectionFactory,
-         Klevu_ConfigurableProduct_Type $klevuconfigurableProductType,
          Klevu_HelperManager  $klevuHelperManager,
 		 Klevu_Entity_Type $klevuEntityType,
 		 Klevu_Entity_Attribute $klevuEntityAttribute,
@@ -72,7 +72,7 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
         $this->_loadAttribute = $loadAttribute;
         $this->_klevuFactory = $klevuFactory;
         $this->_magentoCollectionFactory = $magentoCollectionFactory;
-        $this->_klevuconfigurableProductType = $klevuconfigurableProductType;
+        $this->_klevuProductParentInterface = $klevuProductParent;
         $this->_searchHelperData = $this->_klevuHelperManager->getDataHelper();
 		$this->_klevuEntityAttribute = $klevuEntityAttribute;
 		$this->_klevuEntityType = $klevuEntityType;
@@ -95,7 +95,7 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
             $klevuCollection->setPageSize($limit);
         }
 		
-		
+
         $klevuCollection->load();
 		
         if ($klevuCollection->count() > 0) {
@@ -110,7 +110,7 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
 		
         return $klevuToUpdate;
 	}
-	
+
 	public function addProductCollection($store = null){
 		
 		$klevu = $this->_klevuFactory->create();
@@ -129,13 +129,13 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
 		if(!empty($limit)){
             $productCollection->setPageSize($limit);
         }
-		
+
         $m_product_ids = array();
         foreach ($productCollection->getData() as $key => $value){
 			$parent_id = 0;
             $m_product_ids[] = $parent_id."-".$value['entity_id'];
         }
-		
+
 		// Get Simple product which have parent and visibility not visible individual
         $productCollection = $this->_magentoCollectionFactory->create()
             ->addFieldToSelect('id');
@@ -151,7 +151,7 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
 		
 		
         foreach ($productCollection->getData() as $key => $value){
-            $parent_ids = $this->_klevuconfigurableProductType->getParentIdsByChild($value['entity_id']);
+            $parent_ids = $this->_klevuProductParentInterface->getParentIdsByChild($value['entity_id']);
             if(!empty($parent_ids)) {
                 foreach ($parent_ids as $pkey => $pvalue) {
                     $m_product_ids[] = $pvalue . "-" . $value['entity_id'];
@@ -162,11 +162,11 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
 		
 
         $enable_parent_ids = array();
-        // Get configurable product,enabled or visibility catalogsearch,search
+        // Get parent product,enabled or visibility catalogsearch,search
         $productCollection = $this->_magentoCollectionFactory->create()
             ->addFieldToSelect('id');
         $productCollection->addStoreFilter($store->getId());
-        $productCollection->addAttributeToFilter('type_id', array('in' =>  array('configurable')));
+        $productCollection->addAttributeToFilter('type_id', array('in' =>  $this->_klevuProductParentInterface->getProductParentTypeArray()));
 		$productCollection->addAttributeToFilter('visibility', array('in' => array( \Magento\Catalog\Model\Product\Visibility::VISIBILITY_BOTH ,\Magento\Catalog\Model\Product\Visibility::VISIBILITY_IN_SEARCH)));
 		// disable not working for flat indexing  so checking for enabled product only
         $productCollection->addAttributeToFilter('status', array('eq' =>  \Magento\Catalog\Model\Product\Attribute\Source\Status::STATUS_ENABLED));
@@ -213,7 +213,7 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
         $productCollection->addAttributeToFilter('visibility', array('in' => array( \Magento\Catalog\Model\Product\Visibility::VISIBILITY_BOTH ,\Magento\Catalog\Model\Product\Visibility::VISIBILITY_IN_SEARCH,\Magento\Catalog\Model\Product\Visibility::VISIBILITY_NOT_VISIBLE )));
         $m_product_ids = array();
         foreach ($productCollection->getData() as $key => $value){
-            $parent_ids = $this->_klevuconfigurableProductType->getParentIdsByChild($value['entity_id']);
+            $parent_ids = $this->_klevuProductParentInterface->getParentIdsByChild($value['entity_id']);
             if(!empty($parent_ids)) {
                 foreach ($parent_ids as $pkey => $pvalue) {
 					// 1 = not visible individual
@@ -232,11 +232,11 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
             }
         }
         $enable_parent_ids = array();
-        // Get configurable product,disabled or visibility catalog
+        // Get parent product,disabled or visibility catalog
         $productCollection = $this->_magentoCollectionFactory->create()
             ->addFieldToSelect('id');
         $productCollection->addStoreFilter($store->getId());
-        $productCollection->addAttributeToFilter('type_id', array('in' =>  array('configurable')));
+        $productCollection->addAttributeToFilter('type_id', array('in' => $this->_klevuProductParentInterface->getProductParentTypeArray()));
 		$productCollection->addAttributeToFilter('visibility', array('in' => array( \Magento\Catalog\Model\Product\Visibility::VISIBILITY_BOTH ,\Magento\Catalog\Model\Product\Visibility::VISIBILITY_IN_SEARCH)));
 		$productCollection->addAttributeToFilter('status', array('eq' =>  \Magento\Catalog\Model\Product\Attribute\Source\Status::STATUS_ENABLED));
 		

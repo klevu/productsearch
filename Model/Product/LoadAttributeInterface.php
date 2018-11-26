@@ -53,6 +53,14 @@ interface LoadAttributeInterface
     public function loadProductDataCollection($product_ids);
 
     /**
+     * Return the attribute codes for all attributes currently used in
+     * parent products.
+     *
+     * @return array
+     */
+    public function getConfigurableAttributes();
+
+    /**
      * Return a list of all Magento attributes that are used by Product Sync
      * when collecting product data.
      *

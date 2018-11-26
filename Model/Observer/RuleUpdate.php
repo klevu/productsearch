@@ -36,7 +36,7 @@ class RuleUpdate implements ObserverInterface
     protected $_modelProductAction;
 
     public function __construct(
-        \Klevu\Search\Model\Product\Sync $modelProductSync,
+        \Klevu\Search\Model\Product\MagentoProductActionsInterface $modelProductSync,
         \Magento\Framework\Filesystem $magentoFrameworkFilesystem,
         \Klevu\Search\Helper\Data $searchHelperData
     ) {

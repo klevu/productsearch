@@ -16,9 +16,9 @@ class UpdateLastSyncCategory implements ObserverInterface
 {
 
      /**
-      * @var \Klevu\Search\Model\Product\Sync
+      * @var \Klevu\Search\Model\Product\MagentoProductActionsInterface
       */
-    protected $_modelProductSync;
+    protected $_magentoProductActionsInterface;
 
     /**
      * @var \Magento\Framework\Filesystem
@@ -41,13 +41,13 @@ class UpdateLastSyncCategory implements ObserverInterface
     protected $_frameworkModelResource;
 
     public function __construct(
-        \Klevu\Search\Model\Product\Sync $modelProductSync,
+        \Klevu\Search\Model\Product\MagentoProductActionsInterface $magentoProductActionsInterface,
         \Magento\Framework\Filesystem $magentoFrameworkFilesystem,
         \Klevu\Search\Helper\Data $searchHelperData,
         \Magento\Framework\App\ResourceConnection $frameworkModelResource
     ) {
     
-        $this->_modelProductSync = $modelProductSync;
+        $this->_magentoProductActionsInterface = $magentoProductActionsInterface;
         $this->_magentoFrameworkFilesystem = $magentoFrameworkFilesystem;
         $this->_searchHelperData = $searchHelperData;
         $this->_frameworkModelResource = $frameworkModelResource;
@@ -59,7 +59,7 @@ class UpdateLastSyncCategory implements ObserverInterface
      */
     public function execute(\Magento\Framework\Event\Observer $observer)
     {
-        try {
+        try {					
             $category_ids[] = $observer->getEvent()->getCategory()->getId();
             if (empty($category_ids)) {
                 return;
@@ -74,8 +74,14 @@ class UpdateLastSyncCategory implements ObserverInterface
                     ['last_synced_at' => '0'],
                     $where
                 );
+				
+			$product_ids = $observer->getEvent()->getCategory()->getProductCollection()->getAllIds();			
+			if (empty($product_ids)) {
+				return;
+			} 
+			$this->_magentoProductActionsInterface->updateSpecificProductIds($product_ids);	
         } catch (\Exception $e) {
-                 $this->_searchHelperData->log(\Zend\Log\Logger::DEBUG, sprintf("Error while updating date for category in klevu product sync:\n%s", $e->getMessage()));
+            $this->_searchHelperData->log(\Zend\Log\Logger::DEBUG, sprintf("Error while updating date for category in klevu product sync:\n%s", $e->getMessage()));
         }
     }
 }

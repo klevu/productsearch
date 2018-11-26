@@ -74,7 +74,7 @@ class MagentoCategoryActions extends AbstractModel implements MagentoCategoryAct
             'records' => $data
         ]);
         if ($response->isSuccess()) {
-            $this->_klevuCategoryAction->executeUpdateCategorySuccess($data, $response);
+            return $this->_klevuCategoryAction->executeUpdateCategorySuccess($data, $response);
         } else {
             $this->_searchModelSession->setKlevuFailedFlag(1);
             return sprintf("%d category%s failed (%s)", $total, ($total > 1) ? "s" : "", $response->getMessage());
@@ -104,7 +104,7 @@ class MagentoCategoryActions extends AbstractModel implements MagentoCategoryAct
             }, $data)
         ]);
         if ($response->isSuccess()) {
-            $this->_klevuCategoryAction->executeDeleteCategorySuccess($data, $response);
+            return $this->_klevuCategoryAction->executeDeleteCategorySuccess($data, $response);
         } else {
             $this->_searchModelSession->setKlevuFailedFlag(1);
             return sprintf("%d category%s failed (%s)", $total, ($total > 1) ? "s" : "", $response->getMessage());
@@ -131,7 +131,7 @@ class MagentoCategoryActions extends AbstractModel implements MagentoCategoryAct
             'records' => $data
         ]);
         if ($response->isSuccess()) {
-            $this->_klevuCategoryAction->executeAddCategorySuccess($data, $response);
+            return $this->_klevuCategoryAction->executeAddCategorySuccess($data, $response);
         } else {
             $this->_searchModelSession->setKlevuFailedFlag(1);
             return sprintf("%d category%s failed (%s)", $total, ($total > 1) ? "s" : "", $response->getMessage());

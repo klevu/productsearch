@@ -16,6 +16,7 @@
 	<preference for="Klevu\Search\Model\Category\MagentoCategoryActionsInterface" type="Klevu\Search\Model\Category\MagentoCategoryActions"/>
 	<preference for="Klevu\Search\Model\Category\LoadAttributeInterface" type="Klevu\Search\Model\Category\LoadAttribute"/>
 	<preference for="Klevu\Search\Model\Category\KlevuCategoryActionsInterface" type="Klevu\Search\Category\Product\KlevuCategoryActions"/>
+	<preference for="Klevu\Search\Model\Product\ProductParentInterface" type="Klevu\Search\Model\Product\ProductParent"/>
 
 	<type name="Magento\Framework\Console\CommandList">
 		<arguments>

@@ -91,7 +91,7 @@ class Sync extends AbstractModel
     {
         
         $items = [];
-        $order_date = date_create("now")->format("Y-m-d");
+        $order_date = date_create("now")->format("Y-m-d H:i");
         $session_id = md5(session_id());
         $ip_address = $this->_searchHelperData->getIp();
         if ($order->getCustomerId()) {
@@ -234,7 +234,7 @@ class Sync extends AbstractModel
 		{
 			$itemId = $item->getProductId();
 		}
-		
+		$order_date_miliseconds = strtotime($order_date) * 1000;	
         $response = $this->_apiActionProducttracking
             ->setStore($this->_storeModelStoreManagerInterface->getStore($item->getStoreId()))
             ->execute([
@@ -246,10 +246,11 @@ class Sync extends AbstractModel
             "klevu_currency"  => $this->getStoreCurrency($item->getStoreId()),
             "klevu_shopperIP" => $this->getOrderIP($item->getOrderId()),
             "Klevu_sessionId" => $sess_id,
-            "klevu_orderDate" => $order_date,
+            "klevu_orderDate" => date_format(date_create($order_date),"Y-m-d"),
             "klevu_emailId" => $order_email,
             "klevu_storeTimezone" => $this->_searchHelperData->getStoreTimeZone($item->getStoreId()),
-            "Klevu_clientIp" => $ip_address
+            "Klevu_clientIp" => $ip_address,
+			"klevu_checkoutDate" => $order_date_miliseconds
             ]);
         if ($response->isSuccess()) {
             return true;

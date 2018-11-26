@@ -29,7 +29,7 @@ class RatingGeneration extends Command
         try {
             $state = ObjectManager::getInstance()->get('\Magento\Framework\App\State');
             $state->setAreaCode('frontend');
-            if ($input->hasParameterOption('--regenrate')) {	
+            if ($input->hasParameterOption('--regenerate')) {	
                 $image = ObjectManager::getInstance()->get(Image::class);
                 $storeList = ObjectManager::getInstance()->get(StoreManagerInterface::class)->getStores();
                 foreach ($storeList as $store) {		
@@ -37,7 +37,7 @@ class RatingGeneration extends Command
                 }
 
             }
-            if ($input->hasParameterOption('--regenrate')) {
+            if ($input->hasParameterOption('--regenerate')) {
 				
                 $output->writeln('<info> Klevu rating regenrated successfuly commandline</info>');
 				
@@ -57,11 +57,11 @@ class RatingGeneration extends Command
         $inputList = [];
 
         $inputList[] = new InputOption(
-            'regenrate',
+            'regenerate',
             null,
             InputOption::VALUE_OPTIONAL,
-            'Regenrate Product Rating using commandline',
-            'regenrate'
+            'Regenerate Product Rating using commandline',
+            'regenerate'
         );
         return $inputList;
     }

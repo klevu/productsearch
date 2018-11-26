@@ -17,7 +17,7 @@ use \Magento\Framework\Model\AbstractModel;
 use \Magento\Cron\Model\Schedule;
 use \Psr\Log\LoggerInterface;
 use \Klevu\Search\Model\Sync as KlevuSync;
-use \Magento\ConfigurableProduct\Model\ResourceModel\Product\Type\Configurable as Klevu_ConfigurableProduct_Type;
+
 class Sync extends AbstractModel
 {
 

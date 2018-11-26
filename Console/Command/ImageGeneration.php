@@ -33,7 +33,7 @@ class ImageGeneration extends Command
             //Sync Data
             $image = ObjectManager::getInstance()->get(Image::class);
                 
-            if ($input->hasParameterOption('--regenrate')) {
+            if ($input->hasParameterOption('--regenerate')) {
 				$collections = ObjectManager::getInstance()->get('Magento\Catalog\Model\Product')->getCollection(); 
 				$objectManager = ObjectManager::getInstance();
 				foreach($collections as $collection){
@@ -42,7 +42,7 @@ class ImageGeneration extends Command
 					$image->getImagePath($product->getImage());
 				}
             }
-            if ($input->hasParameterOption('--regenrate')) {
+            if ($input->hasParameterOption('--regenerate')) {
 				
                 $output->writeln('<info> Klevu images regenrated successfuly commandline</info>');
 				
