@@ -2,9 +2,9 @@
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../../../../lib/internal/Magento/Framework/ObjectManager/etc/config.xsd">
 	<preference for="Magento\Config\Block\System\Config\Form\Field" type="Klevu\Search\Block\Adminhtml\System\Config\Form\Field"/>
 	<preference for="Magento\Framework\Search\Request\Cleaner" type="Klevu\Search\Framework\Request\Cleaner"/>
-	<preference for="Magento\Framework\Search\Dynamic\EntityStorage" type="Klevu\Search\Framework\Dynamic\EntityStorage"/>
 	<preference for="Magento\Framework\Search\Adapter\Mysql\ScoreBuilder" type="Klevu\Search\Adapter\Mysql\ScoreBuilder"/>
 	<preference for="Magento\CatalogSearch\Model\Search\TableMapper" type="Klevu\Search\Model\Search\TableMapper"/>
+	<preference for="Magento\Elasticsearch\SearchAdapter\DocumentFactory" type="Klevu\Search\SearchAdapter\DocumentFactory"/>
 
 	<preference for="Klevu\Search\Model\Klevu\Cron\SchedulerInterface" type="Klevu\Search\Model\Klevu\Cron\Scheduler" />
 	<preference for="Klevu\Search\Model\Klevu\Category\CategoryInterface" type="Klevu\Search\Model\Klevu\Category\Category" />

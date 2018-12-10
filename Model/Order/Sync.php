@@ -192,7 +192,7 @@ class Sync extends AbstractModel
                             $this->removeItemFromQueue($value['order_item_id']);
                         }
                     } else {
-                        $this->log(\Zend\Log\Logger::ERR, sprintf("Order item %d does not exist: Removed from sync!", $item_id));
+                        $this->log(\Zend\Log\Logger::ERR, sprintf("Order item %d does not exist: Removed from sync!", $value['order_item_id']));
                         $this->removeItemFromQueue($value['order_item_id']);
                         $errors++;
                     }
