@@ -108,7 +108,7 @@ class Sync extends AbstractModel
 			
 
             /* mark for update special price product */
-            $this->_magentoProductActions->markProductForUpdate();
+            //$this->_magentoProductActions->markProductForUpdate();
 
             // Sync Data only for selected store from config wizard
             $firstSync = $this->_searchModelSession->getFirstSync();
@@ -198,7 +198,7 @@ class Sync extends AbstractModel
     {
         try {
             /* mark for update special price product */
-            $this->_magentoProductActions->markProductForUpdate();
+            //$this->_magentoProductActions->markProductForUpdate();
 
             // Sync Data only for selected store from config wizard
             $firstSync = $this->_searchModelSession->getFirstSync();

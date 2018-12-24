@@ -250,6 +250,31 @@ class Product extends DataObject implements ProductInterface
         return $product['listCategory'];
     }
 
+    public function getAllCategoryId($parent,$item){
+        if ($parent) {
+            //category ids parent
+            $parentCategorys = $parent->getCategoryIds();
+            $product['categoryIds'] = implode(";",(is_array($parentCategorys)?$parentCategorys:[]));
+        } elseif ($item->getCategoryIds()) {
+            $itemCategorys = $item->getCategoryIds();
+            $product['categoryIds'] = implode(";",(is_array($itemCategorys)?$itemCategorys:[]));
+        } else {
+            $product['categoryIds'] = "";
+        }
+        return $product['categoryIds'];
+    }
+
+    public function getAllCategoryPaths($parent,$item){
+        if ($parent) {
+            $product['categoryPaths'] = $this->getCategoryNamesAndPath($parent->getCategoryIds());
+        } elseif ($item->getCategoryIds()) {
+            $product['categoryPaths'] = $this->getCategoryNamesAndPath($item->getCategoryIds());
+        } else {
+            $product['categoryPaths'] = "";
+        }
+        return $product['categoryPaths'];
+    }
+
     public function getGroupPricesData($item){
         if ($item) {
             $product['groupPrices'] = $this->getGroupPrices($item);
@@ -365,6 +390,37 @@ class Product extends DataObject implements ProductInterface
         }
         return array_unique($result);
     }
+    /**
+     * Return a list of the names of all the categories in the
+     * paths of the given categories (including the given categories)
+     * up to, but not including the store root.
+     *
+     * @param array $categories
+     *
+     * @return array
+     */
+    public function getCategoryNamesAndPath(array $categories)
+    {
+        $category_paths = $this->getCategoryPaths();
+        $category_ids = $this->getData('category_path_ids');
+        $result = [];
+        foreach ($categories as $category) {
+            if (isset($category_paths[$category])) {
+                if(count($category_paths[$category]) > 0) {
+                    $catName = implode(";",$category_paths[$category]);
+                    $catId = implode("/",$category_ids[$category]);
+                    $cat_path[$category][] = $catName . '::' . $catId;
+                } else {
+                    $catName = $category_paths[$category];
+                    $catId = $category_ids[$category];
+                    $cat_path[$category] = $catName . '::' . $catId;
+                }
+                $result = array_merge($result, $cat_path[$category]);
+            }
+        }
+
+        return implode(";;",array_unique($result));
+    }
 
     /**
      * Return an array of category paths for all the categories in the
@@ -379,6 +435,7 @@ class Product extends DataObject implements ProductInterface
     {
         if (!$category_paths = $this->getData('category_paths')) {
             $category_paths = [];
+            $category_ids = [];
             $rootId = $this->_storeModelStoreManagerInterface->getStore()->getRootCategoryId();
             $collection = \Magento\Framework\App\ObjectManager::getInstance()
                 ->create('\Magento\Catalog\Model\ResourceModel\Category\Collection')
@@ -389,18 +446,20 @@ class Product extends DataObject implements ProductInterface
                 ->addNameToResult();
             foreach ($collection as $category) {
                 $category_paths[$category->getId()] = [];
+                $category_ids[$category->getId()] = [];
                 $path_ids = $category->getPathIds();
                 foreach ($path_ids as $id) {
                     if ($item = $collection->getItemById($id)) {
+                        $category_ids[$category->getId()][] = $item->getId();
                         $category_paths[$category->getId()][] = $item->getName();
                     }
                 }
             }
+            $this->setData('category_path_ids', $category_ids);
             $this->setData('category_paths', $category_paths);
         }
         return $category_paths;
     }
-
 
     /**
      * Get the list of prices based on customer group

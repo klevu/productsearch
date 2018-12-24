@@ -13,16 +13,18 @@ use Magento\CatalogSearch\Model\ResourceModel\EngineInterface as EngineInterface
 use Klevu\Search\Model\Api\Magento\Request\ProductInterface as KlevuProductApi;
 use Klevu\Search\Helper\Config as KlevuConfig;
 use \Magento\Framework\App\Request\Http as Magento_Request;
+use Klevu\Search\Model\ContextFE as KlevuCoreContext;
 
 class Cleaner extends \Magento\Framework\Search\Request\Cleaner
 {
 
-    private $sessionManager;
-    private $klevuRequest;
-    private $klevuConfig;
-    private $mutableScopeConfigInterface;
-    private $magentoRegistry;
-    private $magentoRequest;
+    protected  $sessionManager;
+    protected  $klevuRequest;
+    protected  $klevuConfig;
+    protected  $mutableScopeConfigInterface;
+    protected  $magentoRegistry;
+    protected  $magentoRequest;
+    protected  $klevuCoreContext;
 
     /**
      * Cleaner constructor
@@ -34,6 +36,7 @@ class Cleaner extends \Magento\Framework\Search\Request\Cleaner
      * @param KlevuProductApi $klevuRequest
      * @param KlevuConfig $klevuConfig
      * @param Magento_Request $magentoRequest
+     * @param KlevuCoreContext $klevuCoreContext
      */
     public function __construct(
         AggregationStatus $aggregationStatus,
@@ -42,16 +45,18 @@ class Cleaner extends \Magento\Framework\Search\Request\Cleaner
         MagentoRegistry $magentoRegistry,
         KlevuProductApi $klevuRequest,
         KlevuConfig $klevuConfig,
-        Magento_Request $magentoRequest
+        Magento_Request $magentoRequest,
+        KlevuCoreContext $klevuCoreContext
     )
     {
+
         $this->sessionManager = $sessionManagerInterface;
         $this->mutableScopeConfigInterface = $mutableScopeConfigInterface;
         $this->magentoRegistry = $magentoRegistry;
         $this->klevuRequest = $klevuRequest;
         $this->klevuConfig = $klevuConfig;
         $this->magentoRequest = $magentoRequest;
-
+        $this->klevuCoreContext = $klevuCoreContext;
         if (is_callable('parent::__construct')) {
             parent::__construct($aggregationStatus);
         }
@@ -70,6 +75,9 @@ class Cleaner extends \Magento\Framework\Search\Request\Cleaner
         return $requestData;
     }
 
+    public function getKlevuContext(){
+        return $this->klevuCoreContext;
+    }
 
     /**
      * @return string

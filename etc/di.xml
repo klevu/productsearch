@@ -4,8 +4,6 @@
 	<preference for="Magento\Framework\Search\Request\Cleaner" type="Klevu\Search\Framework\Request\Cleaner"/>
 	<preference for="Magento\Framework\Search\Adapter\Mysql\ScoreBuilder" type="Klevu\Search\Adapter\Mysql\ScoreBuilder"/>
 	<preference for="Magento\CatalogSearch\Model\Search\TableMapper" type="Klevu\Search\Model\Search\TableMapper"/>
-	<preference for="Magento\Elasticsearch\SearchAdapter\DocumentFactory" type="Klevu\Search\SearchAdapter\DocumentFactory"/>
-
 	<preference for="Klevu\Search\Model\Klevu\Cron\SchedulerInterface" type="Klevu\Search\Model\Klevu\Cron\Scheduler" />
 	<preference for="Klevu\Search\Model\Klevu\Category\CategoryInterface" type="Klevu\Search\Model\Klevu\Category\Category" />
 	<preference for="Klevu\Search\Model\Api\Magento\Request\ProductInterface" type="Klevu\Search\Model\Api\Magento\Request\Product" />
@@ -17,7 +15,15 @@
 	<preference for="Klevu\Search\Model\Category\LoadAttributeInterface" type="Klevu\Search\Model\Category\LoadAttribute"/>
 	<preference for="Klevu\Search\Model\Category\KlevuCategoryActionsInterface" type="Klevu\Search\Category\Product\KlevuCategoryActions"/>
 	<preference for="Klevu\Search\Model\Product\ProductParentInterface" type="Klevu\Search\Model\Product\ProductParent"/>
-
+	<type name="Magento\Catalog\Block\Product\ProductList\Toolbar">
+		<plugin name="klevu_search_toolbar" type="Klevu\Search\Plugin\Catalog\Block\Toolbar" sortOrder="101"/>
+	</type>
+	<type name="Magento\CatalogSearch\Block\Result">
+		<plugin name="Klevu_Search::setpersonalization" type="Klevu\Search\Plugin\Search\Block\Result" sortOrder="101"/>
+	</type>
+	<type name="Magento\Elasticsearch\SearchAdapter\DocumentFactory">
+		<plugin name="Klevu_Search_Plugin_Elasticsearch_SearchAdapter" type="Klevu\Search\Plugin\Elasticsearch\SearchAdapter\DocumentFactory" sortOrder="101"/>
+	</type>
 	<type name="Magento\Framework\Console\CommandList">
 		<arguments>
 			<argument name="commands" xsi:type="array">

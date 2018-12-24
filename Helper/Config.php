@@ -107,6 +107,7 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     const XML_PATH_PRICE_DISPLAY_METHOD = "tax/display/type";
     const XML_PATH_PRICE_TYPEINSEARCH_METHOD = "tax/display/typeinsearch";
     const XML_PATH_CATALOGINVENTRY_OPTIONS_STOCK ="cataloginventory/options/show_out_of_stock";
+    const XML_PATH_CATALOG_SEARCH_RELEVANCE = "klevu_search/searchlanding/klevu_search_relevance";
 
 
     /**
@@ -1068,6 +1069,16 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
             }
         }
         return $this->_klevu_enabled_feature_response;
+    }
+
+    /**
+     * @param null $store
+     * @return string
+     */
+    public function getCatalogSearchRelevance($store = null)
+    {
+        return $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_CATALOG_SEARCH_RELEVANCE, \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $store);
+
     }
 
 }

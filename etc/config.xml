@@ -26,6 +26,7 @@
       </developer>
 	  <searchlanding>
 		<landenabled>2</landenabled>
+		<klevu_search_relevance>1</klevu_search_relevance>
 	  </searchlanding>
 	  <image_setting>
 	    <image_width>200</image_width>

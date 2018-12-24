@@ -182,6 +182,8 @@ class LoadAttribute extends  AbstractModel implements LoadAttributeInterface
                 $product['currency'] = $currency;
                 $product['category'] =  $this->_productData->getCategory($parent,$item);
                 $product['listCategory'] = $this->_productData->getListCategory($parent,$item);
+                $product['categoryIds'] =  $this->_productData->getAllCategoryId($parent,$item);
+                $product['categoryPaths'] = $this->_productData->getAllCategoryPaths($parent,$item);
                 $product['groupPrices'] = $this->_productData->getGroupPricesData($item);
                 $product['url'] = $this->_productData->getProductUrlData($parent,$item,$url_rewrite_data,$product,$base_url);
                 $product['inStock'] = $this->_stockHelper->getKlevuStockStatus($parent,$item);

@@ -48,6 +48,10 @@ interface ProductInterface
 
     public function getListCategory($parent, $item);
 
+    public function getAllCategoryId($parent, $item);
+
+    public function getAllCategoryPaths($parent, $item);
+
     public function getGroupPricesData($item);
 
     public function getProductUrlData($parent, $item, $url_rewrite_data, $product, $base_url);
