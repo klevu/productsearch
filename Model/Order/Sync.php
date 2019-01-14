@@ -92,6 +92,7 @@ class Sync extends AbstractModel
         
         $items = [];
         $order_date = date_create("now")->format("Y-m-d H:i");
+		$checkout_date = round(microtime(true) * 1000);
         $session_id = md5(session_id());
         $ip_address = $this->_searchHelperData->getIp();
         if ($order->getCustomerId()) {
@@ -105,14 +106,14 @@ class Sync extends AbstractModel
                 foreach ($item->getChildrenItems() as $child) {
                     if ($child->getId()!=null) {
                         if ($this->checkItemId($child->getId()) !== true) {
-                            $items[] = [$child->getId(),$session_id,$ip_address,$order_date,$order_email];
+                            $items[] = [$child->getId(),$session_id,$ip_address,$order_date,$order_email,$checkout_date];
                         }
                     }
                 }
             } else {
                 if ($item->getId()!=null) {
                     if ($this->checkItemId($item->getId()) !== true) {
-                        $items[] = [$item->getId(),$session_id,$ip_address,$order_date,$order_email];
+                        $items[] = [$item->getId(),$session_id,$ip_address,$order_date,$order_email,$checkout_date];
                     }
                 }
             }
@@ -179,7 +180,7 @@ class Sync extends AbstractModel
                     $item->load($value['order_item_id']);
                     if ($item->getId()) {
                         if ($this->getApiKey($item->getStoreId())) {
-                                    $result = $this->sync($item, $value['klevu_session_id'], $value['ip_address'], $value['date'], $value['idcode']);
+                                    $result = $this->sync($item, $value['klevu_session_id'], $value['ip_address'], $value['date'], $value['idcode'],$value['checkoutdate']);
                             if ($result === true) {
                                 $this->removeItemFromQueue($value['klevu_session_id']);
                                 $items_synced++;
@@ -192,7 +193,7 @@ class Sync extends AbstractModel
                             $this->removeItemFromQueue($value['order_item_id']);
                         }
                     } else {
-                        $this->log(\Zend\Log\Logger::ERR, sprintf("Order item %d does not exist: Removed from sync!", $value['order_item_id']));
+                        $this->log(\Zend\Log\Logger::ERR, sprintf("Order item %d does not exist: Removed from sync!", $item_id));
                         $this->removeItemFromQueue($value['order_item_id']);
                         $errors++;
                     }
@@ -214,7 +215,7 @@ class Sync extends AbstractModel
      *
      * @return bool|string
      */
-    protected function sync($item, $sess_id, $ip_address, $order_date, $order_email)
+    protected function sync($item, $sess_id, $ip_address, $order_date, $order_email,$checkout_date)
     {
         if (!$this->getApiKey($item->getStoreId())) {
             return "Klevu Search is not configured for this store.";
@@ -234,7 +235,7 @@ class Sync extends AbstractModel
 		{
 			$itemId = $item->getProductId();
 		}
-		$order_date_miliseconds = strtotime($order_date) * 1000;	
+		
         $response = $this->_apiActionProducttracking
             ->setStore($this->_storeModelStoreManagerInterface->getStore($item->getStoreId()))
             ->execute([
@@ -250,7 +251,8 @@ class Sync extends AbstractModel
             "klevu_emailId" => $order_email,
             "klevu_storeTimezone" => $this->_searchHelperData->getStoreTimeZone($item->getStoreId()),
             "Klevu_clientIp" => $ip_address,
-			"klevu_checkoutDate" => $order_date_miliseconds
+			"klevu_checkoutDate" => $checkout_date,
+			"klevu_productPosition" => "1"
             ]);
         if ($response->isSuccess()) {
             return true;
@@ -396,7 +398,7 @@ class Sync extends AbstractModel
 
         return $this->_frameworkModelResource->getConnection()->insertArray(
             $this->_frameworkModelResource->getTableName("klevu_order_sync"),
-            ["order_item_id","klevu_session_id","ip_address","date","idcode"],
+            ["order_item_id","klevu_session_id","ip_address","date","idcode","checkoutdate"],
             $order_item_ids
         );
     }

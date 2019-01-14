@@ -17,5 +17,6 @@ class Collection extends AbstractCollection
             'Klevu\Search\Model\Klevu\Klevu',
             'Klevu\Search\Model\Klevu\Resource\Klevu'
         );
-    }
+    }	
+	
 }

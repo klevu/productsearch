@@ -49,6 +49,6 @@ class RuleApply implements ObserverInterface
     public function execute(\Magento\Framework\Event\Observer $observer)
     {
 
-        $this->_modelProductSync->catalogruleUpdateinfo();
+        //$this->_modelProductSync->catalogruleUpdateinfo();
     }
 }

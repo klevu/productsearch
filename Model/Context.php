@@ -14,6 +14,7 @@ use Klevu\Search\Model\Api\Action\Addrecords as Klevu_Product_Add;
 use Klevu\Search\Model\Api\Action\Features  as Klevu_Action_Feature;
 use Magento\Customer\Model\Group as Klevu_Customer_Group;
 use Magento\Framework\DataObject;
+use Klevu\Search\Model\Product\ProductIndividualInterface as  Klevu_Product_Individual;
 
 
 class Context extends DataObject
@@ -39,8 +40,8 @@ class Context extends DataObject
         Klevu_Product_Update $klevuProductUpdate,
         Klevu_Product_Add $klevuProductAdd,
         Klevu_Customer_Group $klevuCustomerGroup,
-        Klevu_Action_Feature $klevuActionFeature
-
+        Klevu_Action_Feature $klevuActionFeature,
+		Klevu_Product_Individual $klevuProductIndividual
     )
     {
         $data = array(
@@ -55,7 +56,8 @@ class Context extends DataObject
             'klevu_product_update' => $klevuProductUpdate,
             'klevu_product_add' => $klevuProductAdd,
             'klevu_customer_group' => $klevuCustomerGroup,
-            'klevu_action_feature' => $klevuActionFeature
+            'klevu_action_feature' => $klevuActionFeature,
+			'klevu_product_individual' => $klevuProductIndividual
         );
         parent::__construct($data);
     }

@@ -4,9 +4,6 @@
     <job name="klevu_search_product_sync" instance="Klevu\Search\Model\Product\Sync" method="runCron">
         <config_path>klevu_search/product_sync/frequency</config_path>
 	</job>
-	<job name="updateruleinfo" instance="Klevu\Search\Model\Product\Sync" method="catalogruleupdateinfo">
-        <schedule>0 2 * * *</schedule>
-	</job>
 	<job name="klevu_search_order_sync" instance="Klevu\Search\Model\Order\Sync" method="run">
         <schedule>0 2 * * *</schedule>  
 	</job>

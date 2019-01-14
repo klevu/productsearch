@@ -51,6 +51,14 @@ class UpgradeSchema implements UpgradeSchemaInterface
             $order_sync_table = $installer->getTable('klevu_order_sync');
             $installer->run("ALTER TABLE `{$order_sync_table}` ADD `idcode` VARCHAR(255) NOT NULL AFTER `date`");
         }
+		
+		if (version_compare($context->getVersion(), '2.2.5') < 0) {
+			$setup->run("ALTER TABLE `{$installer->getTable('klevu_product_sync')}` DROP PRIMARY KEY");
+			$setup->run("ALTER TABLE `{$installer->getTable('klevu_product_sync')}` ADD `row_id` INT NOT NULL AUTO_INCREMENT FIRST, ADD PRIMARY KEY (`row_id`)");
+			$setup->run("ALTER TABLE `{$installer->getTable('klevu_product_sync')}` ADD UNIQUE KEY `KLEVU_GROUP_ID` (`product_id`,`parent_id`,`store_id`,`type`)");
+			$order_sync_table = $installer->getTable('klevu_order_sync');
+			$installer->run("ALTER TABLE `{$order_sync_table}` ADD `checkoutdate` VARCHAR(255) NOT NULL AFTER `idcode`");
+		}
         
         $installer->endSetup();
     }

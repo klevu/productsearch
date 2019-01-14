@@ -13,6 +13,6 @@ class Klevu extends AbstractDb
      */
     protected function _construct()
     {
-        $this->_init('klevu_product_sync', 'product_id');
+        $this->_init('klevu_product_sync', 'row_id');
     }
 }
