@@ -401,7 +401,7 @@ class Product extends DataObject implements ProductInterface
      */
     public function getCategoryNamesAndPath(array $categories)
     {
-        $category_paths = $this->getCategoryPaths();
+        $category_paths = $this->getData('category_paths_and_ids');
         $category_ids = $this->getData('category_path_ids');
         $result = [];
         foreach ($categories as $category) {
@@ -413,7 +413,11 @@ class Product extends DataObject implements ProductInterface
                 } else {
                     $catName = $category_paths[$category];
                     $catId = $category_ids[$category];
-                    $cat_path[$category] = $catName . '::' . $catId;
+					if(!is_array($catName) && !is_array($catId)) {
+						$cat_path[$category] = $catName . '::' . $catId;
+					} else {
+						$cat_path[$category] = 	array();
+					}                  
                 }
                 $result = array_merge($result, $cat_path[$category]);
             }
@@ -436,25 +440,32 @@ class Product extends DataObject implements ProductInterface
         if (!$category_paths = $this->getData('category_paths')) {
             $category_paths = [];
             $category_ids = [];
+			$category_paths_and_ids = [];
             $rootId = $this->_storeModelStoreManagerInterface->getStore()->getRootCategoryId();
             $collection = \Magento\Framework\App\ObjectManager::getInstance()
                 ->create('\Magento\Catalog\Model\ResourceModel\Category\Collection')
                 ->setStoreId($this->_storeModelStoreManagerInterface->getStore()->getId())
+				->addAttributeToSelect('is_exclude_cat')
                 ->addFieldToFilter('level', ['gt' => 1])
                 ->addFieldToFilter('path', ['like'=> "1/$rootId/%"])
                 ->addIsActiveFilter()
                 ->addNameToResult();
             foreach ($collection as $category) {
                 $category_paths[$category->getId()] = [];
+				$category_paths_and_ids[$category->getId()] = [];
                 $category_ids[$category->getId()] = [];
                 $path_ids = $category->getPathIds();
                 foreach ($path_ids as $id) {
                     if ($item = $collection->getItemById($id)) {
-                        $category_ids[$category->getId()][] = $item->getId();
-                        $category_paths[$category->getId()][] = $item->getName();
+						$category_ids[$category->getId()][] = $item->getId();
+						$category_paths_and_ids[$category->getId()][] = $item->getName();
+						if($category->getIsExcludeCat() != 1) {
+							$category_paths[$category->getId()][] = $item->getName();
+						}	
                     }
                 }
             }
+			$this->setData('category_paths_and_ids',$category_paths_and_ids);
             $this->setData('category_path_ids', $category_ids);
             $this->setData('category_paths', $category_paths);
         }
