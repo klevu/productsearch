@@ -1,6 +1,7 @@
 #klevu_search_wizard{
 	height:100% !important;
 	top:0 !important;
+	position:absolute;
 }
 
 #klevu_search_wizard .magento_content {
