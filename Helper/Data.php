@@ -371,6 +371,21 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         $attribute = $attributecollection->getFirstItem();
         return $attribute->getAttributeId();
     }
+	
+	public function processIp($ips)
+	{
+		$iplist = explode(',', $ips);	
+		if(count($iplist) > 1) {
+            foreach ($iplist as $ip) {
+				if (filter_var(trim($ip), FILTER_VALIDATE_IP, FILTER_FLAG_IPV4))
+				{                    
+					return $ip;
+				}	
+            }
+		} else {
+			return $ips;
+		}	
+	}
     
     /**
      * Get the client ip
@@ -383,20 +398,20 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
             $ip = $_SERVER['HTTP_CLIENT_IP'];
         } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-            $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
+            $ip = $this->processIp($_SERVER['HTTP_X_FORWARDED_FOR']);
         } elseif (!empty($_SERVER['HTTP_X_FORWARDED'])) {
-            $ip = $_SERVER['HTTP_X_FORWARDED'];
+            $ip = $this->processIp($_SERVER['HTTP_X_FORWARDED']);
         } elseif (!empty($_SERVER['HTTP_FORWARDED_FOR'])) {
-            $ip = $_SERVER['HTTP_FORWARDED_FOR'];
+            $ip = $this->processIp($_SERVER['HTTP_FORWARDED_FOR']);
         } elseif (!empty($_SERVER['HTTP_FORWARDED'])) {
-            $ip = $_SERVER['HTTP_FORWARDED'];
+            $ip = $this->processIp($_SERVER['HTTP_FORWARDED']);
         } elseif (!empty($_SERVER['REMOTE_ADDR'])) {
             $ip = $_SERVER['REMOTE_ADDR'];
         } else {
             $ip = 'UNKNOWN';
         }
      
-        return $ip;
+        return $this->processIp($ip);
     }
     
     /**
