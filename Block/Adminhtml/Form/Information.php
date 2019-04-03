@@ -39,7 +39,7 @@ class Information extends \Magento\Config\Block\System\Config\Form\Fieldset
 			foreach($files as $key => $value) {
 				$params['filename'] = basename($value);
 				$url_lock = $UrlInterface->getUrl("klevu_search/sync/clearlock",$params);
-				$html.=  "<p><b>Warning:</b><br><p style='color:#FF0000'>Magento can not execute subprocess command so product sync stopped and klevu generated Cron Lock since ".date ("Y-m-d H:i:s", filemtime($value)) ." <a href='" . $url_lock . "'>Clear Klevu Lock File </a> and Please follow the <a href='https://support.klevu.com/knowledgebase/cron-issue-m2/' target='_blank'>Magento Cron Guideline</a>.</<p>";
+				$html.=  "<p><b>Warning:</b><br><p style='color:#FF0000'>Magento is not able to execute subprocess command and due to this, product sync has stopped. Klevu has generated Cron Lock file since ".date ("Y-m-d H:i:s", filemtime($value)) .". To resolve this, Please follow the <a href='https://support.klevu.com/knowledgebase/run-klevu-cron-independent-of-magento-2-cron/' target='_blank'>guide</a> to setup external Klevu Cron which is independent of Magento Cron. Once the external Klevu Cron is setup, please <a href='" . $url_lock . "'>Click here </a> to remove the Cron lock file.</p>";
 			}
 		}  
 		

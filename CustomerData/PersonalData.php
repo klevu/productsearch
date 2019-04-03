@@ -14,16 +14,19 @@ class PersonalData implements SectionSourceInterface
     {
         // show group price based on logged in customer group
         $customerSession = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Customer\Model\Session');
+		$searchHelperData = \Magento\Framework\App\ObjectManager::getInstance()->get('\Klevu\Search\Helper\Data');
         //Check if User is Logged In
         if ($customerSession->isLoggedIn()) {
             return [
                 'klevuSessionId' => md5(session_id()),
                 'klevuLoginCustomerGroup' => $customerSession->getCustomer()->getGroupId(),
                 'klevuIdCode' => "enc-".md5($customerSession->getCustomer()->getEmail()),
+				'klevuShopperIP' => $searchHelperData->getIp()
             ];
         } else {
             return [
                 'klevuSessionId' => md5(session_id()),
+				'klevuShopperIP' => $searchHelperData->getIp()
             ];
         }
     }

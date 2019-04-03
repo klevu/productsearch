@@ -107,7 +107,7 @@ class All extends \Magento\Backend\App\Action
                 
                 $trigger_cpp = $this->_triggerFactory->create()
 		            ->setName("Update_KlevuProductSync_For_CPP")
-		            ->setTime(\Magento\Framework\DB\Ddl\Trigger::TIME_AFTER)
+		            ->setTime(\Magento\Framework\DB\Ddl\Trigger::TIME_BEFORE)
 		            ->setEvent(\Magento\Framework\DB\Ddl\Trigger::EVENT_UPDATE)
 		            ->setTable($resource->getTableName('catalogrule_product_price'));
 		        $trigger_cpp->addStatement("IF NEW.rule_price <> OLD.rule_price THEN

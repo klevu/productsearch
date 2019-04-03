@@ -15,8 +15,10 @@ require(['jquery'], function(){
             klevu_search_product_tracking = <?php echo $block->getJsonTrackingData() ?>;
             klevu_search_product_tracking.klevu_term = search_term;
             var param = jQuery.param(klevu_search_product_tracking);
+            <?php $isSecure = $block->getRequest()->isSecure();
+            $protocol = ($isSecure) ? 'https://' : 'http://'; ?>
             jQuery.ajax({
-                url:'//<?php echo $block->getAnalyticsUrl() ?>/analytics/productTracking',
+                url:'<?php echo $protocol.$block->getAnalyticsUrl() ?>/analytics/productTracking',
                 type: 'GET',
                 data: param,
                 dataType: 'json',

@@ -52,7 +52,7 @@
                   <comment><![CDATA[The JS URL is used for getting Klevu's Javascript file.]]></comment>
                 </field>
 				<field id="tiers_url" translate="label comment" sortOrder="128" showInStore="1">
-                  <label>Tires URL</label>
+                  <label>Tiers URL</label>
                   <comment><![CDATA[The Tiers URL is used for getting Klevu's Search Tires.]]></comment>
                 </field>
             </group>
