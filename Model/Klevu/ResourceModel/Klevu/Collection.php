@@ -2,7 +2,7 @@
 /**
  * Klevu product resource model collection
  */
-namespace Klevu\Search\Model\Klevu\Resource\Klevu;
+namespace Klevu\Search\Model\Klevu\ResourceModel\Klevu;
 
 use Magento\Framework\Model\ResourceModel\Db\Collection\AbstractCollection;
 
@@ -15,7 +15,7 @@ class Collection extends AbstractCollection
     {
         $this->_init(
             'Klevu\Search\Model\Klevu\Klevu',
-            'Klevu\Search\Model\Klevu\Resource\Klevu'
+            'Klevu\Search\Model\Klevu\ResourceModel\Klevu'
         );
     }	
 	

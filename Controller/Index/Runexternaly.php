@@ -43,8 +43,8 @@ class Runexternaly extends \Magento\Framework\App\Action\Action
         } else if ($this->getRequest()->getParam('sync')) {
 		      if($this->getRequest()->getParam('sync') == 1) {
 		      		$this->_modelProductSync->run();
-					echo "Data has been sent to klevu server";
-					exit;
+					$this->getResponse()->setBody("Data has been sent to klevu server");
+					return;
 			  }
 		} else {
             $line = 100;

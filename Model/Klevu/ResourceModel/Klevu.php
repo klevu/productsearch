@@ -2,7 +2,7 @@
 /**
  * Klevu product resource model
  */
-namespace Klevu\Search\Model\Klevu\Resource;
+namespace Klevu\Search\Model\Klevu\ResourceModel;
 
 use Magento\Framework\Model\ResourceModel\Db\AbstractDb;
 

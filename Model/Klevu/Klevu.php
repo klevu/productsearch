@@ -29,7 +29,7 @@ class Klevu extends AbstractModel
             "category" => "categories",
             "page" => "pages"
         );
-        $this->_init('Klevu\Search\Model\Klevu\Resource\Klevu');
+        $this->_init('Klevu\Search\Model\Klevu\ResourceModel\Klevu');
     }
 
     /** Get Klevu table field
