@@ -212,6 +212,15 @@ class Product extends DataObject implements ProductInterface
 
         return $product['product_type'];
     }
+	
+	public function getVisibility($key,$attributes,$parent,$item,$product,$store) {
+		if($parent){
+            $product['visibility'] = $parent->getData('visibility');
+        }else{
+            $product['visibility'] = $item->getData('visibility');
+        }
+        return $product['visibility'];
+	}
 
     public function isCustomOptionsAvailable($parent,$item){
         $productType = array("grouped", "configurable", "bundle", "downloadable");
@@ -227,6 +236,8 @@ class Product extends DataObject implements ProductInterface
 
         return $product['isCustomOptionsAvailable'];
     }
+	
+	
 
     public function getCategory($parent,$item){
         if ($parent) {

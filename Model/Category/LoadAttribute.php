@@ -67,6 +67,7 @@ class LoadAttribute extends  \Klevu\Search\Model\Category\MagentoCategoryActions
             $value["salePrice"] = 0;
             $value["currency"] = "USD";
             $value["inStock"] = "yes";
+			$value["visibility"] = "search";
             $category_data_new[] = $value;
         }
         return $category_data_new;

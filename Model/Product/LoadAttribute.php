@@ -164,7 +164,20 @@ class LoadAttribute extends  AbstractModel implements LoadAttributeInterface
                         case "dateAdded":
                             $product[$key] = $this->_productData->getDateAdded($key,$attributes,$parent,$item,$product,$this->_storeModelStoreManagerInterface->getStore());
                             break;
-
+						case "visibility":
+							//param values will be catalog, catalog-search, search after processing
+							foreach ($attributes as $attribute) {
+								if ($parent) {
+									$product[$key] = $this->getAttributeData($attribute, $parent->getData($attribute));
+									$product[$key] = str_replace(",","-",str_replace(' ','',strtolower($product[$key]['values']->getText())));
+									break;
+								} elseif ($item->getData($attribute)) {
+									$product[$key] = $this->getAttributeData($attribute, $item->getData($attribute));
+									$product[$key] = str_replace(",","-",str_replace(' ','',strtolower($product[$key]['values']->getText())));
+									break;
+								}								
+							}
+							break;
                         default:
                             foreach ($attributes as $attribute) {
                                 if ($item->getData($attribute)) {

@@ -76,6 +76,10 @@
                   <source_model>Klevu\Search\Model\System\Config\Source\Yesnoforced</source_model>
                   <comment><![CDATA[Enable Product Sync.]]></comment>
                 </field>
+                <field id="catalogvisibility" translate="label comment" sortOrder="101" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Sync Product with Catalog Visibility</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
 				<field id="frequency" translate="label comment" sortOrder="101" type="select" showInDefault="1">
                   <label>Frequency</label>
                   <source_model>Klevu\Search\Model\System\Config\Source\Frequency</source_model>

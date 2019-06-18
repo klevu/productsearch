@@ -98,9 +98,9 @@ class Price extends \Magento\Framework\App\Helper\AbstractHelper
 			$productPrice['startPrice'] = $processed_final_price;
 			if ($item->getData('type_id') == "grouped")
                 {
-                    $this->getGroupProductMinPrice($item, $store);
-                    $productPrice['startPrice'] = $item->getFinalPrice();
-                    $productPrice["salePrice"] = $item->getFinalPrice();
+                    $gprice = $this->getGroupProductMinPrice($item, $store);
+                    $productPrice['startPrice'] = $gprice;
+                    $productPrice["salePrice"] = $gprice;
                 }
             elseif ($item->getData('type_id') == \Magento\Catalog\Model\Product\Type::TYPE_BUNDLE)
                 {
@@ -134,8 +134,8 @@ class Price extends \Magento\Framework\App\Helper\AbstractHelper
 			if ($item->getData('type_id') == "grouped")
                 {
                     // Get the group product original price
-                    $this->getGroupProductOriginalPrice($item, $store);
-                    $sPrice = $item->getPrice();
+                    $sPrice = $this->getGroupProductMinPrice($item, $store);
+                    //$sPrice = $item->getPrice();
                     $productPrice["price"] = $sPrice;
                 }
             elseif ($item->getData('type_id') == \Magento\Catalog\Model\Product\Type::TYPE_BUNDLE)
@@ -350,7 +350,7 @@ class Price extends \Magento\Framework\App\Helper\AbstractHelper
         }
 		
         asort($groupPrices);
-        $product->setFinalPrice(array_shift($groupPrices));
+        return array_shift($groupPrices);
     }
     
     /**

@@ -108,6 +108,7 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     const XML_PATH_PRICE_TYPEINSEARCH_METHOD = "tax/display/typeinsearch";
     const XML_PATH_CATALOGINVENTRY_OPTIONS_STOCK ="cataloginventory/options/show_out_of_stock";
     const XML_PATH_CATALOG_SEARCH_RELEVANCE = "klevu_search/searchlanding/klevu_search_relevance";
+	const XML_PATH_PRODUCT_SYNC_CATALOGVISIBILITY   = "klevu_search/product_sync/catalogvisibility";
 
 
     /**
@@ -1079,6 +1080,19 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     {
         return $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_CATALOG_SEARCH_RELEVANCE, \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $store);
 
+    }
+	
+	
+	/**
+     * Return Catalog Visibity Sync.
+     *
+     * @param Mage_Core_Model_Store|int $store
+     *
+     * @return bool
+     */
+    public function useCatalogVisibitySync($store_id = null)
+    {
+        return $this->_appConfigScopeConfigInterface->isSetFlag(static::XML_PATH_PRODUCT_SYNC_CATALOGVISIBILITY, \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $store_id);
     }
 
 }

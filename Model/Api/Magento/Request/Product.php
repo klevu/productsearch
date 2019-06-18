@@ -200,7 +200,8 @@ class Product implements ProductInterface
                 'paginationStartsFrom' => 0,
                 'enableFilters' => 'false',
                 'klevuShowOutOfStockProducts' => 'true',
-                'category' => $category
+                'category' => $category,
+				'visibility' => 'search'
             ];
         }
 
