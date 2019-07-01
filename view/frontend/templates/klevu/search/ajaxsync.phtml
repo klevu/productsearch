@@ -25,15 +25,20 @@ function callAjaxRecurrsively(){
 				document.getElementById("loader").style.display = "block";
 		   	},
 			success:function(data) {
-					if(data.numberOfRecord_add != 0 || data.numberOfRecord_update != 0 || data.numberOfRecord_delete != 0) {
-						document.getElementById("loader").style.display = "none";
-					    var str = "Next batch sent to klevu";
-						document.getElementById("info_message").innerHTML += str+"</br>";
-						callAjaxRecurrsively();
-					} else{
-						var str = "No records found to sync";
-						document.getElementById("info_message").innerHTML += str+"</br>";
-					}
+					var str = "";
+                                        var requestsToSend = 0;
+
+                                        if(data.numberOfRecord_add != 0 || data.numberOfRecord_update != 0 || data.numberOfRecord_delete != 0) {
+                                                requestsToSend = data.numberOfRecord_add + data.numberOfRecord_update + data.numberOfRecord_delete;
+
+                                                document.getElementById("loader").style.display = "none";
+                                                str = "Batch " + requestsSent + " sent to klevu - " + requestsToSend + " to go.";
+                                                console.log( ((requestsSent / requestsSent)*100) + "% done");
+                                                callAjaxRecurrsively();
+                                        } else{
+                                                str = "No records found to sync";
+                                        }
+                                        document.getElementById("info_message").innerHTML = str+"</br>";
     		},
             crossDomain: true
          });
