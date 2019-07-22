@@ -106,14 +106,14 @@ class Sync extends AbstractModel
                 foreach ($item->getChildrenItems() as $child) {
                     if ($child->getId()!=null) {
                         if ($this->checkItemId($child->getId()) !== true) {
-                            $items[] = [$child->getId(),$session_id,$ip_address,$order_date,$order_email,$checkout_date];
+                            $items[] = [$child->getId(),$session_id,$ip_address,$order_date,$order_email,$checkout_date,0];
                         }
                     }
                 }
             } else {
                 if ($item->getId()!=null) {
                     if ($this->checkItemId($item->getId()) !== true) {
-                        $items[] = [$item->getId(),$session_id,$ip_address,$order_date,$order_email,$checkout_date];
+                        $items[] = [$item->getId(),$session_id,$ip_address,$order_date,$order_email,$checkout_date,0];
                     }
                 }
             }
@@ -182,7 +182,7 @@ class Sync extends AbstractModel
                         if ($this->getApiKey($item->getStoreId())) {
                                     $result = $this->sync($item, $value['klevu_session_id'], $value['ip_address'], $value['date'], $value['idcode'],$value['checkoutdate']);
                             if ($result === true) {
-                                $this->removeItemFromQueue($value['klevu_session_id']);
+                                $this->removeItemFromQueue($value['order_item_id']);
                                 $items_synced++;
                             } else {
                                 $this->log(\Zend\Log\Logger::INFO, sprintf("Skipped order item %d: %s", $value['order_item_id'], $result));
@@ -193,7 +193,7 @@ class Sync extends AbstractModel
                             $this->removeItemFromQueue($value['order_item_id']);
                         }
                     } else {
-                        $this->log(\Zend\Log\Logger::ERR, sprintf("Order item %d does not exist: Removed from sync!", $item_id));
+                        $this->log(\Zend\Log\Logger::ERR, sprintf("Order item %d does not exist: Removed from sync!", $value['order_item_id']));
                         $this->removeItemFromQueue($value['order_item_id']);
                         $errors++;
                     }
@@ -380,7 +380,8 @@ class Sync extends AbstractModel
     {
         return $this->_frameworkModelResource->getConnection()
             ->select()
-            ->from($this->_frameworkModelResource->getTableName("klevu_order_sync"));
+            ->from($this->_frameworkModelResource->getTableName("klevu_order_sync"))
+            ->where("send = 0");
     }
     
     /**
@@ -398,7 +399,7 @@ class Sync extends AbstractModel
 
         return $this->_frameworkModelResource->getConnection()->insertArray(
             $this->_frameworkModelResource->getTableName("klevu_order_sync"),
-            ["order_item_id","klevu_session_id","ip_address","date","idcode","checkoutdate"],
+            ["order_item_id","klevu_session_id","ip_address","date","idcode","checkoutdate","send"],
             $order_item_ids
         );
     }
@@ -411,9 +412,12 @@ class Sync extends AbstractModel
      */
     protected function removeItemFromQueue($order_item_id)
     {
-        return $this->_frameworkModelResource->getConnection()->delete(
+        $where = sprintf("(order_item_id = %s)",$order_item_id);
+        return $this->_frameworkModelResource->getConnection()->update(
             $this->_frameworkModelResource->getTableName("klevu_order_sync"),
-            ["order_item_id" => $order_item_id]
+            ["send" => 1],
+            $where
+
         ) === 1;
     }
 
