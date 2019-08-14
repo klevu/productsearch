@@ -91,14 +91,22 @@
 				<field id="cron_status" translate="label" sortOrder="300" showInDefault="1" showInWebsite="1" showInStore="1">
                   <label>Cron Status</label>
                   <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Store\Status</frontend_model>
+                </field>                
+				<field id="syncoptionsinfo" type="button" sortOrder="405" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <frontend_model>Klevu\Search\Block\Adminhtml\Form\Syncoptionsinfo</frontend_model>
+                    <label>Selected Sync Method</label>
+                    <comment><![CDATA[Data will be sync to the Klevu backend.]]></comment>
                 </field>
-                <field id="sync_options" translate="label comment" sortOrder="398" type="select" showInDefault="1" showInStore="1">
-                  <label>Sync</label>
-                  <source_model>Klevu\Search\Model\System\Config\Source\Syncoptions</source_model>
+                <field id="alldata_sync_btn" type="button" sortOrder="410" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Sync\AllData</frontend_model>
+                    <label>Sync</label>
+                    <comment><![CDATA[<strong>Sync All Data</strong> button will schedule CRON to send all the data to the Klevu. </br>
+                    All the data to be synchronized on next CRON run.]]></comment>
                 </field>
-                <field id="sync_button" type="button" sortOrder="400" showInDefault="1" showInWebsite="1" showInStore="1">
-					<frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Sync\Button</frontend_model>
-                </field>
+                <field id="updatesonly_sync_btn" type="button" sortOrder="415"  showInStore="1">
+                    <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Sync\UpdatesOnly</frontend_model>
+                    <comment><![CDATA[By using <strong>Sync Updates Only</strong> button, it will initiate the data synchronization immediately.]]></comment>
+                </field>                
             </group>
             <group id="attributes" translate="label" sortOrder="104" showInDefault="1" showInWebsite="1" showInStore="1">
                 <label>Product Attribute Settings</label>

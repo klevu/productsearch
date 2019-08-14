@@ -109,6 +109,7 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     const XML_PATH_CATALOGINVENTRY_OPTIONS_STOCK ="cataloginventory/options/show_out_of_stock";
     const XML_PATH_CATALOG_SEARCH_RELEVANCE = "klevu_search/searchlanding/klevu_search_relevance";
 	const XML_PATH_PRODUCT_SYNC_CATALOGVISIBILITY   = "klevu_search/product_sync/catalogvisibility";
+	const  XML_PATH_SEARCHENGINE = 'catalog/search/engine';
 
 
     /**
@@ -1029,20 +1030,29 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function getFeatures()
     {
-        if (strlen($code = $this->_frameworkAppRequestInterface->getParam('store'))) { // store level
-            $code = $this->_frameworkAppRequestInterface->getParam('store');
-            if (!$this->_klevu_features_response) {
-                $store = $this->_frameworkModelStore->load($code);
-                $store_id = $store->getId();
-                $restapi = $this->getRestApiKey($store_id);
-                $param =  ["restApiKey" => $restapi];
-                if (!empty($restapi)) {
-                    $this->_klevu_features_response = $this->executeFeatures($restapi, $store);
-                } else {
-                    return;
-                }
-            }
-            return $this->_klevu_features_response;
+		$dataHelper = \Magento\Framework\App\ObjectManager::getInstance()->get('\Klevu\Search\Helper\Data');
+		try{
+			if (strlen($code = $this->_frameworkAppRequestInterface->getParam('store'))) { // store level
+				$code = $this->_frameworkAppRequestInterface->getParam('store');
+				if (!$this->_klevu_features_response) {
+					$store = $this->_frameworkModelStore->load($code);
+					$store_id = $store->getId();
+					$restapi = $this->getRestApiKey($store_id);
+					$param =  ["restApiKey" => $restapi];
+					if (!empty($restapi)) {
+						$this->_klevu_features_response = $this->executeFeatures($restapi, $store);
+					} else {
+						return;
+					}
+				}
+				return $this->_klevu_features_response;
+			} 
+		} catch (\Zend\Http\Client\Exception\RuntimeException $re) {            
+            $dataHelper->log(\Zend\Log\Logger::INFO, sprintf("Unable to get Klevu Features list (%s)", $re->getMessage()));
+            return;
+        } catch (Exception $e) {            
+            $dataHelper->log(\Zend\Log\Logger::INFO, sprintf("Uncaught Exception thrown while getting Klevu Features list (%s)", $e->getMessage()));
+            return;
         }
     }
 
@@ -1093,6 +1103,18 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     public function useCatalogVisibitySync($store_id = null)
     {
         return $this->_appConfigScopeConfigInterface->isSetFlag(static::XML_PATH_PRODUCT_SYNC_CATALOGVISIBILITY, \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $store_id);
+    }
+
+    /**
+     * Return Catalog Visibity Sync.
+     *
+     * @param Mage_Core_Model_Store|int $store
+     *
+     * @return bool
+     */
+    public function getCurrentEngine()
+    {
+        return $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_SEARCHENGINE);
     }
 
 }

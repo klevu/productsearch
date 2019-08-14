@@ -85,11 +85,17 @@ class Cleaner extends \Magento\Framework\Search\Request\Cleaner
     private function getProductIdField() {
         //decide based on the engine settings what to use as filter
         $currentEngine = $this->mutableScopeConfigInterface->getValue(EngineInterface::CONFIG_ENGINE_PATH, ScopeInterface::SCOPE_STORE);
+        if (strpos($currentEngine, 'elasticsearch') !== false) {
+            $currentEngine = "elasticsearch";
+        }
         switch ($currentEngine) {
             case "elasticsearch":
                 return '_id';
                 break;
             case "elasticsearch5":
+                return '_id';
+                break;
+            case "elasticsearch6":
                 return '_id';
                 break;
             case "solr":
@@ -107,6 +113,7 @@ class Cleaner extends \Magento\Framework\Search\Request\Cleaner
      * @return array
      */
     public function klevuQueryCleanup($requestData){
+
         $categoryFilter = $this->magentoRequest->getParam('productFilter');
         $categoryFilter = isset($categoryFilter) ? $categoryFilter : '';
         // check if we are in search page
@@ -114,8 +121,14 @@ class Cleaner extends \Magento\Framework\Search\Request\Cleaner
         //check if klevu is supposed to be on
         if ($this->klevuConfig->isLandingEnabled()!=1 || !$this->klevuConfig->isExtensionConfigured()) return $requestData;
         //save data in session so we do not request via api for filters
-        $queryTerm = $requestData['queries']['search']['value'];
-        $queryScope = $requestData['dimensions']['scope']['value'];
+		//$queryTerm = $requestData['queries']['search']['value'];
+		//$queryScope = $requestData['dimensions']['scope']['value'];
+		//check if search array generated or not
+        if(!isset($requestData['queries']['search'])) { return $requestData; } 
+		else { $queryTerm = $requestData['queries']['search']['value']; }
+        //check if dimensions array found or not
+		if(!isset($requestData['dimensions']['scope'])) { return $requestData; } 
+		else{$queryScope = $requestData['dimensions']['scope']['value'];}
         $idList = $this->sessionManager->getData('ids_'.$queryScope.'_'.$queryTerm.$categoryFilter);
         if(!$idList){
             $idList = $this->klevuRequest->_getKlevuProductIds($queryTerm);
@@ -157,6 +170,30 @@ class Cleaner extends \Magento\Framework\Search\Request\Cleaner
             'type' => 'termFilter',
             'value' => $idList
         );
+        $currentEngine = $this->klevuConfig->getCurrentEngine();
+        if( $currentEngine !== "mysql") {
+            if (isset($requestData['sort'])) {
+                if (count($requestData['sort']) > 0) {
+                    foreach ($requestData['sort'] as $key => $value) {
+                        if ($value['field'] == "personalized") {
+                            $this->magentoRegistry->register('current_order', "personalized");
+                        }
+
+                    }
+                }
+            }
+
+            $current_order = $this->magentoRegistry->registry('current_order');
+            if (!empty($current_order)) {
+                if ($current_order == "personalized") {
+                    $this->magentoRegistry->register('from', $requestData['from']);
+                    $this->magentoRegistry->register('size', $requestData['size']);
+                    $requestData['from'] = 0;
+                    $requestData['size'] = count($idList);
+                    $requestData['sort'] = array();
+                }
+            }
+       }
         return $requestData;
     }
 }

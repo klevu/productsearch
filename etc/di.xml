@@ -25,6 +25,9 @@
 	<type name="Magento\Elasticsearch\SearchAdapter\DocumentFactory">
 		<plugin name="Klevu_Search_Plugin_Elasticsearch_SearchAdapter" type="Klevu\Search\Plugin\Elasticsearch\SearchAdapter\DocumentFactory" sortOrder="101"/>
 	</type>
+	<type name="Magento\Framework\Api\Search\SearchResult">
+		<plugin name="Klevu_Search_Plugin_Api_Search_SearchResult" type="Klevu\Search\Plugin\Api\Search\SearchResult" sortOrder="101"/>
+	</type>
 	<type name="Magento\Framework\Console\CommandList">
 		<arguments>
 			<argument name="commands" xsi:type="array">

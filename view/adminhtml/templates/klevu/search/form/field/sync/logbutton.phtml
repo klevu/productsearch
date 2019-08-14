@@ -3,7 +3,9 @@
     <span><?php echo __($block->getButtonLabel()) ?></span>
 </button>
 <script type="text/javascript">
-    $("<?php echo $block->getHtmlId() ?>").observe("click", function () {
-        window.open('<?php echo $block->getDestinationUrl() ?>','_blank');
-    });
+require(["prototype"], function(){
+	$("<?php echo $block->getHtmlId() ?>").observe("click", function () {
+		window.open('<?php echo $block->getDestinationUrl() ?>','_blank');
+	});
+});
 </script>

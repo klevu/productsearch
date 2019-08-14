@@ -17,7 +17,7 @@ class Result extends \Magento\Framework\View\Element\Template
      */
     protected $_catalogLayer;
 
-    const KLEVU_PRESERVE_LAYOUT    = 1;
+    const KLEVU_PRESERVE_LAYOUT = 1;
 
     /**
      * @param Context $context
@@ -29,7 +29,8 @@ class Result extends \Magento\Framework\View\Element\Template
         LayerResolver $layerResolver,
         KlevuConfig $klevuConfig,
         array $data = []
-    ) {
+    )
+    {
         $this->_catalogLayer = $layerResolver->get();
         $this->_klevuConfig = $klevuConfig;
         parent::__construct($context, $data);
@@ -38,7 +39,7 @@ class Result extends \Magento\Framework\View\Element\Template
     public function afterSetListOrders()
     {
 
-        if($this->_klevuConfig->getCatalogSearchRelevance($this->_storeManager->getStore()) && $this->_klevuConfig->isLandingEnabled() == static::KLEVU_PRESERVE_LAYOUT) {
+        if ($this->_klevuConfig->getCatalogSearchRelevance($this->_storeManager->getStore()) && $this->_klevuConfig->isLandingEnabled() == static::KLEVU_PRESERVE_LAYOUT) {
             $options = [];
             $category = $this->_catalogLayer->getCurrentCategory();
             /* @var $category \Magento\Catalog\Model\Category */

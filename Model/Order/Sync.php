@@ -4,7 +4,6 @@
  * @method \Magento\Framework\Db\Adapter\Interface getConnection()
  */
 namespace Klevu\Search\Model\Order;
-
 use \Klevu\Search\Model\Sync as KlevuSync;
 use \Magento\Framework\Model\AbstractModel;
 class Sync extends AbstractModel
@@ -34,16 +33,13 @@ class Sync extends AbstractModel
      * @var \Klevu\Search\Model\Api\Action\Producttracking
      */
     protected $_apiActionProducttracking;
-
     /**
      * @var \Magento\Framework\Stdlib\DateTime\DateTime
      */
     protected $_frameworkModelDate;
     
     const NOTIFICATION_TYPE = "order_sync";
-
     protected $_klevuSyncModel;
-
     public function __construct(
         \Magento\Framework\App\ResourceConnection $frameworkModelResource,
         \Magento\Store\Model\StoreManagerInterface $storeModelStoreManagerInterface,
@@ -63,7 +59,6 @@ class Sync extends AbstractModel
         parent::__construct($context, $registry, $resource, $resourceCollection, $data);
         $this->_klevuSyncModel = $klevuSyncModel;
         $this->_klevuSyncModel->setJobCode($this->getJobCode());
-
         $this->_frameworkModelResource = $frameworkModelResource;
         $this->_storeModelStoreManagerInterface = $storeModelStoreManagerInterface;
         $this->_searchHelperConfig = $searchHelperConfig;
@@ -362,7 +357,6 @@ class Sync extends AbstractModel
                     'order' => $this->_frameworkModelResource->getTableName("klevu_order_sync")
                     ])->where("order.order_item_id = ?", $order_item_id)
             );
-
             if (count($orderid) == 1) {
                 return true;
             } else {
@@ -396,7 +390,6 @@ class Sync extends AbstractModel
         if (!is_array($order_item_ids)) {
             $order_item_ids = [$order_item_ids];
         }
-
         return $this->_frameworkModelResource->getConnection()->insertArray(
             $this->_frameworkModelResource->getTableName("klevu_order_sync"),
             ["order_item_id","klevu_session_id","ip_address","date","idcode","checkoutdate","send"],
@@ -417,10 +410,8 @@ class Sync extends AbstractModel
             $this->_frameworkModelResource->getTableName("klevu_order_sync"),
             ["send" => 1],
             $where
-
         ) === 1;
     }
-
     /**
      * Delete Adminhtml notifications for Order Sync.
      *
@@ -434,9 +425,6 @@ class Sync extends AbstractModel
         );
         return $this;
     }
-
-
-
     //compatibility
     public function schedule($time = "now"){
        return $this->_klevuSyncModel->schedule();
