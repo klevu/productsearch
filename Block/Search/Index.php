@@ -119,4 +119,9 @@ class Index extends \Magento\Framework\View\Element\Template
         }
         return true;
     }
+	
+	public function  isCustomerGroupPriceEnabled()
+    {
+        return  $this->_klevuConfig->isCustomerGroupPriceEnabled();
+    }
 }

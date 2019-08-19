@@ -15,7 +15,20 @@ class Information extends \Magento\Config\Block\System\Config\Form\Fieldset
     {
         $html = $this->_getHeaderHtml($element);
         $html .= $this->_toHtml();
-		$html .='<p><b>Installed version</b>: '.$this->getModuleInfo().'</p>';
+		$html .= '<div class="kuInfo">';
+        $html .= '<div class="message kuInfo-fRight">
+      <ul>
+         <li><b>Quick Links:</b></li>
+         <li><a target="_blank" href="https://support.klevu.com/knowledgebase/integration-steps-for-magento-2/">Integration Steps</a></li>
+         <li><a target="_blank" href="https://support.klevu.com/section/manuals/magento2-manuals/migrating-from-staging-to-live/">Migrating from Staging to Live</a></li>
+         <li><a target="_blank" href="https://support.klevu.com/faq/faqs/how-to-upgrade-my-current-plan/">How to upgrade plan?</a></li>
+         <li><a target="_blank" href="https://box.klevu.com/">Klevu Merchant Center</a></li>
+      </ul></div>';
+        
+		$html .='<div class="kuInfo-fLeft"><p><b>Klevu Search Version</b>: '.$this->getModuleInfo().'</p>';
+		if(!empty($this->getModuleInfoCatNav())):
+            $html .='<p><b>Klevu Category Navigation Version</b>: '.$this->getModuleInfoCatNav().'</p>';
+		endif;
         $heperData = \Magento\Framework\App\ObjectManager::getInstance()->get('Klevu\Search\Helper\Config');
         $check_plan = $heperData->getFeatures();
         if (empty($check_plan["errors"]) && !empty($check_plan)) {
@@ -30,6 +43,8 @@ class Information extends \Magento\Config\Block\System\Config\Form\Fieldset
             }
             $html .= '</p>';
         }
+		$html .= '</div>';
+        $html.='<div class="kuInfoClear"></div>';
 		
 		$dir = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Framework\App\Filesystem\DirectoryList');
 		$files = glob($dir->getPath(\Magento\Framework\App\Filesystem\DirectoryList::VAR_DIR).'/subprocess.lock');
@@ -44,10 +59,9 @@ class Information extends \Magento\Config\Block\System\Config\Form\Fieldset
 		}  
 		
         $html .= '<p><b>Prerequisites:</b><br>
-		  1. Ensure cron is running <br>
+		  1. Ensure cron is running (<a target="_blank" href="https://support.klevu.com/knowledgebase/setting-up-a-cron-magento-2/">Click here </a>for more information on setting up a cron )<br>
 		  2. Indices are uptodate (System &gt; Index Management)<br>
 		  3. Products should be enabled and have the visibility set to catalog and search</p>';
-		  
 		
         $html .= $this->_getFooterHtml($element);
         return $html;
@@ -58,4 +72,11 @@ class Information extends \Magento\Config\Block\System\Config\Form\Fieldset
         $moduleInfo = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Framework\Module\ModuleList')->getOne('Klevu_Search');
         return $moduleInfo['setup_version'];
     }
+	
+	public function getModuleInfoCatNav()
+    {
+        $moduleInfo = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Framework\Module\ModuleList')->getOne('Klevu_Categorynavigation');
+        return $moduleInfo['setup_version'];
+    }
+	
 }

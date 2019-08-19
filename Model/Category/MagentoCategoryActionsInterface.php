@@ -10,7 +10,15 @@ namespace Klevu\Search\Model\Category;
 
 interface MagentoCategoryActionsInterface
 {
-    public function getCategorySyncDataActions($store);
+	/**
+     * Returns category pages array based on store and action or error message will shown if it failed.
+     *
+     * @param object instance $store Store 
+     * @param string $action delete|update|add
+     *
+     * @return array| A list with category pages
+     */
+    public function getCategorySyncDataActions($store, $action);
 
     /**
      * Update the given categories on Klevu Search. Returns true if the operation was successful,

@@ -44,15 +44,41 @@ class MagentoCategoryActions extends AbstractModel implements MagentoCategoryAct
         $this->_searchHelperCompat = $context->getHelperManager()->getCompatHelper();
     }
 
-
-    public function getCategorySyncDataActions($store)
+	/**
+     * Returns category pages array based on store and action or error message will shown if it failed.
+     *
+     * @param object instance $store Store 
+     * @param string $action |delete|update|add
+     *
+     * @return array| A list with category pages
+     */
+    public function getCategorySyncDataActions($store, $action)
     {
-        $actions = array(
+		$catPages = array();
+        /*$actions = array(
             "delete" => $this->_klevuSyncModel->getCategoryToDelete($store->getId()),
             "update" => $this->_klevuSyncModel->getCategoryToUpdate($store->getId()),
             "add" => $this->_klevuSyncModel->getCategoryToAdd($store->getId()),
         );
-        return $actions;
+        return $actions;*/		
+        $storeId = $store->getId();
+		try{
+            switch ($action) {
+                case "delete" :
+                    $catPages = $this->_klevuSyncModel->getCategoryToDelete($storeId);
+                    break;
+                case "update" :
+                    $catPages = $this->_klevuSyncModel->getCategoryToUpdate($storeId);
+                    break;
+                case "add" :
+                    $catPages = $this->_klevuSyncModel->getCategoryToAdd($storeId);
+                    break;
+            }
+            return $catPages;
+        } catch (\Exception $e) {
+            $this->_searchHelperData->log(\Zend\Log\Logger::ERR, sprintf("Error in collecting category pages for action %s - %s", $action, $e->getMessage()));
+            return array();
+        }
     }
 
     /**

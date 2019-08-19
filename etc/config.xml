@@ -33,6 +33,9 @@
 	    <image_width>200</image_width>
 		<image_height>200</image_height>
 	  </image_setting>
+	  <price_per_customer_group>
+          <enabled>0</enabled>
+      </price_per_customer_group>
     </klevu_search>
 	<tax>
 		<display>

@@ -60,9 +60,9 @@
 }
 
 .kuInfo .kuInfo-fRight{
-	float:right;
+	/*float:right;
 	width:68%;
-	text-align:right;
+	text-align:right;*/
 }
 
 .kuInfo .kuInfo-fRight ul li{
@@ -109,34 +109,34 @@ table.kuPlanSelection:last-child{
 
 .klevu-btn-disabled, .klevu-btn-disabled:hover{
 	background: rgba(212,212,212,1);
-background: -moz-linear-gradient(top, rgba(212,212,212,1) 0%, rgba(204,204,204,1) 47%, rgba(196,196,196,1) 100%);
-background: -webkit-gradient(left top, left bottom, color-stop(0%, rgba(212,212,212,1)), color-stop(47%, rgba(204,204,204,1)), color-stop(100%, rgba(196,196,196,1)));
-background: -webkit-linear-gradient(top, rgba(212,212,212,1) 0%, rgba(204,204,204,1) 47%, rgba(196,196,196,1) 100%);
-background: -o-linear-gradient(top, rgba(212,212,212,1) 0%, rgba(204,204,204,1) 47%, rgba(196,196,196,1) 100%);
-background: -ms-linear-gradient(top, rgba(212,212,212,1) 0%, rgba(204,204,204,1) 47%, rgba(196,196,196,1) 100%);
-background: linear-gradient(to bottom, rgba(212,212,212,1) 0%, rgba(204,204,204,1) 47%, rgba(196,196,196,1) 100%);
-filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#d4d4d4', endColorstr='#c4c4c4', GradientType=0 );
-border-color: #999;
-cursor:auto;
+	background: -moz-linear-gradient(top, rgba(212,212,212,1) 0%, rgba(204,204,204,1) 47%, rgba(196,196,196,1) 100%);
+	background: -webkit-gradient(left top, left bottom, color-stop(0%, rgba(212,212,212,1)), color-stop(47%, rgba(204,204,204,1)), color-stop(100%, rgba(196,196,196,1)));
+	background: -webkit-linear-gradient(top, rgba(212,212,212,1) 0%, rgba(204,204,204,1) 47%, rgba(196,196,196,1) 100%);
+	background: -o-linear-gradient(top, rgba(212,212,212,1) 0%, rgba(204,204,204,1) 47%, rgba(196,196,196,1) 100%);
+	background: -ms-linear-gradient(top, rgba(212,212,212,1) 0%, rgba(204,204,204,1) 47%, rgba(196,196,196,1) 100%);
+	background: linear-gradient(to bottom, rgba(212,212,212,1) 0%, rgba(204,204,204,1) 47%, rgba(196,196,196,1) 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#d4d4d4', endColorstr='#c4c4c4', GradientType=0 );
+	border-color: #999;
+	cursor:auto;
 }
 
 .kuSelectPlanHeader{
 	text-align:center;
-	margin-top:10px;
+	margin-top: 16px;
 }
 
 .kuSelectPlanHeader h2{
 	margin-bottom:5px !important;
 }
-	
+
 table.kuPlanDetails{
 	width: 85%;
-    margin: 0 auto;
-    margin-top: 15px;
+	margin: 0 auto;
+	margin-top: 26px;
 }
 
 table.kuPlanColumn {
-	width:174px;
+	width: 208px;
 	background-color:#ffffff;
 	border:1px solid #ddd;
 	border-radius:5px;
@@ -157,8 +157,8 @@ table.kuPlanColumn tr:first-child td input[type="radio"]{
 }
 
 table.kuPlanColumn tr:first-child td label{
-    color:#ffffff;
-    font-family: Arial;
+	color:#ffffff;
+	font-family: Arial;
 }
 
 
@@ -173,7 +173,7 @@ table.kuOtherPlan td{
 
 table.kuOtherPlanBox{
 	width: 96%;
-    margin: 0 auto;
+	margin: 0 auto;
 	background-color:#fff;
 	border:1px solid #ddd;
 	border-radius:5px;
@@ -183,7 +183,7 @@ table.kuOtherPlanBox{
 table.kuOtherPlan table.kuOtherPlanBox td.kuOtherPlanHeader{
 	width:20% !important;
 	background-color: #0a4363;
-    border-top-left-radius: 5px;
+	border-top-left-radius: 5px;
 	font-size:15px;
 	text-align:center;
 	padding:5px !important;
@@ -225,80 +225,81 @@ table.kuOtherPlanBox td:first-child label{
 }
 
 .visuallyhidden {
-    display: none;
+	display: none;
 }
 
 .kuWizardSteps{
 	width:100%;
-	min-height:70px;
+	min-height: 82px;
 	background: #f8f8f8;
-    border-bottom: 1px solid #e3e3e3;
-    border-top: 1px solid #e3e3e3;
+	border-bottom: 1px solid #e3e3e3;
+	border-top: 1px solid #e3e3e3;
 }
 
 .kuWizardSteps .wizard-progress {
-    list-style: none;
-    list-style-image: none;
-    margin: 0;
-    padding: 0;
-    margin-top: 10px;
-    white-space: nowrap;
+	list-style: none;
+	list-style-image: none;
+	margin: 0;
+	padding: 0;
+	margin-top: 10px;
+	white-space: nowrap;
 	width:625px;
 	margin:0 auto;
 }
 
 .kuWizardSteps .wizard-progress li {
-    float: left;
-    margin-right: 50px;
-    text-align: center;
-    position: relative;
-    width: 100px;
+	float: left;
+	margin-right: 50px;
+	margin-top: 5px;
+	text-align: center;
+	position: relative;
+	width: 100px;
 }
 
 .kuWizardSteps .wizard-progress .step-name {
-    display: table-cell;
-    height: 32px;
-    vertical-align: bottom;
-    text-align: center;
-    width: 100px;
+	display: table-cell;
+	height: 32px;
+	vertical-align: bottom;
+	text-align: center;
+	width: 100px;
 	font-weight:600;
 	font-size:13px;
 }
 
 .kuWizardSteps .wizard-progress .step-name-wrapper {
-    display: table-cell;
-    height: 100%;
-    vertical-align: bottom;
+	display: table-cell;
+	height: 100%;
+	vertical-align: bottom;
 }
 
 .kuWizardSteps .wizard-progress .step-num {
-    font-size: 14px;
-    font-weight: bold;
-    border: 1px solid #cac3b4;
-    border-radius: 50%;
-    width: 20px;
+	font-size: 14px;
+	font-weight: bold;
+	border: 1px solid #cac3b4;
+	border-radius: 50%;
+	width: 20px;
 	height:20px;
-    display: inline-block;
-    margin-top: 10px;
+	display: inline-block;
+	margin-top: 10px;
 }
 
 .kuWizardSteps .wizard-progress .step-num:after {
-    content: "";
-    display: block;
-    background: #cac3b4;
-    height: 1px;
-    width: 130px;
-    position: absolute;
-    bottom: 10px;
-    left: 60px;
+	content: "";
+	display: block;
+	background: #cac3b4;
+	height: 1px;
+	width: 130px;
+	position: absolute;
+	bottom: 10px;
+	left: 60px;
 }
 
 .kuWizardSteps .wizard-progress li:last-of-type .step-num:after {
-    display: none;
+	display: none;
 }
 
 .kuWizardSteps .wizard-progress .active-step .step-num {
-    background-color: #97c63b;
+	background-color: #97c63b;
 	border: 1px solid #cac3b4;
 }
 
@@ -307,63 +308,63 @@ table.kuOtherPlanBox td:first-child label{
 }
 
 .kuTooltip {
-    outline: none;
-    text-decoration: none;
-    position: relative;
+	outline: none;
+	text-decoration: none;
+	position: relative;
 }
 
 .kuTooltip strong {
-    line-height: 30px;
+	line-height: 30px;
 }
 
 .kuTooltip > span {
 	display:none;
-    width: 300px;
-    padding: 10px 20px;
-    margin-top: 0;
-    margin-left: -120px;
+	width: 300px;
+	padding: 10px 20px;
+	margin-top: 0;
+	margin-left: -120px;
 	line-height:20px;
-    opacity: 0;
-    visibility: hidden;
-    z-index: 10;
-    position: absolute;
-    font-family: Arial;
-    font-size: 12px;
-    font-style: normal;
-    border-radius: 3px;
-    box-shadow: 2px 2px 2px #999;
+	opacity: 0;
+	visibility: hidden;
+	z-index: 10;
+	position: absolute;
+	font-family: Arial;
+	font-size: 12px;
+	font-style: normal;
+	border-radius: 3px;
+	box-shadow: 2px 2px 2px #999;
 }
 
 /*a.tooltip > span:hover,*/
 .kuTooltip:hover > span {
-    opacity: 1;
-    text-decoration: none;
-    visibility: visible;
-    overflow: visible;
-    margin-top: -115px;
-    display: inline;
-    margin-left: -90px;
+	opacity: 1;
+	text-decoration: none;
+	visibility: visible;
+	overflow: visible;
+	margin-top: -115px;
+	display: inline;
+	margin-left: -90px;
 }
 
 .kuTooltip span b {
-    width: 18px;
-    height: 18px;
-    margin-left: 40px;
-    margin-bottom: -20px;
-    display: block;
-    position: absolute;
-    -webkit-transform: rotate(-45deg);
-    -moz-transform: rotate(-45deg);
-    -o-transform: rotate(-45deg);
-    transform: rotate(-45deg);
-}    
+	width: 18px;
+	height: 18px;
+	margin-left: 40px;
+	margin-bottom: -20px;
+	display: block;
+	position: absolute;
+	-webkit-transform: rotate(-45deg);
+	-moz-transform: rotate(-45deg);
+	-o-transform: rotate(-45deg);
+	transform: rotate(-45deg);
+}
 
 .kuTooltip > span {
-	color: #000000; 
+	color: #000000;
 	background: #FBF5E6;
-	border: 1px solid #CFB57C;	     
-}    
-	  
+	border: 1px solid #CFB57C;
+}
+
 .kuTooltip span b {
 	background: #FBF5E6;
 	border-bottom: 1px solid #CFB57C;
@@ -399,11 +400,11 @@ table.kuOtherPlanBox td:first-child label{
 
 .kuFinishSyncInfo ul{
 	margin-top: 21px;
-    line-height: 22px;
-    font-size: 14px;
+	line-height: 22px;
+	font-size: 14px;
 	text-align: left;
-    width: 72%;
-    margin: 0 auto;
+	width: 72%;
+	margin: 0 auto;
 }
 
 .kuFinishSyncInfo ul li{
@@ -411,6 +412,26 @@ table.kuOtherPlanBox td:first-child label{
 }
 
 h4.kuCompleteWarning{
-    text-align: right;
-    font-size: 12px;
+	text-align: right;
+	font-size: 12px;
+}
+
+p.kuComparePlan{
+	text-align:center;
+	margin-top:20px;
+	margin-bottom:10px;
+}
+
+p.kuComparePlan a{
+	font-size:16px;
+	font-weight:600;
+	color:#134363;
+}
+
+p.kuComparePlan a:hover{
+	text-decoration:underline;
+}
+
+#klevu_search_wizard .button-set{
+	width:92% !important;
 }

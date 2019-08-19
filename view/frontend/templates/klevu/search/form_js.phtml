@@ -89,6 +89,14 @@ var allInputs = document.getElementsByTagName( 'input' );
 			} else {
 				product.productImage = product.productImage.replace( 'needtochange/', 'pub/');
 			}
+			
+			if ('undefined' !== typeof klevuMagentoCustomerGroupFlag && klevuMagentoCustomerGroupFlag == false) {
+                product.productPrice = '0';
+                product.startPrice = '0';
+                product.toPrice = '0';
+                product.salePrice = '0';
+            }
+
 			return product;
 		}
 	}

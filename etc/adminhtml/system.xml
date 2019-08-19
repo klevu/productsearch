@@ -159,6 +159,14 @@
                 <comment><![CDATA[Image Hieght.]]></comment>
             </field>
       </group>
+	  <group id="price_per_customer_group" translate="label comment" sortOrder="106" showInDefault="1">
+            <label>Display prices after Customer Group load</label>
+            <field id="enabled" translate="label comment" sortOrder="100" type="select" showInDefault="1">
+                <label>Display prices after Customer Group Load</label>
+                <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                <comment><![CDATA[Recommended if using Customer Group Pricing. This will delay the rendering of prices on the page until the current customer’s group is available, which will ensure the customer group price is displayed rather than the default."]]></comment>
+            </field>
+      </group>
       <group id="developer" translate="label comment" sortOrder="900" showInDefault="1">
         <label>Developer Settings</label>
 		<field id="collection_method" translate="label comment" sortOrder="300" type="select" showInDefault="1">
@@ -180,7 +188,11 @@
         </field>
 		<field id="download_log_button" type="button" sortOrder="401" showInDefault="1" showInWebsite="1" showInStore="1">
             <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Logdownload</frontend_model>
-			 <comment><![CDATA[If file size is less than 1GB then you can click on button to download klevu search log file from var/log folder]]></comment>
+			 <comment><![CDATA[]]></comment>
+        </field>
+		<field id="clear_log_button" type="button" sortOrder="402" showInDefault="1" showInWebsite="1" showInStore="1">
+            <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Logclear</frontend_model>
+			 <comment><![CDATA[]]></comment>
         </field>
 		<field id="tagging_options" translate="label comment" sortOrder="420"  type="select" showInDefault="1">
             <label>Enable partial updates for stock and price</label>

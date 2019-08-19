@@ -1,18 +1,16 @@
 <?php
-
 /**
- * Class \Klevu\Search\Block\Adminhtml\Form\Field\Logdownload
+ * Class \Klevu\Search\Block\Adminhtml\Form\Field\Logclear
  *
  * @method setStoreId($id)
  * @method string getStoreId()
  */
- 
 namespace Klevu\Search\Block\Adminhtml\Form\Field;
 
-class Logdownload extends \Magento\Config\Block\System\Config\Form\Field
+class Logclear extends \Magento\Config\Block\System\Config\Form\Field
 {
     
-    protected $_template = 'klevu/search/form/field/sync/downloadbutton.phtml';
+    protected $_template = 'klevu/search/form/field/sync/clearlogbutton.phtml';
     
     public function render(\Magento\Framework\Data\Form\Element\AbstractElement $element)
     {
@@ -31,44 +29,37 @@ class Logdownload extends \Magento\Config\Block\System\Config\Form\Field
 
     protected function _getElementHtml(\Magento\Framework\Data\Form\Element\AbstractElement $element)
     {
-        $buttonLabel = $this->getButtonLabel();		
+        $buttonLabel = $this->getButtonLabel();
 		if(empty($buttonLabel)){
 			return;
-		}
-		$commentText = __('If file size is less than 1GB then you can click on button to download klevu search log file from var/log folder.');
-        
+		}		
+		$commentText = __('By Clicking on Rename Klevu Search Log, it will renamed the Klevu_Search.log file with current timestamp and newly file will be placed in the var/log directory.');
+      
 		$element->setComment($commentText);
 		$this->addData([
 			"html_id" => $element->getHtmlId(),
-			"button_label" => $buttonLabel,
-			"destination_url" => $this->getUrl("klevu_search/download/logdownload")
+			"button_label" => $buttonLabel,				
+			"destination_url" => $this->getUrl("klevu_search/download/logclear")
 		]);
         
 		return $this->_toHtml();
     }
 	
-	
 	/**
-     * Button label for download button if Klevu_Search.log file exists
+     * Button label if Klevu_Search.log file exists
      * @return string
      * @throws Exception
      */
 	private function getButtonLabel()
     {
 		$_searchHelper = \Magento\Framework\App\ObjectManager::getInstance()->get('\Klevu\Search\Helper\Data');
-		$buttonLabel = __('Download Klevu Search Log');   
-        try {                     
+		$buttonLabel = __('Rename Klevu Search Log');   
+        try {    
             $dir = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Framework\App\Filesystem\DirectoryList');
             $filePath = $dir->getPath('log') . "/".\Klevu\Search\Helper\Data::LOG_FILE;
-            if (file_exists($filePath)) {
-                $filesize = filesize($filePath);
-                if ($filesize < 1024) {
-                    $buttonLabel = $buttonLabel . ' ( ' . $filesize . ' Bytes )';
-                } else {
-                    $filesize = $_searchHelper->bytesToHumanReadable($filesize);
-                    $buttonLabel = $buttonLabel . ' ( ' . $filesize . ' )';
-                }
-            }else{
+            if (file_exists($filePath)) {                
+                return $buttonLabel;
+            } else {
                 $buttonLabel = '';
             }
             return $buttonLabel;

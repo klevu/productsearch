@@ -110,6 +110,7 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     const XML_PATH_CATALOG_SEARCH_RELEVANCE = "klevu_search/searchlanding/klevu_search_relevance";
 	const XML_PATH_PRODUCT_SYNC_CATALOGVISIBILITY   = "klevu_search/product_sync/catalogvisibility";
 	const  XML_PATH_SEARCHENGINE = 'catalog/search/engine';
+	const XML_PATH_PRICE_PER_CUSTOMER_GROUP_METHOD = "klevu_search/price_per_customer_group/enabled";
 
 
     /**
@@ -1115,6 +1116,16 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     public function getCurrentEngine()
     {
         return $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_SEARCHENGINE);
+    }
+    
+    /**
+     * Check if default isCustomerGroupPriceEnabled.
+     *
+     * @return bool
+     */
+    public function isCustomerGroupPriceEnabled()
+    {
+        return $this->_appConfigScopeConfigInterface->isSetFlag(static::XML_PATH_PRICE_PER_CUSTOMER_GROUP_METHOD);
     }
 
 }

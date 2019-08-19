@@ -37,7 +37,7 @@
 						<table class="kuPlanColumn" cellspacing="0">
 						<tbody>
 								<tr>
-									<td><input type="radio" name="userPlan" value="<?php echo $value['planName'];?>" id="kuStarter"/> <label for="kuStarter"><?php echo ucfirst($value['planName']);?></label></td>
+									<td><input type="radio" name="userPlan" value="<?php echo $value['planName'];?>" id="<?php echo ucfirst($value['planName']);?>"/> <label for="<?php echo ucfirst($value['planName']);?>"><?php echo ucfirst($value['planName']);?></label></td>
 								</tr>
 								<tr>
 									<td><img src="<?php echo $value['planImageUrl']; ?>"/></td>
@@ -49,7 +49,7 @@
 				</tr>
             </tbody>
         </table>
-    
+    <p class="kuComparePlan"> <a href="https://www.klevu.com/magento-pricing/" target="_blank">Compare Plan</a></p>
     <div class="button-set">
         <button type="submit" class="action-default primary"><span><?php echo __("Next") ?></span></button>
     </div>

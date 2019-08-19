@@ -414,17 +414,17 @@ class Sync extends AbstractModel
         $this->_searchHelperData->log(\Zend\Log\Logger::INFO, sprintf("Starting sync for category %s (%s).", $store->getWebsite()->getName(), $store->getName()));
 
         // replace below code
-        $actions = $this->_klevuMagentoCategoryAction->getCategorySyncDataActions($store);
-
+        //$actions = $this->_klevuMagentoCategoryAction->getCategorySyncDataActions($store);
+		$actions = array('delete','update','add');
 
         $errors = 0;
-        foreach ($actions as $action => $statement) {
+        foreach ($actions as $key => $action) {
             if ($this->rescheduleIfOutOfMemory()) {
                 return;
             }
 
             $method = $action . "Category";
-            $category_pages = $statement;
+            $category_pages = $this->_klevuMagentoCategoryAction->getCategorySyncDataActions($store, $action);
             $total = count($category_pages);
             $this->_searchHelperData->log(\Zend\Log\Logger::INFO, sprintf("Found %d category Pages to %s.", $total, $action));
             $pages = ceil($total / static ::RECORDS_PER_PAGE);
