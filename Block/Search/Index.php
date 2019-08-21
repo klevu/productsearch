@@ -8,6 +8,7 @@ use Magento\Framework\View\Element\Template;
 use Magento\Framework\View\Element\Template\Context;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\App\Filesystem\DirectoryList;
+use Klevu\Search\Helper\Config as KlevuConfig;
 
 class Index extends \Magento\Framework\View\Element\Template
 {
@@ -15,13 +16,16 @@ class Index extends \Magento\Framework\View\Element\Template
     const DISABLE     = 0;
     const KlEVUTEMPLATE = 2;
     protected $_directoryList;
+    protected $_klevuConfig;
     
     public function __construct(
         \Magento\Framework\View\Element\Template\Context $context,
         DirectoryList $directorylist,
+        KlevuConfig $klevuConfig,
         array $data = []
     ) {
     	$this->_directoryList = $directorylist;
+        $this->_klevuConfig = $klevuConfig;
         parent::__construct($context, $data);
     }
     
