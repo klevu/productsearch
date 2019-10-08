@@ -2,26 +2,55 @@
 namespace Klevu\Search\Console\Command;
 
 use Magento\Framework\Exception\LocalizedException;
-use Magento\Framework\App\ObjectManager;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Exception;
-use Klevu\Search\Model\Product\Sync;
-use Klevu\Search\Model\Order\Sync as Order;
-use Klevu\Content\Model\ContentInterface;
-use Magento\Framework\App\Filesystem\DirectoryList;
-use Klevu\Search\Helper\Api as Api;
-use Klevu\Search\Model\Session as Session;
+use Klevu\Search\Helper\Api\Proxy as Api;
 use Klevu\Search\Helper\Config as Config;
 use Magento\Store\Model\StoreManagerInterface as StoreManagerInterface;
+use Magento\Framework\App\State as AppState;
+use Magento\Framework\App\Filesystem\DirectoryList as DirectoryList;
+use \Psr\Log\LoggerInterface as LoggerInterface;
  
 
 class UserCreation extends Command
 {
 
-    protected function configure()
+    const AREA_CODE_LOCK_FILE = 'klevu_areacode.lock';
+	
+	protected $appState;
+	
+	protected $_directoryList;
+	
+	protected $_logger;
+	
+	protected $_storeInterface;
+	
+	protected $_api;
+	
+	protected $_config;
+	
+	public function __construct(
+		AppState $appState,
+        StoreManagerInterface $storeInterface,
+		DirectoryList $directoryList,
+		LoggerInterface $logger,
+		Api $api,
+		Config $config
+	)
+    {
+		$this->appState = $appState;
+		$this->_storeInterface = $storeInterface;
+		$this->_directoryList = $directoryList;
+		$this->_logger = $logger;
+		$this->_api = $api;
+		$this->_config = $config;
+        parent::__construct();
+    }
+	
+	protected function configure()
     {
         $this->setName('klevu:create')
                 ->setDescription('Create user and webstore for klevu')
@@ -31,15 +60,19 @@ class UserCreation extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-
-            
+		$logDir = $this->_directoryList->getPath(DirectoryList::VAR_DIR);
+		$areacodeFile = $logDir."/".self::AREA_CODE_LOCK_FILE;
+		try {
+			if(file_exists($areacodeFile)){
+				unlink($areacodeFile);
+			}
+			$this->appState->setAreaCode('frontend');
+		}catch (\Exception $e) {
+			fopen($areacodeFile, 'w');
+		    $this->_logger->critical($e->getMessage());
+		    throw $e; return false;
+		}  
         try {
-            $state = ObjectManager::getInstance()->get('\Magento\Framework\App\State');
-            $state->setAreaCode('frontend');
-
-            //Sync Data
-            $api = ObjectManager::getInstance()->get(Api::class);
-                
             if ($input->hasParameterOption('--userstore')) {
 				$email = "test".rand()."@klevudemo.com";
 				$userPlan = "premium";
@@ -48,10 +81,10 @@ class UserCreation extends Command
 				$merchantEmail = "test".rand()."@klevudemo.com";
 				$contactNo = "123456";
 				$password = "123456";
-                $result = $api->createUser($email, $password, $userPlan, $partnerAccount, $url, $merchantEmail, $contactNo);
-				$store = ObjectManager::getInstance()->get(StoreManagerInterface::class)->getStore(1);
-				$result = $api->createWebstore($result["customer_id"], $store);
-				$config = ObjectManager::getInstance()->get(Config::class);
+                $result = $this->_api->createUser($email, $password, $userPlan, $partnerAccount, $url, $merchantEmail, $contactNo);
+				$store = $this->_storeInterface->getStore(1);
+				$result = $this->_api->createWebstore($result["customer_id"], $store);
+				$config = $this->_config;
 				if ($result["success"]) {
 					$config->setJsApiKey($result["webstore"]->getJsApiKey(), $store);
 					$config->setRestApiKey($result["webstore"]->getRestApiKey(), $store);
@@ -65,8 +98,6 @@ class UserCreation extends Command
 				} 
             }
             
-			$klevusession = \Magento\Framework\App\ObjectManager::getInstance()->get('Klevu\Search\Model\Session');
-			
             if ($input->hasParameterOption('--user')) {
 				
                 $output->writeln('<info>User created successfuly</info>');
@@ -88,6 +119,14 @@ class UserCreation extends Command
 
         $inputList[] = new InputOption(
             'user',
+            null,
+            InputOption::VALUE_OPTIONAL,
+            'User creation has been done',
+            'user'
+        );
+		
+		$inputList[] = new InputOption(
+            'userstore',
             null,
             InputOption::VALUE_OPTIONAL,
             'User creation has been done',

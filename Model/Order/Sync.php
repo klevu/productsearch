@@ -91,9 +91,9 @@ class Sync extends AbstractModel
         $session_id = md5(session_id());
         $ip_address = $this->_searchHelperData->getIp();
         if ($order->getCustomerId()) {
-            $order_email = $order->getCustomerEmail(); //logged in customer
+            $order_email = "enc-".md5($order->getCustomerEmail()); //logged in customer
         } else {
-            $order_email = $order->getBillingAddress()->getEmail(); //not logged in customer
+            $order_email = "enc-".md5($order->getBillingAddress()->getEmail()); //not logged in customer
         }
         foreach ($order->getAllVisibleItems() as $item) {
             // For configurable products add children items only, for all other products add parents

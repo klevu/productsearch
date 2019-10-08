@@ -11,11 +11,13 @@ use Magento\Store\Model\StoreManagerInterface as StoreManagerInterface;
 use Magento\Framework\App\State as AppState;
 use Magento\Framework\ObjectManagerInterface;
 use Magento\Framework\App\ObjectManager;
+use \Psr\Log\LoggerInterface as LoggerInterface;
 
 class SyncStoreView extends Command
 {
 
     const LOCK_FILE = 'klevu_running_index.lock';
+	const AREA_CODE_LOCK_FILE = 'klevu_areacode.lock';
     /**
      * Input arguments for mode setter command
      */
@@ -41,6 +43,7 @@ class SyncStoreView extends Command
     protected $websiteList = array();
     protected $allStoreList = array();
     protected $runStoreList = array();
+	private $_logger;
 
     /**
      * Inject dependencies
@@ -49,16 +52,19 @@ class SyncStoreView extends Command
      * @param StoreManagerInterface $storeInterface
      * @param DirectoryList $directoryList
      * @param Sync $sync
+	 * @param \Psr\Log\LoggerInterface $logger
      */
     public function __construct(
         AppState $appState,
         StoreManagerInterface $storeInterface,
-        DirectoryList $directoryList
+        DirectoryList $directoryList,
+		LoggerInterface $logger
     )
     {
         $this->appState = $appState;
         $this->directoryList = $directoryList;
         $this->storeInterface = $storeInterface;
+		$this->_logger = $logger;
         parent::__construct();
     }
     /**
@@ -83,7 +89,18 @@ class SyncStoreView extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $this->appState->setAreaCode('frontend');
+		$logDir = $this->directoryList->getPath(DirectoryList::VAR_DIR);
+		$areacodeFile = $logDir."/".self::AREA_CODE_LOCK_FILE;
+		try {
+			if(file_exists($areacodeFile)){
+				unlink($areacodeFile);
+			}
+			$this->appState->setAreaCode('frontend');
+		}catch (\Exception $e) {
+			fopen($areacodeFile, 'w');
+		    $this->_logger->critical($e->getMessage());
+		    throw $e; return false;
+		}
         $storeList = $this->storeInterface->getStores();
 
         foreach ($storeList as $store) {
@@ -102,7 +119,6 @@ class SyncStoreView extends Command
             try {
                 $array_store = explode(",",$storeCode);
                 $rejectedSites = $this->validateStoreCodes($array_store);
-                $logDir = $this->directoryList->getPath(DirectoryList::VAR_DIR);
 
                 $this->sync = ObjectManager::getInstance()->get(Sync::class);
 
@@ -185,4 +201,5 @@ class SyncStoreView extends Command
         return $rejectedStores;
 
     }
+	
 }

@@ -159,7 +159,7 @@ class Request extends \Magento\Framework\DataObject
         }
 
         $raw_request = $this->build();
-
+        $this->_searchHelperData->log(\Zend\Log\Logger::DEBUG, sprintf("API EndPoint: %s", $this->getEndpoint()));
         $this->_searchHelperData->log(\Zend\Log\Logger::DEBUG, sprintf("API request:\n%s", $this->__toString()));
 
         try {

@@ -44,6 +44,12 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
 
     protected $_klevu_enabled_feature_response;
 
+
+	/**
+     * @var \Magento\Framework\Module\ModuleList
+     */
+    protected $_moduleList;
+	
     public function __construct(
         \Magento\Framework\App\Config\ScopeConfigInterface $appConfigScopeConfigInterface,
         \Magento\Framework\UrlInterface $magentoFrameworkUrlInterface,
@@ -51,7 +57,8 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
         \Magento\Framework\App\RequestInterface $frameworkAppRequestInterface,
         \Magento\Store\Model\Store $frameworkModelStore,
         \Magento\Framework\App\Config\Value $modelConfigData,
-        \Magento\Framework\App\ResourceConnection $frameworkModelResource
+        \Magento\Framework\App\ResourceConnection $frameworkModelResource,
+		\Magento\Framework\Module\ModuleList $moduleList
 
     ) {
 
@@ -62,6 +69,7 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
         $this->_frameworkModelStore = $frameworkModelStore;
         $this->_modelConfigData = $modelConfigData;
         $this->_frameworkModelResource = $frameworkModelResource;
+		$this->_moduleList = $moduleList;		
     }
 
     const XML_PATH_EXTENSION_ENABLED = "klevu_search/general/enabled";
@@ -364,7 +372,7 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     public function getAnalyticsUrl()
     {
         $url = $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_ANALYTICS_URL);
-        return ($url) ? $url : \Klevu\Search\Helper\Api::ENDPOINT_DEFAULT_HOSTNAME;
+        return ($url) ? $url : \Klevu\Search\Helper\Api::ENDPOINT_DEFAULT_ANALYTICS_HOSTNAME;
     }
 
     /**
@@ -720,7 +728,7 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
      *
      * @return $this
      */
-    protected function setGlobalConfig($key, $value)
+    public function setGlobalConfig($key, $value)
     {
         $saveconfig = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Config\Model\ResourceModel\Config');
         $saveconfig->saveConfig($key, $value, "default", 0);
@@ -1128,4 +1136,25 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
         return $this->_appConfigScopeConfigInterface->isSetFlag(static::XML_PATH_PRICE_PER_CUSTOMER_GROUP_METHOD);
     }
 
+    /**
+     * It will return Klevu Search version info
+     *
+     * @return mixed
+     */
+    public function getModuleInfo()
+    {
+        $moduleInfo = $this->_moduleList->getOne('Klevu_Search');
+        return $moduleInfo['setup_version'];
+    }
+
+    /**
+     * It will return Klevu Category Navigation version info
+     *
+     * @return mixed
+     */
+    public function getModuleInfoCatNav()
+    {        
+		$moduleInfo = $this->_moduleList->getOne('Klevu_Categorynavigation');
+        return $moduleInfo['setup_version'];
+    }
 }

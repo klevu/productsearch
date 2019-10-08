@@ -2,17 +2,34 @@
 
 namespace Klevu\Search\Block\Adminhtml\Form\Field\Store\Level;
 
+use Klevu\Search\Helper\Config as Klevu_HelperConfig;
+use Magento\Backend\Block\Template\Context as Template_Context;
+
 class Label extends \Magento\Config\Block\System\Config\Form\Field
 {
-
+	private $_context;
+	
+	public function __construct(
+        Template_Context $context,
+        Klevu_HelperConfig $klevuHelperConfig,         
+        array $data = []
+    )
+    {
+		parent::__construct($context, $data);
+		$this->_context = $context;
+        $this->_klevuHelperConfig = $klevuHelperConfig;        
+    }
+	
     protected function _getElementHtml(\Magento\Framework\Data\Form\Element\AbstractElement $element)
     {
         $request = $this->getRequest();
-        $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
-        $config = $objectManager->get('Klevu\Search\Helper\Config');
-        if ($element->getScope() == "stores") {
+		$store = $this->_context->getStoreManager();		
+        if($store->isSingleStoreMode()) {
+            $store_code = $store->getStore()->getId();
+            return $this->_klevuHelperConfig->getLastProductSyncRun($store_code);
+        }elseif($element->getScope() == "stores") {
             $store_code = $request->getParam("store");
-            return $config->getLastProductSyncRun($store_code);
+            return $this->_klevuHelperConfig->getLastProductSyncRun($store_code);
         } else {
             return __("Switch to store scope to set");
         }

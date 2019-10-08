@@ -83,6 +83,8 @@ class Api extends \Magento\Framework\App\Helper\AbstractHelper
 
     const ENDPOINT_PROTOCOL = 'https://';
     const ENDPOINT_DEFAULT_HOSTNAME = 'box.klevu.com';
+	const ENDPOINT_DEFAULT_ANALYTICS_HOSTNAME = 'stats.klevu.com';
+	
     /**
      * Create a new Klevu user using the API and return the user details.
      *

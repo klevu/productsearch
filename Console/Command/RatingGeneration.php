@@ -2,19 +2,47 @@
 namespace Klevu\Search\Console\Command;
 
 use Magento\Framework\Exception\LocalizedException;
-use Magento\Framework\App\ObjectManager;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Exception;
-use Klevu\Search\Helper\Image as Image;
 use Magento\Store\Model\StoreManagerInterface as StoreManagerInterface;
+use Magento\Framework\App\State as AppState;
+use Magento\Framework\App\Filesystem\DirectoryList as DirectoryList;
+use \Psr\Log\LoggerInterface as LoggerInterface;
+use Klevu\Search\Model\Product\MagentoProductActionsInterface\Proxy as MagentoProductActionsInterface;
  
 
 class RatingGeneration extends Command
 {
-
+	const AREA_CODE_LOCK_FILE = 'klevu_areacode.lock';
+	
+	protected $appState;
+	
+	protected $_directoryList;
+	
+	protected $_logger;
+	
+	protected $_storeInterface;
+	
+	protected $_magentoProductActionsInterface;
+	
+	public function __construct(
+		AppState $appState,
+        StoreManagerInterface $storeInterface,
+		DirectoryList $directoryList,
+		LoggerInterface $logger,
+		MagentoProductActionsInterface $magentoProductActionsInterface
+	)
+    {
+		$this->appState = $appState;
+		$this->_storeInterface = $storeInterface;
+		$this->_directoryList = $directoryList;
+		$this->_logger = $logger;
+		$this->_magentoProductActionsInterface = $magentoProductActionsInterface;
+        parent::__construct();
+    }
     protected function configure()
     {
         $this->setName('klevu:rating')
@@ -24,16 +52,25 @@ class RatingGeneration extends Command
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
-    {
-            
+    {	
+		$logDir = $this->_directoryList->getPath(DirectoryList::VAR_DIR);
+		$areacodeFile = $logDir."/".self::AREA_CODE_LOCK_FILE;
+		try {
+			if(file_exists($areacodeFile)){
+				unlink($areacodeFile);
+			}
+			$this->appState->setAreaCode('frontend');
+		}catch (\Exception $e) {
+			fopen($areacodeFile, 'w');
+		    $this->_logger->critical($e->getMessage());
+		    throw $e; return false;
+		}
+		
         try {
-            $state = ObjectManager::getInstance()->get('\Magento\Framework\App\State');
-            $state->setAreaCode('frontend');
             if ($input->hasParameterOption('--regenerate')) {	
-                $image = ObjectManager::getInstance()->get(Image::class);
-                $storeList = ObjectManager::getInstance()->get(StoreManagerInterface::class)->getStores();
+                $storeList = $this->_storeInterface->getStores();
                 foreach ($storeList as $store) {		
-                    ObjectManager::getInstance()->get('Klevu\Search\Model\Product\MagentoProductActionsInterface')->updateProductsRating($store);
+                    $this->_magentoProductActionsInterface->updateProductsRating($store);
                 }
 
             }

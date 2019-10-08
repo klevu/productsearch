@@ -18,9 +18,13 @@ use Magento\Framework\App\Filesystem\DirectoryList as DirectoryList;
 use Magento\Store\Model\StoreManagerInterface as StoreManagerInterface;
 use Magento\Framework\App\State as AppState;
 use Klevu\Search\Model\Product\MagentoProductActionsInterface as MagentoProductActions;
+use \Psr\Log\LoggerInterface as LoggerInterface;
+
 class SyncCommand extends Command
 {
     const LOCK_FILE = 'klevu_running_index.lock';
+	
+	const AREA_CODE_LOCK_FILE = 'klevu_areacode.lock';
     /**
      * @var AppState
      */
@@ -42,6 +46,8 @@ class SyncCommand extends Command
      * @var \Symfony\Component\Process\PhpExecutableFinder
      */
     protected $_phpExecutableFinder;
+	
+	private $_logger;
 
     protected $websiteList = array();
     protected $allStoreList = array();
@@ -53,7 +59,8 @@ class SyncCommand extends Command
         StoreManagerInterface $storeInterface,
         DirectoryList $directoryList,
         Shell $shell,
-        PhpExecutableFinderFactory $phpExecutableFinderFactory
+        PhpExecutableFinderFactory $phpExecutableFinderFactory,
+		LoggerInterface $logger
     )
     {
         $this->appState = $appState;
@@ -61,6 +68,7 @@ class SyncCommand extends Command
         $this->storeInterface = $storeInterface;
         $this->_shell = $shell;
         $this->_phpExecutableFinder = $phpExecutableFinderFactory;
+		$this->_logger = $logger;
         parent::__construct();
     }
 
@@ -74,13 +82,24 @@ class SyncCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $logDir = $this->directoryList->getPath(DirectoryList::VAR_DIR);
+		$logDir = $this->directoryList->getPath(DirectoryList::VAR_DIR);
         $file = $logDir."/".self::LOCK_FILE;
+		$areacodeFile = $logDir."/".self::AREA_CODE_LOCK_FILE;
+		try {
+			if(file_exists($areacodeFile)){
+				unlink($areacodeFile);
+			}
+			$this->appState->setAreaCode('frontend');
+		}catch (\Exception $e) {
+			fopen($areacodeFile, 'w');
+		    $this->_logger->critical($e->getMessage());
+		    throw $e; return false;
+		}
         if (file_exists($file)) {
             $output->writeln('<info>Klevu indexing process is in running state</info>');
             return;
         }
-
+		
         fopen($file, 'w');
 
         try {
@@ -91,7 +110,6 @@ class SyncCommand extends Command
                 $this->websiteList[$store->getWebsiteId()] = array_unique(array_merge($this->websiteList[$store->getWebsiteId()], array($store->getCode())));
                 $this->allStoreList[$store->getCode()] = $store->getWebsiteId();
             }
-            $this->appState->setAreaCode('frontend');
             // sync cms data
             $magentoProductActions = ObjectManager::getInstance()->get(MagentoProductActions::class);
 

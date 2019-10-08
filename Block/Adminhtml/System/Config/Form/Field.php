@@ -1,20 +1,30 @@
 <?php
 
 namespace Klevu\Search\Block\Adminhtml\System\Config\Form;
+
+use Magento\Backend\Block\Template\Context as Template_Context;
+use Magento\Store\Model\StoreManagerInterface as StoreManagerInterface;
 use Klevu\Search\Model\Klevu\HelperManager as Klevu_HelperManager;
 
 class Field extends \Magento\Config\Block\System\Config\Form\Field
 {
+	
+	private $_context;
 
+	private $storeManager;
+	
+	private $_klevuHelperManager;
+	
     public function __construct(
-        \Magento\Backend\Block\Template\Context $context,
-        Klevu_HelperManager $helperManager,
+        Template_Context $context,
+        Klevu_HelperManager $klevuHelperManager,		 
         array $data = []
-
-
+		
     ) {
-        $this->_helperManager = $helperManager;
+        $this->_klevuHelperManager = $klevuHelperManager;
         parent::__construct($context,$data);
+		$this->_context = $context;
+		 
     }
 
     /**
@@ -38,21 +48,51 @@ class Field extends \Magento\Config\Block\System\Config\Form\Field
     {
         $isCheckboxRequired = $this->_isInheritCheckboxRequired($element);
 
+        $fieldToHide = array(
+            'klevu_search_add_to_cart_enabledaddtocartfront','klevu_search_attributes_other',
+            'klevu_search_attributes_boosting','klevu_search_cmscontent_enabledcmsfront',
+            'klevu_search_cmscontent_excludecms_pages','klevu_search_secureurl_setting_enabled',
+            'klevu_search_image_setting_enabled','klevu_search_image_setting_image_width',
+            'klevu_search_image_setting_image_height','klevu_search_general_category_navigation_url',
+			'klevu_search_categorylanding_enabledcategorynavigation','klevu_search_categorylanding_max_no_of_products',
+			'klevu_search_categorylanding_klevu_cat_relevance','klevu_search_searchlanding_klevu_search_relevance');
+			
+		$this->storeManager = $this->_context->getStoreManager();
+		$store_mode = $this->storeManager->isSingleStoreMode();
+		
+		if( in_array( $element->getId(), $fieldToHide ) ) {
+            //Removing checkbox when SSM is off and view is Global or Websites
+            if(!$store_mode && $element->getScope() != "stores" )  {                
+                $element->unsetData(null);                 
+                return;
+            }elseif (!$store_mode && ( $element->getScope() == "stores" || $element->getScope() == "websites") ){
+                $isCheckboxRequired = false;
+            }             
+        }
+		
         // Disable element if value is inherited from other scope. Flag has to be set before the value is rendered.
         if ($element->getInherit() == 1 && $isCheckboxRequired) {
             $element->setDisabled(true);
         }
         
-        $config = \Magento\Framework\App\ObjectManager::getInstance()->get('Klevu\Search\Helper\Config');
-        $features = $config->getFeaturesUpdate($element->getHtmlId());
-		$store_manager = \Magento\Framework\App\ObjectManager::getInstance()->get('\Magento\Store\Model\StoreManagerInterface');
-		$store_mode = \Magento\Framework\App\ObjectManager::getInstance()->get('\Magento\Store\Model\StoreManagerInterface')->isSingleStoreMode();
+        
+		$klevuConfig = $this->_klevuHelperManager->getConfigHelper();
+        $features = $klevuConfig->getFeaturesUpdate($element->getHtmlId());
+				
 		if($store_mode) {
-			$configScope = \Magento\Framework\App\ObjectManager::getInstance()->get('\Magento\Framework\App\Config\ScopeConfigInterface');
-			$jsApiValue = $config->getJsApiKey($store_manager->getStore());
-			$jsRestValue = $config->getRestApiKey($store_manager->getStore());
-			$config->setStoreConfig('klevu_search/general/js_api_key', $jsApiValue,$store_manager->getStore());
-			$config->setStoreConfig('klevu_search/general/rest_api_key', $jsRestValue,$store_manager->getStore());
+			$labelsToHide = array('klevu_search_add_to_cart_enabled_info','klevu_search_attributes_info_attribute','klevu_search_cmscontent_enabledcmsfront_info','klevu_search_secureurl_setting_info_enabled','klevu_search_image_setting_info_enabled','klevu_search_categorylanding_enabledcategorynavigation_info');
+            if(in_array($element->getId(),$labelsToHide) && $element->getType()=='label') {
+                $element->unsetData(null);
+            }
+			
+			 
+			$jsApiValue = $klevuConfig->getJsApiKey($this->storeManager->getStore());
+			$jsRestValue = $klevuConfig->getRestApiKey($this->storeManager->getStore());
+			$cloudSearchURL = $klevuConfig->getCloudSearchUrl($this->storeManager->getStore());
+			
+			$klevuConfig->setStoreConfig('klevu_search/general/js_api_key', $jsApiValue,$this->storeManager->getStore());
+			$klevuConfig->setStoreConfig('klevu_search/general/rest_api_key', $jsRestValue,$this->storeManager->getStore());
+			 	
 		}
         if (!empty($features)) {
             $style        = 'class="klevu-disabled"';
@@ -115,7 +155,8 @@ class Field extends \Magento\Config\Block\System\Config\Form\Field
         }
         if ($element->getHtmlId() == "klevu_search_searchlanding_landenabled") {
             $klevu_html ='';
-                $check_preserve = \Magento\Framework\App\ObjectManager::getInstance()->get('Klevu\Search\Helper\Config')->getFeatures();
+			$klevuConfig = $this->_klevuHelperManager->getConfigHelper();
+            $check_preserve = $klevuConfig->getFeatures();
             if (!empty($check_preserve)) {
                 if (isset($check_preserve['disabled']) && !empty($check_preserve['disabled'])) {
                     if (strpos($check_preserve['disabled'], "preserves_layout") !== false) {

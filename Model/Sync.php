@@ -99,7 +99,7 @@ class Sync extends AbstractModel
            return true;
        } catch (\Exception $e) {
 		   $logDir = $this->directoryList->getPath(DirectoryList::VAR_DIR);
-		   $subprocess_file = $logDir."/subprocess.lock";
+		   $subprocess_file = $logDir."/klevu_subprocess.lock";
 		   fopen($subprocess_file, 'w');
 		   $this->log(Logger::CRIT, "can not execute subprocess $command ".$e->getMessage());
 		   throw new \Exception($e->getMessage()); 
@@ -128,7 +128,7 @@ class Sync extends AbstractModel
 
         );
 		
-		$files = glob($this->directoryList->getPath(DirectoryList::VAR_DIR).'/*.lock');
+		$files = glob($this->directoryList->getPath(DirectoryList::VAR_DIR).'/*klevu_running_index.lock');
 		$messagestr = '';
 		if(!empty($files)) {
 			foreach($files as $key => $value) {

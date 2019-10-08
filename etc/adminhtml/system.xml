@@ -63,7 +63,7 @@
 				  <comment><![CDATA[Select Search Result Page.]]></comment>
                   <source_model>Klevu\Search\Model\System\Config\Source\Landingoptions</source_model>
                 </field>
-                <field id="klevu_search_relevance" translate="label" type="select" sortOrder="121" showInStore="1">
+                <field id="klevu_search_relevance" translate="label" type="select" sortOrder="121" showInDefault="1" showInStore="1">
                     <label>Sort by Klevu Relevance</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     <comment><![CDATA[When option "Klevu Powered - Preserve Theme Layout" is selected.]]></comment>
@@ -114,12 +114,12 @@
                   <label>Attribute Settings</label>
                   <comment><![CDATA[Switch to store view scope to set.]]></comment>
                 </field>
-                <field id="boosting" translate="label comment" sortOrder="800" type="select" showInStore="1">
+                <field id="boosting" translate="label comment" sortOrder="800" type="select" showInDefault="1" showInStore="1">
                   <label>Boosting Attribute</label>
                   <source_model>Klevu\Search\Model\System\Config\Source\Boosting\Attribute</source_model>
                   <comment><![CDATA[Select the attribute you wish to use as the Boosting attribute in Klevu. The Boosting attribute is a decimal or integer product attribute. To promote a product simply give the product a score higher than 1 and to demote give a score lower than 1 (i.e. 0.1)..]]></comment>
                 </field>
-                <field id="other" translate="label comment" sortOrder="600" type="multiselect" showInStore="1">
+                <field id="other" translate="label comment" sortOrder="600" type="multiselect" showInDefault="1" showInStore="1">
                   <label>Other Attributes To Use In Search</label>
                   <can_be_empty>1</can_be_empty>
                   <source_model>Klevu\Search\Model\System\Config\Source\Product\Attributes</source_model>
@@ -133,7 +133,7 @@
               <label>Use Secure Base Url for Products and Images</label>
               <comment><![CDATA[Switch to store view scope to set]]></comment>
             </field>
-            <field id="enabled" translate="label comment" sortOrder="100" type="select" showInStore="1">
+            <field id="enabled" translate="label comment" sortOrder="100" type="select" showInDefault="1" showInStore="1">
               <label>Use Secure Base Url for Products and Images</label>
               <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
               <comment><![CDATA[Choose Yes to use secure base url from Store &gt; Cofiguration &gt; Store view &gt; General &gt; Secure &gt; Base URL.&lt;/br&gt;Please make sure to resynchronize products by clicking on the "Sync Data for This Store" under the "Data Sync Settings".]]></comment>
@@ -145,7 +145,7 @@
               <label>Use Configurable Product's Image in Search</label>
               <comment><![CDATA[Switch to store view scope to set]]></comment>
             </field>
-            <field id="enabled" translate="label comment" sortOrder="100" type="select" showInStore="1">
+            <field id="enabled" translate="label comment" sortOrder="100" type="select" showInDefault="1" showInStore="1">
               <label>Use Configurable Product's Image in Search.</label>
               <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
               <comment><![CDATA[Choose Yes to use configurable product's image in search.Please make sure to resynchronize products by clicking on the "Sync Data for This Store" under the "Data Sync Settings."]]></comment>
@@ -183,10 +183,10 @@
           <label>Log level</label>
           <source_model>Klevu\Search\Model\System\Config\Source\Log\Level</source_model>
         </field>
-		<field id="log_button" type="button" sortOrder="400" showInDefault="1" showInWebsite="1" showInStore="1">
+		<field id="log_button" type="button" sortOrder="400" showInDefault="1">
             <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Image\Log</frontend_model>
         </field>
-		<field id="download_log_button" type="button" sortOrder="401" showInDefault="1" showInWebsite="1" showInStore="1">
+		<field id="download_log_button" type="button" sortOrder="401" showInDefault="1">
             <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Logdownload</frontend_model>
 			 <comment><![CDATA[]]></comment>
         </field>
@@ -209,15 +209,15 @@
         </field>
       </group>
     </section>
-	<section id="tax" translate="label" sortOrder="303" showInDefault="1" showInWebsite="1" showInStore="1">
+	<section id="tax" translate="label" sortOrder="430" showInDefault="1" showInWebsite="1" showInStore="1">
 		<group id="display" translate="label" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
-				<field id="typeinsearch" translate="label" type="select" sortOrder="12" showInDefault="1" showInWebsite="1" showInStore="1">
-					<label>Display Product Prices In Klevu Search</label>
-					<depends>
-						<field id="type">3</field>
-					</depends>
-					<source_model>Klevu\Search\Model\System\Config\Source\Tax\Display\Type</source_model>
-				</field>
+			<field id="typeinsearch" translate="label" type="select" sortOrder="12" showInDefault="1" showInWebsite="1" showInStore="1">
+				<label>Display Product Prices In Klevu Search</label>
+				<depends>
+					<field id="type">3</field>
+				</depends>
+				<source_model>Klevu\Search\Model\System\Config\Source\Tax\Display\Type</source_model>
+			</field>
 		</group>
 	</section>
   </system>

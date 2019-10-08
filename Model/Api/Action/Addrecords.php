@@ -243,18 +243,23 @@ class Addrecords extends \Klevu\Search\Model\Api\Actionall
 				}
             }
 
-            if (is_array($value)) {
-                $value = implode(",", $value);
+            if(!empty($value)) {
+                if (is_array($value)) {
+                    $value = implode(",", $value);
+                }
             }
-			if(isset($label)){
-				$value = sprintf("%s:%s:%s", $key, $label, $value);
-			}
-			else{
-				$value = sprintf("%s:%s:%s", $key, $key, $value);
-			}
+
+            if(!empty($value)) {
+                if(isset($label)){
+                    $value = sprintf("%s:%s:%s", $key, $label, $value);
+                }
+                else{
+                    $value = sprintf("%s:%s:%s", $key, $key, $value);
+                }
+            }
             
         }
-        $record['other'] = implode(";", $record['other']);
+        $record['other'] = @implode(";", $record['other']);
     }
 
     /**
