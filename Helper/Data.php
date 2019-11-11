@@ -236,13 +236,13 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function humanReadableToBytes($string)
     {
-        $suffix = strtolower(substr($string, -1));
-        $result = substr($string, 0, -1);
+        $suffix = strtolower(substr($string, -1));        
+		$result = intval(substr($string, 0, -1));
         switch ($suffix) {
             case 'g':
-                $result *= 1024;
+                $result *= 1024;				
             case 'm':
-                $result *= 1024;
+                $result *= 1024;				
             case 'k':
                 $result *= 1024;
                 break;

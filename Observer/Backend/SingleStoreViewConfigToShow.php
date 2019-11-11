@@ -26,10 +26,10 @@ class SingleStoreViewConfigToShow implements ObserverInterface
 
     public function execute(EventObserver $observer)
     {
+		$klevuDataHelper = $this->_klevuHelperManager->getDataHelper();
         try {
             $isSingleStoreMode = $this->_storeManager->isSingleStoreMode();
-            $klevuConfig = $this->_klevuHelperManager->getConfigHelper();
-            $klevuDataHelper = $this->_klevuHelperManager->getDataHelper();
+            $klevuConfig = $this->_klevuHelperManager->getConfigHelper();            
 
             $actionFlag = FALSE;
             if( $this->_request->getFullActionName() == 'adminhtml_system_config_edit' &&
@@ -58,4 +58,3 @@ class SingleStoreViewConfigToShow implements ObserverInterface
         }
     }
 }
-?>

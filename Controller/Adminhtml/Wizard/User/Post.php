@@ -46,11 +46,11 @@ class Post extends \Magento\Backend\App\Action
                 $this->_searchModelSession->setHideStep("yes");
                 $this->_searchModelSession->setConfiguredCustomerId($result["customer_id"]);
                 if (isset($result["message"])) {
-                    $this->messageManager->addSuccess(__($result["message"]));
+                    $this->messageManager->addSuccessMessage(__($result["message"]));
                 }
                 return $this->_forward("store");
             } else {
-                $this->messageManager->addError(__($result["message"]));
+                $this->messageManager->addErrorMessage(__($result["message"]));
                 return $this->_forward("user");
             }
         } else {
@@ -65,16 +65,16 @@ class Post extends \Magento\Backend\App\Action
             $error = true;
             if (empty($klevu_new_email) || empty($klevu_new_password) || empty($klevu_new_url)
             || empty($merchantEmail) ) {
-                $this->messageManager->addError(__("Missing details in the form. Please check."));
+                $this->messageManager->addErrorMessage(__("Missing details in the form. Please check."));
                 return $this->_forward("user");
             } elseif (!preg_match("/^[_\.0-9a-zA-Z-]+@([0-9a-zA-Z][0-9a-zA-Z-]+\.)+[a-zA-Z]{2,6}$/i", $klevu_new_email)) {
-                $this->messageManager->addError(__("Please enter valid Primary Email."));
+                $this->messageManager->addErrorMessage(__("Please enter valid Primary Email."));
                 return $this->_forward("user");
             } elseif (!preg_match("/^[_\.0-9a-zA-Z-]+@([0-9a-zA-Z][0-9a-zA-Z-]+\.)+[a-zA-Z]{2,6}$/i", $merchantEmail)) {
-                $this->messageManager->addError(__("Please enter valid Retailer Email."));
+                $this->messageManager->addErrorMessage(__("Please enter valid Retailer Email."));
                 return $this->_forward("user");
             } elseif (empty($termsconditions)) {
-                $this->messageManager->addError(__("Please accept terms and conditions."));
+                $this->messageManager->addErrorMessage(__("Please accept terms and conditions."));
                 return $this->_forward("user");
             } else {
                     $result = $api->checkUserDetail(
@@ -91,7 +91,7 @@ class Post extends \Magento\Backend\App\Action
                     $this->_searchModelSession->setContactNo($contactNo);
                     return $this->_forward("userplan");
                 } else {
-                    $this->messageManager->addError(__($result["message"]));
+                    $this->messageManager->addErrorMessage(__($result["message"]));
                     return $this->_forward("user");
                 }
             }

@@ -2,7 +2,7 @@
 
 namespace Klevu\Search\Model\System\Config\Source\Tax\Display;
 
-class Type implements \Magento\Framework\Option\ArrayInterface
+class Type implements \Magento\Framework\Data\OptionSourceInterface
 {
     /**
      * @var array

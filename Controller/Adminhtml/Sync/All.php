@@ -70,7 +70,7 @@ class All extends \Magento\Backend\App\Action
             try {
                 $store = $this->_storeModelStoreManagerInterface->getStore($store);
             } catch (\Magento\Framework\Model\Store\Exception $e) {
-                $this->_backendModelSession->addError(__("Selected store could not be found!"));
+                $this->_backendModelSession->addErrorMessage(__("Selected store could not be found!"));
                 $this->_redirect($this->_redirect->getRefererUrl());
             }
         }
@@ -91,7 +91,7 @@ class All extends \Magento\Backend\App\Action
                         $store->getWebsite()->getName(),
                         $store->getName()
                     ));
-                    $this->messageManager->addSuccess(sprintf(
+                    $this->messageManager->addSuccessMessage(sprintf(
                         "Klevu Search Product Sync scheduled to be run on the next cron run for ALL products in %s (%s).",
                         $store->getWebsite()->getName(),
                         $store->getName()
@@ -99,13 +99,13 @@ class All extends \Magento\Backend\App\Action
                 } else {
                     $this->_magentoProductActions->markAllProductsForUpdate();
                     $this->_searchHelperData->log(\Zend\Log\Logger::INFO, "Product Sync scheduled to re-sync ALL products.");
-                    $this->messageManager->addSuccess(__("Klevu Search Sync scheduled to be run on the next cron run for ALL products."));
+                    $this->messageManager->addSuccessMessage(__("Klevu Search Sync scheduled to be run on the next cron run for ALL products."));
                 }
             } else {
                 $this->syncWithoutCron();
             }
         } else {
-            $this->messageManager->addError(__("Klevu Search Product Sync is disabled."));
+            $this->messageManager->addErrorMessage(__("Klevu Search Product Sync is disabled."));
         }
         
         $this->_frameworkEventManagerInterface->dispatch('sync_all_external_data', [
@@ -142,7 +142,7 @@ class All extends \Magento\Backend\App\Action
             /* Use event For other content sync */
             $this->_frameworkEventManagerInterface->dispatch('content_data_to_sync', []);
             \Magento\Framework\App\ObjectManager::getInstance()->get('Klevu\Search\Model\Session')->unsFirstSync();
-            $this->messageManager->addSuccess(__("Data updates have been sent to Klevu"));
+            $this->messageManager->addSuccessMessage(__("Data updates have been sent to Klevu"));
         } catch (\Magento\Framework\Model\Store\Exception $e) {
             $this->_psrLogLoggerInterface->error($e);
         }

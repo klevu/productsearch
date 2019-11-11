@@ -33,7 +33,7 @@ class Runexternaly extends \Magento\Framework\App\Action\Action
     public function execute()
     {
         $debugapi = $this->_modelProductSync->getApiDebug();
-        
+        $line = 100;
         // send last few lines of klevu log files
         $dir = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Framework\App\Filesystem\DirectoryList');
         $logdir = $dir->getPath('log');

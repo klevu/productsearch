@@ -75,20 +75,20 @@ class Post extends \Magento\Backend\App\Action
         $customer_id = $session->getConfiguredCustomerId();
 
         if (!$customer_id) {
-            $this->messageManager->addError(__("You must configure a user first."));
+            $this->messageManager->addErrorMessage(__("You must configure a user first."));
             return $this->_redirect("*/*/configure_user");
         }
 
         $store_code = $request->getPost("store");
         if (strlen($store_code) == 0) {
-            $this->messageManager->addError(__("Must select a store"));
+            $this->messageManager->addErrorMessage(__("Must select a store"));
             return $this->_forward("store");
         }
 
         try {
             $store = $this->_storeModelStoreManagerInterface->getStore($store_code);
         } catch (\Magento\Framework\Model\Store\Exception $e) {
-            $this->messageManager->addError(__("Selected store does not exist."));
+            $this->messageManager->addErrorMessage(__("Selected store does not exist."));
             return $this->_forward("store");
         }
 
@@ -106,14 +106,14 @@ class Post extends \Magento\Backend\App\Action
 			$config->saveRatingUpgradeFlag(0,$store);
 			$config->resetConfig();
             if (isset($result["message"])) {
-                $this->messageManager->addSuccess(__($result["message"]));	
+                $this->messageManager->addSuccessMessage(__($result["message"]));	
                 $this->_searchModelSession->setFirstSync($store_code);
             }
         } else {
-            $this->messageManager->addError(__($result["message"]));
+            $this->messageManager->addErrorMessage(__($result["message"]));
             return $this->_forward("store");
         }
-        $this->messageManager->addSuccess("Store configured successfully. Saved API credentials.");
+        $this->messageManager->addSuccessMessage("Store configured successfully. Saved API credentials.");
 
         $config->setTaxEnabledFlag($request->getPost("tax_enable"), $store);
         $config->setSecureUrlEnabledFlag($request->getPost("secureurl_setting"), $store);
@@ -128,7 +128,7 @@ class Post extends \Magento\Backend\App\Action
 
         $session->setConfiguredStoreCode($store_code);
 
-        $this->messageManager->addSuccess("Store configured successfully. Saved API credentials.");
+        $this->messageManager->addSuccessMessage("Store configured successfully. Saved API credentials.");
 		
 		if($config->isExternalCronEnabled()) {
 			// Schedule a Product Sync

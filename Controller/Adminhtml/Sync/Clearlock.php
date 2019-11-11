@@ -63,7 +63,7 @@ class Clearlock extends \Magento\Backend\App\Action
     {
 		$filename = $this->getRequest()->getParam('filename');
         $message = $this->_modelSync->clearKlevuLockFile($filename);
-        $this->messageManager->addSuccess(__($message));
+        $this->messageManager->addSuccessMessage(__($message));
         $this->_redirect($this->_redirect->getRefererUrl());
     }
 }

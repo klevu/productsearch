@@ -42,7 +42,7 @@ class Post extends \Magento\Backend\App\Action
         }
                  
         if (empty($userPlan)) {
-            $this->messageManager->addError(__("Not sure, which plan to select? Select Premium to try all features free for 14-days."));
+            $this->messageManager->addErrorMessage(__("Not sure, which plan to select? Select Premium to try all features free for 14-days."));
             return $this->_forward("userplan");
         }
         $api = $this->_searchHelperApi;
@@ -59,11 +59,11 @@ class Post extends \Magento\Backend\App\Action
         if ($result["success"]) {
             $this->_searchModelSession->setConfiguredCustomerId($result["customer_id"]);
             if (isset($result["message"])) {
-                $this->messageManager->addSuccess(__($result["message"]));
+                $this->messageManager->addSuccessMessage(__($result["message"]));
             }
             return $this->_forward("store");
         } else {
-            $this->messageManager->addError(__($result["message"]));
+            $this->messageManager->addErrorMessage(__($result["message"]));
             return $this->_forward("userplan");
         }
         return $this->_forward("store");

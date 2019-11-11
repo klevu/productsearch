@@ -119,12 +119,12 @@ class All extends \Magento\Backend\App\Action
                 END IF ;");
                 $connection->createTrigger($trigger_cpp);
                 
-                $this->messageManager->addSuccess(__("Trigger is activated."));  
+                $this->messageManager->addSuccessMessage(__("Trigger is activated."));  
         } else {
 				$connection->query("DROP TRIGGER IF EXISTS Update_KlevuProductSync_For_CPIP;");
                 $connection->query("DROP TRIGGER IF EXISTS Update_KlevuProductSync_For_LSA;");
                 $connection->query("DROP TRIGGER IF EXISTS Update_KlevuProductSync_For_CPP;");
-                $this->messageManager->addSuccess(__("Trigger is deactivated."));		
+                $this->messageManager->addSuccessMessage(__("Trigger is deactivated."));		
 		}
         return $this->_redirect($this->_redirect->getRefererUrl());
     }
