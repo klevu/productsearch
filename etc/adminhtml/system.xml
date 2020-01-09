@@ -182,10 +182,7 @@
         <field id="log_level" translate="label" sortOrder="310" type="select" showInDefault="1">
           <label>Log level</label>
           <source_model>Klevu\Search\Model\System\Config\Source\Log\Level</source_model>
-        </field>
-		<field id="log_button" type="button" sortOrder="400" showInDefault="1">
-            <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Image\Log</frontend_model>
-        </field>
+        </field>		
 		<field id="download_log_button" type="button" sortOrder="401" showInDefault="1">
             <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Logdownload</frontend_model>
 			 <comment><![CDATA[]]></comment>
