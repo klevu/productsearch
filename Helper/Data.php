@@ -306,7 +306,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
     /**
-     Generate a Klevu product sku with parent product.
+     * Generate a Klevu product sku with parent product.
      *
      * @param string      $product_sku Magento Sku of the product to generate a Klevu sku for.
      * @param null $parent_sku  Optional Magento Parent Sku of the parent product.

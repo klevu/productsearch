@@ -481,8 +481,12 @@ class LoadAttribute extends  AbstractModel implements LoadAttributeInterface
      */
     protected function getAttributeData($code, $value = null)
     {
+        $currentStoreID = $this->_storeModelStoreManagerInterface->getStore()->getId();
         if (!empty($value)) {
-            if (!$attribute_data = $this->getData('attribute_data')) {
+//            if (!$attribute_data = $this->getData('attribute_data')) {
+	      //If store ID changes then fetch facets title
+	      if((!$attribute_data = $this->getData('attribute_data')) || ($currentStoreID != $this->getData('attributeStoreID'))) {
+                $this->setData('attributeStoreID',$this->_storeModelStoreManagerInterface->getStore()->getId());
                 $attribute_data = [];
                 $collection = $this->_productAttributeCollection
                     ->addFieldToFilter('attribute_code', ['in' => $this->getUsedMagentoAttributes()]);

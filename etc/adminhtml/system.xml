@@ -91,12 +91,7 @@
 				<field id="cron_status" translate="label" sortOrder="300" showInDefault="1" showInWebsite="1" showInStore="1">
                   <label>Cron Status</label>
                   <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Store\Status</frontend_model>
-                </field>                
-				<field id="syncoptionsinfo" type="button" sortOrder="405" showInDefault="1" showInWebsite="1" showInStore="1">
-                    <frontend_model>Klevu\Search\Block\Adminhtml\Form\Syncoptionsinfo</frontend_model>
-                    <label>Selected Sync Method</label>
-                    <comment><![CDATA[Data will be sync to the Klevu backend.]]></comment>
-                </field>
+                </field>	
                 <field id="alldata_sync_btn" type="button" sortOrder="410" showInDefault="1" showInWebsite="1" showInStore="1">
                     <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Sync\AllData</frontend_model>
                     <label>Sync</label>
@@ -156,7 +151,7 @@
             </field>
 			<field id="image_height" translate="label comment" sortOrder="128" showInStore="1" showInDefault="1">
                 <label>Image Height</label>
-                <comment><![CDATA[Image Hieght.]]></comment>
+                <comment><![CDATA[Image Height.]]></comment>
             </field>
       </group>
 	  <group id="price_per_customer_group" translate="label comment" sortOrder="106" showInDefault="1">
