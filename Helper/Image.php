@@ -18,22 +18,22 @@ class Image extends \Magento\Framework\App\Helper\AbstractHelper
      * @var \Magento\Framework\Image\Factory
      */
     protected $_imageFactory;
-    
+
     /**
      * @var \Magento\Backend\Block\Page\RequireJs
      */
     protected $_requireJs;
-    
+
     /**
      * @var \Magento\Framework\App\Filesystem\DirectoryList
      */
     protected $_directoryList;
-	
-	/**
+
+    /**
      * @var \Magento\Framework\App\ProductMetadataInterface
      */
     protected $_productMetadataInterface;
-	
+
     public function __construct(
         \Magento\Store\Model\StoreManagerInterface $storeModelStoreManagerInterface,
         \Klevu\Search\Helper\Config $searchHelperConfig,
@@ -41,31 +41,31 @@ class Image extends \Magento\Framework\App\Helper\AbstractHelper
         \Magento\Framework\Image\Factory $imageFactory,
         \Magento\Backend\Block\Page\RequireJs $requireJs,
         \Magento\Framework\App\Filesystem\DirectoryList $directoryList,
-		\Magento\Framework\App\ProductMetadataInterface $productMetadataInterface
+        \Magento\Framework\App\ProductMetadataInterface $productMetadataInterface
     ) {
-    
+
         $this->_storeModelStoreManagerInterface = $storeModelStoreManagerInterface;
         $this->_searchHelperConfig = $searchHelperConfig;
         $this->_searchHelperData = $searchHelperData;
         $this->_imageFactory = $imageFactory;
         $this->_requireJs = $requireJs;
         $this->_directoryList = $directoryList;
-		$this->_productMetadataInterface = $productMetadataInterface;
-		if (version_compare($this->_productMetadataInterface->getVersion(), '2.1.0', '>=')===true) {
+        $this->_productMetadataInterface = $productMetadataInterface;
+        if (version_compare($this->_productMetadataInterface->getVersion(), '2.1.0', '>=')===true) {
             // you're on 2.0.13 later version
             $this->_galleryReadHandler = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Catalog\Model\Product\Gallery\ReadHandler');
         } else {
             $this->_galleryReadHandler = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Catalog\Model\Product\Gallery\GalleryManagement');
         }
     }
-    
-    
+
+
     /**
      * Get the secure and unsecure media url
      *
      * @return string
      */
-     
+
     public function getMediaUrl()
     {
         if ($this->_searchHelperConfig->isSecureUrlEnabled($this->_storeModelStoreManagerInterface->getStore()->getId())) {
@@ -75,14 +75,14 @@ class Image extends \Magento\Framework\App\Helper\AbstractHelper
         }
         $pos = strpos($media_url, "/pub");
         if ($pos === false) {
-		    $media_url = str_replace('/media/', '/needtochange/media/', $media_url);
-		} else {
-		    $media_url = str_replace('/pub/', '/needtochange/', $media_url);
-		}
+            $media_url = str_replace('/media/', '/needtochange/media/', $media_url);
+        } else {
+            $media_url = str_replace('/pub/', '/needtochange/', $media_url);
+        }
 
         return $media_url;
     }
-    
+
     /**
      * Decide the image path for search images
      *
@@ -104,7 +104,7 @@ class Image extends \Magento\Framework\App\Helper\AbstractHelper
         }
         return $product_image_path;
     }
-    
+
     /**
      * Get the first image from gallery
      *
@@ -112,7 +112,7 @@ class Image extends \Magento\Framework\App\Helper\AbstractHelper
      *
      * @return string
      */
-    
+
     public function getFirstImageFromGallery($product)
     {
         if (version_compare($this->_productMetadataInterface->getVersion(), '2.1.0', '>=')===true) {
@@ -147,25 +147,27 @@ class Image extends \Magento\Framework\App\Helper\AbstractHelper
      *
      * @return $this
      */
-        
+
     public function thumbImage($image, $mediadir, $resize_folder)
     {
         try {
+            $image_width = $this->_searchHelperConfig->getImageWidth($this->_storeModelStoreManagerInterface->getStore());
+            $image_height = $this->_searchHelperConfig->getImageHeight($this->_storeModelStoreManagerInterface->getStore());
             $baseImageUrl = $mediadir.DIRECTORY_SEPARATOR."catalog".DIRECTORY_SEPARATOR."product".$image;
             if (file_exists($baseImageUrl)) {
-                list($width, $height, $type, $attr)=getimagesize($baseImageUrl);
-                if ($width > $this->_searchHelperConfig->getImageWidth($this->_storeModelStoreManagerInterface->getStore()) && $height > $this->_searchHelperConfig->getImageHeight($this->_storeModelStoreManagerInterface->getStore())) {
+                list($width, $height, $type, $attr) = getimagesize($baseImageUrl);
+                if ($width > $image_width && $height > $image_height) {
                     $imageResized = $mediadir.DIRECTORY_SEPARATOR."klevu_images/".$resize_folder.$image;
                     if (!file_exists($imageResized)) {
-                        $this->thumbImageObj($baseImageUrl, $imageResized);
+                        $this->thumbImageObj($baseImageUrl, $imageResized, $image_width, $image_height);
                     }
                 }
             }
         } catch (\Exception $e) {
-            $this->_searchHelperData->log(\Zend\Log\Logger::DEBUG, sprintf("Image Error:\n%s", $e->getMessage()));
+            $this->_searchHelperData->log(\Zend\Log\Logger::DEBUG, sprintf("ImageHelper:: Image Error:\n%s", $e->getMessage()));
         }
     }
-        
+
     /**
      * Generate 200px thumb image
      *
@@ -173,7 +175,7 @@ class Image extends \Magento\Framework\App\Helper\AbstractHelper
      *
      * @return $this
      */
-    public function thumbImageObj($imageUrl, $imageResized)
+    public function thumbImageObj($imageUrl, $imageResized, $width = 200, $height = 200)
     {
         $imageObj = $this->_imageFactory->create($imageUrl);
         $imageObj->constrainOnly(true);
@@ -181,10 +183,12 @@ class Image extends \Magento\Framework\App\Helper\AbstractHelper
         $imageObj->keepFrame(false);
         $imageObj->keepTransparency(true);
         $imageObj->backgroundColor([255, 255, 255]);
-        $imageObj->resize($this->_searchHelperConfig->getImageHeight($this->_storeModelStoreManagerInterface->getStore()), $this->_searchHelperConfig->getImageHeight($this->_storeModelStoreManagerInterface->getStore()));
+        $store = $this->_storeModelStoreManagerInterface->getStore();
+        //$imageObj->resize($this->_searchHelperConfig->getImageWidth($store), $this->_searchHelperConfig->getImageHeight($store));
+        $imageObj->resize($width, $height);
         $imageObj->save($imageResized);
     }
-    
+
 
     /**
      * get parent product image as prority
@@ -193,7 +197,7 @@ class Image extends \Magento\Framework\App\Helper\AbstractHelper
      *
      * @return $string
      */
-    
+
     public function getParentProductImage($parent, $item, $attribute)
     {
         if ($parent && $parent->getData($attribute) && !empty($parent->getData($attribute) && $parent->getData($attribute) != "no_selection")) {
@@ -206,20 +210,20 @@ class Image extends \Magento\Framework\App\Helper\AbstractHelper
                 $product_image = $this->getFirstImageFromGallery($parent);
             }
         }
-                                    
+
         if (empty($product_image) || $product_image == "no_selection") {
             $product_image = $item->getData($attribute);
             if (empty($product_image) || $product_image == "no_selection") {
                 $product_image = $item->getData('small_image');
                 $images = [];
                 if (empty($product_image) || $product_image == "no_selection") {
-                     $product_image = $this->getFirstImageFromGallery($item);
+                    $product_image = $this->getFirstImageFromGallery($item);
                 }
             }
         }
         return $product_image;
     }
-    
+
     /**
      * get simple product image as prority
      *
@@ -227,20 +231,20 @@ class Image extends \Magento\Framework\App\Helper\AbstractHelper
      *
      * @return $string
      */
-    
+
     public function getSimpleProductImage($parent, $item, $attribute)
     {
         if ($item->getData($attribute) && !empty($item->getData($attribute)) && $item->getData($attribute) != "no_selection") {
             $product_image = $item->getData($attribute);
         }
-                                    
+
         if (empty($product_image) || $product_image == "no_selection") {
             $product_image = $item->getData('small_image');
             $images = [];
             if (empty($product_image) || $product_image == "no_selection") {
                 $product_image = $this->getFirstImageFromGallery($item);
             }
-                                    
+
             if ($parent && ($product_image == "no_selection" || empty($product_image))) {
                 $product_image = $parent->getData($attribute);
                 if (empty($product_image) || $product_image == "no_selection") {
@@ -254,4 +258,33 @@ class Image extends \Magento\Framework\App\Helper\AbstractHelper
         }
         return $product_image;
     }
+
+     /**
+     * Generate the image for each product
+     *
+     * @param  imagepath string
+     * @return void
+     * @throws \Magento\Framework\Exception\LocalizedException
+     *
+     * */
+    public function generateProductImagesForcefully($image_path) {
+        $image_width = $this->_searchHelperConfig->getImageWidth($this->_storeModelStoreManagerInterface->getStore());
+        $image_height = $this->_searchHelperConfig->getImageHeight($this->_storeModelStoreManagerInterface->getStore());
+        $resize_folder = $image_width."X".$image_height;
+        $mediadir = $this->_directoryList->getPath(\Magento\Framework\App\Filesystem\DirectoryList::MEDIA);
+
+        try {
+            $baseImageUrl = $mediadir.DIRECTORY_SEPARATOR."catalog".DIRECTORY_SEPARATOR."product".$image_path;
+            if (file_exists($baseImageUrl)) {
+                list($width, $height, $type, $attr) = getimagesize($baseImageUrl);
+                if ($width > $image_width && $height > $image_height) {
+                    $imageResized = $mediadir.DIRECTORY_SEPARATOR."klevu_images/".$resize_folder.$image_path;
+                    $this->thumbImageObj($baseImageUrl, $imageResized, $image_width, $image_height);
+                }
+            }
+        } catch (\Exception $e) {
+            $this->_searchHelperData->log(\Zend\Log\Logger::DEBUG, sprintf("ImageHelper:: Exception while forcefully regenerating image :%s", $e->getMessage()));
+        }
+    }
 }
+

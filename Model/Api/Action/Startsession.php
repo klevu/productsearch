@@ -22,12 +22,14 @@ class Startsession extends \Klevu\Search\Model\Api\Actionall
     public function __construct(
         \Klevu\Search\Model\Api\Response\Invalid $apiResponseInvalid,
         \Klevu\Search\Helper\Api $searchHelperApi,
+        \Magento\Store\Model\StoreManagerInterface $storeModelStoreManagerInterface,
         \Klevu\Search\Helper\Config $searchHelperConfig
     ) {
-    
+
         $this->_apiResponseInvalid = $apiResponseInvalid;
         $this->_searchHelperApi = $searchHelperApi;
         $this->_searchHelperConfig = $searchHelperConfig;
+        $this->_storeModelStoreManagerInterface = $storeModelStoreManagerInterface;
     }
 
     const ENDPOINT = "/rest/service/startSession";
@@ -44,8 +46,7 @@ class Startsession extends \Klevu\Search\Model\Api\Actionall
         }
 
         $request = $this->getRequest();
-        $endpoint = $this->buildEndpoint(static::ENDPOINT, $parameters['store'], $this->_searchHelperConfig->getRestHostname($parameters['store']));
-
+        $endpoint = $this->buildEndpoint(static::ENDPOINT, $this->getStore(), $this->_searchHelperConfig->getRestHostname($this->getStore()));
         $request
             ->setResponseModel($this->getResponse())
             ->setEndpoint($endpoint)
@@ -56,6 +57,19 @@ class Startsession extends \Klevu\Search\Model\Api\Actionall
         return $request->send();
     }
 
+    /**
+     * Get the store used for this request.
+     * @return \Magento\Framework\Model\Store
+     */
+    public function getStore()
+    {
+        if (!$this->hasData('store')) {
+            $this->setData('store', $this->_storeModelStoreManagerInterface->getStore());
+        }
+
+        return $this->getData('store');
+    }
+
     protected function validate($parameters)
     {
         if (!isset($parameters['api_key']) || empty($parameters['api_key'])) {
@@ -64,10 +78,10 @@ class Startsession extends \Klevu\Search\Model\Api\Actionall
             return true;
         }
     }
-    
+
     public function buildEndpoint($endpoint, $store = null, $hostname = null)
     {
-       
+
         return static::ENDPOINT_PROTOCOL . (($hostname) ? $hostname : $this->_searchHelperConfig->getHostname($store)) . $endpoint;
     }
 }

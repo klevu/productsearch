@@ -1,46 +1,47 @@
-<?xml version="1.0"?>
-<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../Magento/Store/etc/config.xsd">
-  <default>
-    <klevu_search>
-      <general>
-        <enabled>0</enabled>
-        <hostname>box.klevu.com</hostname>
-        <rest_hostname>rest.klevu.com</rest_hostname>
-        <cloud_search_url>eucs.klevu.com</cloud_search_url>
-        <analytics_url>stats.klevu.com</analytics_url>
-        <js_url>js.klevu.com</js_url>
-		<tiers_url>tiers.klevu.com</tiers_url>
-      </general>
-      <product_sync>
-        <enabled>1</enabled>
-        <catalogvisibility>0</catalogvisibility>
-		<frequency>0 */3 * * *</frequency>
-        <last_run>Never</last_run>
-        <sync_options>1</sync_options>
-      </product_sync>
-      <developer>
-		<collection_method>0</collection_method>
-		<tagging_options>0</tagging_options>
-        <force_log>1</force_log>
-		<log_level>6</log_level>
-        <!-- Log level default is set in the backend model and getter as it uses Zend_Log constants -->
-      </developer>
-	  <searchlanding>
-		<landenabled>2</landenabled>
-		<klevu_search_relevance>1</klevu_search_relevance>
-	  </searchlanding>
-	  <image_setting>
-	    <image_width>200</image_width>
-		<image_height>200</image_height>
-	  </image_setting>
-	  <price_per_customer_group>
-          <enabled>0</enabled>
-      </price_per_customer_group>
-    </klevu_search>
-	<tax>
-		<display>
-			<typeinsearch>1</typeinsearch>
-		</display>
-	</tax>
-  </default>
+<?xml version="1.0" encoding="UTF-8"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+    <default>
+        <klevu_search>
+            <general>
+                <enabled>0</enabled>
+                <hostname>box.klevu.com</hostname>
+                <rest_hostname>rest.klevu.com</rest_hostname>
+                <cloud_search_url>eucs.klevu.com</cloud_search_url>
+                <analytics_url>stats.klevu.com</analytics_url>
+                <js_url>js.klevu.com</js_url>
+                <tiers_url>tiers.klevu.com</tiers_url>
+            </general>
+            <product_sync>
+                <enabled>1</enabled>
+                <catalogvisibility>0</catalogvisibility>
+                <frequency>0 */3 * * *</frequency>
+                <last_run>Never</last_run>
+                <sync_options>1</sync_options>
+                <order_sync_enabled>1</order_sync_enabled>
+            </product_sync>           
+            <developer>
+                <collection_method>0</collection_method>
+                <tagging_options>0</tagging_options>
+                <force_log>1</force_log>
+                <log_level>6</log_level>
+                <!-- Log level default is set in the backend model and getter as it uses Zend_Log constants -->
+            </developer>
+            <searchlanding>
+                <landenabled>2</landenabled>
+                <klevu_search_relevance>1</klevu_search_relevance>
+            </searchlanding>
+            <image_setting>
+                <image_width>200</image_width>
+                <image_height>200</image_height>
+            </image_setting>
+            <price_per_customer_group>
+                <enabled>0</enabled>
+            </price_per_customer_group>
+        </klevu_search>
+        <tax>
+            <display>
+                <typeinsearch>1</typeinsearch>
+            </display>
+        </tax>
+    </default>
 </config>

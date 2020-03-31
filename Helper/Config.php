@@ -86,7 +86,7 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     const XML_PATH_ATTRIBUTES_AUTOMATIC  = "klevu_search/attributes/automatic";
     const XML_PATH_ATTRIBUTES_OTHER       = "klevu_search/attributes/other";
     const XML_PATH_ATTRIBUTES_BOOSTING       = "klevu_search/attributes/boosting";
-    const XML_PATH_ORDER_SYNC_ENABLED   = "klevu_search/order_sync/enabled";
+    const XML_PATH_ORDER_SYNC_ENABLED   = "klevu_search/product_sync/order_sync_enabled";
     const XML_PATH_ORDER_SYNC_FREQUENCY = "klevu_search/order_sync/frequency";
     const XML_PATH_ORDER_SYNC_LAST_RUN = "klevu_search/order_sync/last_run";
     const XML_PATH_FORCE_LOG = "klevu_search/developer/force_log";
@@ -296,6 +296,7 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
         $this->setStoreConfig($path, $hostname, $store);
         return $this;
     }
+	
 
     /**
      * Return the API Hostname configured, used for API requests, for a specified store
@@ -312,9 +313,9 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
      * Return the API Rest Hostname configured, used for API requests, for a specified store
      * @return string
      */
-    public function getRestHostname()
+    public function getRestHostname($store = null)
     {
-        $hostname = $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_RESTHOSTNAME, \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
+        $hostname = $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_RESTHOSTNAME, \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $store->getId());
         return ($hostname) ? $hostname : \Klevu\Search\Helper\Api::ENDPOINT_DEFAULT_HOSTNAME;
     }
 
@@ -554,9 +555,9 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
      *
      * @return int
      */
-    public function getOrderSyncEnabledFlag($store = null)
+    public function getOrderSyncEnabledFlag($store = 0)
     {
-        return (int)$this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_ORDER_SYNC_ENABLED, $store);
+        return (int)$this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_ORDER_SYNC_ENABLED, \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $store);
     }
 
     /**
@@ -1136,7 +1137,7 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
         return $this->_appConfigScopeConfigInterface->isSetFlag(static::XML_PATH_PRICE_PER_CUSTOMER_GROUP_METHOD);
     }
 
-    /**
+	/**
      * It will return Klevu Search version info
      *
      * @return mixed
@@ -1157,4 +1158,17 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
 		$moduleInfo = $this->_moduleList->getOne('Klevu_Categorynavigation');
         return $moduleInfo['setup_version'];
     }
+
+	/**
+     * Save UseCollectionMethodFlag
+     *
+     * @param bool $value
+     *
+     * @return $this
+     */	 
+	public function saveUseCollectionMethodFlag($value)
+	{
+		$this->setGlobalConfig(static::XML_PATH_COLLECTION_METHOD, $value);
+        return $this;
+	}
 }

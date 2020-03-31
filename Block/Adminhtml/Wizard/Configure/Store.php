@@ -1,9 +1,43 @@
 <?php
-
 namespace Klevu\Search\Block\Adminhtml\Wizard\Configure;
+
+use Magento\Backend\Block\Template as Template;
+use Klevu\Search\Model\Klevu\HelperManager as Klevu_HelperManager;
+use Klevu\Search\Helper\Backend as Klevu_BackendHelper;
+use Klevu\Search\Model\Session as Klevu_Session;
 
 class Store extends \Magento\Backend\Block\Template
 {
+
+    /**
+     * @var \Magento\Backend\Block\Template
+     */
+    protected $_context;
+
+
+    /**
+     * Wizard Store constructor
+     *
+     * @param \Klevu\Search\Model\Klevu\HelperManager $klevuHelperManager
+     * @param \Klevu\Search\Helper\Backend $klevuBackendHelper
+     * @param \Magento\Backend\Block\Template $context
+	 * @param \Klevu\Search\Model\Session $klevuSession
+     * @param array $data
+     */
+    public function __construct(
+        Template\Context $context,
+        Klevu_HelperManager $klevuHelperManager,
+        Klevu_BackendHelper $klevuBackendHelper,
+        Klevu_Session $klevuSession,
+        array $data = []
+    )
+    {
+        $this->_klevuHelperManager = $klevuHelperManager;
+        $this->_klevuBackendHelper = $klevuBackendHelper;
+        $this->_context = $context;
+        $this->_klevuSession = $klevuSession;
+        parent::__construct($context, $data);
+    }
 
     /**
      * Return the submit URL for the store configuration form.
@@ -23,8 +57,9 @@ class Store extends \Magento\Backend\Block\Template
      */
     public function getStoreSelectData()
     {
-        $stores = \Magento\Framework\App\ObjectManager::getInstance()->get('\Magento\Store\Model\StoreManagerInterface')->getStores(false);
-        $config = \Magento\Framework\App\ObjectManager::getInstance()->get('\Klevu\Search\Helper\Config');
+        //$stores = \Magento\Framework\App\ObjectManager::getInstance()->get('\Magento\Store\Model\StoreManagerInterface')->getStores(false);
+        $stores = $this->_context->getStoreManager()->getStores();
+        $config = $this->_klevuHelperManager->getConfigHelper();
 
         $data = [];
 
@@ -49,24 +84,40 @@ class Store extends \Magento\Backend\Block\Template
         }
         return $data;
     }
-	
-	/**
+
+    /**
      * Return flag to display tax settings in wizard based on price display setting in magento.
      *
      * @return string
      */
     public function showTaxSettings()
     {
-		$config = \Magento\Framework\App\ObjectManager::getInstance()->get('\Klevu\Search\Helper\Config');
-		if($config->getPriceDisplaySettings() == 3){
-			return true;
-		}
+        if($this->_klevuHelperManager->getConfigHelper()->getPriceDisplaySettings() == 3){
+            return true;
+        }
         return false;
     }
-	
-	public function getSyncUrlForStore(){
-        $store_id = \Magento\Framework\App\ObjectManager::getInstance()->get('\Klevu\Search\Model\Session')->getCurrentKlevuStoreId();
-        $rest_api = \Magento\Framework\App\ObjectManager::getInstance()->get('\Klevu\Search\Model\Session')->getCurrentKlevuRestApiKlevu();
+
+	/**
+     * Return Klevu Sync URL for current store
+     *
+     * @return string
+     */
+    public function getSyncUrlForStore(){
+        //$store_id = \Magento\Framework\App\ObjectManager::getInstance()->get('\Klevu\Search\Model\Session')->getCurrentKlevuStoreId();
+        //$rest_api = \Magento\Framework\App\ObjectManager::getInstance()->get('\Klevu\Search\Model\Session')->getCurrentKlevuRestApiKlevu();
+        $store_id = $this->_klevuSession->getCurrentKlevuStoreId();
+        $rest_api = $this->_klevuSession->getCurrentKlevuRestApiKlevu();
         return $this->_storeManager->getStore($store_id)->getBaseUrl()."search/index/syncstore/store/".$store_id."/restapi/".$rest_api;
+    }
+
+    /**
+     * Recommend to Use Collection Method or not based on collection.
+     *
+     * @return boolean
+     */
+    public function showUseCollectionMethod()
+    {
+        return $this->_klevuBackendHelper->getRecommendToUseCollectionMethod();
     }
 }

@@ -214,5 +214,3 @@ function hide_registration() {
     }
 }
 //var klevu_search_wizard_configure_user_form = new varienForm('klevu_search_wizard_configure_user_form');
-
- 

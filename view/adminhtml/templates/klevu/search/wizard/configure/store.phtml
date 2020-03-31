@@ -65,6 +65,24 @@
                         </select>
 						</div>
 			</div>
+			<?php if($block->showUseCollectionMethod()) : ?>
+			<div class="admin__field field">
+                <label for="collection_method" class="label admin__field-label"><?php echo __('Use Collection Method'); ?> <br/>
+                </label>
+                <div class="admin__field-control control">                    
+                    <select name="use_collection_method" id="use_collection_method" class="select admin__control-select">
+					<option value="1"><?php echo __('Yes');?> </option>
+                    <option value="0"><?php echo __('No');?></option>                        
+                    </select></br>
+                    <div id="toshowcollectionnote" class="note" style="font-size: 13px;">
+    <?php echo __('As store having a large number of products, we recommended to ');?>
+<a target="_blank" title="<?php echo __('More info about Collection Method');?>" href="https://support.klevu.com/knowledgebase/enabling-collection-method-to-sync-data-magento-2/"><?php echo __(' Use Collection Method');?></a> and
+<a target="_blank" title="<?php echo __('Guide to Setup Klevu CRON independent of Magento CRON');?>" href="https://support.klevu.com/knowledgebase/run-klevu-cron-independent-of-magento-2-cron/"><?php echo __('To Setup Klevu CRON independent of Magento CRON');?></a>
+                    </br><strong style="color:red">Warning! </strong><span><?php echo __('Please make it absolutely sure that Magento Indexers (System > Index Management) are up to date.');?></span>
+                    </div>
+                </div>
+            </div>
+			<?php endif; ?>
 			<div class="admin__field field">
 				<div class="button-set">
 					<button type="submit" class="action-default primary"><span><?php echo __("Continue") ?></span></button>

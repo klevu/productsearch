@@ -4,8 +4,11 @@
  * @method \Magento\Framework\Db\Adapter\Interface getConnection()
  */
 namespace Klevu\Search\Model\Order;
-use \Klevu\Search\Model\Sync as KlevuSync;
-use \Magento\Framework\Model\AbstractModel;
+
+use Klevu\Search\Model\Sync as KlevuSync;
+use Magento\Framework\Model\AbstractModel;
+use Magento\GroupedProduct\Model\Product\Type\Grouped as GroupedProduct;
+
 class Sync extends AbstractModel
 {
     
@@ -39,7 +42,13 @@ class Sync extends AbstractModel
     protected $_frameworkModelDate;
     
     const NOTIFICATION_TYPE = "order_sync";
+
+    /**
+     * @var \Klevu\Search\Model\Sync
+     */
     protected $_klevuSyncModel;
+    
+
     public function __construct(
         \Magento\Framework\App\ResourceConnection $frameworkModelResource,
         \Magento\Store\Model\StoreManagerInterface $storeModelStoreManagerInterface,
@@ -158,15 +167,20 @@ class Sync extends AbstractModel
                 $this->log(\Zend\Log\Logger::INFO, "Another copy is already running. Stopped.");
                 return;
             }
-            
+
             $stores = $this->_storeModelStoreManagerInterface->getStores();
             foreach ($stores as $store) {
-                    $this->log(\Zend\Log\Logger::INFO, "Starting sync.");
-                    $items_synced = 0;
-                    $errors = 0;
-                    $item = \Magento\Framework\App\ObjectManager::getInstance()->create('Magento\Sales\Model\Order\Item');
-                    $stmt = $this->_frameworkModelResource->getConnection()->query($this->getSyncQueueSelect());
-                    $itemsToSend = $stmt->fetchAll();
+                //Skip it if no API keys found
+                if(!$this->getApiKey($store->getId())) {
+                    $this->log(\Zend\Log\Logger::INFO, sprintf("Order Sync :: No API Key found for Store Name:(%s), Website:(%s).", $store->getName(), $store->getWebsite()->getName()));
+                    continue;
+                }
+                $this->log(\Zend\Log\Logger::INFO, sprintf("Starting Order Sync for Store Name:(%s), Website:(%s).", $store->getName(), $store->getWebsite()->getName()));
+                $items_synced = 0;
+                $errors = 0;
+                $item = $this->_modelOrderItem;
+                $stmt = $this->_frameworkModelResource->getConnection()->query($this->getSyncQueueSelect());
+                $itemsToSend = $stmt->fetchAll();
                 foreach ($itemsToSend as $key => $value) {
                     if ($this->rescheduleIfOutOfMemory()) {
                         return;
@@ -174,30 +188,36 @@ class Sync extends AbstractModel
                     $item->setData([]);
                     $item->load($value['order_item_id']);
                     if ($item->getId()) {
-                        if ($this->getApiKey($item->getStoreId())) {
-                                    $result = $this->sync($item, $value['klevu_session_id'], $value['ip_address'], $value['date'], $value['idcode'],$value['checkoutdate']);
-                            if ($result === true) {
-                                $this->removeItemFromQueue($value['order_item_id']);
-                                $items_synced++;
-                            } else {
-                                $this->log(\Zend\Log\Logger::INFO, sprintf("Skipped order item %d: %s", $value['order_item_id'], $result));
-                                $errors++;
+                        //Checking if Option Order Sync Send is enabled or not for such store item
+                        if ($this->isOrderSyncSendOptionEnabled($item->getStoreId())) {
+                            //Instead of checking API keys, comparing the Store IDs
+                            //if ($this->getApiKey($item->getStoreId())) {
+                            if ($item->getStoreId() == $store->getStoreId()) {
+                                $result = $this->sync($item, $value['klevu_session_id'], $value['ip_address'], $value['date'], $value['idcode'], $value['checkoutdate']);
+                                if ($result === true) {
+                                    $this->removeItemFromQueue($value['order_item_id']);
+                                    $items_synced++;
+                                } else {
+                                    $this->log(\Zend\Log\Logger::INFO, sprintf("Skipped Order Item %d: %s", $value['order_item_id'], $result));
+                                    $errors++;
+                                }
                             }
                         } else {
-                            $this->log(\Zend\Log\Logger::ERR, sprintf("Skipped item %d: Order Sync is not enabled for this store.", $value['order_item_id']));
-                            $this->removeItemFromQueue($value['order_item_id']);
+                            $this->log(\Zend\Log\Logger::ERR, sprintf("Skipped Order Item %d: Send Order Items to Klevu Option not enabled for Store Name:(%s), Website:(%s).", $value['order_item_id'], $store->getName(), $store->getWebsite()->getName()));
+                            //It should not remove item from queue due to send sync is disabled. It can be enable in future.
+                            //$this->removeItemFromQueue($value['order_item_id']);
                         }
                     } else {
-                        $this->log(\Zend\Log\Logger::ERR, sprintf("Order item %d does not exist: Removed from sync!", $value['order_item_id']));
+                        $this->log(\Zend\Log\Logger::ERR, sprintf("Order Item %d does not exist: Removed from sync!", $value['order_item_id']));
                         $this->removeItemFromQueue($value['order_item_id']);
                         $errors++;
                     }
                 }
-                    $this->log(\Zend\Log\Logger::INFO, sprintf("Sync finished. %d items synced.", $items_synced));
+                $this->log(\Zend\Log\Logger::INFO, sprintf("Order Sync finished for Store Name:(%s), Website:(%s) and %d Items synced.", $store->getName(), $store->getWebsite()->getName(), $items_synced));
             }
         } catch (\Exception $e) {
             // Catch the exception that was thrown, log it, then throw a new exception to be caught the Magento cron.
-            $this->_searchHelperData->log(\Zend\Log\Logger::CRIT, sprintf("Exception thrown in %s::%s - %s", __CLASS__, __METHOD__, $e->getMessage()));
+            $this->log(\Zend\Log\Logger::CRIT, sprintf("Order Sync:: Exception thrown in %s::%s - %s", __CLASS__, __METHOD__, $e->getMessage()));
             throw $e;
         }
     }
@@ -207,6 +227,11 @@ class Sync extends AbstractModel
      * the error message otherwise.
      *
      * @param \Magento\Sales\Model\Order\Item $item
+     * @param string $sess_id
+     * @param string $ip_address
+     * @param date $order_date
+     * @param string $order_email
+     * @param timestamp $checkout_date
      *
      * @return bool|string
      */
@@ -216,20 +241,17 @@ class Sync extends AbstractModel
             return "Klevu Search is not configured for this store.";
         }
         $parent = null;
-        if ($item->getParentItemId()) {
-            $parent =  \Magento\Framework\App\ObjectManager::getInstance()->create('Magento\Sales\Model\Order\Item')->load($item->getParentItemId());
+	if ($item->getParentItemId()) {
+            //$parent =  \Magento\Framework\App\ObjectManager::getInstance()->create('Magento\Sales\Model\Order\Item')->load($item->getParentItemId());
+            $parent = $this->_modelOrderItem->load($item->getParentItemId());
         }
-		if($item->getProductType() == "grouped")
-		{
-			$objectManager = \Magento\Framework\App\ObjectManager::getInstance();
-			$groupProductObject = $objectManager->create('Magento\GroupedProduct\Model\Product\Type\Grouped');
-			$groupProduct = $groupProductObject->getParentIdsByChild($item->getProductId());
-			$itemId = $groupProduct[0];
-		}
-		else
-		{
-			$itemId = $item->getProductId();
-		}
+	if($item->getProductType() == GroupedProduct::TYPE_CODE) {
+		$objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+		$groupProductObject = $objectManager->create('Magento\GroupedProduct\Model\Product\Type\Grouped');		
+		$itemId = $groupProduct[0];
+	} else {
+		$itemId = $item->getProductId();
+	}
 		
         $response = $this->_apiActionProducttracking
             ->setStore($this->_storeModelStoreManagerInterface->getStore($item->getStoreId()))
@@ -246,8 +268,8 @@ class Sync extends AbstractModel
             "klevu_emailId" => $order_email,
             "klevu_storeTimezone" => $this->_searchHelperData->getStoreTimeZone($item->getStoreId()),
             "Klevu_clientIp" => $ip_address,
-			"klevu_checkoutDate" => $checkout_date,
-			"klevu_productPosition" => "1"
+            "klevu_checkoutDate" => $checkout_date,
+            "klevu_productPosition" => "1"
             ]);
         if ($response->isSuccess()) {
             return true;
@@ -257,13 +279,13 @@ class Sync extends AbstractModel
     }
     
     /**
-     * Check if Order Sync is enabled for the given store.
+     * Check if Order Sync Send is enabled for the given store to process Order Items.
      *
      * @param $store_id
      *
      * @return bool
      */
-    protected function isEnabled($store_id)
+    protected function isOrderSyncSendOptionEnabled($store_id)
     {
         $is_enabled = $this->getData("is_enabled");
         if (!is_array($is_enabled)) {

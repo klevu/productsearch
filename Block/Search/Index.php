@@ -9,6 +9,7 @@ use Magento\Framework\View\Element\Template\Context;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Klevu\Search\Helper\Config as KlevuConfig;
+use Klevu\Search\Helper\Backend as KlevuHelperBackend;
 
 class Index extends \Magento\Framework\View\Element\Template
 {
@@ -22,10 +23,12 @@ class Index extends \Magento\Framework\View\Element\Template
         \Magento\Framework\View\Element\Template\Context $context,
         DirectoryList $directorylist,
         KlevuConfig $klevuConfig,
+		KlevuHelperBackend $klevuHelperBackend,
         array $data = []
     ) {
     	$this->_directoryList = $directorylist;
         $this->_klevuConfig = $klevuConfig;
+		$this->_klevuHelperBackend = $klevuHelperBackend;
         parent::__construct($context, $data);
     }
     
@@ -127,5 +130,15 @@ class Index extends \Magento\Framework\View\Element\Template
 	public function  isCustomerGroupPriceEnabled()
     {
         return  $this->_klevuConfig->isCustomerGroupPriceEnabled();
+    }
+	
+     /**
+     * To show message indexers are invalid
+     *
+     * @return boolean
+     */
+    public function isShowIndexerMessage()
+    {
+        return $this->_klevuHelperBackend->checkToShowIndexerMessage();
     }
 }

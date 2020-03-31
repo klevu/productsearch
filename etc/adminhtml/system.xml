@@ -80,9 +80,14 @@
                     <label>Sync Product with Catalog Visibility</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
-				<field id="frequency" translate="label comment" sortOrder="101" type="select" showInDefault="1">
+                <field id="frequency" translate="label comment" sortOrder="101" type="select" showInDefault="1">
                   <label>Frequency</label>
                   <source_model>Klevu\Search\Model\System\Config\Source\Frequency</source_model>
+                </field>
+                <field id="order_sync_enabled" type="select" sortOrder="115" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Enable Order Sync</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment><![CDATA[It is <strong>strongly recommended that Order Sync is set to 'Yes'</strong>. Klevu Search uses transaction data as a factor in ranking product results for customers.]]></comment>
                 </field>
                 <field id="last_run" translate="label" sortOrder="300" showInDefault="1" showInWebsite="1" showInStore="1">
                   <label>Last Run</label>
@@ -131,7 +136,7 @@
             <field id="enabled" translate="label comment" sortOrder="100" type="select" showInDefault="1" showInStore="1">
               <label>Use Secure Base Url for Products and Images</label>
               <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-              <comment><![CDATA[Choose Yes to use secure base url from Store &gt; Cofiguration &gt; Store view &gt; General &gt; Secure &gt; Base URL.&lt;/br&gt;Please make sure to resynchronize products by clicking on the "Sync Data for This Store" under the "Data Sync Settings".]]></comment>
+              <comment><![CDATA[Choose Yes to use secure base url from Store &gt; Cofiguration &gt; Store view &gt; General &gt; Secure &gt; Base URL.&lt; </br> Please make sure to resynchronize products by clicking on the <strong>Sync Data for This Store</strong> under the "Data Sync Settings".]]></comment>
             </field>
       </group>
 	    <group id="image_setting" translate="label comment" sortOrder="106" showInDefault="1" showInStore="1">
@@ -143,15 +148,17 @@
             <field id="enabled" translate="label comment" sortOrder="100" type="select" showInDefault="1" showInStore="1">
               <label>Use Configurable Product's Image in Search.</label>
               <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-              <comment><![CDATA[Choose Yes to use configurable product's image in search.Please make sure to resynchronize products by clicking on the "Sync Data for This Store" under the "Data Sync Settings."]]></comment>
+              <comment><![CDATA[Choose <strong>Yes</strong> to use configurable product's image in search. </br> Please make sure to resynchronize products by clicking on the <strong>Sync Data for This Store</strong> under the "Data Sync Settings."]]></comment>
             </field>
-			<field id="image_width" translate="label comment" sortOrder="128" showInStore="1" showInDefault="1">
+		<field id="image_width" translate="label comment" sortOrder="128" showInStore="1" showInDefault="1">
                 <label>Image Width</label>
                 <comment><![CDATA[Image Width.]]></comment>
+                <validate>required-entry validate-number</validate>
             </field>
-			<field id="image_height" translate="label comment" sortOrder="128" showInStore="1" showInDefault="1">
+		<field id="image_height" translate="label comment" sortOrder="128" showInStore="1" showInDefault="1">
                 <label>Image Height</label>
                 <comment><![CDATA[Image Height.]]></comment>
+                <validate>required-entry validate-number</validate>
             </field>
       </group>
 	  <group id="price_per_customer_group" translate="label comment" sortOrder="106" showInDefault="1">
@@ -164,7 +171,7 @@
       </group>
       <group id="developer" translate="label comment" sortOrder="900" showInDefault="1">
         <label>Developer Settings</label>
-		<field id="collection_method" translate="label comment" sortOrder="300" type="select" showInDefault="1">
+	<field id="collection_method" translate="label comment" sortOrder="300" type="select" showInDefault="1">
           <label>Use Collection Method</label>
           <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
           <comment><![CDATA[Use Collection Method]]></comment>
@@ -178,15 +185,15 @@
           <label>Log level</label>
           <source_model>Klevu\Search\Model\System\Config\Source\Log\Level</source_model>
         </field>		
-		<field id="download_log_button" type="button" sortOrder="401" showInDefault="1">
+	<field id="download_log_button" type="button" sortOrder="401" showInDefault="1">
             <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Logdownload</frontend_model>
-			 <comment><![CDATA[]]></comment>
+            <comment><![CDATA[]]></comment>
         </field>
-		<field id="clear_log_button" type="button" sortOrder="402" showInDefault="1" showInWebsite="1" showInStore="1">
+	<field id="clear_log_button" type="button" sortOrder="402" showInDefault="1" showInWebsite="1" showInStore="1">
             <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Logclear</frontend_model>
-			 <comment><![CDATA[]]></comment>
+            <comment><![CDATA[]]></comment>
         </field>
-		<field id="tagging_options" translate="label comment" sortOrder="420"  type="select" showInDefault="1">
+	<field id="tagging_options" translate="label comment" sortOrder="420"  type="select" showInDefault="1">
             <label>Enable partial updates for stock and price</label>
             <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
             <comment><![CDATA[Enable product partial update for stock and price.]]></comment>
@@ -201,16 +208,17 @@
         </field>
       </group>
     </section>
-	<section id="tax" translate="label" sortOrder="430" showInDefault="1" showInWebsite="1" showInStore="1">
-		<group id="display" translate="label" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
-			<field id="typeinsearch" translate="label" type="select" sortOrder="12" showInDefault="1" showInWebsite="1" showInStore="1">
-				<label>Display Product Prices In Klevu Search</label>
-				<depends>
-					<field id="type">3</field>
-				</depends>
-				<source_model>Klevu\Search\Model\System\Config\Source\Tax\Display\Type</source_model>
-			</field>
-		</group>
-	</section>
+        <section id="tax" translate="label" sortOrder="430" showInDefault="1" showInWebsite="1" showInStore="1">
+            <group id="display" translate="label" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
+                <field id="typeinsearch" translate="label" type="select" sortOrder="12" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Display Product Prices In Klevu Search</label>
+                    <depends>
+                        <field id="type">3</field>
+                    </depends>
+                    <source_model>Klevu\Search\Model\System\Config\Source\Tax\Display\Type</source_model>
+                    <comment><![CDATA[Choose 'Including Tax' to show prices with Tax in Klevu search results.]]></comment>
+                </field>
+            </group>
+        </section>
   </system>
 </config>

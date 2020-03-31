@@ -3,7 +3,11 @@
 	$store_id = $block->getStoreParam();
 	$rest_api = $block->getRestApiParam();
 	$rest_from_db = $block->getRestApi($store_id);
+	$indexersMessage = $block->isShowIndexerMessage();
 ?>
+<?php if($indexersMessage):?>
+    <div class="message warning" id="kl_indexers_message"><span><?php echo __('Magento Indexers are found invalid for the Magento Store. Please rebuild <strong> Magento Indexers </strong> and Click on <strong> Sync Updates Only for This Store</strong> again..')?>&nbsp;</span></div>
+<?php endif; ?>
 <div class="message warning" id="kl_close_warning_before" style="display:block"><span><?php echo __('Please don\'t close this tab when the data is being synchronized.')?></span></div>
 <div class="message success" id="kl_close_warning_after" style="display:none"><span><?php echo __('Data Synchronization has been finished. You can close this tab now.')?>&nbsp;<a title="<?php echo __('By clicking on link, it will close tab');?>" href="#" onclick="window.close();return false;"><?php echo __('Click to close tab');?></a></span></div>
 <div id="info_message"><span id="loader" style="display:none"><?php echo __('Please wait...');?></span></div>

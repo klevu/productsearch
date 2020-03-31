@@ -48,6 +48,7 @@ class Syncstoreview extends \Magento\Framework\App\Action\Action
 		$restapi = $request->getParam('restapi');
 	    $store_rest_api = $this->_klevuSyncModel->getHelper()->getConfigHelper()->getRestApiKey($store_id);
 		if($store_rest_api == $restapi) {
+			$this->_storeInterface->setCurrentStore($store_id);
 			$store_view = $this->_storeInterface->getStore($store_id);
 			\Magento\Framework\App\ObjectManager::getInstance()->get('\Magento\Framework\Event\ManagerInterface')->dispatch('content_data_to_sync', []);
 			$this->_klevuSyncModel->setSessionVariable("limit",500);

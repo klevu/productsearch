@@ -115,8 +115,9 @@ class Post extends \Magento\Backend\App\Action
         }
         $this->messageManager->addSuccessMessage("Store configured successfully. Saved API credentials.");
 
-        $config->setTaxEnabledFlag($request->getPost("tax_enable"), $store);
-        $config->setSecureUrlEnabledFlag($request->getPost("secureurl_setting"), $store);
+        $config->setTaxEnabledFlag((int)$request->getPost("tax_enable"), $store);
+        $config->setSecureUrlEnabledFlag((int)$request->getPost("secureurl_setting"), $store);
+        $config->saveUseCollectionMethodFlag((int)$request->getPost("use_collection_method"));
 		$config->resetConfig();
         $this->_view->loadLayout();
         $this->_view->getLayout()->initMessages();
