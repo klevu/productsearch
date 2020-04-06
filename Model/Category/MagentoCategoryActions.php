@@ -24,7 +24,7 @@ class MagentoCategoryActions extends AbstractModel implements MagentoCategoryAct
     public function __construct(
         Klevu_Context $context,
         Eav_Config $eavConfig,
-        Klevu_Category_Actions $klevuCategoryAction,     
+        Klevu_Category_Actions $klevuCategoryAction,
 		Klevu_LoadCategoryAttribute $loadAttribute
     )
     {
@@ -47,7 +47,7 @@ class MagentoCategoryActions extends AbstractModel implements MagentoCategoryAct
 	/**
      * Returns category pages array based on store and action or error message will shown if it failed.
      *
-     * @param object instance $store Store 
+     * @param object instance $store Store
      * @param string $action |delete|update|add
      *
      * @return array| A list with category pages
@@ -60,7 +60,7 @@ class MagentoCategoryActions extends AbstractModel implements MagentoCategoryAct
             "update" => $this->_klevuSyncModel->getCategoryToUpdate($store->getId()),
             "add" => $this->_klevuSyncModel->getCategoryToAdd($store->getId()),
         );
-        return $actions;*/		
+        return $actions;*/
         $storeId = $store->getId();
 		try{
             switch ($action) {
@@ -95,7 +95,7 @@ class MagentoCategoryActions extends AbstractModel implements MagentoCategoryAct
     {
         $total = count($data);
         $data = $this->_loadAttribute->addcategoryData($data);
-        $response = $this->_apiActionUpdaterecords->setStore($this->getStore())->execute([
+        $response = $this->_apiActionUpdaterecords->setStore($this->_storeModelStoreManagerInterface->getStore())->execute([
             'sessionId' => $this->_searchModelSession->getKlevuSessionId(),
             'records' => $data
         ]);
@@ -120,7 +120,7 @@ class MagentoCategoryActions extends AbstractModel implements MagentoCategoryAct
     public function deleteCategory(array $data)
     {
         $total = count($data);
-        $response = $this->_apiActionDeleterecords->setStore($this->getStore())->execute([
+        $response = $this->_apiActionDeleterecords->setStore($this->_storeModelStoreManagerInterface->getStore())->execute([
             'sessionId' => $this->_searchModelSession->getKlevuSessionId(),
             'records' => array_map(function ($v) {
 
@@ -152,7 +152,7 @@ class MagentoCategoryActions extends AbstractModel implements MagentoCategoryAct
     {
         $total = count($data);
         $data =$this->_loadAttribute->addcategoryData($data);
-        $response = $this->_apiActionAddrecords->setStore($this->getStore())->execute([
+        $response = $this->_apiActionAddrecords->setStore($this->_storeModelStoreManagerInterface->getStore())->execute([
             'sessionId' => $this->_searchModelSession->getKlevuSessionId(),
             'records' => $data
         ]);
@@ -191,3 +191,4 @@ class MagentoCategoryActions extends AbstractModel implements MagentoCategoryAct
     }
 
 }
+

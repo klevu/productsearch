@@ -305,6 +305,9 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function getHostname($store = null)
     {
+	if ($store == null) {
+            $store = $this->_storeModelStoreManagerInterface->getStore();
+        }
         $hostname = $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_HOSTNAME, \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $store->getId());
         return ($hostname) ? $hostname : \Klevu\Search\Helper\Api::ENDPOINT_DEFAULT_HOSTNAME;
     }
@@ -315,6 +318,9 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function getRestHostname($store = null)
     {
+	if ($store == null) {
+            $store = $this->_storeModelStoreManagerInterface->getStore();
+        }
         $hostname = $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_RESTHOSTNAME, \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $store->getId());
         return ($hostname) ? $hostname : \Klevu\Search\Helper\Api::ENDPOINT_DEFAULT_HOSTNAME;
     }
