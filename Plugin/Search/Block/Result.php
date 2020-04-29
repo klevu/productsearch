@@ -2,10 +2,10 @@
 
 namespace Klevu\Search\Plugin\Search\Block;
 
-use Magento\Framework\View\Element\AbstractBlock;
-use Magento\Framework\View\Element\Template\Context as Context;
-use Magento\Catalog\Model\Layer\Resolver as LayerResolver;
 use Klevu\Search\Helper\Config as KlevuConfig;
+use Magento\Catalog\Model\Layer\Resolver as LayerResolver;
+use Magento\CatalogSearch\Block\Result as CatalogSearchSubject;
+use Magento\Framework\View\Element\Template\Context as Context;
 
 class Result extends \Magento\Framework\View\Element\Template
 {
@@ -36,18 +36,31 @@ class Result extends \Magento\Framework\View\Element\Template
         parent::__construct($context, $data);
     }
 
-    public function afterSetListOrders()
+    /**
+     * @return $this
+     * @throws \Magento\Framework\Exception\LocalizedException
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     */
+    public function afterSetListOrders(CatalogSearchSubject $result)
     {
+        //If Klevu Extension is not enabled for specific store view
+        if (!$this->_klevuConfig->isExtensionEnabled($this->_storeManager->getStore())) {
+            return $this;
+        }
 
+        //Check if store is using the PRESERVE LAYOUT Option and Catalog Search Relevance On
         if ($this->_klevuConfig->getCatalogSearchRelevance($this->_storeManager->getStore()) && $this->_klevuConfig->isLandingEnabled() == static::KLEVU_PRESERVE_LAYOUT) {
             $options = [];
             $category = $this->_catalogLayer->getCurrentCategory();
             /* @var $category \Magento\Catalog\Model\Category */
+
+            $searchBlock = $result->getListBlock();
             $availableOrders = $category->getAvailableSortByOptions();
             unset($availableOrders['relevance']);
             unset($availableOrders['position']);
-            $availableOrders['personalized'] = __('Relevance');
-            $this->getLayout()->getBlock('search_result_list')->setAvailableOrders(
+            $availableOrders['personalized'] = $this->getKlevuRelevanceLabel();
+
+            $searchBlock->setAvailableOrders(
                 $availableOrders
             )->setDefaultDirection(
                 'desc'
@@ -57,6 +70,12 @@ class Result extends \Magento\Framework\View\Element\Template
             return $this;
         }
     }
-}
-   
 
+    /** Returns the text label configured in the Klevu System configuration
+     * @return \Magento\Framework\Phrase|string
+     */
+    protected function getKlevuRelevanceLabel()
+    {
+        return $this->_klevuConfig->getCatalogSearchRelevanceLabel($this->_storeManager->getStore());
+    }
+}

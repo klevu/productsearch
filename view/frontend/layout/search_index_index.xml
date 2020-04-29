@@ -1,8 +1,15 @@
 <?xml version="1.0"?>
-<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" layout="1column" xsi:noNamespaceSchemaLocation="../../../../../lib/internal/Magento/Framework/View/Layout/etc/page_configuration.xsd">
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" layout="1column"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <head>
+        <css src="Klevu_Search::css/klevu-landing-page-style.css" rel="stylesheet" type="text/css"/>
+        <css src="Klevu_Search::css/klevu-landing-responsive.css" rel="stylesheet" type="text/css"/>
+    </head>
     <body>
         <referenceBlock name="content">
-          <block class="Klevu\Search\Block\Search\Index" template="klevu/search/index.phtml" name="search_index"/>
+            <block class="Klevu\Search\Block\Search\Index" template="Klevu_Search::klevu/search/index.phtml"
+                   name="search_index"/>
         </referenceBlock>
     </body>
-</config>
+</page>
+

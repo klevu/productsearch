@@ -98,6 +98,9 @@ class Cleaner extends \Magento\Framework\Search\Request\Cleaner
             case "elasticsearch6":
                 return '_id';
                 break;
+            case "elasticsearch7":
+                return '_id';
+                break;
             case "solr":
                 return '_id';
                 break;

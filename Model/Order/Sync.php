@@ -3,15 +3,20 @@
  * Class \Klevu\Search\Model\Order\Sync
  * @method \Magento\Framework\Db\Adapter\Interface getConnection()
  */
+
 namespace Klevu\Search\Model\Order;
 
 use Klevu\Search\Model\Sync as KlevuSync;
 use Magento\Framework\Model\AbstractModel;
 use Magento\GroupedProduct\Model\Product\Type\Grouped as GroupedProduct;
 
+/**
+ * Class Sync
+ * @package Klevu\Search\Model\Order
+ */
 class Sync extends AbstractModel
 {
-    
+
     /**
      * @var \Magento\Framework\App\ResourceConnection
      */
@@ -40,14 +45,19 @@ class Sync extends AbstractModel
      * @var \Magento\Framework\Stdlib\DateTime\DateTime
      */
     protected $_frameworkModelDate;
-    
+
+    /**
+     * @var GroupedProduct
+     */
+    protected $_groupedProduct;
+
     const NOTIFICATION_TYPE = "order_sync";
 
     /**
      * @var \Klevu\Search\Model\Sync
      */
     protected $_klevuSyncModel;
-    
+
 
     public function __construct(
         \Magento\Framework\App\ResourceConnection $frameworkModelResource,
@@ -57,14 +67,16 @@ class Sync extends AbstractModel
         \Klevu\Search\Helper\Data $searchHelperData,
         \Klevu\Search\Model\Api\Action\Producttracking $apiActionProducttracking,
         \Magento\Framework\Stdlib\DateTime\DateTime $frameworkModelDate,
+        GroupedProduct $groupedProduct,
         KlevuSync $klevuSyncModel,
-         // abstract parent
+        // abstract parent
         \Magento\Framework\Model\Context $context,
         \Magento\Framework\Registry $registry,
         \Magento\Framework\Model\ResourceModel\AbstractResource $resource = null,
         \Magento\Framework\Data\Collection\AbstractDb $resourceCollection = null,
         array $data = []
-    ) {
+    )
+    {
         parent::__construct($context, $registry, $resource, $resourceCollection, $data);
         $this->_klevuSyncModel = $klevuSyncModel;
         $this->_klevuSyncModel->setJobCode($this->getJobCode());
@@ -75,54 +87,55 @@ class Sync extends AbstractModel
         $this->_searchHelperData = $searchHelperData;
         $this->_apiActionProducttracking = $apiActionProducttracking;
         $this->_frameworkModelDate = $frameworkModelDate;
+        $this->_groupedProduct = $groupedProduct;
     }
-   
+
     public function getJobCode()
     {
         return "klevu_search_order_sync";
     }
-    
+
     /**
      * Add the items from the given order to the Order Sync queue. Does nothing if
      * Order Sync is disabled for the store that the order was placed in.
      *
      * @param \Magento\Sales\Model\Order $order
-     * @param bool                   $force Skip enabled check
+     * @param bool $force Skip enabled check
      *
      * @return $this
      */
     public function addOrderToQueue(\Magento\Sales\Model\Order $order)
     {
-        
+
         $items = [];
         $order_date = date_create("now")->format("Y-m-d H:i");
-		$checkout_date = round(microtime(true) * 1000);
+        $checkout_date = round(microtime(true) * 1000);
         $session_id = md5(session_id());
         $ip_address = $this->_searchHelperData->getIp();
         if ($order->getCustomerId()) {
-            $order_email = "enc-".md5($order->getCustomerEmail()); //logged in customer
+            $order_email = "enc-" . md5($order->getCustomerEmail()); //logged in customer
         } else {
-            $order_email = "enc-".md5($order->getBillingAddress()->getEmail()); //not logged in customer
+            $order_email = "enc-" . md5($order->getBillingAddress()->getEmail()); //not logged in customer
         }
         foreach ($order->getAllVisibleItems() as $item) {
             // For configurable products add children items only, for all other products add parents
             if ($item->getProductType() == \Magento\ConfigurableProduct\Model\Product\Type\Configurable::TYPE_CODE) {
                 foreach ($item->getChildrenItems() as $child) {
-                    if ($child->getId()!=null) {
+                    if ($child->getId() != null) {
                         if ($this->checkItemId($child->getId()) !== true) {
-                            $items[] = [$child->getId(),$session_id,$ip_address,$order_date,$order_email,$checkout_date,0];
+                            $items[] = [$child->getId(), $session_id, $ip_address, $order_date, $order_email, $checkout_date, 0];
                         }
                     }
                 }
             } else {
-                if ($item->getId()!=null) {
+                if ($item->getId() != null) {
                     if ($this->checkItemId($item->getId()) !== true) {
-                        $items[] = [$item->getId(),$session_id,$ip_address,$order_date,$order_email,$checkout_date,0];
+                        $items[] = [$item->getId(), $session_id, $ip_address, $order_date, $order_email, $checkout_date, 0];
                     }
                 }
             }
         }
-       
+
         // in case of multiple addresses used for shipping
         // its possible that items object here is empty
         // if so, we do not add to the item.
@@ -131,7 +144,7 @@ class Sync extends AbstractModel
         }
         return $this;
     }
-    
+
     /**
      * Clear the Order Sync queue for the given store. If no store is given, clears
      * the queue for all stores.
@@ -158,7 +171,7 @@ class Sync extends AbstractModel
         $result = $this->_frameworkModelResource->query($select->deleteFromSelect("k"));
         return $result->rowCount();
     }
-    
+
     public function run()
     {
         try {
@@ -171,7 +184,7 @@ class Sync extends AbstractModel
             $stores = $this->_storeModelStoreManagerInterface->getStores();
             foreach ($stores as $store) {
                 //Skip it if no API keys found
-                if(!$this->getApiKey($store->getId())) {
+                if (!$this->getApiKey($store->getId())) {
                     $this->log(\Zend\Log\Logger::INFO, sprintf("Order Sync :: No API Key found for Store Name:(%s), Website:(%s).", $store->getName(), $store->getWebsite()->getName()));
                     continue;
                 }
@@ -221,7 +234,7 @@ class Sync extends AbstractModel
             throw $e;
         }
     }
-    
+
     /**
      * Sync the given order item to Klevu. Returns true on successful sync and
      * the error message otherwise.
@@ -235,41 +248,42 @@ class Sync extends AbstractModel
      *
      * @return bool|string
      */
-    protected function sync($item, $sess_id, $ip_address, $order_date, $order_email,$checkout_date)
+    protected function sync($item, $sess_id, $ip_address, $order_date, $order_email, $checkout_date)
     {
         if (!$this->getApiKey($item->getStoreId())) {
             return "Klevu Search is not configured for this store.";
         }
         $parent = null;
-	if ($item->getParentItemId()) {
+        if ($item->getParentItemId()) {
             //$parent =  \Magento\Framework\App\ObjectManager::getInstance()->create('Magento\Sales\Model\Order\Item')->load($item->getParentItemId());
             $parent = $this->_modelOrderItem->load($item->getParentItemId());
         }
-	if($item->getProductType() == GroupedProduct::TYPE_CODE) {
-		$objectManager = \Magento\Framework\App\ObjectManager::getInstance();
-		$groupProductObject = $objectManager->create('Magento\GroupedProduct\Model\Product\Type\Grouped');		
-		$itemId = $groupProduct[0];
-	} else {
-		$itemId = $item->getProductId();
-	}
-		
+        if ($item->getProductType() == GroupedProduct::TYPE_CODE) {
+            //$objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+            //$groupProductObject = $objectManager->create('Magento\GroupedProduct\Model\Product\Type\Grouped');
+            $groupProduct = $this->_groupedProduct->getParentIdsByChild($item->getProductId());
+            $itemId = $groupProduct[0];
+        } else {
+            $itemId = $item->getProductId();
+        }
+
         $response = $this->_apiActionProducttracking
             ->setStore($this->_storeModelStoreManagerInterface->getStore($item->getStoreId()))
             ->execute([
-            "klevu_apiKey"    => $this->getApiKey($item->getStoreId()),
-            "klevu_type"      => "checkout",
-            "klevu_productId" => $this->_searchHelperData->getKlevuProductId($itemId, ($parent) ? $parent->getProductId() : 0),
-            "klevu_unit"      => $item->getQtyOrdered() ? $item->getQtyOrdered() : ($parent ? $parent->getQtyOrdered() : null),
-            "klevu_salePrice" => $item->getPriceInclTax() ? $item->getPriceInclTax() : ($parent ? $parent->getPriceInclTax() : null),
-            "klevu_currency"  => $this->getStoreCurrency($item->getStoreId()),
-            "klevu_shopperIP" => $this->getOrderIP($item->getOrderId()),
-            "Klevu_sessionId" => $sess_id,
-            "klevu_orderDate" => date_format(date_create($order_date),"Y-m-d"),
-            "klevu_emailId" => $order_email,
-            "klevu_storeTimezone" => $this->_searchHelperData->getStoreTimeZone($item->getStoreId()),
-            "Klevu_clientIp" => $ip_address,
-            "klevu_checkoutDate" => $checkout_date,
-            "klevu_productPosition" => "1"
+                "klevu_apiKey" => $this->getApiKey($item->getStoreId()),
+                "klevu_type" => "checkout",
+                "klevu_productId" => $this->_searchHelperData->getKlevuProductId($itemId, ($parent) ? $parent->getProductId() : 0),
+                "klevu_unit" => $item->getQtyOrdered() ? $item->getQtyOrdered() : ($parent ? $parent->getQtyOrdered() : null),
+                "klevu_salePrice" => $item->getPriceInclTax() ? $item->getPriceInclTax() : ($parent ? $parent->getPriceInclTax() : null),
+                "klevu_currency" => $this->getStoreCurrency($item->getStoreId()),
+                "klevu_shopperIP" => $this->getOrderIP($item->getOrderId()),
+                "Klevu_sessionId" => $sess_id,
+                "klevu_orderDate" => date_format(date_create($order_date), "Y-m-d"),
+                "klevu_emailId" => $order_email,
+                "klevu_storeTimezone" => $this->_searchHelperData->getStoreTimeZone($item->getStoreId()),
+                "Klevu_clientIp" => $ip_address,
+                "klevu_checkoutDate" => $checkout_date,
+                "klevu_productPosition" => "1"
             ]);
         if ($response->isSuccess()) {
             return true;
@@ -277,7 +291,7 @@ class Sync extends AbstractModel
             return $response->getMessage();
         }
     }
-    
+
     /**
      * Check if Order Sync Send is enabled for the given store to process Order Items.
      *
@@ -297,7 +311,7 @@ class Sync extends AbstractModel
         }
         return $is_enabled[$store_id];
     }
-    
+
     /**
      * Return the JS API key for the given store.
      *
@@ -317,7 +331,7 @@ class Sync extends AbstractModel
         }
         return $api_keys[$store_id];
     }
-    
+
     /**
      * Get the currency code for the given store.
      *
@@ -337,7 +351,7 @@ class Sync extends AbstractModel
         }
         return $currencies[$store_id];
     }
-    
+
     /**
      * Return the customer IP for the given order.
      *
@@ -362,7 +376,7 @@ class Sync extends AbstractModel
         }
         return $order_ips[$order_id];
     }
-    
+
     /**
      * Return Order ItemId Already exits or not.
      *
@@ -376,7 +390,7 @@ class Sync extends AbstractModel
             $orderid = $this->_frameworkModelResource->getConnection()->fetchAll(
                 $this->_frameworkModelResource->getConnection()
                     ->select()->from([
-                    'order' => $this->_frameworkModelResource->getTableName("klevu_order_sync")
+                        'order' => $this->_frameworkModelResource->getTableName("klevu_order_sync")
                     ])->where("order.order_item_id = ?", $order_item_id)
             );
             if (count($orderid) == 1) {
@@ -386,7 +400,7 @@ class Sync extends AbstractModel
             }
         }
     }
-    
+
     /**
      * Return a select statement for getting all items in the sync queue.
      *
@@ -399,7 +413,7 @@ class Sync extends AbstractModel
             ->from($this->_frameworkModelResource->getTableName("klevu_order_sync"))
             ->where("send = 0");
     }
-    
+
     /**
      * Add the given order item IDs to the sync queue.
      *
@@ -414,10 +428,11 @@ class Sync extends AbstractModel
         }
         return $this->_frameworkModelResource->getConnection()->insertArray(
             $this->_frameworkModelResource->getTableName("klevu_order_sync"),
-            ["order_item_id","klevu_session_id","ip_address","date","idcode","checkoutdate","send"],
+            ["order_item_id", "klevu_session_id", "ip_address", "date", "idcode", "checkoutdate", "send"],
             $order_item_ids
         );
     }
+
     /**
      * Remove the given item from the sync queue.
      *
@@ -427,13 +442,14 @@ class Sync extends AbstractModel
      */
     protected function removeItemFromQueue($order_item_id)
     {
-        $where = sprintf("(order_item_id = %s)",$order_item_id);
+        $where = sprintf("(order_item_id = %s)", $order_item_id);
         return $this->_frameworkModelResource->getConnection()->update(
-            $this->_frameworkModelResource->getTableName("klevu_order_sync"),
-            ["send" => 1],
-            $where
-        ) === 1;
+                $this->_frameworkModelResource->getTableName("klevu_order_sync"),
+                ["send" => 1],
+                $where
+            ) === 1;
     }
+
     /**
      * Delete Adminhtml notifications for Order Sync.
      *
@@ -447,17 +463,38 @@ class Sync extends AbstractModel
         );
         return $this;
     }
+
     //compatibility
-    public function schedule($time = "now"){
-       return $this->_klevuSyncModel->schedule();
+    public function schedule($time = "now")
+    {
+        return $this->_klevuSyncModel->schedule();
     }
-    public function isRunning($copies = 1){
+
+    /**
+     * @param int $copies
+     * @return bool
+     */
+    public function isRunning($copies = 1)
+    {
         return $this->_klevuSyncModel->isRunning($copies);
     }
-    public function rescheduleIfOutOfMemory(){
+
+    /**
+     * @return bool
+     */
+    public function rescheduleIfOutOfMemory()
+    {
         return $this->_klevuSyncModel->rescheduleIfOutOfMemory();
     }
-    public function log($level, $message){
+
+    /**
+     * @param $level
+     * @param $message
+     * @return KlevuSync
+     */
+    public function log($level, $message)
+    {
         return $this->_klevuSyncModel->log($level, $message);
     }
 }
+

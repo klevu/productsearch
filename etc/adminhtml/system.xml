@@ -68,6 +68,11 @@
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     <comment><![CDATA[When option "Klevu Powered - Preserve Theme Layout" is selected.]]></comment>
                 </field>
+                <field id="relevance_label" translate="label" type="text" sortOrder="122" showInDefault="1" showInStore="1">
+                    <label>Sort Relevance Label</label>
+                    <validate>required-entry</validate>
+                    <comment><![CDATA[On the Search Results Page, text label will be shown in the sorting drop-down.</br> Default label will be as <strong>Relevance</strong>.]]></comment>
+                </field>
             </group>
             <group id="product_sync" translate="label" sortOrder="102" showInDefault="1" showInWebsite="1" showInStore="1">
                 <label>Product Sync Settings</label>

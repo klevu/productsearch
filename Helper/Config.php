@@ -119,6 +119,7 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
 	const XML_PATH_PRODUCT_SYNC_CATALOGVISIBILITY   = "klevu_search/product_sync/catalogvisibility";
 	const  XML_PATH_SEARCHENGINE = 'catalog/search/engine';
 	const XML_PATH_PRICE_PER_CUSTOMER_GROUP_METHOD = "klevu_search/price_per_customer_group/enabled";
+    const XML_PATH_CATALOG_SEARCH_RELEVANCE_LABEL = "klevu_search/searchlanding/relevance_label";
 
 
     /**
@@ -1177,4 +1178,18 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
 		$this->setGlobalConfig(static::XML_PATH_COLLECTION_METHOD, $value);
         return $this;
 	}
+
+
+    /**
+     * Return the Relevance label
+     *
+     * @param null $store
+     * @return string
+     */
+    public function getCatalogSearchRelevanceLabel($store = null)
+    {
+        $sortLabel = $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_CATALOG_SEARCH_RELEVANCE_LABEL, \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $store);
+        return $sortLabel ? $sortLabel : __('Relevance');
+    }
+
 }

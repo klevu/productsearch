@@ -448,7 +448,9 @@ class Product extends DataObject implements ProductInterface
      */
     protected function getCategoryPaths()
     {
-        if (!$category_paths = $this->getData('category_paths')) {
+        $currentStoreID = $this->_storeModelStoreManagerInterface->getStore()->getId();
+        if ((!$category_paths = $this->getData('category_paths')) || ($currentStoreID != $this->getData('catFieldStoreID'))) {
+            $this->setData('catFieldStoreID', $this->_storeModelStoreManagerInterface->getStore()->getId());
             $category_paths = [];
             $category_ids = [];
 			$category_paths_and_ids = [];

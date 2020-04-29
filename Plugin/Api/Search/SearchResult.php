@@ -12,6 +12,10 @@ use Magento\Store\Model\ScopeInterface as ScopeInterface;
 use Magento\Framework\App\Config\MutableScopeConfigInterface as MutableScopeConfigInterface;
 use Klevu\Search\Helper\Config as KlevuConfig;
 
+/**
+ * Class SearchResult
+ * @package Klevu\Search\Plugin\Api\Search
+ */
 class SearchResult
 {
 
@@ -21,7 +25,15 @@ class SearchResult
     private $registry;
 
     /**
+     * @var KlevuConfig
+     */
+    private $klevuConfig;
+
+    /**
+     * SearchResult constructor.
+     *
      * @param Registry $registry
+     * @param KlevuConfig $klevuConfig
      */
     public function __construct(Registry $registry,KlevuConfig $klevuConfig)
     {
@@ -37,14 +49,15 @@ class SearchResult
             if (!empty($current_order)) {
                 if ($current_order == "personalized") {
                     if (!empty($this->registry->registry('search_ids'))) {
-                        $flag = 0;
+                        $flag = $key = 0;
                         $ids = array_reverse($this->registry->registry('search_ids'));
                         $result_key = array();
                         foreach ($result as $item) {
+                            $key++;
                             if (in_array($item->getId(), $ids)) {
-                                $score = $this->array_find($item->getId(), $ids);
+                                $score = $this->array_find($item->getId(), $ids, $key);
                             } else {
-                                $score = $item->getCustomAttribute("score")->getValue();
+                                $score = $item->getCustomAttribute("score")->getValue() + (int)$key;
                             }
                             $item->getCustomAttribute("score")->setValue($score);
 
@@ -82,14 +95,21 @@ class SearchResult
 
     }
 
-    public function array_find($needle, array $haystack)
+     /**
+     * @param $needle
+     * @param array $haystack
+     * @param int $itemKey
+     * @return int
+     */
+    public function array_find($needle, array $haystack, $itemKey = 0)
     {
         foreach ($haystack as $key => $value) {
             if ($value == $needle) {
-                return $key;
+		//powerup score by 10k ids
+                return (int)$key + 10000;
             }
         }
-        return 0;
+        return $itemKey;
     }
 
 }

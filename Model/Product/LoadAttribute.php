@@ -244,7 +244,7 @@ class LoadAttribute extends  AbstractModel implements LoadAttributeInterface
         }
 
         if(count($rejectedProducts) > 0) {
-            $this->_searchHelperData->log(\Zend\Log\Logger::WARN, sprintf("Because of indexing issue or invalid data we cannot synchronize product IDs %d", implode(',', array_map(function($el){ return $el['product_id']; }, $rejectedProducts))));
+            $this->_searchHelperData->log(\Zend\Log\Logger::WARN, sprintf("Because of indexing issue or invalid data we cannot synchronize product IDs %s", implode(',', array_map(function($el){ return $el['product_id']; }, $rejectedProducts))));
            \Magento\Framework\App\ObjectManager::getInstance()->create('Klevu\Search\Model\Product\MagentoProductActionsInterface')->deleteProducts($rejectedProducts);
         }
         return $this;
