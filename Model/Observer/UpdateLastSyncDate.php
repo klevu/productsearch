@@ -6,18 +6,17 @@
  * @method setIsProductSyncScheduled($flag)
  * @method bool getIsProductSyncScheduled()
  */
+
 namespace Klevu\Search\Model\Observer;
- 
-use Magento\Framework\Event\Observer;
+
 use Magento\Framework\Event\ObserverInterface;
-use Magento\Framework\View\Layout\Interceptor;
 
 class UpdateLastSyncDate implements ObserverInterface
 {
 
-     /**
-      * @var \Klevu\Search\Model\Product\Sync
-      */
+    /**
+     * @var \Klevu\Search\Model\Product\Sync
+     */
     protected $_modelProductSync;
 
     /**
@@ -34,7 +33,7 @@ class UpdateLastSyncDate implements ObserverInterface
      * @var \Magento\Catalog\Model\Product\Action
      */
     protected $_modelProductAction;
-    
+
     /**
      * @var \Magento\Framework\App\ResourceConnection
      */
@@ -45,8 +44,9 @@ class UpdateLastSyncDate implements ObserverInterface
         \Magento\Framework\Filesystem $magentoFrameworkFilesystem,
         \Klevu\Search\Helper\Data $searchHelperData,
         \Magento\Framework\App\ResourceConnection $frameworkModelResource
-    ) {
-    
+    )
+    {
+
         $this->_modelProductSync = $modelProductSync;
         $this->_magentoFrameworkFilesystem = $magentoFrameworkFilesystem;
         $this->_searchHelperData = $searchHelperData;
@@ -76,7 +76,7 @@ class UpdateLastSyncDate implements ObserverInterface
                     $where
                 );
         } catch (\Exception $e) {
-                 $this->_searchHelperData->log(\Zend\Log\Logger::DEBUG, sprintf("Error while updating date in klevu product sync:\n%s", $e->getMessage()));
+            $this->_searchHelperData->log(\Zend\Log\Logger::DEBUG, sprintf("Error while updating date in klevu product sync:\n%s", $e->getMessage()));
         }
     }
 }

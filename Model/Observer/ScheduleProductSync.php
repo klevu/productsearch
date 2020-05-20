@@ -4,11 +4,10 @@
  * Class \Klevu\Search\Model\Observer
  *
  */
+
 namespace Klevu\Search\Model\Observer;
- 
-use Magento\Framework\Event\Observer;
+
 use Magento\Framework\Event\ObserverInterface;
-use Magento\Framework\View\Layout\Interceptor;
 
 class ScheduleProductSync implements ObserverInterface
 {
@@ -37,15 +36,16 @@ class ScheduleProductSync implements ObserverInterface
         \Klevu\Search\Model\Product\Sync $modelProductSync,
         \Magento\Framework\Filesystem $magentoFrameworkFilesystem,
         \Klevu\Search\Helper\Data $searchHelperData,
-		\Klevu\Search\Helper\Config $searchHelperConfig
-    ) {
-    
+        \Klevu\Search\Helper\Config $searchHelperConfig
+    )
+    {
+
         $this->_modelProductSync = $modelProductSync;
         $this->_magentoFrameworkFilesystem = $magentoFrameworkFilesystem;
         $this->_searchHelperData = $searchHelperData;
-		$this->_searchHelperConfig = $searchHelperConfig;
+        $this->_searchHelperConfig = $searchHelperConfig;
     }
- 
+
     /**
      * Schedule a Product Sync to run immediately.
      *
@@ -53,8 +53,8 @@ class ScheduleProductSync implements ObserverInterface
      */
     public function execute(\Magento\Framework\Event\Observer $observer)
     {
-		if($this->_searchHelperConfig->isExternalCronEnabled()) {
+        if ($this->_searchHelperConfig->isExternalCronEnabled()) {
             $this->_modelProductSync->schedule();
-		}
+        }
     }
 }

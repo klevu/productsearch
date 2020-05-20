@@ -1166,6 +1166,34 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
         return $moduleInfo['setup_version'];
     }
 
+
+    /**
+     * Retrieve default per page values
+     *
+     * @return string (comma separated)
+     */
+
+    public function getCatalogGridPerPageValues()
+    {
+        return $this->_appConfigScopeConfigInterface->getValue(
+            'catalog/frontend/grid_per_page_values',
+            \Magento\Store\Model\ScopeInterface::SCOPE_STORE
+        );
+    }
+
+    /**
+     * Retrieve default per page
+     *
+     * @return int
+     */
+    public function getCatalogGridPerPage()
+    {
+        return (int) $this->_appConfigScopeConfigInterface->getValue(
+            'catalog/frontend/grid_per_page',
+            \Magento\Store\Model\ScopeInterface::SCOPE_STORE
+        );
+    }
+
 	/**
      * Save UseCollectionMethodFlag
      *
@@ -1191,5 +1219,6 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
         $sortLabel = $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_CATALOG_SEARCH_RELEVANCE_LABEL, \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $store);
         return $sortLabel ? $sortLabel : __('Relevance');
     }
+
 
 }

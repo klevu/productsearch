@@ -7,9 +7,6 @@
         $("<?php echo $block->getHtmlId() ?>").observe("click", function () {
             if(document.getElementById('klevu_search_product_sync_sync_options')) {
                 var syncoptions = document.getElementById('klevu_search_product_sync_sync_options').value;
-                <?php
-                $store = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Store\Model\StoreManagerInterface');
-                ?>
                 new Ajax.Request("<?php echo $block->getUrl('klevu_search/savesyncoption/option'); ?>" + '?sync_options=' + syncoptions, {
                     method: 'POST',
                     onComplete: function(data) {
@@ -23,7 +20,6 @@
             } else {
                 setLocation("<?php echo $block->getDestinationUrl() ?>");
             }
-
         });
     });
 </script>

@@ -2,8 +2,24 @@
 
 namespace Klevu\Search\Block\Adminhtml\Wizard\Configure;
 
+use Klevu\Search\Helper\Config as Klevu_Config;
+use Klevu\Search\Model\Api\Action\Getplans as Klevu_Plans;
+use Magento\Backend\Block\Template\Context as Template_Context;
+
 class Userplan extends \Magento\Backend\Block\Template
 {
+
+    public function __construct(
+        Template_Context $context,
+        Klevu_Plans $klevuPlans,
+        Klevu_Config $klevuConfig,
+        array $data = [])
+    {
+        $this->_klevuPlans = $klevuPlans;
+        $this->_klevuConfig = $klevuConfig;
+        parent::__construct($context, $data);
+    }
+
 
     /**
      * Return the submit URL for the user configuration form.
@@ -24,28 +40,24 @@ class Userplan extends \Magento\Backend\Block\Template
     {
         return $this->getBaseUrl();
     }
-	
-	
-	/**
+
+
+    /**
      * Return plans from klevu server.
      *
      * @return array
      */
     public function getPlans()
     {
-		$getPlans = \Magento\Framework\App\ObjectManager::getInstance()->get('Klevu\Search\Model\Api\Action\Getplans');
-		
-		$extension_version = \Magento\Framework\App\ObjectManager::getInstance()->get('Klevu\Search\Block\Search\Index')->getModuleInfo();
-		
-        $response = $getPlans->execute(array("store"=>"magento","extension_version" => (string)$extension_version[0]));
-		if ($response->isSuccess()) {
-		    $plans = $response->getData();
-			return $plans['plans']['plan'];
-		} else {
-			return;
-		}
+        $extension_version = $this->_klevuConfig->getModuleInfo();
+        $response = $this->_klevuPlans->execute(array("store" => "magento", "extension_version" => (string)$extension_version));
+        if ($response->isSuccess()) {
+            $plans = $response->getData();
+            return $plans['plans']['plan'];
+        } else {
+            return;
+        }
     }
-	
-	
-	
+
+
 }

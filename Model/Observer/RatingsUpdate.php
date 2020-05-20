@@ -6,11 +6,10 @@
  * @method setIsProductSyncScheduled($flag)
  * @method bool getIsProductSyncScheduled()
  */
+
 namespace Klevu\Search\Model\Observer;
- 
-use Magento\Framework\Event\Observer;
+
 use Magento\Framework\Event\ObserverInterface;
-use Magento\Framework\View\Layout\Interceptor;
 
 class RatingsUpdate implements ObserverInterface
 {
@@ -34,17 +33,17 @@ class RatingsUpdate implements ObserverInterface
      * @var \Magento\Catalog\Model\Product\Action
      */
     protected $_modelProductAction;
-    
+
     /**
      * @var \Magento\Store\Model\StoreManagerInterface
      */
     protected $_storeModelStoreManagerInterface;
-    
+
     /**
      * @var \Magento\Rating\Model\Rating
      */
     protected $_ratingModelRating;
-    
+
     /**
      * @var \Magento\Eav\Model\Entity\Type
      */
@@ -59,8 +58,9 @@ class RatingsUpdate implements ObserverInterface
         \Magento\Eav\Model\Entity\Type $modelEntityType,
         \Magento\Eav\Model\Entity\Attribute $modelEntityAttribute,
         \Magento\Catalog\Model\Product\Action $modelProductAction
-    ) {
-    
+    )
+    {
+
         $this->_modelProductSync = $modelProductSync;
         $this->_magentoFrameworkFilesystem = $magentoFrameworkFilesystem;
         $this->_searchHelperData = $searchHelperData;
@@ -84,7 +84,7 @@ class RatingsUpdate implements ObserverInterface
                 $productId = $object->getEntityPkValue();
                 $ratingObj = $this->_ratingModelRating->getEntitySummary($productId);
                 if ($ratingObj->getCount() != 0) {
-                    $ratings = $ratingObj->getSum()/$ratingObj->getCount();
+                    $ratings = $ratingObj->getSum() / $ratingObj->getCount();
                     $entity_type = $this->_modelEntityType->loadByCode("catalog_product");
                     $entity_typeid = $entity_type->getId();
                     $attributecollection = $this->_modelEntityAttribute->getCollection()->addFieldToFilter("entity_type_id", $entity_typeid)->addFieldToFilter("attribute_code", "rating");
@@ -92,12 +92,12 @@ class RatingsUpdate implements ObserverInterface
                     if (!empty($attributecollection)) {
                         if (!empty($object->getData('stores'))) {
                             foreach ($object->getData('stores') as $key => $value) {
-                                $this->_modelProductAction->updateAttributes([$productId], ['rating'=>$ratings], $value);
+                                $this->_modelProductAction->updateAttributes([$productId], ['rating' => $ratings], $value);
                             }
                         }
                         /* update attribute */
                         if (count($allStores) > 1) {
-                            $this->_modelProductAction->updateAttributes([$productId], ['rating'=>0], 0);
+                            $this->_modelProductAction->updateAttributes([$productId], ['rating' => 0], 0);
                         }
 
                         /* mark product for update to sync data with klevu */

@@ -1,18 +1,30 @@
 <?php
 namespace Klevu\Search\Block\Adminhtml\Form\Field\Store;
 
+use Magento\Backend\Block\Template\Context as Template_Context;
+use Klevu\Search\Model\Sync as Klevu_Sync;
+
 class Status extends \Magento\Config\Block\System\Config\Form\Field
 {
 
+    public function __construct(
+        Template_Context $context,
+        Klevu_Sync $klevuSync,
+        array $data = [])
+    {
+        $this->_klevuSync = $klevuSync;
+        parent::__construct($context, $data);
+    }
+
     protected function _getElementHtml(\Magento\Framework\Data\Form\Element\AbstractElement $element)
     {
-            $status = \Magento\Framework\App\ObjectManager::getInstance()->get('Klevu\Search\Model\Sync')->getKlevuCronStatus();
+        $status = $this->_klevuSync->getKlevuCronStatus();
         if (!empty($status)) {
             $html = $status;
         } else {
             $html = __("-");
         }
-            return $html;
+        return $html;
     }
 
     public function render(\Magento\Framework\Data\Form\Element\AbstractElement $element)

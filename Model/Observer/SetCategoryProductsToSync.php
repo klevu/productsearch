@@ -6,11 +6,10 @@
  * @method setIsProductSyncScheduled($flag)
  * @method bool getIsProductSyncScheduled()
  */
+
 namespace Klevu\Search\Model\Observer;
- 
-use Magento\Framework\Event\Observer;
+
 use Magento\Framework\Event\ObserverInterface;
-use Magento\Framework\View\Layout\Interceptor;
 
 class SetCategoryProductsToSync implements ObserverInterface
 {
@@ -29,10 +28,10 @@ class SetCategoryProductsToSync implements ObserverInterface
      * @var \Magento\Catalog\Model\Product\Action
      */
     protected $_modelProductAction;
-    
-        /**
-         * @var \Magento\Framework\App\ResourceConnection
-         */
+
+    /**
+     * @var \Magento\Framework\App\ResourceConnection
+     */
     protected $_frameworkModelResource;
 
     public function __construct(
@@ -40,14 +39,15 @@ class SetCategoryProductsToSync implements ObserverInterface
         \Magento\Framework\Filesystem $magentoFrameworkFilesystem,
         \Magento\Framework\App\ResourceConnection $frameworkModelResource,
         \Klevu\Search\Helper\Data $searchHelperData
-    ) {
-    
+    )
+    {
+
         $this->_modelProductSync = $modelProductSync;
         $this->_magentoFrameworkFilesystem = $magentoFrameworkFilesystem;
         $this->_searchHelperData = $searchHelperData;
         $this->_frameworkModelResource = $frameworkModelResource;
     }
-    
+
     /**
      * When products are updated in bulk, update products so that they will be synced.
      * @param \Magento\Framework\Event\Observer $observer

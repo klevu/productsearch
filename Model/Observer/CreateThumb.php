@@ -6,15 +6,15 @@
  * @method execute()
  *
  */
+
 namespace Klevu\Search\Model\Observer;
 
-use Magento\Framework\Event\Observer;
-use Magento\Framework\Event\ObserverInterface;
-use Magento\Framework\App\Filesystem\DirectoryList;
+use Klevu\Search\Model\Klevu\HelperManager as Klevu_HelperManager;
 use Magento\Catalog\Model\Product as ProductModel;
+use Magento\Framework\App\Filesystem\DirectoryList;
+use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\Filesystem as FileSystem;
 use Magento\Store\Model\StoreManagerInterface as StoreManager;
-use Klevu\Search\Model\Klevu\HelperManager as Klevu_HelperManager;
 
 class CreateThumb implements ObserverInterface
 {
@@ -49,13 +49,30 @@ class CreateThumb implements ObserverInterface
      */
     protected $_storeModelStoreManagerInterface;
 
+    /**
+     * @var Klevu_HelperManager
+     */
+    protected $_klevuHelperManager;
+
+    /**
+     * @var Klevu Image Helper
+     */
+    protected $_imageHelper;
+
+    /**
+     * CreateThumb constructor.
+     * @param DirectoryList $directoryList
+     * @param FileSystem $magentoFrameworkFilesystem
+     * @param Klevu_HelperManager $klevuHelperManager
+     * @param StoreManager $storeModelStoreManager
+     */
     public function __construct(
         DirectoryList $directoryList,
         FileSystem $magentoFrameworkFilesystem,
         Klevu_HelperManager $klevuHelperManager,
         StoreManager $storeModelStoreManager
-    ) {
-
+    )
+    {
         $this->_directoryList = $directoryList;
         $this->_magentoFrameworkFilesystem = $magentoFrameworkFilesystem;
         $this->_klevuHelperManager = $klevuHelperManager;
@@ -69,7 +86,7 @@ class CreateThumb implements ObserverInterface
      */
     public function execute(\Magento\Framework\Event\Observer $observer)
     {
-        $this->_searchHelperData =  $this->_klevuHelperManager->getDataHelper();
+        $this->_searchHelperData = $this->_klevuHelperManager->getDataHelper();
         $this->_searchHelperImage = $this->_klevuHelperManager->getImageHelper();
         $this->_searchHelperConfig = $this->_klevuHelperManager->getConfigHelper();
 
@@ -77,44 +94,46 @@ class CreateThumb implements ObserverInterface
         //Switching to getStoreIds() instead of getStoreId()
         //getStoreId() returns 0 (admin store)
         $storeIds = $observer->getEvent()->getProduct()->getStoreIds();
-        if(empty($storeIds)) {
+        if (empty($storeIds)) {
             $this->_searchHelperData->log(\Zend\Log\Logger::DEBUG, sprintf("ProductObserver:: StoreIDs not found for ProductID: %s", $catalogProduct->getId()));
-            return ;
+            return;
         }
-        if(!$catalogProduct instanceOf ProductModel) {
+        if (!$catalogProduct instanceof ProductModel) {
             $this->_searchHelperData->log(\Zend\Log\Logger::DEBUG, sprintf("ProductObserver:: Product not found"));
-            return ;
+            return;
         }
+
         $image = $observer->getEvent()->getProduct()->getImage();
 
         /* * To do for dynamic image attribute * */
 
         if (($image != "no_selection") && (!empty($image))) {
             try {
+
                 $pub = $this->_directoryList->getUrlPath("pub");
                 $mediadir = $orgMediaDir = $this->_directoryList->getPath(DirectoryList::MEDIA);
                 if ($pub == DirectoryList::PUB) {
                     //If pub not being used then will replace /pub/ with / from mediadir
                     //$mediadir = str_replace( '/pub/', '/', $mediadir);
-                    $mediadir = str_replace( DirectoryList::PUB,'', $mediadir);
+                    $mediadir = str_replace(DirectoryList::PUB, '', $mediadir);
                 }
 
-                foreach($storeIds as $storeId) {
+                foreach ($storeIds as $storeId) {
                     $image_width = $this->_searchHelperConfig->getImageWidth($storeId);
                     $image_height = $this->_searchHelperConfig->getImageHeight($storeId);
 
-                    $resize_folder = $image_width."X".$image_height;
-                    $imageResized = $mediadir.DIRECTORY_SEPARATOR."klevu_images/".$resize_folder.$image;
-                    $baseImageUrl = $mediadir.DIRECTORY_SEPARATOR."catalog".DIRECTORY_SEPARATOR."product".$image;
+                    $resize_folder = $image_width . "X" . $image_height;
+                    $imageResized = $mediadir . DIRECTORY_SEPARATOR . "klevu_images/" . $resize_folder . $image;
+                    $baseImageUrl = $mediadir . DIRECTORY_SEPARATOR . "catalog" . DIRECTORY_SEPARATOR . "product" . $image;
 
-                    $catalogImagePath = $orgMediaDir.DIRECTORY_SEPARATOR."catalog".DIRECTORY_SEPARATOR."product".$image;
-                    $klevuImagePath = $orgMediaDir.DIRECTORY_SEPARATOR."klevu_images/".$resize_folder.$image;
+                    $catalogImagePath = $orgMediaDir . DIRECTORY_SEPARATOR . "catalog" . DIRECTORY_SEPARATOR . "product" . $image;
+                    $klevuImagePath = $orgMediaDir . DIRECTORY_SEPARATOR . "klevu_images/" . $resize_folder . $image;
 
                     if (file_exists($catalogImagePath)) {
-                        list($width, $height, $type, $attr)= getimagesize($catalogImagePath);
+                        list($width, $height, $type, $attr) = getimagesize($catalogImagePath);
                         if ($width > $image_width && $height > $image_height) {
                             if (file_exists($klevuImagePath)) {
-                                if (!unlink($orgMediaDir.'/klevu_images/'.$resize_folder. $image)) {
+                                if (!unlink($orgMediaDir . '/klevu_images/' . $resize_folder . $image)) {
                                     $this->_searchHelperData->log(\Zend\Log\Logger::DEBUG, sprintf("ProductObserver:: Image Deleting Error:\n%s", $image));
                                 }
                             }

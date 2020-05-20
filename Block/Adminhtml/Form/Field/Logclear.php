@@ -7,10 +7,26 @@
  */
 namespace Klevu\Search\Block\Adminhtml\Form\Field;
 
+use Magento\Backend\Block\Template\Context as Template_Context;
+use Magento\Framework\App\Filesystem\DirectoryList as DirectoryList;
+use Klevu\Search\Helper\Data as Klevu_HelperData;
+
 class Logclear extends \Magento\Config\Block\System\Config\Form\Field
 {
     
+	
     protected $_template = 'klevu/search/form/field/sync/clearlogbutton.phtml';
+	
+	public function __construct(
+        Template_Context $context,
+        Klevu_HelperData $klevuHelperData,
+		DirectoryList $directoryList,
+        array $data = [])
+    {
+        $this->_klevuHelperData = $klevuHelperData;
+		$this->_directoryList = $directoryList;
+        parent::__construct($context, $data);
+    }
     
     public function render(\Magento\Framework\Data\Form\Element\AbstractElement $element)
     {
@@ -52,11 +68,11 @@ class Logclear extends \Magento\Config\Block\System\Config\Form\Field
      */
 	private function getButtonLabel()
     {
-		$_searchHelper = \Magento\Framework\App\ObjectManager::getInstance()->get('\Klevu\Search\Helper\Data');
+ 
 		$buttonLabel = __('Rename Klevu Search Log');   
         try {    
-            $dir = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Framework\App\Filesystem\DirectoryList');
-            $filePath = $dir->getPath('log') . "/".\Klevu\Search\Helper\Data::LOG_FILE;
+            
+            $filePath = $this->_directoryList->getPath('log') . "/".\Klevu\Search\Helper\Data::LOG_FILE;
             if (file_exists($filePath)) {                
                 return $buttonLabel;
             } else {
@@ -64,7 +80,7 @@ class Logclear extends \Magento\Config\Block\System\Config\Form\Field
             }
             return $buttonLabel;
         } catch (Exception $e) {
-            $_searchHelper->log(\Zend\Log\Logger::CRIT, sprintf("Exception thrown in %s::%s - %s", __CLASS__, __METHOD__, $e->getMessage()));
+            $this->_klevuHelperData->log(\Zend\Log\Logger::CRIT, sprintf("Exception thrown in %s::%s - %s", __CLASS__, __METHOD__, $e->getMessage()));
         }
     }
 }

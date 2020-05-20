@@ -8,8 +8,7 @@
     <body>
         <referenceBlock name="content">
             <block class="Klevu\Search\Block\Search\Index" template="Klevu_Search::klevu/search/index.phtml"
-                   name="search_index"/>
+                   name="search_index_klevutemplate"/>
         </referenceBlock>
     </body>
 </page>
-

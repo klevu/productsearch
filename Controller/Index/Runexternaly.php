@@ -5,6 +5,10 @@ namespace Klevu\Search\Controller\Index;
 class Runexternaly extends \Magento\Framework\App\Action\Action
 {
 
+    protected $_indexerFactory;
+
+    protected $_indexerCollectionFactory;
+
     public function __construct(
         \Magento\Framework\App\Action\Context $context,
         \Magento\Framework\App\Cache\TypeListInterface $cacheTypeList,
@@ -15,9 +19,12 @@ class Runexternaly extends \Magento\Framework\App\Action\Action
         \Magento\Framework\Filesystem $magentoFrameworkFilesystem,
         \Klevu\Search\Model\Api\Action\Debuginfo $apiActionDebuginfo,
         \Klevu\Search\Model\Session $frameworkModelSession,
-        \Klevu\Search\Helper\Data $searchHelperData
+        \Klevu\Search\Helper\Config $searchHelperConfig,
+        \Magento\Framework\App\Filesystem\DirectoryList $directoryList,
+        \Magento\Indexer\Model\IndexerFactory $indexerFactory,
+        \Magento\Indexer\Model\Indexer\CollectionFactory $indexerCollectionFactory
     ) {
-    
+
         parent::__construct($context);
         $this->_cacheTypeList = $cacheTypeList;
         $this->_cacheState = $cacheState;
@@ -27,16 +34,25 @@ class Runexternaly extends \Magento\Framework\App\Action\Action
         $this->_magentoFrameworkFilesystem = $magentoFrameworkFilesystem;
         $this->_apiActionDebuginfo = $apiActionDebuginfo;
         $this->_frameworkModelSession = $frameworkModelSession;
-        $this->_searchHelperData = $searchHelperData;
+        $this->_searchHelperConfig = $searchHelperConfig;
+        $this->_directoryList = $directoryList;
+        $this->_indexerFactory = $indexerFactory;
+        $this->_indexerCollectionFactory = $indexerCollectionFactory;
     }
-    
+
+    /**
+     * @return \Magento\Framework\App\ResponseInterface|\Magento\Framework\Controller\ResultInterface|void
+     * @throws \Magento\Framework\Exception\FileSystemException
+     */
     public function execute()
     {
+        $restAPI = $this->_searchHelperConfig->getRestApiKey();
         $debugapi = $this->_modelProductSync->getApiDebug();
         $line = 100;
+
         // send last few lines of klevu log files
-        $dir = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Framework\App\Filesystem\DirectoryList');
-        $logdir = $dir->getPath('log');
+        //$dir = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Framework\App\Filesystem\DirectoryList');
+        $logdir = $this->_directoryList->getPath('log');
         $path = $logdir."/Klevu_Search.log";
         if ($this->getRequest()->getParam('lines')) {
             $line = $this->getRequest()->getParam('lines');
@@ -51,30 +67,29 @@ class Runexternaly extends \Magento\Framework\App\Action\Action
         }
         $content = "";
         $content.= $this->getLastlines($path, $line, true);
-        
+        $content.= "</br>";
         // Get the all indexing status
-        $indexer = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Indexer\Model\IndexerFactory')
-        ->create();
-        $indexerCollection = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Indexer\Model\Indexer\CollectionFactory')->create();
+        $indexer = $this->_indexerFactory->create();
+        $indexerCollection = $this->_indexerCollectionFactory->create();
 
         $ids = $indexerCollection->getAllIds();
         foreach ($ids as $id) {
             $idx = $indexer->load($id);
-            $content.= $idx->getTitle().":".$idx->getStatus();
+            $content.= "</br>".$idx->getTitle().":".$idx->getStatus();
         }
-        
-        $response = $this->_apiActionDebuginfo->debugKlevu(['apiKey'=>$debugapi,'klevuLog'=>$content,'type'=>'index']);
-        
+
+        $response = $this->_apiActionDebuginfo->debugKlevu(['apiKey'=>$restAPI,'klevuLog'=>$content,'type'=>'index']);
+
         $this->_view->loadLayout();
         $this->_view->getLayout()->initMessages();
         $this->_view->renderLayout();
     }
-    
+
     public function getLastlines($filepath, $lines, $adaptive = true)
     {
         // Open file
         $f = @fopen($filepath, "rb");
-        
+
         if ($f === false) {
             return false;
         }

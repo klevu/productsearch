@@ -6,6 +6,7 @@
  */
 namespace Klevu\Search\Block\Adminhtml\Form\Field\Sync;
 
+use Klevu\Search\Model\Sync as Klevu_Sync;
 
 class UpdatesOnly extends \Magento\Config\Block\System\Config\Form\Field
 {
@@ -16,9 +17,13 @@ class UpdatesOnly extends \Magento\Config\Block\System\Config\Form\Field
      */
     protected $_storeManager;
 
-    public function __construct(\Magento\Backend\Block\Template\Context $context, array $data = [])
+    public function __construct(
+        \Magento\Backend\Block\Template\Context $context,
+        Klevu_Sync $klevuSync,
+        array $data = [] )
     {
-        $this->_urlBuilder = $context->getStoreManager();
+        $this->_storeManager = $context->getStoreManager();
+        $this->_klevuSync = $klevuSync;
         parent::__construct($context, $data);
     }
     
@@ -87,9 +92,11 @@ class UpdatesOnly extends \Magento\Config\Block\System\Config\Form\Field
      */
 	public function getRestApi($store_id)
     {
-		$om = \Magento\Framework\App\ObjectManager::getInstance();
-		$rest_api = $om->get('\Klevu\Search\Model\Sync')->getHelper()->getConfigHelper()->getRestApiKey($store_id);
-		return $rest_api;
+		//$om = \Magento\Framework\App\ObjectManager::getInstance();
+		//$rest_api = $om->get('\Klevu\Search\Model\Sync')->getHelper()->getConfigHelper()->getRestApiKey($store_id);
+        //return $rest_api;
+        return $this->_klevuSync->getHelper()->getConfigHelper()->getRestApiKey((int)$store_id);
+
 	}
 
 	/**
@@ -98,9 +105,10 @@ class UpdatesOnly extends \Magento\Config\Block\System\Config\Form\Field
      *
      * @return string
      */
-	public function getSyncUrlForStore(){
-		
-		$store = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Store\Model\StoreManagerInterface');
+	public function getSyncUrlForStore()
+    {
+		//$store = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Store\Model\StoreManagerInterface');
+        $store = $this->_storeManager;
 		if($store->isSingleStoreMode())
 		{
 			$store_id = $store->getStore()->getId();

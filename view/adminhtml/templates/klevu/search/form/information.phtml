@@ -2,7 +2,7 @@
 <div class="kuInfo">
    <div class="kuInfo-fLeft">
       <p><b><?php echo __("Installed Version:") ?></b> <?php echo $block->getVersion(); ?></br></p>
-      <?php $check_plan = \Magento\Framework\App\ObjectManager::getInstance()->get('Klevu\Search\Helper\Config')->getFeatures();?>
+      <?php $check_plan = $block->getFeatures();?>
       <?php if(empty($check_plan["errors"]) && !empty($check_plan)) { ?> 
         <p>
          <?php if(!empty($check_plan['user_plan_for_store'])) {?>

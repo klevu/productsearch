@@ -4,6 +4,15 @@ namespace Klevu\Search\Controller\Index;
 
 class Syncstoreview extends \Magento\Framework\App\Action\Action
 {
+    /**
+     * @var \Magento\Framework\Event\ManagerInterface
+     */
+    protected $_eventManager;
+
+    /**
+     * @var \Magento\Framework\App\Action\Context
+     */
+    protected $_context;
 
     public function __construct(
         \Magento\Framework\App\Action\Context $context,
@@ -11,47 +20,50 @@ class Syncstoreview extends \Magento\Framework\App\Action\Action
         \Magento\Framework\App\Cache\StateInterface $cacheState,
         \Magento\Framework\App\Cache\Frontend\Pool $cacheFrontendPool,
         \Magento\Framework\View\Result\PageFactory $resultPageFactory,
-        \Klevu\Search\Model\Product\Sync $modelProductSync,
         \Magento\Framework\Filesystem $magentoFrameworkFilesystem,
+        \Magento\Store\Model\StoreManagerInterface $storeInterface,
+        \Klevu\Search\Model\Product\Sync $modelProductSync,
         \Klevu\Search\Model\Api\Action\Debuginfo $apiActionDebuginfo,
         \Klevu\Search\Model\Session $frameworkModelSession,
         \Klevu\Search\Helper\Data $searchHelperData,
-		\Klevu\Search\Model\Sync $modelSync,
-		\Magento\Store\Model\StoreManagerInterface $storeInterface
+		\Klevu\Search\Model\Sync $modelSync
     ) {
-		
+
 		parent::__construct($context);
         $this->_cacheTypeList = $cacheTypeList;
         $this->_cacheState = $cacheState;
         $this->_cacheFrontendPool = $cacheFrontendPool;
         $this->resultPageFactory = $resultPageFactory;
-        $this->_modelProductSync = $modelProductSync;
         $this->_magentoFrameworkFilesystem = $magentoFrameworkFilesystem;
+        $this->_storeInterface = $storeInterface;
+        $this->_modelProductSync = $modelProductSync;
         $this->_apiActionDebuginfo = $apiActionDebuginfo;
         $this->_frameworkModelSession = $frameworkModelSession;
         $this->_searchHelperData = $searchHelperData;
 		$this->_klevuSyncModel = $modelSync;
-		$this->_storeInterface = $storeInterface;
+        $this->_context = $context;
+		$this->_eventManager = $this->_context->getEventManager();
+		$this->_request = $this->_context->getRequest();
     }
     
     public function execute()
     {
-		$om = \Magento\Framework\App\ObjectManager::getInstance();
-		$request = $om->get('Magento\Framework\App\RequestInterface');
 		if($this->_storeInterface->isSingleStoreMode())
 		{
 			$store_id = $this->_storeInterface->getStore()->getId();
 		} else {
-			$store_id = $request->getParam('store');
+			//$store_id = $request->getParam('store');
+            $store_id = $this->_request->getParam('store');
 		}
 		
-		$restapi = $request->getParam('restapi');
-	    $store_rest_api = $this->_klevuSyncModel->getHelper()->getConfigHelper()->getRestApiKey($store_id);
+		//$restapi = $request->getParam('restapi');
+        $restapi = $this->_request->getParam('restapi');
+	    $store_rest_api = $this->_klevuSyncModel->getHelper()->getConfigHelper()->getRestApiKey((int)$store_id);
 		if($store_rest_api == $restapi) {
 			$this->_storeInterface->setCurrentStore($store_id);
 			$store_view = $this->_storeInterface->getStore($store_id);
-			\Magento\Framework\App\ObjectManager::getInstance()->get('\Magento\Framework\Event\ManagerInterface')->dispatch('content_data_to_sync', []);
-			$this->_klevuSyncModel->setSessionVariable("limit",500);
+            $this->_eventManager->dispatch('content_data_to_sync', []);
+            $this->_klevuSyncModel->setSessionVariable("limit",500);
 			$this->_klevuSyncModel->getRegistry()->unregister("numberOfRecord_add");
 			$this->_klevuSyncModel->getRegistry()->unregister("numberOfRecord_delete");
 			$this->_klevuSyncModel->getRegistry()->unregister("numberOfRecord_update");

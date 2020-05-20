@@ -100,5 +100,10 @@ class Information extends \Magento\Config\Block\System\Config\Form\Fieldset
 
         $html .= $this->_getFooterHtml($element);
         return $html;
-    }    
+    }
+
+    public function getFeatures()
+    {
+        $this->_config->getFeatures();
+    }
 }

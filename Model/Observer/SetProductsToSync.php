@@ -6,11 +6,10 @@
  * @method setIsProductSyncScheduled($flag)
  * @method bool getIsProductSyncScheduled()
  */
+
 namespace Klevu\Search\Model\Observer;
- 
-use Magento\Framework\Event\Observer;
+
 use Magento\Framework\Event\ObserverInterface;
-use Magento\Framework\View\Layout\Interceptor;
 
 class SetProductsToSync implements ObserverInterface
 {
@@ -34,7 +33,7 @@ class SetProductsToSync implements ObserverInterface
      * @var \Magento\Catalog\Model\Product\Action
      */
     protected $_modelProductAction;
-    
+
     /**
      * @var \Magento\Framework\App\ResourceConnection
      */
@@ -45,8 +44,9 @@ class SetProductsToSync implements ObserverInterface
         \Magento\Framework\Filesystem $magentoFrameworkFilesystem,
         \Klevu\Search\Helper\Data $searchHelperData,
         \Magento\Framework\App\ResourceConnection $frameworkModelResource
-    ) {
-    
+    )
+    {
+
         $this->_modelProductSync = $modelProductSync;
         $this->_magentoFrameworkFilesystem = $magentoFrameworkFilesystem;
         $this->_searchHelperData = $searchHelperData;

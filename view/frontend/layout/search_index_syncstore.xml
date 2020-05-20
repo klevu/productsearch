@@ -1,14 +1,21 @@
 <?xml version="1.0"?>
-<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" layout="1column" xsi:noNamespaceSchemaLocation="../../../../../lib/internal/Magento/Framework/View/Layout/etc/page_configuration.xsd">
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" layout="empty" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
     <body>
-<referenceBlock name="minicart" remove="true" />
+        <referenceBlock name="page.main.title">
+            <action method="setPageTitle">
+                <argument translate="true" name="title" xsi:type="string">Externally Sync</argument>
+            </action>
+        </referenceBlock>
+
+        <referenceBlock name="minicart" remove="true" />
         <referenceContainer name="header.panel" remove="true" />
         <referenceBlock name="top.search" remove="true" />
         <referenceBlock name="catalog.compare.link" remove="true" />
         <referenceBlock name="catalog.topnav" remove="true"/>
-        <referenceContainer name="footer-container"  remove="true"/> 
-		<referenceBlock name="content">
-			<block class="Klevu\Search\Block\Search\Index" template="klevu/search/ajaxsync.phtml" name="search_index"/>
-		</referenceBlock>
+        <referenceContainer name="footer-container"  remove="true"/>
+
+        <referenceBlock name="content">
+            <block class="Klevu\Search\Block\Search\Index" template="Klevu_Search::klevu/search/ajaxsync.phtml" name="search_index_syncstore"/>
+        </referenceBlock>
     </body>
-</config>
+</page>

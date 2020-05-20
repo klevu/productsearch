@@ -9,8 +9,9 @@ use Klevu\Search\Helper\Config;
 use Klevu\Search\Model\Product\Sync;
 use Klevu\Search\Helper\Data;
 use Magento\Framework\Event\ManagerInterface;
-use Magento\Framework\App\ObjectManager;
 use Klevu\Search\Model\Product\MagentoProductActionsInterface as MagentoProductActions;
+
+
 class All extends \Magento\Backend\App\Action
 {
     /**
@@ -45,14 +46,15 @@ class All extends \Magento\Backend\App\Action
      * @var \Klevu\Search\Model\Product\MagentoProductActionsInterface
      */
     protected $_magentoProductActions;
-	
+
     public function __construct(
         \Magento\Backend\App\Action\Context $context,
         \Magento\Store\Model\StoreManagerInterface $storeModelStoreManagerInterface,
         \Klevu\Search\Helper\Config $searchHelperConfig,
         \Klevu\Search\Model\Product\Sync $modelProductSync,
         \Klevu\Search\Helper\Data $searchHelperData,
-		\Klevu\Search\Model\Product\MagentoProductActionsInterface $magentoProductActions
+		\Klevu\Search\Model\Product\MagentoProductActionsInterface $magentoProductActions,
+        \Klevu\Search\Model\Session $klevuSync
     ) {
         $this->_storeModelStoreManagerInterface = $storeModelStoreManagerInterface;
         $this->_backendModelSession = $context->getSession();
@@ -61,6 +63,8 @@ class All extends \Magento\Backend\App\Action
         $this->_searchHelperData = $searchHelperData;
         $this->_frameworkEventManagerInterface = $context->getEventManager();
 		$this->_magentoProductActions = $magentoProductActions;
+		$this->_klevuSync = $klevuSync;
+
         parent::__construct($context);
     }
     public function execute()
@@ -74,7 +78,7 @@ class All extends \Magento\Backend\App\Action
                 $this->_redirect($this->_redirect->getRefererUrl());
             }
         }
-        
+
         if ($this->_searchHelperConfig->isProductSyncEnabled()) {
             if ($this->_searchHelperConfig->getSyncOptionsFlag() == "2") {
                 if ($store) {
@@ -85,7 +89,7 @@ class All extends \Magento\Backend\App\Action
 						$this->_magentoProductActions
 						->markAllProductsForUpdate($store);
 					}
-                    
+
                     $this->_searchHelperData->log(\Zend\Log\Logger::INFO, sprintf(
                         "Product Sync scheduled to re-sync ALL products in %s (%s).",
                         $store->getWebsite()->getName(),
@@ -107,19 +111,19 @@ class All extends \Magento\Backend\App\Action
         } else {
             $this->messageManager->addErrorMessage(__("Klevu Search Product Sync is disabled."));
         }
-        
+
         $this->_frameworkEventManagerInterface->dispatch('sync_all_external_data', [
             'store' => $store
         ]);
         $this->_storeModelStoreManagerInterface->setCurrentStore(0);
         return $this->_redirect($this->_redirect->getRefererUrl());
     }
-    
+
     protected function _isAllowed()
     {
          return true;
     }
-    
+
     public function syncWithoutCron()
     {
         try {
@@ -128,7 +132,7 @@ class All extends \Magento\Backend\App\Action
 			if($store != null) {
 				//Sync Data
 				if(is_object($onestore)) {
-					
+
 						$this->_modelProductSync->reset();
 						if (!$this->_modelProductSync->setupSession($onestore)) {
 							return;
@@ -141,8 +145,10 @@ class All extends \Magento\Backend\App\Action
 			}
             /* Use event For other content sync */
             $this->_frameworkEventManagerInterface->dispatch('content_data_to_sync', []);
-            \Magento\Framework\App\ObjectManager::getInstance()->get('Klevu\Search\Model\Session')->unsFirstSync();
-            $this->messageManager->addSuccessMessage(__("Data updates have been sent to Klevu"));
+
+            $this->_klevuSync->unsFirstSync();
+            $this->messageManager->addSuccess(__("Data updates have been sent to Klevu"));
+
         } catch (\Magento\Framework\Model\Store\Exception $e) {
             $this->_psrLogLoggerInterface->error($e);
         }

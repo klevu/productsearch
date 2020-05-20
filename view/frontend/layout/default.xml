@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
-<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../../../lib/internal/Magento/Framework/View/Layout/etc/page_configuration.xsd">
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
   <body>
     <referenceBlock name="before.body.end">
       <block class="Klevu\Search\Block\Search\Index" template="Klevu_Search::klevu/search/form_js.phtml"  name="klevu.search.form_js"/>
-	  
-	    <block class="Magento\Framework\View\Element\Template" name="personal_data" before="-"
+
+        <block class="Magento\Framework\View\Element\Template" name="personal_data" before="-"
                    template="Klevu_Search::personal.phtml">
                 <arguments>
                     <argument name="jsLayout" xsi:type="array">
@@ -18,4 +18,4 @@
         </block>
     </referenceBlock>
   </body>
-</config>
+</page>

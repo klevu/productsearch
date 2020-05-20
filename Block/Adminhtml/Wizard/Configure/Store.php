@@ -1,43 +1,48 @@
 <?php
+
 namespace Klevu\Search\Block\Adminhtml\Wizard\Configure;
 
-use Magento\Backend\Block\Template as Template;
-use Klevu\Search\Model\Klevu\HelperManager as Klevu_HelperManager;
-use Klevu\Search\Helper\Backend as Klevu_BackendHelper;
 use Klevu\Search\Model\Session as Klevu_Session;
+use Klevu\Search\Model\Sync as Klevu_Sync;
+use Magento\Backend\Block\Template\Context as Template_Context;
+use Klevu\Search\Helper\Backend as Klevu_BackendHelper;
 
+/**
+ * Class Store
+ * @package Klevu\Search\Block\Adminhtml\Wizard\Configure
+ */
 class Store extends \Magento\Backend\Block\Template
 {
 
     /**
-     * @var \Magento\Backend\Block\Template
+     * Store manager
+     *
+     * @var \Magento\Store\Model\StoreManagerInterface
      */
-    protected $_context;
+    protected $_storeManager;
 
 
     /**
-     * Wizard Store constructor
-     *
-     * @param \Klevu\Search\Model\Klevu\HelperManager $klevuHelperManager
-     * @param \Klevu\Search\Helper\Backend $klevuBackendHelper
-     * @param \Magento\Backend\Block\Template $context
-	 * @param \Klevu\Search\Model\Session $klevuSession
+     * Store constructor.
+     * @param Template_Context $context
+     * @param Klevu_Sync $klevuSync
+     * @param Klevu_Session $klevuSession
      * @param array $data
      */
     public function __construct(
-        Template\Context $context,
-        Klevu_HelperManager $klevuHelperManager,
-        Klevu_BackendHelper $klevuBackendHelper,
+        Template_Context $context,
+        Klevu_Sync $klevuSync,
         Klevu_Session $klevuSession,
-        array $data = []
-    )
+        Klevu_BackendHelper $klevuBackendHelper,
+        array $data = [])
     {
-        $this->_klevuHelperManager = $klevuHelperManager;
-        $this->_klevuBackendHelper = $klevuBackendHelper;
-        $this->_context = $context;
+        $this->_klevuSync = $klevuSync;
         $this->_klevuSession = $klevuSession;
+        $this->_klevuBackendHelper = $klevuBackendHelper;
+        $this->_storeManager = $context->getStoreManager();
         parent::__construct($context, $data);
     }
+
 
     /**
      * Return the submit URL for the store configuration form.
@@ -57,9 +62,8 @@ class Store extends \Magento\Backend\Block\Template
      */
     public function getStoreSelectData()
     {
-        //$stores = \Magento\Framework\App\ObjectManager::getInstance()->get('\Magento\Store\Model\StoreManagerInterface')->getStores(false);
-        $stores = $this->_context->getStoreManager()->getStores();
-        $config = $this->_klevuHelperManager->getConfigHelper();
+        $stores = $this->_storeManager->getStores(false);
+        $config = $this->_klevuSync->getHelper()->getConfigHelper();
 
         $data = [];
 
@@ -92,23 +96,24 @@ class Store extends \Magento\Backend\Block\Template
      */
     public function showTaxSettings()
     {
-        if($this->_klevuHelperManager->getConfigHelper()->getPriceDisplaySettings() == 3){
+        $config = $this->_klevuSync->getHelper()->getConfigHelper();
+        if ($config->getPriceDisplaySettings() == 3) {
             return true;
         }
         return false;
     }
 
-	/**
+
+    /**
      * Return Klevu Sync URL for current store
      *
      * @return string
      */
-    public function getSyncUrlForStore(){
-        //$store_id = \Magento\Framework\App\ObjectManager::getInstance()->get('\Klevu\Search\Model\Session')->getCurrentKlevuStoreId();
-        //$rest_api = \Magento\Framework\App\ObjectManager::getInstance()->get('\Klevu\Search\Model\Session')->getCurrentKlevuRestApiKlevu();
+    public function getSyncUrlForStore()
+    {
         $store_id = $this->_klevuSession->getCurrentKlevuStoreId();
         $rest_api = $this->_klevuSession->getCurrentKlevuRestApiKlevu();
-        return $this->_storeManager->getStore($store_id)->getBaseUrl()."search/index/syncstore/store/".$store_id."/restapi/".$rest_api;
+        return $this->_storeManager->getStore($store_id)->getBaseUrl() . "search/index/syncstore/store/" . $store_id . "/restapi/" . $rest_api;
     }
 
     /**
@@ -121,3 +126,4 @@ class Store extends \Magento\Backend\Block\Template
         return $this->_klevuBackendHelper->getRecommendToUseCollectionMethod();
     }
 }
+

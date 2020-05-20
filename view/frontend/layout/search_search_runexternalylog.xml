@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
-<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" layout="1column" xsi:noNamespaceSchemaLocation="../../../../../lib/internal/Magento/Framework/View/Layout/etc/page_configuration.xsd">
 
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" layout="1column" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
     <body>
         <referenceBlock name="content">
-          <block class="Klevu\Search\Block\Search\Index" template="klevu/search/klevulog.phtml" name="search_index"/>
+            <block class="Klevu\Search\Block\Search\Index" template="Klevu_Search::klevu/search/klevulog.phtml" name="search_index_runexternalylog"/>
         </referenceBlock>
     </body>
-</config>
+</page>

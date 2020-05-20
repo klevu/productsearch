@@ -6,11 +6,10 @@
  * @method setIsProductSyncScheduled($flag)
  * @method bool getIsProductSyncScheduled()
  */
+
 namespace Klevu\Search\Model\Observer;
- 
-use Magento\Framework\Event\Observer;
+
 use Magento\Framework\Event\ObserverInterface;
-use Magento\Framework\View\Layout\Interceptor;
 
 class RuleUpdate implements ObserverInterface
 {
@@ -39,22 +38,23 @@ class RuleUpdate implements ObserverInterface
         \Klevu\Search\Model\Product\MagentoProductActionsInterface $modelProductSync,
         \Magento\Framework\Filesystem $magentoFrameworkFilesystem,
         \Klevu\Search\Helper\Data $searchHelperData
-    ) {
-    
+    )
+    {
+
         $this->_modelProductSync = $modelProductSync;
         $this->_magentoFrameworkFilesystem = $magentoFrameworkFilesystem;
         $this->_searchHelperData = $searchHelperData;
     }
 
-   /**
-    * Mark all of the products for update and then schedule a sync
-    * to run immediately.
-    *
-    * @param \Magento\Framework\Event\Observer $observer
-    */
+    /**
+     * Mark all of the products for update and then schedule a sync
+     * to run immediately.
+     *
+     * @param \Magento\Framework\Event\Observer $observer
+     */
     public function execute(\Magento\Framework\Event\Observer $observer)
     {
-        
+
         $obj = $observer->getEvent()->getRule();
         $matchIds = $obj->getMatchingProductIds();
         $rows = [];
@@ -62,7 +62,7 @@ class RuleUpdate implements ObserverInterface
             foreach ($matchIds as $key => $value) {
                 if (is_array($value)) {
                     if (in_array(1, $value)) {
-                            $rows[] = $key;
+                        $rows[] = $key;
                     }
                 }
             }

@@ -6,12 +6,10 @@
  * @method setIsProductSyncScheduled($flag)
  * @method bool getIsProductSyncScheduled()
  */
+
 namespace Klevu\Search\Model\Observer;
- 
-use Magento\Framework\Event\Observer;
+
 use Magento\Framework\Event\ObserverInterface;
-use Magento\Framework\View\Layout\Interceptor;
-use Klevu\Search\Model\Product\MagentoProductActionsInterface as MagentoProductActions;
 
 class SyncAllProducts implements ObserverInterface
 {
@@ -35,8 +33,8 @@ class SyncAllProducts implements ObserverInterface
      * @var \Magento\Catalog\Model\Product\Action
      */
     protected $_modelProductAction;
-	
-	/**
+
+    /**
      * @var \Klevu\Search\Model\Product\MagentoProductActionsInterface
      */
     protected $_magentoProductActions;
@@ -45,23 +43,24 @@ class SyncAllProducts implements ObserverInterface
         \Klevu\Search\Model\Product\Sync $modelProductSync,
         \Magento\Framework\Filesystem $magentoFrameworkFilesystem,
         \Klevu\Search\Helper\Data $searchHelperData,
-		\Klevu\Search\Helper\Config $searchHelperConfig,
-		\Klevu\Search\Model\Product\MagentoProductActionsInterface $magentoProductActions
-    ) {
-    
+        \Klevu\Search\Helper\Config $searchHelperConfig,
+        \Klevu\Search\Model\Product\MagentoProductActionsInterface $magentoProductActions
+    )
+    {
+
         $this->_modelProductSync = $modelProductSync;
         $this->_magentoFrameworkFilesystem = $magentoFrameworkFilesystem;
         $this->_searchHelperData = $searchHelperData;
-		$this->_searchHelperConfig = $searchHelperConfig;
-		$this->_magentoProductActions = $magentoProductActions;
+        $this->_searchHelperConfig = $searchHelperConfig;
+        $this->_magentoProductActions = $magentoProductActions;
     }
- 
-   /**
-    * Mark all of the products for update and then schedule a sync
-    * to run immediately.
-    *
-    * @param \Magento\Framework\Event\Observer $observer
-    */
+
+    /**
+     * Mark all of the products for update and then schedule a sync
+     * to run immediately.
+     *
+     * @param \Magento\Framework\Event\Observer $observer
+     */
     public function execute(\Magento\Framework\Event\Observer $observer)
     {
 
@@ -82,9 +81,9 @@ class SyncAllProducts implements ObserverInterface
         }
 
         $this->_magentoProductActions->markAllProductsForUpdate($store);
-		
-		if($this->_searchHelperConfig->isExternalCronEnabled()) {
-			$this->_modelProductSync->schedule();
-		}
+
+        if ($this->_searchHelperConfig->isExternalCronEnabled()) {
+            $this->_modelProductSync->schedule();
+        }
     }
 }

@@ -109,7 +109,7 @@ $request = $block->getRequest(); ?>
                                 <?php echo __("Phone Number:") ?><span class="required">&nbsp;</span></label>
                             <div class="admin__field-control control">
                                 <input type="text" value="<?php if($request->getPost(" countyCode ")){ echo $request->getPost("countyCode ");} ?>" name="countyCode" id="countyCode" class="input-text admin__control-text" />
-                                <input type="text" name="contactNo" id="contactNo" value="<?php echo \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Framework\App\Config\ScopeConfigInterface')->getValue('general/store_information/phone');?>" class="input-text admin__control-text" />
+                                <input type="text" name="contactNo" id="contactNo" value="<?php echo $block->getStorePhoneNumber(); ?>" class="input-text admin__control-text" />
                             </div>
                         </div>
 
