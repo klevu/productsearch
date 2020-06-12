@@ -64,6 +64,7 @@ class Sync extends AbstractModel
         \Magento\Store\Model\StoreManagerInterface $storeModelStoreManagerInterface,
         \Klevu\Search\Helper\Config $searchHelperConfig,
         \Magento\Sales\Model\Order\Item $modelOrderItem,
+        \Magento\Sales\Model\Order\ItemFactory $modelOrderItemFactory,
         \Klevu\Search\Helper\Data $searchHelperData,
         \Klevu\Search\Model\Api\Action\Producttracking $apiActionProducttracking,
         \Magento\Framework\Stdlib\DateTime\DateTime $frameworkModelDate,
@@ -84,6 +85,7 @@ class Sync extends AbstractModel
         $this->_storeModelStoreManagerInterface = $storeModelStoreManagerInterface;
         $this->_searchHelperConfig = $searchHelperConfig;
         $this->_modelOrderItem = $modelOrderItem;
+        $this->_modelOrderItemFactory = $modelOrderItemFactory;
         $this->_searchHelperData = $searchHelperData;
         $this->_apiActionProducttracking = $apiActionProducttracking;
         $this->_frameworkModelDate = $frameworkModelDate;
@@ -255,8 +257,8 @@ class Sync extends AbstractModel
         }
         $parent = null;
         if ($item->getParentItemId()) {
-            //$parent =  \Magento\Framework\App\ObjectManager::getInstance()->create('Magento\Sales\Model\Order\Item')->load($item->getParentItemId());
-            $parent = $this->_modelOrderItem->load($item->getParentItemId());
+            //$parent = \Magento\Framework\App\ObjectManager::getInstance()->create('Magento\Sales\Model\Order\Item')->load($item->getParentItemId());
+            $parent = $this->_modelOrderItemFactory->create()->load($item->getParentItemId());
         }
         if ($item->getProductType() == GroupedProduct::TYPE_CODE) {
             //$objectManager = \Magento\Framework\App\ObjectManager::getInstance();

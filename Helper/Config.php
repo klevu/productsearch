@@ -1067,7 +1067,7 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
 		} catch (\Zend\Http\Client\Exception\RuntimeException $re) {            
             $dataHelper->log(\Zend\Log\Logger::INFO, sprintf("Unable to get Klevu Features list (%s)", $re->getMessage()));
             return;
-        } catch (Exception $e) {            
+        } catch (\Exception $e) {            
             $dataHelper->log(\Zend\Log\Logger::INFO, sprintf("Uncaught Exception thrown while getting Klevu Features list (%s)", $e->getMessage()));
             return;
         }

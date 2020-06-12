@@ -78,7 +78,7 @@ class Logclear extends Action
             }else {
                 $this->_context->getMessageManager()->addNoticeMessage(__($logFileTitle.' file not found!'));
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $message = __($e->getMessage());
             $this->_context->getMessageManager()->addErrorMessage($message);
             $this->_searchHelperData->log(\Zend\Log\Logger::CRIT, sprintf("Exception thrown in %s::%s - %s", __CLASS__, __METHOD__, $message));

@@ -59,7 +59,7 @@ class Logdownload extends \Magento\Backend\App\Action
                 return $this->_fileFactory->create("Klevu_Search.zip", $contentToGen, \Magento\Framework\App\Filesystem\DirectoryList::ROOT, 'application/zip');
                 //return $this->_fileFactory->create("Klevu_Search.zip", @file_get_contents($file));
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $message = __($e->getMessage());
             $this->_context->getMessageManager()->addErrorMessage($message);
             $this->_searchHelperData->log(\Zend\Log\Logger::CRIT, sprintf("Exception thrown in while downloading file. %s::%s - %s", __CLASS__, __METHOD__, $message));

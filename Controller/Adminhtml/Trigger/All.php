@@ -68,7 +68,7 @@ class All extends \Magento\Backend\App\Action
                 $this->_klevuModelTrigger->dropTriggerIfFoundExist();
                 $this->messageManager->addSuccessMessage(__("Trigger is deactivated."));
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $this->messageManager->addSuccessMessage('Trigger Operation failed.' . $e->getMessage());
         }
 

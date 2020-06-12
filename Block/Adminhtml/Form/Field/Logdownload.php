@@ -87,7 +87,7 @@ class Logdownload extends \Magento\Config\Block\System\Config\Form\Field
                 $buttonLabel = '';
             }
             return $buttonLabel;
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $this->_klevuHelperData->log(\Zend\Log\Logger::CRIT, sprintf("Exception thrown in %s::%s - %s", __CLASS__, __METHOD__, $e->getMessage()));
         }
     }
