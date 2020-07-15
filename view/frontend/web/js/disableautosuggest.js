@@ -1,6 +1,6 @@
 define([
   'jquery',
-  'jquery/ui',
+  'jquery-ui-modules/widget',
   'Magento_Search/form-mini' 
 ], function($){
  
