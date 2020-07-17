@@ -254,6 +254,10 @@ class Sync extends AbstractModel
         }
 
         $config = $this->_searchHelperConfig;
+        if (!$config->isProductSyncEnabled($store->getId())) {
+            $this->_searchHelperData->log(\Zend\Log\Logger::INFO, sprintf("Product Sync found disabled for %s (%s).", $store->getWebsite()->getName(), $store->getName()));
+            return;
+        }
         $firstSync = $this->_searchModelSession->getFirstSync();
 
         try {
@@ -411,6 +415,10 @@ class Sync extends AbstractModel
      */
     public function runCategory($store)
     {
+        if (!$this->_searchHelperConfig->getCategorySyncEnabledFlag($store->getId())) {
+            $this->_searchHelperData->log(\Zend\Log\Logger::INFO, sprintf("Category Sync found disabled for %s (%s).", $store->getWebsite()->getName(), $store->getName()));
+            return;
+        }
         $this->_searchHelperData->log(\Zend\Log\Logger::INFO, sprintf("Starting sync for category %s (%s).", $store->getWebsite()->getName(), $store->getName()));
 
         // replace below code

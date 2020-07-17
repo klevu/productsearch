@@ -681,5 +681,29 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
         if (!empty($pro_ids)) {
             $this->updateSpecificProductIds($pro_ids);
         }
+    }
+
+    /**
+     * Mark records for update storewise
+     *
+     * @param $productIds
+     * @param string $recordType
+     * @param int $store
+     */
+    public function markRecordIntoQueue($productIds, $recordType = 'products', $store = null)
+    {
+        $ids = implode(',', $productIds);
+        $whereType = $this->_frameworkModelResource->getConnection('core_write')->quoteInto('type = ?', $recordType);
+        $where = sprintf("(product_id IN(%s) OR parent_id IN(%s)) AND %s", $ids, $ids, $whereType);
+        if ($store !== null) {
+            $store = $this->_storeModelStoreManagerInterface->getStore($store);
+            $whereStoreId= $this->_frameworkModelResource->getConnection('core_write')->quoteInto('store_id = ?', $store->getId());
+            $where .= sprintf(" AND %s", $whereStoreId);
+        }
+        $this->_frameworkModelResource->getConnection('core_write')->update(
+            $this->_frameworkModelResource->getTableName('klevu_product_sync'),
+            ['last_synced_at' => '0'],
+            $where
+        );
     }	
 }

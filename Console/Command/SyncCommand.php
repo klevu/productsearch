@@ -128,9 +128,10 @@ class SyncCommand extends Command
                 );
             }
 
-            // sync cms data
-            $sync = ObjectManager::getInstance()->get(Content::class);
-            $sync->run();
+            // sync cms data moved to the klevu:syncstore:storecode command
+            /*$sync = ObjectManager::getInstance()->get(Content::class);
+            $sync->run();*/
+
             // sync order data
             $syncOrder = ObjectManager::getInstance()->get(Order::class);
             $syncOrder->run();

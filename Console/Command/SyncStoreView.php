@@ -12,6 +12,7 @@ use Magento\Framework\App\State as AppState;
 use Magento\Framework\ObjectManagerInterface;
 use Magento\Framework\App\ObjectManager;
 use \Psr\Log\LoggerInterface as LoggerInterface;
+use Klevu\Content\Model\ContentInterface as KlevuContent;
 
 class SyncStoreView extends Command
 {
@@ -121,7 +122,7 @@ class SyncStoreView extends Command
                 $rejectedSites = $this->validateStoreCodes($array_store);
 
                 $this->sync = ObjectManager::getInstance()->get(Sync::class);
-
+                $this->cmsSync = ObjectManager::getInstance()->get(KlevuContent::class);
                 if(!empty($rejectedSites))
                     $output->writeln("<error>Sync can not be done for store codes. Please check if that following codes belong to one website: ".implode(",",$rejectedSites)."</error>");
                 if(count($this->runStoreList) > 0 ) {
@@ -143,11 +144,17 @@ class SyncStoreView extends Command
                                     }
                                     continue;
                                 }
+                                $output->writeln("<info>Product Sync started for store code : " . $oneStore->getCode() . "</info>");
                                 $this->sync->runStore($oneStore);
+                                $output->writeln("<info>Product Sync completed for store code : " . $oneStore->getCode() . "</info>");
+                                $output->writeln("<info>CMS Sync started for store code : " . $oneStore->getCode() . "</info>");
+                                $this->cmsSync->syncCmsData($oneStore);
+                                $output->writeln("<info>CMS Sync completed for store code : " . $oneStore->getCode() . "</info>");
                             }
                             $output->writeln("<info>Sync was done for store code : ".$oneStore->getCode()."</info>");
+                            $output->writeln("<info>********************************</info>");
                         } catch (\Exception $e) {
-                            $output->writeln('<error>' . $e->getMessage() ." :".$value. '</error>');
+                            $output->writeln('<error>Error thrown in Storewise sync ' . $e->getMessage() ." for STORE => ".$value. '</error>');
                         }
 
                         if (file_exists($file)) {
@@ -156,7 +163,7 @@ class SyncStoreView extends Command
                     }
                 }
             } catch (\Exception $e) {
-                $output->writeln('<error>' . $e->getMessage() . '</error>');
+                $output->writeln('<error>Error thrown in Storewise sync: ' . $e->getMessage() . '</error>');
                 if(isset($file)) {
                     if (file_exists($file)) {
                         unlink($file);

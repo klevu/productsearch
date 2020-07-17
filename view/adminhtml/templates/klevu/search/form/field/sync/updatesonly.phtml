@@ -7,7 +7,6 @@
         $("<?php echo $block->getHtmlId() ?>").observe("click", function () {
             if(document.getElementById('klevu_search_product_sync_updatesonly_sync_btn')) {
                 var syncoptions = <?php echo $block->getSyncOptionId()?>;
-                //alert(syncoptions); return false;
                 new Ajax.Request("<?php echo $block->getUrl('klevu_search/savesyncoption/option'); ?>" + '?sync_options=' + syncoptions, {
                     method: 'POST',
                     onComplete: function(data) {

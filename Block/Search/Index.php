@@ -80,40 +80,32 @@ class Index extends Template
 
     public function getJsApiKey()
     {
-        //return \Magento\Framework\App\ObjectManager::getInstance()->get('Klevu\Search\Helper\Config')->getJsApiKey();
         return $this->_klevuConfigHelper->getJsApiKey();
     }
 
     public function getModuleInfo()
     {
-        //$moduleInfo = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Framework\Module\ModuleList')->getOne('Klevu_Search');
-        //return $moduleInfo['setup_version'];
         return $this->_klevuConfigHelper->getModuleInfo();
     }
 
     public function getJsUrl()
     {
-        //return \Magento\Framework\App\ObjectManager::getInstance()->get('Klevu\Search\Helper\Config')->getJsUrl();
         return $this->_klevuConfigHelper->getJsUrl();
     }
 
     public function getStoreLanguage()
     {
-        //return \Magento\Framework\App\ObjectManager::getInstance()->get('Klevu\Search\Helper\Data')->getStoreLanguage();
         return $this->_klevuDataHelper->getStoreLanguage();
     }
 
     public function getCurrentCurrencyCode()
     {
-        //$store = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Store\Model\StoreManagerInterface')->getStore();
-        //return $store->getCurrentCurrencyCode();
         return $this->_storeManager->getStore()->getCurrentCurrencyCode();
     }
 
     public function getCurrencyData()
     {
-        /*$store = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Store\Model\StoreManagerInterface')->getStore();
-        return \Magento\Framework\App\ObjectManager::getInstance()->get('Klevu\Search\Helper\Data')->getCurrencyData($store);*/
+
         return $this->_klevuDataHelper->getCurrencyData($this->getStore());
     }
 
@@ -125,48 +117,27 @@ class Index extends Template
     //Based on the usage it can be removed
     public function getKlevuSync()
     {
-        //return \Magento\Framework\App\ObjectManager::getInstance()->get('Klevu\Search\Model\Sync');
         return $this->_klevusync;
     }
 
     public function getKlevuRequestParam($key)
     {
-        /*$om = \Magento\Framework\App\ObjectManager::getInstance();
-        $request = $om->get('Magento\Framework\App\RequestInterface');
-        $store_id = $request->getParam('store');
-        $store = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Store\Model\StoreManagerInterface');
-        $store_view = $store->getStore($store_id);
-        $value = $request->getParam($key);
-        return $value;*/
         return $this->_request->getParam($key);
     }
 
     public function getStoreParam()
     {
-        /*$om = \Magento\Framework\App\ObjectManager::getInstance();
-        $request = $om->get('Magento\Framework\App\RequestInterface');
-        $store_id = $request->getParam('store');
-        return $store_id;*/
         return $this->_request->getParam('store');
     }
 
     public function getRestApiParam()
     {
-        /*$om = \Magento\Framework\App\ObjectManager::getInstance();
-        $request = $om->get('Magento\Framework\App\RequestInterface');
-        $restapi = $request->getParam('restapi');
-        return $restapi;*/
-        return $this->_request->getParam('restapi');
+        return urlencode($this->_request->getParam('hashkey'));
     }
 
     public function getRestApi($store_id)
     {
-        //$om = \Magento\Framework\App\ObjectManager::getInstance();
-        //$rest_api = $om->get('\Klevu\Search\Model\Sync')->getHelper()->getConfigHelper()->getRestApiKey($store_id);
-        //return $rest_api;
-        //return $this->_klevusync->getHelper()->getConfigHelper()->getRestApiKey((int)$store_id);
-        return $this->_klevuConfigHelper->getRestApiKey((int)$store_id);
-
+        return hash('sha256',$this->_klevuConfigHelper->getRestApiKey((int)$store_id));
     }
 
     public function isPubInUse()
@@ -177,6 +148,7 @@ class Index extends Template
         }
         return true;
     }
+
 
     public function isCustomerGroupPriceEnabled()
     {
@@ -214,3 +186,4 @@ class Index extends Template
         return $this->_klevuHelperBackend->checkToShowIndexerMessage();
     }
 }
+

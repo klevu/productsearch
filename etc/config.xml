@@ -18,6 +18,8 @@
                 <last_run>Never</last_run>
                 <sync_options>1</sync_options>
                 <order_sync_enabled>1</order_sync_enabled>
+				<lockfile>172800</lockfile>
+				<category_sync_enabled>1</category_sync_enabled>
             </product_sync>           
             <developer>
                 <collection_method>0</collection_method>

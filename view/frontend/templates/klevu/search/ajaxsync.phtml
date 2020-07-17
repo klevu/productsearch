@@ -1,57 +1,71 @@
-<?php /** @var \Klevu\Search\Block\Search\Index $block */?>
-<?php 
-	$store_id = $block->getStoreParam();
-	$rest_api = $block->getRestApiParam();
-	$rest_from_db = $block->getRestApi($store_id);
-	$indexersMessage = $block->isShowIndexerMessage();
+<?php /** @var \Klevu\Search\Block\Search\Index $block */ ?>
+<?php
+$store_id = (int)$block->getStoreParam();
+$key = $block->getRestApiParam();
+$rest_from_db = $block->getRestApi($store_id);
+$indexersMessage = $block->isShowIndexerMessage();
 ?>
-<?php if($indexersMessage):?>
-    <div class="message warning" id="kl_indexers_message"><span><?php echo __('Magento Indexers are found invalid for the Magento Store. Please rebuild <strong> Magento Indexers </strong> and Click on <strong> Sync Updates Only for This Store</strong> again..')?>&nbsp;</span></div>
+<?php if ($indexersMessage): ?>
+    <div class="message warning" id="kl_indexers_message">
+        <span><?php echo __('Magento Indexers are found invalid for the Magento Store. Please rebuild <strong> Magento Indexers </strong> and Click on <strong> Sync Updates Only for This Store</strong> again..') ?>&nbsp;</span>
+    </div>
 <?php endif; ?>
-<div class="message warning" id="kl_close_warning_before" style="display:block"><span><?php echo __('Please don\'t close this tab when the data is being synchronized.')?></span></div>
-<div class="message success" id="kl_close_warning_after" style="display:none"><span><?php echo __('Data Synchronization has been finished. You can close this tab now.')?>&nbsp;<a title="<?php echo __('By clicking on link, it will close tab');?>" href="#" onclick="window.close();return false;"><?php echo __('Click to close tab');?></a></span></div>
-<div id="info_message"><span id="loader" style="display:none"><?php echo __('Please wait...');?></span></div>
+<div class="message warning" id="kl_close_warning_before" style="display:block">
+    <span><?php echo __('Please don\'t close this tab when the data is being synchronized.') ?></span></div>
+<div class="message success" id="kl_close_warning_after" style="display:none">
+    <span><?php echo __('Data Synchronization has been finished. You can close this tab now.') ?>&nbsp;<a
+            title="<?php echo __('By clicking on link, it will close tab'); ?>" href="#"
+            onclick="window.close();return false;"><?php echo __('Click to close tab'); ?></a></span></div>
+<div id="info_message"><span id="loader" style="display:none"><?php echo __('Please wait...'); ?></span></div>
 
 <script type="text/javascript">
-<?php if($rest_api == $rest_from_db) { ?>
-require(['jquery'], function(){
+<?php if($key == $rest_from_db) { ?>
+require(['jquery'], function() {
         callAjaxRecurrsively();
 });
 <?php } else { ?>
-	     alert('<?php echo $rest_api."</br>".$rest_api;?>');
+    var hashMsg = "<?php echo __('Hash key found invalid for requested store.');?>";
+    document.getElementById("info_message").innerHTML = hashMsg + "</br>";
 <?php } ?>
 
-function callAjaxRecurrsively(){
-	jQuery.ajax({
-            url:'<?php echo $block->getBaseUrl(); ?>/search/index/syncstoreview/store/'+<?php echo $store_id; ?>+'/restapi/'+'<?php echo $rest_api; ?>',
+    function callAjaxRecurrsively() {
+        jQuery.ajax({
+            url:'<?php echo $block->getBaseUrl(); ?>/search/index/syncstoreview/store/'+<?php echo $store_id; ?>+'/hashkey/'+'<?php echo $key; ?>',
             type: 'GET',
             dataType: 'json',
-			beforeSend: function(){
-				// Show image container
-				document.getElementById("loader").style.display = "block";
-		   	},
-			success:function(data) {
-				if(data.numberOfRecord_add == null && 
-					data.numberOfRecord_update == null && 
-					data.numberOfRecord_delete == null){
-					document.getElementById("loader").style.display = "none";
-					var str = "Something went wrong with the sync. Please see Klevu_Search.log file for further information.";
-					document.getElementById("info_message").innerHTML += str+"</br>";
-				}else if(data.numberOfRecord_add != 0 || data.numberOfRecord_update != 0 || data.numberOfRecord_delete != 0) {
-					document.getElementById("loader").style.display = "none";
-					var str = "<?php echo __('Next batch sent to klevu');?>";
-					document.getElementById("info_message").innerHTML += str+"</br>";
-					callAjaxRecurrsively();
-				} else{
-					var str = "<?php echo __('No records found to sync');?>";
-					document.getElementById("info_message").innerHTML += str+"</br>";						
-					document.getElementById("kl_close_warning_before").style.display = "none";
-					document.getElementById("kl_close_warning_after").style.display = "block";
-				}
-    		},
+            beforeSend: function () {
+                // Show image container
+                document.getElementById("loader").style.display = "block";
+            },
+            success: function (data) {
+                if (data.numberOfRecord_add == null &&
+                    data.numberOfRecord_update == null &&
+                    data.numberOfRecord_delete == null) {
+                    document.getElementById("loader").style.display = "none";
+                    var str = '</br><div class="message warning"><span>Something went wrong with the sync. Please see Klevu_Search.log file for further information.';
+                    var msgToShow = '';
+                    if (data.msg != null) {
+                        msgToShow += str + '</br>' + data.msg + '</span></div>';
+                    } else {
+                        msgToShow += str + '</span></div>';
+                    }
+                    document.getElementById("info_message").innerHTML += msgToShow;
+                } else if (data.numberOfRecord_add != 0 || data.numberOfRecord_update != 0 || data.numberOfRecord_delete != 0) {
+                    document.getElementById("loader").style.display = "none";
+                    var str = "<?php echo __('Next batch sent to klevu');?>";
+                    document.getElementById("info_message").innerHTML += str + "</br>";
+                    callAjaxRecurrsively();
+                } else {
+                    var str = "<?php echo __('No records found to sync');?>";
+                    document.getElementById("info_message").innerHTML += str + "</br>";
+                    document.getElementById("kl_close_warning_before").style.display = "none";
+                    document.getElementById("kl_close_warning_after").style.display = "block";
+                }
+            },
             crossDomain: true
-         });
-}
+        });
+    }
 
 </script>
+
 

@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
 	<preference for="Magento\Config\Block\System\Config\Form\Field" type="Klevu\Search\Block\Adminhtml\System\Config\Form\Field"/>
-	<preference for="Magento\Framework\Search\Request\Cleaner" type="Klevu\Search\Framework\Request\Cleaner"/>
+	<!-- <preference for="Magento\Framework\Search\Request\Cleaner" type="Klevu\Search\Framework\Request\Cleaner"/> -->
 	<preference for="Magento\Framework\Search\Adapter\Mysql\ScoreBuilder" type="Klevu\Search\Adapter\Mysql\ScoreBuilder"/>
 	<preference for="Magento\CatalogSearch\Model\Search\TableMapper" type="Klevu\Search\Model\Search\TableMapper"/>
 	<preference for="Klevu\Search\Model\Klevu\Cron\SchedulerInterface" type="Klevu\Search\Model\Klevu\Cron\Scheduler" />
@@ -28,6 +28,9 @@
 	<type name="Magento\Framework\Api\Search\SearchResult">
 		<plugin name="Klevu_Search_Plugin_Api_Search_SearchResult" type="Klevu\Search\Plugin\Api\Search\SearchResult" sortOrder="101"/>
 	</type>
+    <type name="Magento\CatalogInventory\Api\StockRegistryInterface">
+        <plugin name="Klevu_Search::addStockRegistryProductsInQueue" type="Klevu\Search\Plugin\Api\StockUpdatePlugin"/>
+    </type>
 	<type name="Magento\Framework\Console\CommandList">
 		<arguments>
 			<argument name="commands" xsi:type="array">
@@ -39,4 +42,11 @@
 			</argument>
 		</arguments>
 	</type>
+
+    <type name="Magento\Framework\Search\Request\Cleaner">
+        <plugin name="Klevu_Search::CleanerForProductSearch"
+                type="Klevu\Search\Plugin\Framework\Search\Request\CleanerPlugin"
+                disabled="false"/>
+    </type>
+
 </config>

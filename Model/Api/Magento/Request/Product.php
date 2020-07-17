@@ -29,6 +29,11 @@ class Product implements ProductInterface
      */
     protected $_klevu_product_ids = [];
     protected $_klevu_parent_child_ids = [];
+
+    /**
+     * @var array
+     */
+    protected $_klevu_variant_parent_child_ids = array();
     /**
      * Klevu Search API Response
      * @var \Klevu\Search\Model\Api\Response
@@ -110,6 +115,7 @@ class Product implements ProductInterface
                     $this->_klevu_parent_child_ids[] = $item_id;
                     if ($item_id['parent_id'] != 0) {
                         $this->_klevu_product_ids[$item_id['parent_id']] = $item_id['parent_id'];
+                        $this->_klevu_variant_parent_child_ids[$item_id['parent_id']] = $item_id['product_id'];
                     } else {
                         $this->_klevu_product_ids[$item_id['product_id']] = $item_id['product_id'];
                     }
@@ -119,6 +125,7 @@ class Product implements ProductInterface
                         $this->_klevu_parent_child_ids[] = $item_id;
                         if ($item_id['parent_id'] != 0) {
                             $this->_klevu_product_ids[$item_id['parent_id']] = $item_id['parent_id'];
+                            $this->_klevu_variant_parent_child_ids[$item_id['parent_id']] = $item_id['product_id'];
                         } else {
                             $this->_klevu_product_ids[$item_id['product_id']] = $item_id['product_id'];
                         }
@@ -218,4 +225,17 @@ class Product implements ProductInterface
         $this->_klevu_product_ids = null;
         return true;
     }
+
+    /**
+     * This method will return the parent child ids
+     * @return array
+     */
+    public function getKlevuVariantParentChildIds()
+    {
+        if (!empty($this->_klevu_variant_parent_child_ids)) {
+            return $this->_klevu_variant_parent_child_ids;
+        }
+        return array();
+    }
 }
+

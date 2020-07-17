@@ -127,4 +127,14 @@ interface MagentoProductActionsInterface
      * @return void
      */
     public function catalogruleUpdateinfo();
+
+    /**
+     * Mark records for update storewise
+     *
+     * @param $productIds
+     * @param $recordType
+     * @param $store
+     * @return mixed
+     */
+    public function markRecordIntoQueue($productIds, $recordType, $store);
 }

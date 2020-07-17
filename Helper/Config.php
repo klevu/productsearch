@@ -120,7 +120,8 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
 	const  XML_PATH_SEARCHENGINE = 'catalog/search/engine';
 	const XML_PATH_PRICE_PER_CUSTOMER_GROUP_METHOD = "klevu_search/price_per_customer_group/enabled";
     const XML_PATH_CATALOG_SEARCH_RELEVANCE_LABEL = "klevu_search/searchlanding/relevance_label";
-
+    const XML_PATH_SYNC_LOCKFILE_OPTION = "klevu_search/product_sync/lockfile";
+ 	const XML_PATH_CATEGORY_SYNC_ENABLED   = "klevu_search/product_sync/category_sync_enabled";
 
     /**
      * Set the Enable on Frontend flag in System Configuration for the given store.
@@ -1220,5 +1221,25 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
         return $sortLabel ? $sortLabel : __('Relevance');
     }
 
+
+    /**
+     * Returns selection lockfile option
+     * @param null $store
+     * @return mixed
+     */
+    public function getSelectedLockFileOption($store = null)
+    {
+        return $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_SYNC_LOCKFILE_OPTION, \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $store);
+    }
+
+	/**
+     * Returns the category sync status
+     * @param int $store
+     * @return int
+     */
+    public function getCategorySyncEnabledFlag($store = 0)
+    {
+        return (int)$this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_CATEGORY_SYNC_ENABLED, \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $store);
+    }
 
 }

@@ -51,10 +51,11 @@ class KlevuProductActions  extends DataObject implements KlevuProductActionsInte
     {
 
         $config = $this->_searchHelperConfig;
-        if (!$config->isProductSyncEnabled($store->getId())) {
+	//Moved to each of the specific product sync
+        /*if (!$config->isProductSyncEnabled($store->getId())) {
             $this->_searchHelperData->log(\Zend\Log\Logger::INFO, sprintf("Disabled for %s (%s).", $store->getWebsite()->getName(), $store->getName()));
             return null;
-        }
+        }*/
         $api_key = $config->getRestApiKey($store->getId());
         if (!$api_key) {
             $this->_searchHelperData->log(\Zend\Log\Logger::INFO, sprintf("No API key found for %s (%s).", $store->getWebsite()->getName(), $store->getName()));

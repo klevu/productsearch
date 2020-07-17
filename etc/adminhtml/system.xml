@@ -94,6 +94,11 @@
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     <comment><![CDATA[It is <strong>strongly recommended that Order Sync is set to 'Yes'</strong>. Klevu Search uses transaction data as a factor in ranking product results for customers.]]></comment>
                 </field>
+                <field id="category_sync_enabled" type="select" sortOrder="120" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Enable Category Sync</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment><![CDATA[Choose <strong>No</strong> to disable category data sync.]]></comment>
+                </field>
                 <field id="last_run" translate="label" sortOrder="300" showInDefault="1" showInWebsite="1" showInStore="1">
                   <label>Last Run</label>
                   <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Store\Level\Label</frontend_model>
@@ -101,7 +106,18 @@
 				<field id="cron_status" translate="label" sortOrder="300" showInDefault="1" showInWebsite="1" showInStore="1">
                   <label>Cron Status</label>
                   <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Store\Status</frontend_model>
-                </field>	
+                </field>
+                <field id="lockfile" translate="label comment" sortOrder="310" type="select" showInDefault="1">
+                    <label>Remove Lock file selection</label>
+                    <source_model>Klevu\Search\Model\System\Config\Source\LockFileOptions</source_model>
+                    <comment>
+                        <![CDATA[Choose option to automatically remove the Klevu related .lock file temporary generated during Sync]]></comment>
+                    <tooltip>
+                        <![CDATA[When the sync is running, a temporary lock file created on store level inside var/ folder to avoid executing multiple copies of Klevu's product sync at the same time and delete the same lock file on completion.
+                        </br>Based on this selection, System will check and remove lock files that were not deleted automatically on Sync completion.
+                        </br> e.g. If <strong>2 Days ago</strong> selected, then 2 days old lock files will get deleted.
+                        </br> The field <strong>Cron Status</strong> will show the existing lock files if any. ]]></tooltip>
+                </field>
                 <field id="alldata_sync_btn" type="button" sortOrder="410" showInDefault="1" showInWebsite="1" showInStore="1">
                     <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Sync\AllData</frontend_model>
                     <label>Sync</label>

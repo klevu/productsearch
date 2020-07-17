@@ -3,7 +3,7 @@
     <body>
         <referenceBlock name="page.main.title">
             <action method="setPageTitle">
-                <argument translate="true" name="title" xsi:type="string">Externally Sync</argument>
+                <argument translate="true" name="title" xsi:type="string">Manually Data Sync</argument>
             </action>
         </referenceBlock>
 
