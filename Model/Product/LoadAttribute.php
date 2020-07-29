@@ -6,6 +6,7 @@ namespace Klevu\Search\Model\Product;
 use \Klevu\Search\Model\Product\ProductInterface as Klevu_ProductData;
 use \Magento\Framework\Model\AbstractModel as AbstractModel;
 use \Magento\Catalog\Model\ResourceModel\Product\Attribute\Collection as Klevu_Product_Attribute_Collection;
+use Klevu\Search\Model\Klevu\KlevuFactory;
 
 class LoadAttribute extends  AbstractModel implements LoadAttributeInterface
 {
@@ -19,11 +20,13 @@ class LoadAttribute extends  AbstractModel implements LoadAttributeInterface
     protected $_searchHelperCompat;
     protected $_klevuSync;
     protected $_stockHelper;
+	protected $_klevuFactory;
 
     public function __construct(
         \Klevu\Search\Model\Context $context,
         Klevu_ProductData $productdata,
-        Klevu_Product_Attribute_Collection $productAttributeCollection
+        Klevu_Product_Attribute_Collection $productAttributeCollection,
+		KlevuFactory $klevuFactory
 
     ){
         $this->_storeModelStoreManagerInterface = $context->getStoreManagerInterface();
@@ -35,6 +38,7 @@ class LoadAttribute extends  AbstractModel implements LoadAttributeInterface
         $this->_searchHelperData = $context->getHelperManager()->getDataHelper();
         $this->_klevuSync = $context->getSync();
         $this->_stockHelper = $context->getHelperManager()->getStockHelper();
+		$this->_klevuFactory = $klevuFactory;
 
     }
 
@@ -244,8 +248,25 @@ class LoadAttribute extends  AbstractModel implements LoadAttributeInterface
         }
 
         if(count($rejectedProducts) > 0) {
-            $this->_searchHelperData->log(\Zend\Log\Logger::WARN, sprintf("Because of indexing issue or invalid data we cannot synchronize product IDs %s", implode(',', array_map(function($el){ return $el['product_id']; }, $rejectedProducts))));
-           \Magento\Framework\App\ObjectManager::getInstance()->create('Klevu\Search\Model\Product\MagentoProductActionsInterface')->deleteProducts($rejectedProducts);
+            if(!$this->_searchHelperConfig->displayOutofstock()) {
+                $rejectedProducts_data = array();
+                $r = 0;
+                foreach ($rejectedProducts as $rkey => $rvalue) {
+                    $idData = $this->checkIdexitsInDb($this->_storeModelStoreManagerInterface->getStore()->getId(), $rvalue["product_id"], $rvalue["parent_id"]);
+					$ids = $idData->getData();
+					if (count($ids) > 0) {
+                        $rejectedProducts_data[$r]["product_id"] = $rvalue["product_id"];
+                        $rejectedProducts_data[$r]["parent_id"] = $rvalue["parent_id"];
+                        $r++;
+                    }
+                }
+                $this->_searchHelperData->log(\Zend\Log\Logger::WARN, sprintf("Because of indexing issue or invalid data we cannot synchronize product IDs %s", implode(',', array_map(function($el){ return $el['product_id']; }, $rejectedProducts_data))));
+                \Magento\Framework\App\ObjectManager::getInstance()->create('Klevu\Search\Model\Product\MagentoProductActionsInterface')->deleteProducts($rejectedProducts_data);
+            } else {
+                $this->_searchHelperData->log(\Zend\Log\Logger::WARN, sprintf("Because of indexing issue or invalid data we cannot synchronize product IDs %s", implode(',', array_map(function($el){ return $el['product_id']; }, $rejectedProducts))));
+                \Magento\Framework\App\ObjectManager::getInstance()->create('Klevu\Search\Model\Product\MagentoProductActionsInterface')->deleteProducts($rejectedProducts);
+
+            }
         }
         return $this;
     }
@@ -557,5 +578,21 @@ class LoadAttribute extends  AbstractModel implements LoadAttributeInterface
             $result['values'] = $value;
             return $result;
         }
+    }
+
+    /**
+     * Check product_id exits in klevu sync table.
+     *
+     * @return array
+     */
+    protected function checkIdexitsInDb($store_id, $product_id, $parent_id)
+    {
+		$klevu = $this->_klevuFactory->create();
+        $klevuCollection = $klevu->getCollection()
+            ->addFieldToFilter($klevu->getKlevuField('type'), $klevu->getKlevuType('product'))
+			->addFieldToFilter($klevu->getKlevuField('product_id'), $product_id)
+			->addFieldToFilter($klevu->getKlevuField('parent_id'), $parent_id)
+            ->addFieldToFilter($klevu->getKlevuField('store_id'), $store_id);
+		return $klevuCollection->load();
     }
 }

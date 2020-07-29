@@ -165,6 +165,12 @@ class CleanerPlugin
         $this->magentoRegistry->register('parentChildIDs', $parentChildIDs);
 
 
+        $currentEngine = $this->getCurrentSearchEngine();
+        //if no ids there then no need to set new handler for mysql only
+        if (empty($idList) && $currentEngine === 'mysql') {
+            return $requestData;
+        }
+        
         //find the search query term and override the processor
         foreach ($requestData['queries']['quick_search_container']['queryReference'] as $key => $filter) {
             if ($filter['ref'] == 'search') $requestData['queries']['quick_search_container']['queryReference'][$key] = array('clause' => 'must', 'ref' => 'klevu_id_search');
@@ -199,7 +205,7 @@ class CleanerPlugin
             'value' => $idList
         );
 
-        $currentEngine = $this->getCurrentSearchEngine();
+
         if ($currentEngine !== "mysql") {
             if (isset($requestData['sort'])) {
                 if (count($requestData['sort']) > 0) {
