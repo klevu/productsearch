@@ -27,7 +27,7 @@ class Store extends \Magento\Backend\App\Action
         $session = $this->_searchModelSession;
 
         if (!$session->getConfiguredCustomerId()) {
-            $session->addError(__("You must configure a user first."));
+            $session->addErrorMessage(__("You must configure a user first."));
             return $this->_redirect("*/*/user");
         }
 

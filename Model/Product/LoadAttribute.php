@@ -348,10 +348,12 @@ class LoadAttribute extends  AbstractModel implements LoadAttributeInterface
      */
     public function getUsedMagentoAttributes()
     {
-        $result = [];
+        $result[] = array();
         foreach ($this->getAttributeMap() as $attributes) {
-            $result = array_merge($result, $attributes);
+            //$result = array_merge($result, $attributes);
+            $result[] = $attributes;
         }
+        $result = call_user_func_array('array_merge', $result);
         $result = array_merge($result, $this->getConfigurableAttributes());
         return array_unique($result);
     }
@@ -423,7 +425,8 @@ class LoadAttribute extends  AbstractModel implements LoadAttributeInterface
             // Default mapped attributes
             $default_attributes = $this->_searchHelperConfig->getDefaultMappedAttributes();
             $attributes = [];
-            for ($i = 0; $i < count($default_attributes['klevu_attribute']); $i++) {
+            $iMaxDefaultAttrCnt = count($default_attributes['klevu_attribute']);
+            for ($i = 0; $i < $iMaxDefaultAttrCnt; $i++) {
                 $attributes[] = [
                     'klevu_attribute' => $default_attributes['klevu_attribute'][$i],
                     'magento_attribute' => $default_attributes['magento_attribute'][$i]

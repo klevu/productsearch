@@ -147,7 +147,8 @@ class KlevuProductActions  extends DataObject implements KlevuProductActionsInte
             ->where("k.type = ?", "products");
 
         $or_where = [];
-        for ($i = 0; $i < count($data); $i++) {
+        $iMaxCount = count($data);
+        for ($i = 0; $i < $iMaxCount; $i++) {
             if (isset($skipped_record_ids[$i])) {
                 continue;
             }
@@ -176,7 +177,8 @@ class KlevuProductActions  extends DataObject implements KlevuProductActionsInte
         }
 
         $where = [];
-        for ($i = 0; $i < count($data); $i++) {
+        $iMaxCount = count($data);
+        for ($i = 0; $i < $iMaxCount; $i++) {
             if (isset($skipped_record_ids[$i])) {
                 continue;
             }

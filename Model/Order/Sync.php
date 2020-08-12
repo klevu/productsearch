@@ -499,4 +499,3 @@ class Sync extends AbstractModel
         return $this->_klevuSyncModel->log($level, $message);
     }
 }
-

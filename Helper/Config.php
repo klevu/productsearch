@@ -1153,7 +1153,10 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     public function getModuleInfo()
     {
         $moduleInfo = $this->_moduleList->getOne('Klevu_Search');
-        return $moduleInfo['setup_version'];
+        if (isset($moduleInfo['setup_version'])) {
+            return $moduleInfo['setup_version'];
+        }
+        return false;
     }
 
     /**
@@ -1163,8 +1166,11 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function getModuleInfoCatNav()
     {        
-		$moduleInfo = $this->_moduleList->getOne('Klevu_Categorynavigation');
-        return $moduleInfo['setup_version'];
+	$moduleInfo = $this->_moduleList->getOne('Klevu_Categorynavigation');
+        if (isset($moduleInfo['setup_version'])) {
+            return $moduleInfo['setup_version'];
+        }
+        return false;
     }
 
 
@@ -1220,7 +1226,6 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
         $sortLabel = $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_CATALOG_SEARCH_RELEVANCE_LABEL, \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $store);
         return $sortLabel ? $sortLabel : __('Relevance');
     }
-
 
     /**
      * Returns selection lockfile option

@@ -147,11 +147,12 @@ class All extends \Magento\Backend\App\Action
             $this->_frameworkEventManagerInterface->dispatch('content_data_to_sync', []);
 
             $this->_klevuSync->unsFirstSync();
-            $this->messageManager->addSuccess(__("Data updates have been sent to Klevu"));
+            $this->messageManager->addSuccessMessage(__("Data updates have been sent to Klevu"));
 
         } catch (\Magento\Framework\Model\Store\Exception $e) {
-            $this->_psrLogLoggerInterface->error($e);
+            $this->_searchHelperData->log(\Zend\Log\Logger::ERR, sprintf("Error thrown while scheduling product sync %s", $e->getMessage()));
         }
         return $this->_redirect($this->_redirect->getRefererUrl());
     }
 }
+

@@ -137,4 +137,11 @@ interface MagentoProductActionsInterface
      * @return mixed
      */
     public function markRecordIntoQueue($productIds, $recordType, $store);
+
+    /**
+     * Returns the parent relations by child id
+     * @param $ids
+     * @return mixed
+     */
+    public function getParentRelationsByChild($ids);
 }

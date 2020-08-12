@@ -473,4 +473,9 @@ class Sync extends AbstractModel
         return $this->_klevuSyncModel->log($level, $message);
     }
 
+
+    public function isExtensionConfigured($store_id)
+    {
+        return $this->_searchHelperConfig->isExtensionConfigured($store_id);
+    }
 }
