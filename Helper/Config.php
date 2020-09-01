@@ -45,10 +45,10 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     protected $_klevu_enabled_feature_response;
 
 
-	/**
-     * @var \Magento\Framework\Module\ModuleList
+     /**
+     * @var \Klevu\Search\Helper\VersionReader
      */
-    protected $_moduleList;
+    protected $_versionReader;
 	
     public function __construct(
         \Magento\Framework\App\Config\ScopeConfigInterface $appConfigScopeConfigInterface,
@@ -58,7 +58,7 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
         \Magento\Store\Model\Store $frameworkModelStore,
         \Magento\Framework\App\Config\Value $modelConfigData,
         \Magento\Framework\App\ResourceConnection $frameworkModelResource,
-		\Magento\Framework\Module\ModuleList $moduleList
+        \Klevu\Search\Helper\VersionReader $versionReader
 
     ) {
 
@@ -69,7 +69,7 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
         $this->_frameworkModelStore = $frameworkModelStore;
         $this->_modelConfigData = $modelConfigData;
         $this->_frameworkModelResource = $frameworkModelResource;
-		$this->_moduleList = $moduleList;		
+		$this->_versionReader = $versionReader;		
     }
 
     const XML_PATH_EXTENSION_ENABLED = "klevu_search/general/enabled";
@@ -1152,11 +1152,7 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function getModuleInfo()
     {
-        $moduleInfo = $this->_moduleList->getOne('Klevu_Search');
-        if (isset($moduleInfo['setup_version'])) {
-            return $moduleInfo['setup_version'];
-        }
-        return false;
+        return $this->_versionReader->getVersionString('Klevu_Search');
     }
 
     /**
@@ -1165,12 +1161,8 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
      * @return mixed
      */
     public function getModuleInfoCatNav()
-    {        
-	$moduleInfo = $this->_moduleList->getOne('Klevu_Categorynavigation');
-        if (isset($moduleInfo['setup_version'])) {
-            return $moduleInfo['setup_version'];
-        }
-        return false;
+    {      
+        return $this->_versionReader->getVersionString('Klevu_Categorynavigation');
     }
 
 

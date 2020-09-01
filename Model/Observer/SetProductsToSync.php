@@ -9,48 +9,27 @@
 
 namespace Klevu\Search\Model\Observer;
 
+use Klevu\Search\Model\Product\MagentoProductActionsInterface;
 use Magento\Framework\Event\ObserverInterface;
 
+/**
+ * Class SetProductsToSync
+ * @package Klevu\Search\Model\Observer
+ */
 class SetProductsToSync implements ObserverInterface
 {
-
     /**
-     * @var \Klevu\Search\Model\Product\Sync
+     * SetProductsToSync constructor.
+     * @param MagentoProductActionsInterface $magentoProductActions
+     * @param \Klevu\Search\Helper\Data $searchHelperData
      */
-    protected $_modelProductSync;
-
-    /**
-     * @var \Magento\Framework\Filesystem
-     */
-    protected $_magentoFrameworkFilesystem;
-
-    /**
-     * @var \Klevu\Search\Helper\Data
-     */
-    protected $_searchHelperData;
-
-    /**
-     * @var \Magento\Catalog\Model\Product\Action
-     */
-    protected $_modelProductAction;
-
-    /**
-     * @var \Magento\Framework\App\ResourceConnection
-     */
-    protected $_frameworkModelResource;
-
     public function __construct(
-        \Klevu\Search\Model\Product\Sync $modelProductSync,
-        \Magento\Framework\Filesystem $magentoFrameworkFilesystem,
-        \Klevu\Search\Helper\Data $searchHelperData,
-        \Magento\Framework\App\ResourceConnection $frameworkModelResource
+        MagentoProductActionsInterface $magentoProductActions,
+        \Klevu\Search\Helper\Data $searchHelperData
     )
     {
-
-        $this->_modelProductSync = $modelProductSync;
-        $this->_magentoFrameworkFilesystem = $magentoFrameworkFilesystem;
+        $this->magentoProductActions = $magentoProductActions;
         $this->_searchHelperData = $searchHelperData;
-        $this->_frameworkModelResource = $frameworkModelResource;
     }
 
     /**
@@ -59,20 +38,16 @@ class SetProductsToSync implements ObserverInterface
      */
     public function execute(\Magento\Framework\Event\Observer $observer)
     {
-        $product_ids = $observer->getData('product_ids');
-
-        if (empty($product_ids)) {
-            return;
+        try {
+            //returns the product_ids array
+            $product_ids = $observer->getData('product_ids');
+            if (empty($product_ids)) {
+                return;
+            }
+            $this->magentoProductActions->markRecordIntoQueue($product_ids, 'products');
+        } catch (\Exception $e) {
+            $this->_searchHelperData->log(\Zend\Log\Logger::DEBUG, sprintf("Marking products sync error:: SetProductsToSync :: %s", $e->getMessage()));
         }
-
-        $product_ids = implode(',', $product_ids);
-        $where = sprintf("product_id IN(%s) OR parent_id IN(%s)", $product_ids, $product_ids);
-        $resource = $this->_frameworkModelResource;
-        $resource->getConnection('core_write')
-            ->update(
-                $resource->getTableName('klevu_product_sync'),
-                ['last_synced_at' => '0'],
-                $where
-            );
     }
 }
+

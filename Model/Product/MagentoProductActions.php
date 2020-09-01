@@ -708,19 +708,28 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
     /**
      * Mark records for update storewise
      *
-     * @param $productIds
+     * @param int|array $productIds
      * @param string $recordType
-     * @param int $store
+     * @param null $stores
+     *
+     * @return mixed|void
      */
-    public function markRecordIntoQueue($productIds, $recordType = 'products', $store = null)
+    public function markRecordIntoQueue($productIds, $recordType = 'products', $stores = null)
     {
-        $ids = implode(',', $productIds);
+        if (is_array($productIds)) {
+            $ids = implode(',', $productIds);
+        } else {
+            $ids = (int)$productIds;
+        }
         $whereType = $this->_frameworkModelResource->getConnection('core_write')->quoteInto('type = ?', $recordType);
         $where = sprintf("(product_id IN(%s) OR parent_id IN(%s)) AND %s", $ids, $ids, $whereType);
-        if ($store !== null) {
-            $store = $this->_storeModelStoreManagerInterface->getStore($store);
-            $whereStoreId = $this->_frameworkModelResource->getConnection('core_write')->quoteInto('store_id = ?', $store->getId());
-            $where .= sprintf(" AND %s", $whereStoreId);
+        if ($stores !== null) {
+            if (is_array($stores)) {
+                $storeIds = implode(',', $stores);
+            } else {
+                $storeIds = (int)$stores;
+            }
+            $where .= sprintf(" AND `store_id` IN(%s)", $storeIds);
         }
         $this->_frameworkModelResource->getConnection('core_write')->update(
             $this->_frameworkModelResource->getTableName('klevu_product_sync'),

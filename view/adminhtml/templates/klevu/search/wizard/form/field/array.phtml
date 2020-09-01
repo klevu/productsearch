@@ -40,7 +40,7 @@ $_colspan = $_colspan > 1 ? 'colspan="' . $_colspan . '"' : '';
 </div>
 
 <script type="text/javascript">
-//<![CDATA[
+
 // create row creator
 // Make sure it's in the global scope
 window.arrayRow<?php echo $_htmlId ?> = {
@@ -135,5 +135,5 @@ arrayRow<?php echo $_htmlId ?>.showButtonOnly();
 <?php if ($block->getElement()->getDisabled()):?>
 toggleValueElements({checked:true}, $('grid<?php echo $_htmlId ?>').parentNode);
 <?php endif;?>
-//]]>
+
 </script>

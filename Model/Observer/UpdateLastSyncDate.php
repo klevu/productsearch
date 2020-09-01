@@ -1,28 +1,20 @@
 <?php
 
-/**
- * Class \Klevu\Search\Model\Observer
- *
- * @method setIsProductSyncScheduled($flag)
- * @method bool getIsProductSyncScheduled()
- */
-
 namespace Klevu\Search\Model\Observer;
 
+use Klevu\Search\Model\Product\MagentoProductActionsInterface;
 use Magento\Framework\Event\ObserverInterface;
 
+/**
+ * Class UpdateLastSyncDate
+ * @package Klevu\Search\Model\Observer
+ */
 class UpdateLastSyncDate implements ObserverInterface
 {
-
     /**
-     * @var \Klevu\Search\Model\Product\Sync
+     * @var MagentoProductActionsInterface
      */
-    protected $_modelProductSync;
-
-    /**
-     * @var \Magento\Framework\Filesystem
-     */
-    protected $_magentoFrameworkFilesystem;
+    protected $magentoProductActions;
 
     /**
      * @var \Klevu\Search\Helper\Data
@@ -30,27 +22,18 @@ class UpdateLastSyncDate implements ObserverInterface
     protected $_searchHelperData;
 
     /**
-     * @var \Magento\Catalog\Model\Product\Action
+     * UpdateLastSyncDate constructor.
+     * @param \Klevu\Search\Helper\Data $searchHelperData
+     * @param MagentoProductActionsInterface $magentoProductActions
      */
-    protected $_modelProductAction;
-
-    /**
-     * @var \Magento\Framework\App\ResourceConnection
-     */
-    protected $_frameworkModelResource;
-
     public function __construct(
-        \Klevu\Search\Model\Product\Sync $modelProductSync,
-        \Magento\Framework\Filesystem $magentoFrameworkFilesystem,
-        \Klevu\Search\Helper\Data $searchHelperData,
-        \Magento\Framework\App\ResourceConnection $frameworkModelResource
+        MagentoProductActionsInterface $magentoProductActions,
+        \Klevu\Search\Helper\Data $searchHelperData
+
     )
     {
-
-        $this->_modelProductSync = $modelProductSync;
-        $this->_magentoFrameworkFilesystem = $magentoFrameworkFilesystem;
+        $this->magentoProductActions = $magentoProductActions;
         $this->_searchHelperData = $searchHelperData;
-        $this->_frameworkModelResource = $frameworkModelResource;
     }
 
     /**
@@ -61,22 +44,19 @@ class UpdateLastSyncDate implements ObserverInterface
     {
         try {
             $product_ids[] = $observer->getEvent()->getProduct()->getId();
-
             if (empty($product_ids)) {
                 return;
             }
-
-            $product_ids = implode(',', $product_ids);
-            $where = sprintf("product_id IN(%s) OR parent_id IN(%s)", $product_ids, $product_ids);
-            $resource = $this->_frameworkModelResource;
-            $resource->getConnection('core_write')
-                ->update(
-                    $resource->getTableName('klevu_product_sync'),
-                    ['last_synced_at' => '0'],
-                    $where
-                );
+            $storeIds = $observer->getEvent()->getProduct()->getStoreIds();
+            if ($storeIds > 0) {
+                $this->magentoProductActions->markRecordIntoQueue($product_ids, 'products', $storeIds);
+            } else {
+                //For all the stores
+                $this->magentoProductActions->markRecordIntoQueue($product_ids, 'products');
+            }
         } catch (\Exception $e) {
-            $this->_searchHelperData->log(\Zend\Log\Logger::DEBUG, sprintf("Error while updating date in klevu product sync:\n%s", $e->getMessage()));
+            $this->_searchHelperData->log(\Zend\Log\Logger::CRIT, sprintf("Marking products sync error:: UpdateLastSyncDate :: %s", $e->getMessage()));
         }
     }
 }
+

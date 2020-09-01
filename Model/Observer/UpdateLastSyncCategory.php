@@ -9,20 +9,19 @@
 
 namespace Klevu\Search\Model\Observer;
 
+use Klevu\Search\Model\Product\MagentoProductActionsInterface;
 use Magento\Framework\Event\ObserverInterface;
 
+/**
+ * Class UpdateLastSyncCategory
+ * @package Klevu\Search\Model\Observer
+ */
 class UpdateLastSyncCategory implements ObserverInterface
 {
-
     /**
      * @var \Klevu\Search\Model\Product\MagentoProductActionsInterface
      */
     protected $_magentoProductActionsInterface;
-
-    /**
-     * @var \Magento\Framework\Filesystem
-     */
-    protected $_magentoFrameworkFilesystem;
 
     /**
      * @var \Klevu\Search\Helper\Data
@@ -30,27 +29,17 @@ class UpdateLastSyncCategory implements ObserverInterface
     protected $_searchHelperData;
 
     /**
-     * @var \Magento\Catalog\Model\Product\Action
+     * UpdateLastSyncCategory constructor.
+     * @param \Klevu\Search\Model\Product\MagentoProductActionsInterface $magentoProductActionsInterface
+     * @param \Klevu\Search\Helper\Data $searchHelperData
      */
-    protected $_modelProductAction;
-
-    /**
-     * @var \Magento\Framework\App\ResourceConnection
-     */
-    protected $_frameworkModelResource;
-
     public function __construct(
-        \Klevu\Search\Model\Product\MagentoProductActionsInterface $magentoProductActionsInterface,
-        \Magento\Framework\Filesystem $magentoFrameworkFilesystem,
-        \Klevu\Search\Helper\Data $searchHelperData,
-        \Magento\Framework\App\ResourceConnection $frameworkModelResource
+        MagentoProductActionsInterface $magentoProductActionsInterface,
+        \Klevu\Search\Helper\Data $searchHelperData
     )
     {
-
         $this->_magentoProductActionsInterface = $magentoProductActionsInterface;
-        $this->_magentoFrameworkFilesystem = $magentoFrameworkFilesystem;
         $this->_searchHelperData = $searchHelperData;
-        $this->_frameworkModelResource = $frameworkModelResource;
     }
 
     /**
@@ -60,28 +49,22 @@ class UpdateLastSyncCategory implements ObserverInterface
     public function execute(\Magento\Framework\Event\Observer $observer)
     {
         try {
+            //getId adding as array
             $category_ids[] = $observer->getEvent()->getCategory()->getId();
             if (empty($category_ids)) {
                 return;
             }
+            $this->_magentoProductActionsInterface->markRecordIntoQueue($category_ids, 'categories');
 
-            $category_ids = implode(',', $category_ids);
-            $where = sprintf("product_id IN(%s) OR parent_id IN(%s)", $category_ids, $category_ids);
-            $resource = $this->_frameworkModelResource;
-            $resource->getConnection('core_write')
-                ->update(
-                    $resource->getTableName('klevu_product_sync'),
-                    ['last_synced_at' => '0'],
-                    $where
-                );
-
+            //getAllIds will return array
             $product_ids = $observer->getEvent()->getCategory()->getProductCollection()->getAllIds();
             if (empty($product_ids)) {
                 return;
             }
-            $this->_magentoProductActionsInterface->updateSpecificProductIds($product_ids);
+            $this->_magentoProductActionsInterface->markRecordIntoQueue($product_ids,'products');
         } catch (\Exception $e) {
-            $this->_searchHelperData->log(\Zend\Log\Logger::DEBUG, sprintf("Error while updating date for category in klevu product sync:\n%s", $e->getMessage()));
+            $this->_searchHelperData->log(\Zend\Log\Logger::CRIT, sprintf("Marking products sync error:: UpdateLastSyncCategory :: %s", $e->getMessage()));
         }
     }
 }
+

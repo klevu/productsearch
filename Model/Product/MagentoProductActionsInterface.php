@@ -131,10 +131,11 @@ interface MagentoProductActionsInterface
     /**
      * Mark records for update storewise
      *
-     * @param $productIds
-     * @param $recordType
-     * @param $store
-     * @return mixed
+     * @param int|array $productIds
+     * @param string $recordType
+     * @param null $stores
+     *
+     * @return mixed|void
      */
     public function markRecordIntoQueue($productIds, $recordType, $store);
 

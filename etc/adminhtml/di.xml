@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+
+    <type name="Magento\Catalog\Controller\Adminhtml\Product\Action\Attribute\Save">
+        <plugin name="KlevuSearch::BulkProductSavePlugin"
+                type="Klevu\Search\Plugin\Admin\BulkProductAttributeSavePlugin"
+                sortOrder="1"
+        ></plugin>
+    </type>
+
+    <type name="Magento\UrlRewrite\Controller\Adminhtml\Url\Rewrite\Save">
+        <plugin name="KlevuSearch::URLRewriteSavePlugin"
+                type="Klevu\Search\Plugin\Admin\UrlRewriteSavePlugin"
+                sortOrder="1"></plugin>
+    </type>
+
+</config>
+

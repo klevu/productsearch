@@ -46,6 +46,7 @@ class Startsession extends \Klevu\Search\Model\Api\Actionall
         }
 
         $request = $this->getRequest();
+        $request->setData([]);
         $endpoint = $this->buildEndpoint(static::ENDPOINT, $this->getStore(), $this->_searchHelperConfig->getRestHostname($this->getStore()));
         $request
             ->setResponseModel($this->getResponse())
