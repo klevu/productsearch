@@ -24,7 +24,7 @@ class VersionReader extends \Magento\Framework\App\Helper\AbstractHelper
      *
      * @var string
      */
-    public const KLEVU_FILE_NAME = 'composer.json';
+    const KLEVU_FILE_NAME = 'composer.json';
 
     /**
      * VersionReader constructor.
