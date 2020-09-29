@@ -214,11 +214,6 @@
             <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Logclear</frontend_model>
             <comment><![CDATA[]]></comment>
         </field>
-	<field id="tagging_options" translate="label comment" sortOrder="420"  type="select" showInDefault="1">
-            <label>Enable partial updates for stock and price</label>
-            <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-            <comment><![CDATA[Enable product partial update for stock and price.]]></comment>
-        </field>
         <field id="trigger_options_info" translate="label comment" sortOrder="420"  type="select" showInDefault="1">
             <label>Using an ERP OR 3rd party tool for product updates</label>
             <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>

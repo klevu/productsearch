@@ -132,6 +132,7 @@ class CleanerPlugin
 
         //check if search array generated or not
         if (!isset($requestData['queries']['search'])) {
+            $this->klevuHelperData->log(\Zend\Log\Logger::DEBUG,"Search array is not found in CleanerPlugin");
             return $requestData;
         } else {
             $queryTerm = $requestData['queries']['search']['value'];
@@ -139,6 +140,7 @@ class CleanerPlugin
 
         //check if dimensions array found or not
         if (!isset($requestData['dimensions']['scope'])) {
+            $this->klevuHelperData->log(\Zend\Log\Logger::DEBUG,"Dimension array is not found in CleanerPlugin");
             return $requestData;
         } else {
             $queryScope = $requestData['dimensions']['scope']['value'];
@@ -168,6 +170,7 @@ class CleanerPlugin
         $currentEngine = $this->getCurrentSearchEngine();
         //if no ids there then no need to set new handler for mysql only
         if (empty($idList) && $currentEngine === 'mysql') {
+            $this->klevuHelperData->log(\Zend\Log\Logger::DEBUG,"MySQL Search Engine is selected and No Ids were found in CleanerPlugin");
             return $requestData;
         }
         
@@ -231,7 +234,12 @@ class CleanerPlugin
                 }
             }
         }
-
+        //convert requestData object into array
+        $requestDataToArray = json_decode(json_encode($requestData), true);
+        $this->klevuHelperData->log(
+            \Zend\Log\Logger::DEBUG,
+            "Request data in CleanerPlugin" . PHP_EOL . print_r($requestDataToArray, true)
+        );
         return $requestData;
     }
 

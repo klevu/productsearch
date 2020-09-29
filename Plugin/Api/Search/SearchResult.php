@@ -11,6 +11,7 @@ use Magento\Framework\Registry;
 use Magento\Store\Model\ScopeInterface as ScopeInterface;
 use Magento\Framework\App\Config\MutableScopeConfigInterface as MutableScopeConfigInterface;
 use Klevu\Search\Helper\Config as KlevuConfig;
+use Klevu\Search\Helper\Data as KlevuHelperData;
 
 /**
  * Class SearchResult
@@ -30,20 +31,30 @@ class SearchResult
     private $klevuConfig;
 
     /**
+     * @var KlevuHelperData
+     */
+    protected $klevuHelperData;
+
+    /**
      * SearchResult constructor.
      *
      * @param Registry $registry
      * @param KlevuConfig $klevuConfig
      */
-    public function __construct(Registry $registry,KlevuConfig $klevuConfig)
+    public function __construct(Registry $registry,KlevuConfig $klevuConfig,KlevuHelperData $klevuHelperData)
     {
 
         $this->registry = $registry;
         $this->klevuConfig = $klevuConfig;
+        $this->klevuHelperData = $klevuHelperData;
     }
 
     public function beforeSetItems(\Magento\Framework\Api\Search\SearchResult $subject, $result)
     {
+            $this->klevuHelperData->log(
+                \Zend\Log\Logger::DEBUG,
+                "Search Result before processing in SearchResult plugin" . PHP_EOL . print_r($result, true)
+            );
 
             $current_order = $this->registry->registry('current_order');
             if (!empty($current_order)) {
@@ -51,6 +62,7 @@ class SearchResult
                     if (!empty($this->registry->registry('search_ids'))) {
                         $flag = $key = 0;
                         $ids = array_reverse($this->registry->registry('search_ids'));
+                        $this->klevuHelperData->log(\Zend\Log\Logger::DEBUG, sprintf("array reverse search ids in SearchResult plugin %s", implode(',',$ids)));
                         $result_key = array();
                         foreach ($result as $item) {
                             $key++;
@@ -69,6 +81,10 @@ class SearchResult
 
 
                         if ($flag == 1) {
+                            $this->klevuHelperData->log(
+                                \Zend\Log\Logger::DEBUG,
+                                "Result key array for multisort in SearchResult plugin" . PHP_EOL . print_r($result_key, true)
+                            );
                             array_multisort($result_key, SORT_DESC, $result);
                         }
 
@@ -80,6 +96,10 @@ class SearchResult
                             if (count($result) > 0) {
                                 $array = array_chunk($result, $size);
                                 if (isset($array[$start])) {
+                                    $this->klevuHelperData->log(
+                                        \Zend\Log\Logger::DEBUG,
+                                        "Result after processing in SearchResult plugin" . PHP_EOL . print_r($array[$start], true)
+                                    );
                                     return [$array[$start]];
                                 }
                             } else {

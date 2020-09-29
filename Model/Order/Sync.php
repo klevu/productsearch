@@ -108,7 +108,7 @@ class Sync extends AbstractModel
      */
     public function addOrderToQueue(\Magento\Sales\Model\Order $order)
     {
-
+        $groupItemUniqueIds = array();
         $items = [];
         $order_date = date_create("now")->format("Y-m-d H:i");
         $checkout_date = round(microtime(true) * 1000);
@@ -129,11 +129,32 @@ class Sync extends AbstractModel
                         }
                     }
                 }
+            //For group product, only one item will be sync with id of Group Product
+            } elseif ($item->getProductType() == GroupedProduct::TYPE_CODE) {
+                    if ($item->getId() != null && $this->checkItemId($item->getId()) !== true) {
+                        $groupProduct = $this->_groupedProduct->getParentIdsByChild($item->getProductId());
+                        if (!empty($groupProduct)) {
+                            $idOfGroupProduct = $groupProduct[0];
+                            if (!in_array($idOfGroupProduct, $groupItemUniqueIds)) {
+                                $groupItemUniqueIds[$item->getId()] = (int)$groupProduct[0];
+                            }
+                        }
+                    }
+
             } else {
                 if ($item->getId() != null) {
                     if ($this->checkItemId($item->getId()) !== true) {
                         $items[] = [$item->getId(), $session_id, $ip_address, $order_date, $order_email, $checkout_date, 0];
                     }
+                }
+            }
+        }
+
+        if (!empty($groupItemUniqueIds)) {
+            //Only uniqueGroupItems
+            foreach ($groupItemUniqueIds as $orderItemFirstId => $groupProductUniqueId) {
+                if (!empty($groupProductUniqueId) && !empty($orderItemFirstId)) {
+                    $items[] = [$orderItemFirstId, $session_id, $ip_address, $order_date, $order_email, $checkout_date, 0];
                 }
             }
         }
@@ -252,45 +273,54 @@ class Sync extends AbstractModel
      */
     protected function sync($item, $sess_id, $ip_address, $order_date, $order_email, $checkout_date)
     {
-        if (!$this->getApiKey($item->getStoreId())) {
-            return "Klevu Search is not configured for this store.";
-        }
-        $parent = null;
-        if ($item->getParentItemId()) {
-            //$parent = \Magento\Framework\App\ObjectManager::getInstance()->create('Magento\Sales\Model\Order\Item')->load($item->getParentItemId());
-            $parent = $this->_modelOrderItemFactory->create()->load($item->getParentItemId());
-        }
-        if ($item->getProductType() == GroupedProduct::TYPE_CODE) {
-            //$objectManager = \Magento\Framework\App\ObjectManager::getInstance();
-            //$groupProductObject = $objectManager->create('Magento\GroupedProduct\Model\Product\Type\Grouped');
-            $groupProduct = $this->_groupedProduct->getParentIdsByChild($item->getProductId());
-            $itemId = $groupProduct[0];
-        } else {
-            $itemId = $item->getProductId();
-        }
+        try {
+            if (!$this->getApiKey($item->getStoreId())) {
+                return "Klevu Search is not configured for this store.";
+            }
+            $parent = null;
+            if ($item->getParentItemId()) {
+                //$parent = \Magento\Framework\App\ObjectManager::getInstance()->create('Magento\Sales\Model\Order\Item')->load($item->getParentItemId());
+                $parent = $this->_modelOrderItemFactory->create()->load($item->getParentItemId());
+            }
+            if ($item->getProductType() == GroupedProduct::TYPE_CODE) {
+                $groupProduct = $this->_groupedProduct->getParentIdsByChild($item->getProductId());
+                if (isset($groupProduct[0])) {
+                    $klevu_productId = $groupProduct[0];
+                } else {
+					return "Group product can not be loaded.";
+					//return as we do not want to send incorect data to klevu if we can not load the parent group product.
+                    //$klevu_productId = $this->_searchHelperData->getKlevuProductId($item->getProductId(), ($parent) ? $parent->getProductId() : 0);
+                }
+            }  else {
+                $klevu_productId = $this->_searchHelperData->getKlevuProductId($item->getProductId(), ($parent) ? $parent->getProductId() : 0);
+            }
 
-        $response = $this->_apiActionProducttracking
-            ->setStore($this->_storeModelStoreManagerInterface->getStore($item->getStoreId()))
-            ->execute([
-                "klevu_apiKey" => $this->getApiKey($item->getStoreId()),
-                "klevu_type" => "checkout",
-                "klevu_productId" => $this->_searchHelperData->getKlevuProductId($itemId, ($parent) ? $parent->getProductId() : 0),
-                "klevu_unit" => $item->getQtyOrdered() ? $item->getQtyOrdered() : ($parent ? $parent->getQtyOrdered() : null),
-                "klevu_salePrice" => $item->getPriceInclTax() ? $item->getPriceInclTax() : ($parent ? $parent->getPriceInclTax() : null),
-                "klevu_currency" => $this->getStoreCurrency($item->getStoreId()),
-                "klevu_shopperIP" => $this->getOrderIP($item->getOrderId()),
-                "Klevu_sessionId" => $sess_id,
-                "klevu_orderDate" => date_format(date_create($order_date), "Y-m-d"),
-                "klevu_emailId" => $order_email,
-                "klevu_storeTimezone" => $this->_searchHelperData->getStoreTimeZone($item->getStoreId()),
-                "Klevu_clientIp" => $ip_address,
-                "klevu_checkoutDate" => $checkout_date,
-                "klevu_productPosition" => "1"
-            ]);
-        if ($response->isSuccess()) {
-            return true;
-        } else {
-            return $response->getMessage();
+            $response = $this->_apiActionProducttracking
+                ->setStore($this->_storeModelStoreManagerInterface->getStore($item->getStoreId()))
+                ->execute([
+                    "klevu_apiKey" => $this->getApiKey($item->getStoreId()),
+                    "klevu_type" => "checkout",
+                    "klevu_productId" => $klevu_productId,
+                    "klevu_unit" => $item->getQtyOrdered() ? $item->getQtyOrdered() : ($parent ? $parent->getQtyOrdered() : null),
+                    "klevu_salePrice" => $item->getPriceInclTax() ? $item->getPriceInclTax() : ($parent ? $parent->getPriceInclTax() : null),
+                    "klevu_currency" => $this->getStoreCurrency($item->getStoreId()),
+                    "klevu_shopperIP" => $this->getOrderIP($item->getOrderId()),
+                    "Klevu_sessionId" => $sess_id,
+                    "klevu_orderDate" => date_format(date_create($order_date), "Y-m-d"),
+                    "klevu_emailId" => $order_email,
+                    "klevu_storeTimezone" => $this->_searchHelperData->getStoreTimeZone($item->getStoreId()),
+                    "Klevu_clientIp" => $ip_address,
+                    "klevu_checkoutDate" => $checkout_date,
+                    "klevu_productPosition" => "1"
+                ]);
+            if ($response->isSuccess()) {
+                return true;
+            } else {
+                return $response->getMessage();
+            }
+        } catch (\Exception $e) {
+            // Catch the exception that was thrown, log it, then throw a new exception to be caught the Magento cron.
+            $this->log(\Zend\Log\Logger::INFO, sprintf("Order Itemid %s skipped for Klevu Order Sync ", $item->getOrderId()));
         }
     }
 

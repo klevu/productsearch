@@ -15,7 +15,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Magento\Framework\ObjectManagerInterface;
 use Klevu\Content\Model\ContentInterface as KlevuContent;
-
+use Klevu\Search\Helper\Data as KlevuSearchHelperData;
 
 /**
  * Class SyncStoreView
@@ -66,13 +66,15 @@ class SyncStoreView extends Command
         AppState $appState,
         StoreManagerInterface $storeInterface,
         DirectoryList $directoryList,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        KlevuSearchHelperData $klevuSearchHelperData
     )
     {
         $this->appState = $appState;
         $this->directoryList = $directoryList;
         $this->storeInterface = $storeInterface;
         $this->_logger = $logger;
+        $this->klevuSearchHelperData = $klevuSearchHelperData;
         parent::__construct();
     }
 
@@ -113,6 +115,7 @@ HELP
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        $this->klevuSearchHelperData->log(\Zend\Log\Logger::INFO,"SyncStoreView command executed via CLI");
         $logDir = $this->directoryList->getPath(DirectoryList::VAR_DIR);
         $areacodeFile = $logDir . "/" . self::AREA_CODE_LOCK_FILE;
         try {

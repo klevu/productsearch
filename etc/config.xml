@@ -23,7 +23,6 @@
             </product_sync>           
             <developer>
                 <collection_method>0</collection_method>
-                <tagging_options>0</tagging_options>
                 <force_log>1</force_log>
                 <log_level>6</log_level>
                 <!-- Log level default is set in the backend model and getter as it uses Zend_Log constants -->

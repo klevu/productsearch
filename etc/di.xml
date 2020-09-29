@@ -40,7 +40,8 @@
 				<item name="syncStoreViewData" xsi:type="object">Klevu\Search\Console\Command\SyncStoreView</item>
 				<item name="RatingGeneration" xsi:type="object">Klevu\Search\Console\Command\RatingGeneration</item>
 				<item name="ImageGeneration" xsi:type="object">Klevu\Search\Console\Command\ImageGeneration</item>
-			</argument>
+                                <item name="sync_category" xsi:type="object">Klevu\Search\Console\Command\SyncCategoryCommand</item>
+                        </argument>
 		</arguments>
 	</type>
 

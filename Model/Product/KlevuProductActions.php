@@ -196,6 +196,7 @@ class KlevuProductActions  extends DataObject implements KlevuProductActionsInte
             }
         }
 
+
         if (!empty($where)) {
             $where = sprintf(
                 "(%s) AND (%s)",

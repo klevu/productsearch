@@ -112,9 +112,11 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
 
         if ($klevuCollection->count() > 0) {
             foreach ($klevuCollection as $klevuItem) {
-                $klevuToUpdate[$klevuItem->getData($klevu->getKlevuField('product_id'))]["product_id"] = $klevuItem->getData($klevu->getKlevuField('product_id'));
-                $klevuToUpdate[$klevuItem->getData($klevu->getKlevuField('product_id'))]["parent_id"] = $klevuItem->getData($klevu->getKlevuField('parent_id'));
-
+                $parentFieldId = $klevuItem->getData($klevu->getKlevuField('parent_id'));
+                $productFieldId = $klevuItem->getData($klevu->getKlevuField('product_id'));
+                $uniqueGroupKey = $parentFieldId . "-" . $productFieldId;
+                $klevuToUpdate[$uniqueGroupKey]["product_id"] = $productFieldId;
+                $klevuToUpdate[$uniqueGroupKey]["parent_id"] = $parentFieldId;
             }
         }
 
@@ -155,7 +157,7 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
             if (!empty($parent_ids_all)) {
                 foreach ($parent_ids_all as $pkey => $pvalue) {
                     if ($pvalue['product_id'] == $value['entity_id']) {
-                        $m_product_ids[] = $pvalue['parent_id'] . "-" . $value['entity_id'];
+                        $m_product_ids[] = $pvalue['entity_id'] . "-" . $value['entity_id'];
                     }
                 }
             }
@@ -186,7 +188,7 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
             if (!empty($parent_ids)) {
                 foreach ($parent_ids as $pkey => $pvalue) {
                     if ($pvalue['product_id'] == $value['entity_id']) {
-                        $m_product_ids[] = $pvalue['parent_id'] . "-" . $value['entity_id'];
+                        $m_product_ids[] = $pvalue['entity_id'] . "-" . $value['entity_id'];
                     }
                 }
             }
@@ -222,12 +224,12 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
             $ids = explode('-', $value);
             if ($ids[0] !== "0") {
                 if (in_array($ids[0], $enable_parent_ids)) {
-                    $products_ids_add[$ids[1]]['parent_id'] = $ids[0];
-                    $products_ids_add[$ids[1]]['product_id'] = $ids[1];
+                    $products_ids_add[$value]['parent_id'] = $ids[0];
+                    $products_ids_add[$value]['product_id'] = $ids[1];
                 }
             } else {
-                $products_ids_add[$ids[1]]['parent_id'] = $ids[0];
-                $products_ids_add[$ids[1]]['product_id'] = $ids[1];
+                $products_ids_add[$value]['parent_id'] = $ids[0];
+                $products_ids_add[$value]['product_id'] = $ids[1];
             }
         }
         return $products_ids_add;
@@ -303,10 +305,13 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
         $products_to_delete = array_diff($k_product_ids, $m_product_ids);
         foreach ($products_to_delete as $key => $value) {
             $ids = explode('-', $value);
-            $products_ids_delete[$ids[1]]['parent_id'] = $ids[0];
-            $products_ids_delete[$ids[1]]['product_id'] = $ids[1];
+            /*$products_ids_delete[$ids[1]]['parent_id'] = $ids[0];
+            $products_ids_delete[$ids[1]]['product_id'] = $ids[1];*/
+            $products_ids_delete[$value]['parent_id'] = $ids[0];
+            $products_ids_delete[$value]['product_id'] = $ids[1];
         }
-
+        //have to apply unique to remove duplicate deletion
+        $products_ids_delete = array_unique($products_ids_delete, SORT_REGULAR);
         return $products_ids_delete;
     }
 
@@ -757,6 +762,29 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
             )->where('l.product_id IN(?)', $ids);
         $select->columns(array('e.entity_id', 'l.product_id', 'l.parent_id'));
         return $this->_frameworkModelResource->getConnection()->fetchAll($select);
+    }
+
+    /**
+     * @param null $stores
+     * @return mixed|void
+     */
+    public function markCategoryRecordIntoQueue($stores = null)
+    {
+        $whereType = $this->_frameworkModelResource->getConnection('core_write')->quoteInto('type = ?', 'categories');
+        $where = sprintf(" %s", $whereType);
+        if ($stores !== null) {
+            if (is_array($stores)) {
+                $storeIds = implode(',', $stores);
+            } else {
+                $storeIds = (int)$stores;
+            }
+            $where .= sprintf(" AND `store_id` IN(%s)", $storeIds);
+        }
+        $this->_frameworkModelResource->getConnection('core_write')->update(
+            $this->_frameworkModelResource->getTableName('klevu_product_sync'),
+            ['last_synced_at' => '0'],
+            $where
+        );
     }
 }
 

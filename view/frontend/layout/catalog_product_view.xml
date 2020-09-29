@@ -3,7 +3,6 @@
     <body>
         <referenceBlock name="before.body.end">
             <block class="Klevu\Search\Block\Catalog\Product\Tracking" template="Klevu_Search::klevu/search/product_tracking.phtml" name="klevu_search.catalog.product.tracking"/>
-		    <block class="Klevu\Search\Block\Catalog\Product\Productdata" template="Klevu_Search::klevu/search/product_datatracking.phtml" name="klevu_search.catalog.product.productdata"/>
         </referenceBlock>
     </body>
 </page>

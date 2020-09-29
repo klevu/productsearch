@@ -145,4 +145,10 @@ interface MagentoProductActionsInterface
      * @return mixed
      */
     public function getParentRelationsByChild($ids);
+
+    /**
+     * @param null $stores
+     * @return mixed
+     */
+    public function markCategoryRecordIntoQueue($stores = null);
 }

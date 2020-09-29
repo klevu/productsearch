@@ -197,6 +197,8 @@ class Sync extends AbstractModel
     public function runCron()
     {
         try {
+
+            $this->_searchHelperData->log(\Zend\Log\Logger::INFO,"Sync action performed thorugh Magento Cron");
             /* mark for update special price product */
             //$this->_magentoProductActions->markProductForUpdate();
 
@@ -286,7 +288,7 @@ class Sync extends AbstractModel
             $pids = array();	
 			$pids = $this->getProductsIds($action,$store);
             $method = $action . "Products";
-            $products = $pids;
+            $products = array_values($pids);  //resetting key index
             $total = count($pids);
             $this->_searchHelperData->log(\Zend\Log\Logger::INFO, sprintf("Found %d products to %s.", $total, $action));
             $pages = ceil($total / static::RECORDS_PER_PAGE);
@@ -416,8 +418,9 @@ class Sync extends AbstractModel
     public function runCategory($store)
     {
         if (!$this->_searchHelperConfig->getCategorySyncEnabledFlag($store->getId())) {
-            $this->_searchHelperData->log(\Zend\Log\Logger::INFO, sprintf("Category Sync found disabled for %s (%s).", $store->getWebsite()->getName(), $store->getName()));
-            return;
+            $msg = sprintf("Category Sync option found disabled for %s (%s).", $store->getWebsite()->getName(), $store->getName());
+            $this->_searchHelperData->log(\Zend\Log\Logger::INFO,$msg);
+            return $msg;
         }
         $this->_searchHelperData->log(\Zend\Log\Logger::INFO, sprintf("Starting sync for category %s (%s).", $store->getWebsite()->getName(), $store->getName()));
 

@@ -76,6 +76,11 @@ class Syncstoreview extends \Magento\Framework\App\Action\Action
             $store_rest_api = hash('sha256',$this->_klevuSyncModel->getHelper()->getConfigHelper()->getRestApiKey((int)$store_id));
             if ($store_rest_api == $hashkey) {
                 $this->_storeInterface->setCurrentStore($store_id);
+                $this->_searchHelperData->log(\Zend\Log\Logger::INFO, sprintf(
+                    "Updates only data sync action performed from Magento Admin Panel %s (%s).",
+                    $this->_storeInterface->getWebsite()->getName(),
+                    $this->_storeInterface->getName()
+                ));
                 $this->_klevuSyncContent->syncCmsData($store_object);
                 $this->_klevuSyncModel->setSessionVariable("limit", 500);
                 $this->_klevuSyncModel->getRegistry()->unregister("numberOfRecord_add");

@@ -111,7 +111,6 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     const DATETIME_FORMAT = "Y-m-d H:i:s T";
     const XML_PATH_CONFIG_SYNC_FREQUENCY = "klevu_search/product_sync/frequency";
     const XML_PATH_PRICE_INCLUDES_TAX = "tax/calculation/price_includes_tax";
-    const XML_PATH_TAG_METHOD = "klevu_search/developer/tagging_options";
     const XML_PATH_PRICE_DISPLAY_METHOD = "tax/display/type";
     const XML_PATH_PRICE_TYPEINSEARCH_METHOD = "tax/display/typeinsearch";
     const XML_PATH_CATALOGINVENTRY_OPTIONS_STOCK ="cataloginventory/options/show_out_of_stock";
@@ -923,15 +922,6 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
 
-    /**
-     * Check if default Magento log settings should be overridden to force logging for this module.
-     *
-     * @return bool
-     */
-    public function isTagMethodEnabled()
-    {
-        return $this->_appConfigScopeConfigInterface->isSetFlag(static::XML_PATH_TAG_METHOD);
-    }
 
     /**
      * Return the configuration flag for sync options.

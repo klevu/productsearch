@@ -134,7 +134,7 @@ class Sync extends AbstractModel
 			foreach($files as $key => $value) {
 				$params['filename'] = basename($value);
 				$url_lock = $this->_urlInterface->getUrl("klevu_search/sync/clearlock",$params);
-				$messagestr.=  "Lock File exits since ".date ("Y-m-d H:i:s", filemtime($value)) ." <a href='" . $url_lock . "'>Clear Klevu Lock File </a>".$params['filename']."</br>";
+				$messagestr .= "Lock File (" . $params['filename'] . ") exits since " . date("Y-m-d H:i:s", filemtime($value)) . " <a title='Click to remove lock file' href='" . $url_lock . "'>Clear Klevu Lock File </a></br></br>";
 			}
 		}
 		
