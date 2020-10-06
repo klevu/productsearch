@@ -214,6 +214,11 @@
             <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Logclear</frontend_model>
             <comment><![CDATA[]]></comment>
         </field>
+          <field id="preserve_layout_log_enabled" translate="label" sortOrder="403" type="select" showInDefault="1">
+              <label>Enable Preserve Layout Log</label>
+              <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+              <comment><![CDATA[Use this setting to enable Klevu Preserve Layout log. Once this setting is set to "yes", it will log the Product data and Search request data in the file magento-root/var/log/Klevu_Search_Preserve_Layout.log. Please make sure to enable this option only when it is required to debug search request data otherwise it can impact the frontend search page. ]]></comment>
+          </field>
         <field id="trigger_options_info" translate="label comment" sortOrder="420"  type="select" showInDefault="1">
             <label>Using an ERP OR 3rd party tool for product updates</label>
             <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>

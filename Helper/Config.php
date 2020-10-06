@@ -121,6 +121,7 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     const XML_PATH_CATALOG_SEARCH_RELEVANCE_LABEL = "klevu_search/searchlanding/relevance_label";
     const XML_PATH_SYNC_LOCKFILE_OPTION = "klevu_search/product_sync/lockfile";
  	const XML_PATH_CATEGORY_SYNC_ENABLED   = "klevu_search/product_sync/category_sync_enabled";
+    const XML_PATH_PRESERVE_LAYOUT_LOG_ENABLED = "klevu_search/developer/preserve_layout_log_enabled";
 
     /**
      * Set the Enable on Frontend flag in System Configuration for the given store.
@@ -1227,6 +1228,16 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     public function getCategorySyncEnabledFlag($store = 0)
     {
         return (int)$this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_CATEGORY_SYNC_ENABLED, \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $store);
+    }
+
+    /**
+     * Check if Klevu preserve layout log enabled in settings
+     *
+     * @return bool
+     */
+    public function isPreserveLayoutLogEnabled()
+    {
+        return $this->_appConfigScopeConfigInterface->isSetFlag(static::XML_PATH_PRESERVE_LAYOUT_LOG_ENABLED);
     }
 
 }

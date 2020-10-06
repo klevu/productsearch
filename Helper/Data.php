@@ -109,6 +109,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
     const LOG_FILE = "Klevu_Search.log";
 
+    const PRESERVE_LAYOUT_LOG_FILE = "Klevu_Search_Preserve_Layout.log";
+
     const ID_SEPARATOR = "-";
 	
 	const SKU_SEPARATOR = ";;;;";
@@ -282,6 +284,20 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             $logger->addWriter($writer);
             $logger->info($message);
         }
+    }
+
+    /**
+     * Write a log message to the \Klevu\Search\preserve log file.
+     *
+     * @param string $message
+     */
+    public function preserveLayoutLog($message)
+    {
+        $writer = new \Zend\Log\Writer\Stream(BP . '/var/log/'.static::PRESERVE_LAYOUT_LOG_FILE);
+        $logger = new \Zend\Log\Logger();
+        $logger->addWriter($writer);
+        $logger->info($message);
+
     }
 
     /**

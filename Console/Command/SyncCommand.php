@@ -19,6 +19,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Process\PhpExecutableFinder as PhpExecutableFinderFactory;
+use Klevu\Search\Helper\Data as KlevuSearchHelperData;
 
 /**
  * Class SyncCommand
@@ -124,6 +125,9 @@ HELP
         }
 
         fopen($file, 'w');
+        //get the helper for logging
+        $this->klevuSearchHelperData = ObjectManager::getInstance()->get(KlevuSearchHelperData::class);
+
         $returnValue = Cli::RETURN_FAILURE;
         try {
 
@@ -141,7 +145,7 @@ HELP
                 $this->websiteList[$store->getWebsiteId()] = array_unique(array_merge($this->websiteList[$store->getWebsiteId()], array($store->getCode())));
                 $this->allStoreList[$store->getCode()] = $store->getWebsiteId();
             }
-            
+
             //Showing the message for those stores which are having locks, if all of them having stores then return
             if(is_array($lockStoresList) && !empty($lockStoresList)){
                 $output->writeln('<error>Error: Klevu index process cannot start because a lock file exists for store code(s): ' . implode(",", $lockStoresList) . ', skipping this store(s).</error>');
@@ -175,6 +179,14 @@ HELP
             $phpPath = $this->_phpExecutableFinder->find() ?: 'php';
             foreach ($this->websiteList as $storeList) {
                 $output->writeln('<info>' . $webKey . '. Started for store code(s): ' . implode(",", $storeList) . '</info>');
+                $this->klevuSearchHelperData->log(
+                    \Zend\Log\Logger::INFO,
+                    sprintf(
+                        "Synchronize product data for the specified store codes: %s /bin/magento klevu:syncstore:storecode %s",
+                        $phpPath,
+                        implode(',', $storeList)
+                    )
+                );
                 $this->_shell->execute(
                     $phpPath . ' %s klevu:syncstore:storecode ' . implode(",", $storeList),
                     [
@@ -199,19 +211,24 @@ HELP
                 $output->writeln('<info>All Data has been synchronized with Klevu</info>');
             } elseif ($input->hasParameterOption('--updatesonly')) {
                 if ($klevusession->getKlevuFailedFlag() == 1) {
-                    $output->writeln("<error>Data sync failed. Please consult Klevu_search.log file for more information.</error>");
+                    $this->klevuSearchHelperData->log(\Zend\Log\Logger::ERR, "Product sync failed using SyncCommand. Please consult var/log/Klevu_Search.log file for more information.");
+                    $output->writeln("<error>Data sync failed. Please consult var/log/Klevu_Search.log file for more information.</error>");
                     $klevusession->setKlevuFailedFlag(0);
                 } else {
+                    $this->klevuSearchHelperData->log(\Zend\Log\Logger::INFO, "Data updates have been sent to Klevu using SyncCommand.");
                     $output->writeln('<info>Data updates have been sent to Klevu</info>');
                     $klevusession->setKlevuFailedFlag(0);
                 }
             } else {
+                $this->klevuSearchHelperData->log(\Zend\Log\Logger::INFO, "Data updates have been sent to Klevu.");
                 $output->writeln('<info>Data updates have been sent to Klevu</info>');
                 $klevusession->setKlevuFailedFlag(0);
             }
         } catch (LocalizedException $e) {
+            $this->klevuSearchHelperData->log(\Zend\Log\Logger::ERR,sprintf("LocalizedException %s",$e->getMessage()));
             $output->writeln('<error>LocalizedException: ' . $e->getMessage() . '</error>');
         } catch (Exception $e) {
+            $this->klevuSearchHelperData->log(\Zend\Log\Logger::ERR,sprintf("Exception: Not able to complete the synchronization due to %s",$e->getMessage()));
             $output->writeln('<error>Exception: Not able to complete the synchronization due to ' . $e->getMessage() . '</error>');
         }
 
