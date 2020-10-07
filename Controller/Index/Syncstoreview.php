@@ -78,8 +78,8 @@ class Syncstoreview extends \Magento\Framework\App\Action\Action
                 $this->_storeInterface->setCurrentStore($store_id);
                 $this->_searchHelperData->log(\Zend\Log\Logger::INFO, sprintf(
                     "Updates only data sync action performed from Magento Admin Panel %s (%s).",
-                    $this->_storeInterface->getWebsite()->getName(),
-                    $this->_storeInterface->getName()
+                    $store_object->getWebsite()->getName(),
+                    $store_object->getName()
                 ));
                 $this->_klevuSyncContent->syncCmsData($store_object);
                 $this->_klevuSyncModel->setSessionVariable("limit", 500);

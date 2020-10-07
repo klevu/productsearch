@@ -132,7 +132,7 @@ class CleanerPlugin
 
         //check if search array generated or not
         if (!isset($requestData['queries']['search'])) {
-            if($this->klevuConfig->isPreserveLayoutLogEnabled()) {
+            if($this->klevuHelperConfig->isPreserveLayoutLogEnabled()) {
                 $this->klevuHelperData->preserveLayoutLog("Search array is not found in CleanerPlugin");
             }
             return $requestData;
@@ -142,7 +142,7 @@ class CleanerPlugin
 
         //check if dimensions array found or not
         if (!isset($requestData['dimensions']['scope'])) {
-            if($this->klevuConfig->isPreserveLayoutLogEnabled()) {
+            if($this->klevuHelperConfig->isPreserveLayoutLogEnabled()) {
                 $this->klevuHelperData->preserveLayoutLog("Dimension array is not found in CleanerPlugin");
             }
             return $requestData;
@@ -174,7 +174,7 @@ class CleanerPlugin
         $currentEngine = $this->getCurrentSearchEngine();
         //if no ids there then no need to set new handler for mysql only
         if (empty($idList) && $currentEngine === 'mysql') {
-            if($this->klevuConfig->isPreserveLayoutLogEnabled()) {
+            if($this->klevuHelperConfig->isPreserveLayoutLogEnabled()) {
                 $this->klevuHelperData->preserveLayoutLog("MySQL Search Engine is selected and No Ids were found in CleanerPlugin");
             }
             return $requestData;
@@ -241,7 +241,7 @@ class CleanerPlugin
             }
         }
 
-        if($this->klevuConfig->isPreserveLayoutLogEnabled()) {
+        if($this->klevuHelperConfig->isPreserveLayoutLogEnabled()) {
             //convert requestData object into array
             $requestDataToArray = json_decode(json_encode($requestData), true);
             $this->klevuHelperData->preserveLayoutLog(
