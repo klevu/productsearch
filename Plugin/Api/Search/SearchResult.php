@@ -51,23 +51,15 @@ class SearchResult
 
     public function beforeSetItems(\Magento\Framework\Api\Search\SearchResult $subject, $result)
     {
-            if($this->klevuConfig->isPreserveLayoutLogEnabled()) {
-                $this->klevuHelperData->preserveLayoutLog(
-                    "Search Result before processing in SearchResult plugin" . PHP_EOL . print_r($result, true)
-                );
-            }
-
             $current_order = $this->registry->registry('current_order');
             if (!empty($current_order)) {
                 if ($current_order == "personalized") {
                     if (!empty($this->registry->registry('search_ids'))) {
                         $flag = $key = 0;
                         $ids = array_reverse($this->registry->registry('search_ids'));
-                        if($this->klevuConfig->isPreserveLayoutLogEnabled()) {
-                            $this->klevuHelperData->preserveLayoutLog(
-                                sprintf("array reverse search ids in SearchResult plugin %s", implode(',', $ids))
-                            );
-                        }                        $result_key = array();
+
+                        $result_key = array();
+                        $returned_ids = array();
                         foreach ($result as $item) {
                             $key++;
                             if (in_array($item->getId(), $ids)) {
@@ -76,7 +68,7 @@ class SearchResult
                                 $score = $item->getCustomAttribute("score")->getValue() + (int)$key;
                             }
                             $item->getCustomAttribute("score")->setValue($score);
-
+                            $returned_ids[] = $item->getId();
                             if ($item->getCustomAttribute("score")->getValue() !== null) {
                                 $flag = 1;
                                 $result_key[$item->getCustomAttribute("score")->getValue()] = $item->getCustomAttribute("score")->getValue();
@@ -85,27 +77,38 @@ class SearchResult
 
 
                         if ($flag == 1) {
-                            if($this->klevuConfig->isPreserveLayoutLogEnabled()) {
-                                $this->klevuHelperData->preserveLayoutLog(
-                                    "Result key array for multisort in SearchResult plugin" . PHP_EOL . print_r($result_key, true)
-                                );
-                            }
                             array_multisort($result_key, SORT_DESC, $result);
                         }
 
                         $from = $this->registry->registry('from');
                         $size = $this->registry->registry('size');
-
+                        if($this->klevuConfig->isPreserveLayoutLogEnabled()) {
+                            $process = rand(100000, 999999);
+                            $returned_ids_ordered = array();
+                            foreach ($result as $item) {
+                                $returned_ids_ordered[] = $item->getId();
+                            }
+                            $this->klevuHelperData->preserveLayoutLog(
+                                $process . sprintf(" Array reverse search ids in SearchResult plugin %s", implode(',', $ids))
+                            );
+                            $this->klevuHelperData->preserveLayoutLog(
+                                $process . sprintf(" Search Result before processing in SearchResult plugin ", implode(',', $returned_ids))
+                            );
+                            $this->klevuHelperData->preserveLayoutLog(
+                                $process . sprintf(" Search Result after processing in SearchResult plugin ", implode(',', $returned_ids_ordered))
+                            );
+                            $this->klevuHelperData->preserveLayoutLog(
+                                $process . sprintf(" Offset of the list of results : from = %s", implode(',', $from))
+                            );
+                            $this->klevuHelperData->preserveLayoutLog(
+                                $process . sprintf(" Size of the results page : size =  %s", implode(',', $size))
+                            );
+                        }
                         if (!empty($size)) {
                             $start = $from / $size;
                             if (count($result) > 0) {
                                 $array = array_chunk($result, $size);
                                 if (isset($array[$start])) {
-                                    if($this->klevuConfig->isPreserveLayoutLogEnabled()) {
-                                        $this->klevuHelperData->preserveLayoutLog(
-                                            "Result after processing in SearchResult plugin" . PHP_EOL . print_r($array[$start], true)
-                                        );
-                                    }
                                     return [$array[$start]];
                                 }
                             } else {
