@@ -50,14 +50,36 @@ class Product extends DataObject implements ProductInterface
     {
         foreach ($attributes as $attribute) {
             if ($parent && $parent->getData($attribute)) {
-                $product[$key] = $parent->getData($attribute);
+                $product[$key] = $this->checkBoostingAttributeValue($attribute,$parent);
             } else {
-                $product[$key] = $item->getData($attribute);
+                $product[$key] = $this->checkBoostingAttributeValue($attribute,$item);
             }
         }
-
         return $product[$key];
 
+    }
+
+    /**
+     * check boosting attribute is integer or decimal if it is string then send the blank value
+     *
+     * @param string $attribute
+     * @param object $product
+     *
+     * @return int, string, void, float
+     */
+    public function checkBoostingAttributeValue($attribute,$product){
+        $productAttribute = $product->getResource()->getAttribute($attribute);
+        if($productAttribute) {
+            if(!is_null($attributeFrontend = $productAttribute->getFrontend())) {
+                $productBoostingAttributeValue = $attributeFrontend->getValue($product);
+                if (!is_numeric($productBoostingAttributeValue)) {
+                    $productBoostingAttributeValue = "";
+                }
+                return $productBoostingAttributeValue;
+            }
+            return;
+        }
+        return;
     }
 
     public  function getRating($key,$attributes,$parent,$item,$product)

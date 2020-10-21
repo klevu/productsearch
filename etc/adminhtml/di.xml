@@ -15,5 +15,14 @@
                 sortOrder="1"></plugin>
     </type>
 
+    <type name="Magento\Framework\Notification\MessageList">
+        <arguments>
+            <argument name="messages" xsi:type="array">
+                <item name="klevu_lock_file" xsi:type="string">Klevu\Search\Model\Message\LockFileMessage</item>
+                <item name="klevu_object_vs_collection" xsi:type="string">Klevu\Search\Model\Message\ObjectVsCollectionMessage</item>
+            </argument>
+        </arguments>
+    </type>
+
 </config>
 

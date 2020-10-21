@@ -106,6 +106,29 @@ class Sync extends AbstractModel
            return false;
        }
     }
+
+    /**
+     * @return string
+     */
+    public function getKlevuLockStatus()
+    {
+        $messagestr = '';
+        $lockFileMessages = [];
+
+        $files = glob($this->directoryList->getPath(DirectoryList::VAR_DIR).'/*klevu_running_index.lock');
+        if(!empty($files)) {
+            foreach($files as $key => $value) {
+                $params['filename'] = basename($value);
+                $url_lock = $this->_urlInterface->getUrl("klevu_search/sync/clearlock", $params);
+                $lockFileMessages[] = date('Y-m-d H:i:s', filemtime($value)) . ' - <a title="Remove Lock" href="' . $url_lock . '">Remove Lock</a><br />' . $params['filename'];
+            }
+            
+            $messagestr = implode('<br/><br/>', $lockFileMessages) . '<br/><br/>';
+        }
+
+        return $messagestr;
+    }
+    
     /**
      * Get the klevu cron entry which is running mode
      *
@@ -127,22 +150,15 @@ class Sync extends AbstractModel
             "setPageSize" => 1
 
         );
-		
-		$files = glob($this->directoryList->getPath(DirectoryList::VAR_DIR).'/*klevu_running_index.lock');
-		$messagestr = '';
-		if(!empty($files)) {
-			foreach($files as $key => $value) {
-				$params['filename'] = basename($value);
-				$url_lock = $this->_urlInterface->getUrl("klevu_search/sync/clearlock",$params);
-				$messagestr .= "Lock File (" . $params['filename'] . ") exits since " . date("Y-m-d H:i:s", filemtime($value)) . " <a title='Click to remove lock file' href='" . $url_lock . "'>Clear Klevu Lock File </a></br></br>";
-			}
-		}
-		
+
+        $messagestr = '';
         $runningSchedules = $scheduler->getScheduleCollection($filters, $operations);
-        if ($runningSchedules->getSize()) {
+        if ($this->_klevuHelperManager->getConfigHelper()->isExternalCronActive()) {
+            $messagestr .= "Disabled";
+        } else if ($runningSchedules->getSize()) {
             $url = $this->_urlInterface->getUrl("klevu_search/sync/clearcron");
-			
-            $messagestr.= $scheduler->getStatusByCode('running') . " Since " . $runningSchedules->getFirstItem()->getData("executed_at") . " <a href='" . $url . "'>Clear Klevu Cron</a></br>";
+
+            $messagestr .= $runningSchedules->getFirstItem()->getData("executed_at") . " - Running - <a href='" . $url . "'>Reset Klevu Cron</a>";
         } else {
             $filters = array(
                 "job_code" => $jobCode,
@@ -158,9 +174,10 @@ class Sync extends AbstractModel
             );
             $doneSchedules = $scheduler->getScheduleCollection($filters, $operations);
             if ($doneSchedules->getSize()) {
-                $messagestr.= $scheduler->getStatusByCode('success') . " " . $doneSchedules->getFirstItem()->getData("finished_at");
+                $messagestr .= $doneSchedules->getFirstItem()->getData("finished_at") . ' - Completed';
             }
         }
+        
         return $messagestr;
     }
 

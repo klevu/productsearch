@@ -40,6 +40,10 @@
             <price_per_customer_group>
                 <enabled>0</enabled>
             </price_per_customer_group>
+            <notification>
+                <object_vs_collection>0</object_vs_collection>
+                <lock_file>1</lock_file>
+            </notification>
         </klevu_search>
         <tax>
             <display>

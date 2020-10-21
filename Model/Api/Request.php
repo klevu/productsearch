@@ -15,18 +15,28 @@ class Request extends \Magento\Framework\DataObject
     protected $_searchHelperData;
 
     /**
+     * @var \Klevu\Search\Helper\Config
+     */
+    protected $_searchHelperConfig;
+
+    /**
      * @var \Klevu\Search\Model\Api\Response\Empty
      */
     protected $_apiResponseEmpty;
-
+    /**
+     * @var string[]
+     */
+    private $maskFields = array('restApiKey', 'email', 'password', 'Authorization');
     public function __construct(
         \Klevu\Search\Model\Api\Response $modelApiResponse,
         \Klevu\Search\Helper\Data $searchHelperData,
+        \Klevu\Search\Helper\Config $searchHelperConfig,
         \Klevu\Search\Model\Api\Response\Rempty $apiResponseEmpty
     ) {
     
         $this->_modelApiResponse = $modelApiResponse;
         $this->_searchHelperData = $searchHelperData;
+        $this->_searchHelperConfig = $searchHelperConfig;
         $this->_apiResponseEmpty = $apiResponseEmpty;
 
         parent::__construct();
@@ -169,10 +179,14 @@ class Request extends \Magento\Framework\DataObject
             $this->_searchHelperData->log(\Zend\Log\Logger::ERR, sprintf("HTTP error: %s", $e->getMessage()));
             return $this->_apiResponseEmpty;
         }
-
+        $content = $raw_response->getBody();
+        $logLevel = $this->_searchHelperConfig->getLogLevel();
+        if ($logLevel >= \Zend\Log\Logger::DEBUG) {
+            $content = $this->applyMaskingOnResponse($content);
+        }
         $this->_searchHelperData->log(\Zend\Log\Logger::DEBUG, sprintf(
             "API response:\n%s",
-            $raw_response->getBody()
+            $content
         ));
 
         $response = $this->getResponseModel();
@@ -192,6 +206,9 @@ class Request extends \Magento\Framework\DataObject
         if (!empty($headers)) {
             array_walk($headers, function (&$value, $key) {
                 $value = ($value !== null && $value !== false) ? sprintf("%s: %s", $key, $value) : null;
+                if (in_array($key, $this->maskFields)) {
+                    $value = sprintf("%s: %s", $key, '***************');
+                }
             });
         }
 
@@ -227,5 +244,38 @@ class Request extends \Magento\Framework\DataObject
         }
 
         return $client;
+    }
+
+    /**
+     * Applying masking for sensitive fields
+     *
+     * @param $content
+     * @return string
+     */
+    private function applyMaskingOnResponse($content)
+    {
+        $originalString = $content;
+        try {
+            switch ($content) {
+                case strpos($content, 'email') !== false:
+                    $emailPattern = '/[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,3})/';
+                    if (preg_match($emailPattern, $content, $email_string)) {
+                        //checking for first full pattern only
+                        $content = str_replace($email_string[0], '***********', $content);
+                    }
+                    break;
+                case strpos($content, 'restApiKey') !== false:
+                    if (preg_match_all("%(<restApiKey>).*?(</restApiKey>)%i", $content, $restApi)) {
+                        $content = str_replace($restApi[0], '<restApiKey>**********</restApiKey>', $content);
+                    }
+                    break;
+                default:
+                    break;
+            }
+        } catch (\Exception $e) {
+            $this->_searchHelperData->log(\Zend\Log\Logger::ERR, sprintf("Exception while masking: %s", $e->getMessage()));
+            return $originalString;
+        }
+        return $content;
     }
 }

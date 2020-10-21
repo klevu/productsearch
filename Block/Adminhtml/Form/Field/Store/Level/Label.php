@@ -24,15 +24,21 @@ class Label extends \Magento\Config\Block\System\Config\Form\Field
     {
         $request = $this->getRequest();
 		$store = $this->_context->getStoreManager();		
-        if($store->isSingleStoreMode()) {
+        if ($store->isSingleStoreMode()) {
             $store_code = $store->getStore()->getId();
-            return $this->_klevuHelperConfig->getLastProductSyncRun($store_code);
-        }elseif($element->getScope() == "stores") {
+            $html = $this->_klevuHelperConfig->getLastProductSyncRun($store_code);
+        } elseif($element->getScope() == "stores") {
             $store_code = $request->getParam("store");
-            return $this->_klevuHelperConfig->getLastProductSyncRun($store_code);
+            $html = $this->_klevuHelperConfig->getLastProductSyncRun($store_code);
         } else {
-            return __("Switch to store scope to set");
+            $html = $this->_klevuHelperConfig->getLastProductSyncRun();
         }
+        
+        if (empty($html)) {
+            $html = __('No entries found in klevu_product_sync table.');
+        }
+        
+        return $html;
     }
 
     public function render(\Magento\Framework\Data\Form\Element\AbstractElement $element)

@@ -24,8 +24,8 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class SyncCategoryCommand extends Command
 {
-    const LOCK_FILE = 'category_klevu_running_index.lock';
-    const AREA_CODE_LOCK_FILE = 'klevu_category_areacode.lock';
+    const LOCK_FILE = 'klcatentity_klevu_running_index.lock';
+    const AREA_CODE_LOCK_FILE = 'klevu_catentity_areacode.lock';
 
     const ALLDATA_CATEGORY_DESC = 'Send all Category records to Klevu.';
     const UPDATESONLY_CATEGORY_DESC = 'Only send those Category records which have been modified since the last sync with Klevu.';

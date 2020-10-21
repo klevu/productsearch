@@ -81,7 +81,7 @@ class SyncStoreView extends Command
      */
     protected function configure()
     {
-        $description = 'Sync recent changes to Product, Category, CMS and Order data with Klevu for a particular store view or store views. When specifying mulitple stores, please use a comma to separate them and ensure all stores are within the same website.';
+        $description = 'Sync recent changes to Product, Category and CMS data with Klevu for a particular store view or store views. When specifying mulitple stores, please use a comma to separate them and ensure all stores are within the same website.';
         $this->setName('klevu:syncstore:storecode')
             ->setDescription($description)
             ->setDefinition([

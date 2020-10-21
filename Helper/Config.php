@@ -108,7 +108,7 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     const XML_PATH_TRIGGER_OPTIONS = "klevu_search/developer/trigger_options_info";
     const XML_PATH_CONFIG_IMAGE_HEIGHT = "klevu_search/image_setting/image_height";
     const XML_PATH_CONFIG_IMAGE_WIDHT = "klevu_search/image_setting/image_width";
-    const DATETIME_FORMAT = "Y-m-d H:i:s T";
+    const DATETIME_FORMAT = "Y-m-d H:i:s T"; // deprecated, do not use DATETIME_FORMAT
     const XML_PATH_CONFIG_SYNC_FREQUENCY = "klevu_search/product_sync/frequency";
     const XML_PATH_PRICE_INCLUDES_TAX = "tax/calculation/price_includes_tax";
     const XML_PATH_PRICE_DISPLAY_METHOD = "tax/display/type";
@@ -121,8 +121,9 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     const XML_PATH_CATALOG_SEARCH_RELEVANCE_LABEL = "klevu_search/searchlanding/relevance_label";
     const XML_PATH_SYNC_LOCKFILE_OPTION = "klevu_search/product_sync/lockfile";
  	const XML_PATH_CATEGORY_SYNC_ENABLED   = "klevu_search/product_sync/category_sync_enabled";
-    const XML_PATH_PRESERVE_LAYOUT_LOG_ENABLED = "klevu_search/developer/preserve_layout_log_enabled";
-
+    const XML_PATH_NOTIFICATION_OBJECT_VS_COLLECTION   = "klevu_search/notification/object_vs_collection";
+    const XML_PATH_NOTIFICATION_LOCK_FILE = "klevu_search/notification/lock_file";
+	const XML_PATH_PRESERVE_LAYOUT_LOG_ENABLED = "klevu_search/developer/preserve_layout_log_enabled";
     /**
      * Set the Enable on Frontend flag in System Configuration for the given store.
      *
@@ -466,12 +467,10 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
     /**
-     * Set the last Product Sync run time from klevu sync table.
+     * Get the last sync time from klevu sync table.
      *
-     * @param DateTime|string                $datetime If string is passed, it will be converted to DateTime.
-     * @param \Magento\Framework\Model\Store|int|null $store
-     *
-     * @return $this
+     * @param int|null $store
+     * @return string
      */
     public function getLastProductSyncRun($store = null)
     {
@@ -480,13 +479,18 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
         $select = $connection
             ->select()
             ->from(['k' => $resource->getTableName("klevu_product_sync")])
-            ->where("k.store_id = ?", $store)
             ->order(['k.last_synced_at DESC'])
             ->limit(1);
+        
+        // retrieve last sync across all stores if none specified
+        if ($store !== null) {
+            $select->where("k.store_id = ?", $store);
+        }
+        
         $result = $connection->fetchAll($select);
         if (!empty($result)) {
             $datetime = new \DateTime($result[0]['last_synced_at']);
-            return $datetime->format(static::DATETIME_FORMAT);
+            return $datetime->format('Y-m-d H:i:s');
         }
     }
 
@@ -606,7 +610,7 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
         if (!$datetime instanceof DateTime) {
             $datetime = new DateTime($datetime);
         }
-        $this->setGlobalConfig(static::XML_PATH_ORDER_SYNC_LAST_RUN, $datetime->format(static::DATETIME_FORMAT));
+        $this->setGlobalConfig(static::XML_PATH_ORDER_SYNC_LAST_RUN, $datetime->format('Y-m-d H:i:s T'));
         return $this;
     }
 
@@ -973,6 +977,7 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
      * Return the klevu cron stettings.
      *
      * @return bool
+     * @deprecated Method name does not match logic, please use isExternalCronActive() instead.
      */
     public function isExternalCronEnabled(){
         if($this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_CONFIG_SYNC_FREQUENCY) == "0 5 31 2 *") {
@@ -980,6 +985,21 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
         } else {
             return true;
         }
+    }
+
+    /**
+     * Replaces isExternalCronEnabled().
+     * Determine whether the store is using external cron,
+     * ie. whether the internal cron schedule is set as 'Never'.
+     *
+     * @return bool
+     */
+    public function isExternalCronActive()
+    {
+        $configFrequency = $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_CONFIG_SYNC_FREQUENCY);
+        $isExternalCronActive = $configFrequency == \Klevu\Search\Model\System\Config\Source\Frequency::CRON_NEVER;
+        
+        return $isExternalCronActive;
     }
 
     /**
@@ -1231,6 +1251,27 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
     /**
+     * Returns notification flag for object method
+     *
+     * @param int $store
+     * @return int
+     */
+    public function getObjMethodNotificationOption($store=0){
+
+        return (int)$this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_NOTIFICATION_OBJECT_VS_COLLECTION, \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $store);
+    }
+
+    /**
+     * Returns notification flag for lock file warning
+     *
+     * @param int $store
+     * @return int
+     */
+    public function getLockFileNotificationOption($store=0){
+
+        return (int)$this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_NOTIFICATION_LOCK_FILE, \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $store);
+    }
+	/**
      * Check if Klevu preserve layout log enabled in settings
      *
      * @return bool
@@ -1239,5 +1280,4 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     {
         return $this->_appConfigScopeConfigInterface->isSetFlag(static::XML_PATH_PRESERVE_LAYOUT_LOG_ENABLED);
     }
-
 }

@@ -4,6 +4,10 @@ namespace Klevu\Search\Model\Api\Request;
 
 class Post extends \Klevu\Search\Model\Api\Request
 {
+    /**
+     * @var string[]
+     */
+    private $maskFields = array('restApiKey', 'email', 'password', 'Authorization');
 
     public function __toString()
     {
@@ -12,7 +16,11 @@ class Post extends \Klevu\Search\Model\Api\Request
         $parameters = $this->getData();
         if (!empty($parameters)) {
             array_walk($parameters, function (&$value, $key) {
-                $value = sprintf("%s: %s", $key, $value);
+                if (in_array($key, $this->maskFields)) {
+                    $value = sprintf("%s: %s", $key, '***************');
+                } else {
+                    $value = sprintf("%s: %s", $key, $value);
+                }
             });
         }
 

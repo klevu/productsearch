@@ -3,9 +3,11 @@
 namespace Klevu\Search\Helper;
 
 use Klevu\Search\Model\Klevu\HelperManager as Klevu_HelperManager;
-use Klevu\Search\Model\ProductCollection as Klevu_ProductCollection;
 use Klevu\Search\Model\Product\Indexer as Klevu_ProductIndexer;
+use Klevu\Search\Model\ProductCollection as Klevu_ProductCollection;
+use Magento\Framework\App\Filesystem\DirectoryList as DirectoryList;
 use Magento\Framework\App\Helper\Context;
+use Magento\Framework\Filesystem;
 
 /**
  * Klevu search Backend helper
@@ -22,7 +24,7 @@ class Backend extends \Magento\Framework\App\Helper\AbstractHelper
     /**#@-*/
 
     /**
-     * @var Klevu_ProductCollection 
+     * @var Klevu_ProductCollection
      */
     private $_klevuCollection;
 
@@ -37,6 +39,8 @@ class Backend extends \Magento\Framework\App\Helper\AbstractHelper
         Klevu_ProductCollection $klevuCollection,
         Klevu_ProductIndexer $klevuIndexer,
         Klevu_HelperManager $klevuHelperManager,
+        DirectoryList $directoryList,
+        Filesystem $fileSystem,
         Context $context
     )
     {
@@ -44,6 +48,8 @@ class Backend extends \Magento\Framework\App\Helper\AbstractHelper
         $this->_klevuIndexer = $klevuIndexer;
         $this->_searchHelperConfig = $klevuHelperManager->getConfigHelper();
         $this->_searchHelperData = $klevuHelperManager->getDataHelper();
+        $this->directoryList = $directoryList;
+        $this->fileSystem = $fileSystem;
         parent::__construct($context);
     }
 
@@ -91,4 +97,49 @@ class Backend extends \Magento\Framework\App\Helper\AbstractHelper
     {
         return ($this->_searchHelperConfig->isCollectionMethodEnabled() && $this->checkMagentoIndexersInvalid()) ? true : false;
     }
+
+    /**
+     * Checks whethere any outdated lock file exists
+     *
+     * @return bool
+     */
+    public function isOutdatedLockFilesExist()
+    {
+        $flag = false;
+        $selectedOption = $this->_searchHelperConfig->getSelectedLockFileOption();
+        if (is_null($selectedOption)) {
+            return false;
+        }
+
+        try {
+            //checking all lock files
+            $dirReader = $this->fileSystem->getDirectoryRead(DirectoryList::VAR_DIR);
+            $files = glob($this->directoryList->getPath(DirectoryList::VAR_DIR) . '/*klevu_running_index.lock');
+
+            if (!empty($files)) {
+                foreach ($files as $key => $file) {
+                    //not showing if file do not exist
+                    if (!$dirReader->isExist($file)) {
+                        continue;
+                    }
+                    //Current Unix timestamp
+                    $currentTime = time();
+                    $absPath = $dirReader->getAbsolutePath($file);
+                    //File Modification Time in Unix timestamp
+                    $fileModifiedTime = filemtime($absPath);
+
+                    //Only show notification if lock file is older than selectionOption
+                    if ($currentTime - $fileModifiedTime > $selectedOption) {
+                        $flag = true;
+                        break;
+                    }
+                }
+            }
+            return $flag;
+        } catch (\Exception $e) {
+            $this->_searchHelperData->log(\Zend\Log\Logger::CRIT, sprintf("Klevu Lock File Notification Exception: %s", $e->getMessage()));
+        }
+        return $flag;
+    }
 }
+

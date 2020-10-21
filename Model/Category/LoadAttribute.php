@@ -38,8 +38,8 @@ class LoadAttribute extends  \Klevu\Search\Model\Category\MagentoCategoryActions
     public function addcategoryData(&$pages)
     {
         $category_ids = [];
-        foreach ($pages as $key => $value) {
-            $category_ids[] = $value["category_id"];
+        foreach ($pages as $key => $category_page) {
+            $category_ids[] = $category_page["category_id"];
         }
         $storeId = $this->_storeModelStoreManagerInterface->getStore()->getStoreId();
         $category_data = $this->loadCategoryCollection($storeId,$category_ids);

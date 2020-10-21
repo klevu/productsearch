@@ -131,15 +131,17 @@ class Sync extends AbstractModel
                 }
             //For group product, only one item will be sync with id of Group Product
             } elseif ($item->getProductType() == GroupedProduct::TYPE_CODE) {
-                    if ($item->getId() != null && $this->checkItemId($item->getId()) !== true) {
-                        $groupProduct = $this->_groupedProduct->getParentIdsByChild($item->getProductId());
-                        if (!empty($groupProduct)) {
-                            $idOfGroupProduct = $groupProduct[0];
+                if ($item->getId() != null && $this->checkItemId($item->getId()) !== true) {
+                    $group_product_data = $item->getProductOptions();
+                    if(isset($group_product_data["super_product_config"]["product_id"])) {
+                        $idOfGroupProduct = $group_product_data["super_product_config"]["product_id"];
+                        if (!empty($idOfGroupProduct)) {
                             if (!in_array($idOfGroupProduct, $groupItemUniqueIds)) {
-                                $groupItemUniqueIds[$item->getId()] = (int)$groupProduct[0];
+                                $groupItemUniqueIds[$item->getId()] = (int)$idOfGroupProduct;
                             }
                         }
                     }
+                }
 
             } else {
                 if ($item->getId() != null) {
@@ -283,13 +285,11 @@ class Sync extends AbstractModel
                 $parent = $this->_modelOrderItemFactory->create()->load($item->getParentItemId());
             }
             if ($item->getProductType() == GroupedProduct::TYPE_CODE) {
-                $groupProduct = $this->_groupedProduct->getParentIdsByChild($item->getProductId());
-                if (isset($groupProduct[0])) {
-                    $klevu_productId = $groupProduct[0];
+                $group_product_data = $item->getProductOptions();
+                if(isset($group_product_data["super_product_config"]["product_id"])) {
+                    $klevu_productId = $group_product_data["super_product_config"]["product_id"];
                 } else {
-					return "Group product can not be loaded.";
-					//return as we do not want to send incorect data to klevu if we can not load the parent group product.
-                    //$klevu_productId = $this->_searchHelperData->getKlevuProductId($item->getProductId(), ($parent) ? $parent->getProductId() : 0);
+                    return "Group product can not be loaded.";
                 }
             }  else {
                 $klevu_productId = $this->_searchHelperData->getKlevuProductId($item->getProductId(), ($parent) ? $parent->getProductId() : 0);

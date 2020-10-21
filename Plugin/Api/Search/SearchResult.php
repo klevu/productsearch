@@ -92,16 +92,16 @@ class SearchResult
                                 $process . sprintf(" Array reverse search ids in SearchResult plugin %s", implode(',', $ids))
                             );
                             $this->klevuHelperData->preserveLayoutLog(
-                                $process . sprintf(" Search Result before processing in SearchResult plugin ", implode(',', $returned_ids))
+                                $process . sprintf(" Search Result before processing in SearchResult plugin : %s", implode(',', $returned_ids))
                             );
                             $this->klevuHelperData->preserveLayoutLog(
-                                $process . sprintf(" Search Result after processing in SearchResult plugin ", implode(',', $returned_ids_ordered))
+                                $process . sprintf(" Search Result after processing in SearchResult plugin : %s", implode(',', $returned_ids_ordered))
                             );
                             $this->klevuHelperData->preserveLayoutLog(
-                                $process . sprintf(" Offset of the list of results : from = %s", implode(',', $from))
+                                $process . sprintf(" Offset of the list of results : from = %s", $from)
                             );
                             $this->klevuHelperData->preserveLayoutLog(
-                                $process . sprintf(" Size of the results page : size =  %s", implode(',', $size))
+                                $process . sprintf(" Size of the results page : size =  %s", $size)
                             );
                         }
                         if (!empty($size)) {

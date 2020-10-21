@@ -19,41 +19,45 @@
                 <field id="enabled" translate="label" type="select" sortOrder="121" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Enable on Frontend</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment><![CDATA[
+                      Whether or not to enable Klevu Search in the frontend.
+                      Data sync will still take place even if this is disabled, according to the Data Sync Settings.
+                    ]]></comment>
                 </field>
                 <field id="js_api_key" translate="label comment" sortOrder="121" type="text" showInStore="1">
                   <label>JS API Key</label>
-                  <comment><![CDATA[This API key is used for searches in the frontend.]]></comment>
+                  <comment><![CDATA[JS API key is used for performing searches in the frontend.]]></comment>
                 </field>
                 <field id="rest_api_key" translate="label comment" sortOrder="122" showInStore="1">
                   <label>REST API Key</label>
-                  <comment><![CDATA[This API key is used for syncing product information in the backend.]]></comment>
+                  <comment><![CDATA[REST API key is used for syncing product information to the backend.]]></comment>
                 </field>
                 <field id="wizard" type="button" sortOrder="400" showInDefault="1" showInWebsite="1" showInStore="1">
                 <frontend_model>Klevu\Search\Block\Adminhtml\Wizard\Config\Button</frontend_model>
                 </field>
                 <field id="hostname" translate="label comment" sortOrder="123" showInStore="1">
                   <label>Hostname</label>
-                  <comment><![CDATA[The Hostname is used for sending store configuration parameters to Klevu.]]></comment>
+                  <comment><![CDATA[Hostname is used for sending store configuration parameters to Klevu.]]></comment>
                 </field>
                 <field id="rest_hostname" translate="label comment" sortOrder="124" showInStore="1">
                   <label>Product Synchronization URL</label>
-                  <comment><![CDATA[This Hostname is used for sending product synchronization API requests to Klevu.]]></comment>
+                  <comment><![CDATA[Product Synchronization URL is used for sending product synchronization API requests to Klevu.]]></comment>
                 </field>
                 <field id="cloud_search_url" translate="label comment" sortOrder="125" showInStore="1">
                   <label>Cloud Search URL</label>
-                  <comment><![CDATA[The Cloud Search URL is used for sending search API requests to Klevu.]]></comment>
+                  <comment><![CDATA[Cloud Search URL is used for sending search API requests to Klevu.]]></comment>
                 </field>
                 <field id="analytics_url" translate="label comment" sortOrder="126" showInStore="1">
                   <label>Analytics URL</label>
-                  <comment><![CDATA[The Analytics URL is used for reporting search terms and clicks to Klevu.]]></comment>
+                  <comment><![CDATA[Analytics URL is used for reporting search terms, clicks and checkouts to Klevu.]]></comment>
                 </field>
                 <field id="js_url" translate="label comment" sortOrder="127" showInStore="1">
                   <label>JS URL</label>
-                  <comment><![CDATA[The JS URL is used for getting Klevu's Javascript file.]]></comment>
+                  <comment><![CDATA[JS URL is used for powering the JavaScript Klevu based template and quick search on the frontend.]]></comment>
                 </field>
 				<field id="tiers_url" translate="label comment" sortOrder="128" showInStore="1">
                   <label>Tiers URL</label>
-                  <comment><![CDATA[The Tiers URL is used for getting Klevu's Search Tires.]]></comment>
+                  <comment><![CDATA[Tiers URL is used for retrieving information about the Klevu Plan you are signed up to.]]></comment>
                 </field>
             </group>
             <group id="searchlanding" translate="label" sortOrder="103" showInDefault="1" showInWebsite="1" showInStore="1">
@@ -76,64 +80,113 @@
             </group>
             <group id="product_sync" translate="label" sortOrder="102" showInDefault="1" showInWebsite="1" showInStore="1">
                 <label>Product Sync Settings</label>
-                <field id="enabled" translate="label comment" sortOrder="100" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
+                <field id="enabled" translate="label comment" sortOrder="20" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
                   <label>Enable Product Sync</label>
                   <source_model>Klevu\Search\Model\System\Config\Source\Yesnoforced</source_model>
-                  <comment><![CDATA[Enable Product Sync.]]></comment>
+                  <comment><![CDATA[
+                    Include Magento Products with your search results.
+                    We will monitor changes to your products and send them to Klevu based on the above frequency.
+                  ]]></comment>
                 </field>
-                <field id="catalogvisibility" translate="label comment" sortOrder="101" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
-                    <label>Sync Product with Catalog Visibility</label>
+                <field id="catalogvisibility" translate="label comment" sortOrder="30" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Include Visibility: Catalog</label>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment><![CDATA[
+                      With this disabled, only products with Visibility: "Catalog, Search" or "Search" will be sent to Klevu.
+                      Enable this setting to also include products with Visibility: "Catalog".
+                      <strong>Important:</strong> Please contact <a href="mailto:support@klevu.com">support@klevu.com</a>
+                      before enabling this option to prevent "Catalog" products appearing in your search results.
+                    ]]></comment>
                 </field>
-                <field id="frequency" translate="label comment" sortOrder="101" type="select" showInDefault="1">
+                <field id="frequency" translate="label comment" sortOrder="10" type="select" showInDefault="1">
                   <label>Frequency</label>
                   <source_model>Klevu\Search\Model\System\Config\Source\Frequency</source_model>
+                  <comment><![CDATA[
+                    Configure how often Klevu will synchronise changes to Products, Categories and CMS data.
+                    Learn more about the available options for synchronising data here:
+                    <a href="https://support.klevu.com/knowledgebase/magento-data-sync" target="_blank">Magento 2 Data Sync</a>.
+                  ]]></comment>
                 </field>
-                <field id="order_sync_enabled" type="select" sortOrder="115" showInDefault="1" showInWebsite="1" showInStore="1">
+                <field id="order_sync_enabled" type="select" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Enable Order Sync</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                    <comment><![CDATA[It is <strong>strongly recommended that Order Sync is set to 'Yes'</strong>. Klevu Search uses transaction data as a factor in ranking product results for customers.]]></comment>
+                    <comment><![CDATA[
+                      <strong>Recommended.</strong> Klevu Search uses transactional data as a ranking factor to show the most popular products to your customers.
+                      Enable this option to send recent Orders to Klevu every day at 2AM local time via the native Magento internal cron.                      
+                    ]]></comment>
                 </field>
-                <field id="category_sync_enabled" type="select" sortOrder="120" showInDefault="1" showInWebsite="1" showInStore="1">
+                <field id="category_sync_enabled" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Enable Category Sync</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                    <comment><![CDATA[Choose <strong>No</strong> to disable category data sync.]]></comment>
+                    <comment><![CDATA[
+                      Include Magento Categories with your search results.
+                      We will monitor changes to your categories and send them to Klevu based on the above frequency.
+                    ]]></comment>
                 </field>
-                <field id="last_run" translate="label" sortOrder="300" showInDefault="1" showInWebsite="1" showInStore="1">
-                  <label>Last Run</label>
-                  <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Store\Level\Label</frontend_model>
+                <field id="last_run" translate="label" sortOrder="910" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Sync Status</label>
+                    <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Store\Level\Label</frontend_model>
+                    <comment><![CDATA[
+                    This is the date the last Product, Category or CMS Page was sent to Klevu,
+                    which may have been triggered via Cron, CLI Command or manual sync.
+                    Use Store View scope for store specific values. The date comes from the
+                    klevu_product_sync database table, so the timezone may be different to expected.
+                  ]]></comment>
                 </field>
-				<field id="cron_status" translate="label" sortOrder="300" showInDefault="1" showInWebsite="1" showInStore="1">
-                  <label>Cron Status</label>
-                  <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Store\Status</frontend_model>
+                <field id="cron_status" translate="label" sortOrder="920" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Cron Status</label>
+                    <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Store\Status</frontend_model>
+                    <comment><![CDATA[
+                    This is the status of the native Magento Cron, which can either be 'Running' or 'Completed'.
+                    If the status is 'Running' and the date is quite old, there might be a problem with your sync.
+                    The date comes from the cron_schedule database table, so the timezone may be different to expected.
+                  ]]></comment>
                 </field>
-                <field id="lockfile" translate="label comment" sortOrder="310" type="select" showInDefault="1">
-                    <label>Remove Lock file selection</label>
+                <field id="lockfile" translate="label comment" sortOrder="330" type="select" showInDefault="1">
+                    <label>Automatic Lock File Removal</label>
                     <source_model>Klevu\Search\Model\System\Config\Source\LockFileOptions</source_model>
-                    <comment>
-                        <![CDATA[Choose option to automatically remove the Klevu related .lock file temporary generated during Sync]]></comment>
-                    <tooltip>
-                        <![CDATA[When the sync is running, a temporary lock file created on store level inside var/ folder to avoid executing multiple copies of Klevu's product sync at the same time and delete the same lock file on completion.
-                        </br>Based on this selection, System will check and remove lock files that were not deleted automatically on Sync completion.
-                        </br> e.g. If <strong>2 Days ago</strong> selected, then 2 days old lock files will get deleted.
-                        </br> The field <strong>Cron Status</strong> will show the existing lock files if any. ]]></tooltip>
+                    <comment><![CDATA[
+                      Control how regularly old lock files are automatically removed.
+                      Learn more about <a href="https://support.klevu.com/knowledgebase/magento-2-lock-files" target="_blank">Klevu Lock Files.</a>
+                    ]]></comment>
                 </field>
-                <field id="alldata_sync_btn" type="button" sortOrder="410" showInDefault="1" showInWebsite="1" showInStore="1">
+                <field id="lock_file_status" translate="label" sortOrder="930" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Lock File Status</label>
+                    <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Store\LockStatus</frontend_model>
+                    <comment><![CDATA[
+                    If any of the above lock files are quite old, there might be a problem with your sync.
+                    Learn more about <a href="https://support.klevu.com/knowledgebase/magento-2-lock-files" target="_blank">Klevu Lock Files.</a>
+                    The dates come from the server files, so the timezone may be different to expected.
+                  ]]></comment>
+                </field>
+                <field id="alldata_sync_btn" type="button" sortOrder="1010" showInDefault="1" showInWebsite="1" showInStore="1">
                     <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Sync\AllData</frontend_model>
-                    <label>Sync</label>
-                    <comment><![CDATA[<strong>Sync All Data</strong> button will schedule CRON to send all the data to the Klevu. </br>
-                    All the data to be synchronized on next CRON run.]]></comment>
+                    <label>Sync All Data</label>
+                    <comment><![CDATA[
+                      Use this button to schedule all Products, Categories and CMS Pages need to be synchronised with Klevu.
+                      These entities will then be sent during the next data sync via Cron, CLI Command or manual sync.
+                    ]]></comment>
                 </field>
-                <field id="updatesonly_sync_btn" type="button" sortOrder="415"  showInStore="1">
+                <field id="info_attribute" translate="label comment" sortOrder="1020" type="label" showInDefault="1" showInWebsite="1">
+                    <label>Sync Updates Only</label>
+                    <comment><![CDATA[Switch to Store View to sync recently modified entities.]]></comment>
+                </field>
+                <field id="updatesonly_sync_btn" type="button" sortOrder="1020"  showInStore="1">
+                    <label>Sync Updates Only</label>
                     <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Sync\UpdatesOnly</frontend_model>
-                    <comment><![CDATA[By using <strong>Sync Updates Only</strong> button, it will initiate the data synchronization immediately.]]></comment>
-                </field>                
+                    <comment><![CDATA[
+                      Use this button to open a new tab where the data synchronisation will begin immediately,
+                      synchronising any Products, Categories or CMS Pages which have been modified since the last sync to Klevu.
+                    ]]></comment>
+                </field>
             </group>
             <group id="attributes" translate="label" sortOrder="104" showInDefault="1" showInWebsite="1" showInStore="1">
                 <label>Product Attribute Settings</label>
-                <field id="info_attribute" translate="label comment" sortOrder="100" type="label" showInDefault="1">
-                  <label>Attribute Settings</label>
-                  <comment><![CDATA[Switch to store view scope to set.]]></comment>
+                <field id="info_attribute" translate="label comment" sortOrder="100" type="label" showInDefault="1" showInWebsite="1">
+                  <comment><![CDATA[Switch to Store View scope to manage.]]></comment>
                 </field>
                 <field id="boosting" translate="label comment" sortOrder="800" type="select" showInDefault="1" showInStore="1">
                   <label>Boosting Attribute</label>
@@ -144,32 +197,38 @@
                   <label>Other Attributes To Use In Search</label>
                   <can_be_empty>1</can_be_empty>
                   <source_model>Klevu\Search\Model\System\Config\Source\Product\Attributes</source_model>
-                  <comment><![CDATA[By default, Klevu uses the following attributes in search: name, sku, description, short_description, price and rating. To add more attributes to search, please select one or more attributes from the list above. Once you have selected the respective attributes, please make sure to resynchronize all the products.]]></comment>
+                  <comment><![CDATA[
+                    By default, Klevu uses the following attributes in search: name, sku, description, short_description, price and rating. To add more attributes to search, please select one or more attributes from the list above.
+                    This change will take place during the next data sync via Cron, CLI Command or manual sync.
+                  ]]></comment>
                 </field>
-          </group>
-		
-      <group id="secureurl_setting" translate="label comment" sortOrder="106" showInDefault="1" showInStore="1">
+          </group>		
+      <group id="secureurl_setting" translate="label comment" sortOrder="106" showInDefault="1" showInWebsite="1" showInStore="1">
             <label>Secure Url Settings</label>
-            <field id="info_enabled" translate="label comment" sortOrder="100" type="label" showInDefault="1">
-              <label>Use Secure Base Url for Products and Images</label>
-              <comment><![CDATA[Switch to store view scope to set]]></comment>
+            <field id="info_enabled" translate="label comment" sortOrder="100" type="label" showInDefault="1" showInWebsite="1">
+              <comment><![CDATA[Switch to Store View scope to manage.]]></comment>
             </field>
             <field id="enabled" translate="label comment" sortOrder="100" type="select" showInDefault="1" showInStore="1">
               <label>Use Secure Base Url for Products and Images</label>
               <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-              <comment><![CDATA[Choose Yes to use secure base url from Store &gt; Cofiguration &gt; Store view &gt; General &gt; Secure &gt; Base URL.&lt; </br> Please make sure to resynchronize products by clicking on the <strong>Sync Data for This Store</strong> under the "Data Sync Settings".]]></comment>
+              <comment><![CDATA[
+                Choose Yes to use secure base url from Store &gt; Cofiguration &gt; Store view &gt; General &gt; Secure &gt; Base URL.
+                This change will take place during the next data sync via Cron, CLI Command or manual sync.
+              ]]></comment>
             </field>
       </group>
-	    <group id="image_setting" translate="label comment" sortOrder="106" showInDefault="1" showInStore="1">
+	    <group id="image_setting" translate="label comment" sortOrder="106" showInDefault="1" showInWebsite="1" showInStore="1">
             <label>Product Image Settings</label>
-            <field id="info_enabled" translate="label comment" sortOrder="100" type="label" showInDefault="1">
-              <label>Use Configurable Product's Image in Search</label>
-              <comment><![CDATA[Switch to store view scope to set]]></comment>
+            <field id="info_enabled" translate="label comment" sortOrder="100" type="label" showInDefault="1" showInWebsite="1">
+              <comment><![CDATA[Switch to Store View scope to manage.]]></comment>
             </field>
             <field id="enabled" translate="label comment" sortOrder="100" type="select" showInDefault="1" showInStore="1">
               <label>Use Configurable Product's Image in Search.</label>
               <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-              <comment><![CDATA[Choose <strong>Yes</strong> to use configurable product's image in search. </br> Please make sure to resynchronize products by clicking on the <strong>Sync Data for This Store</strong> under the "Data Sync Settings."]]></comment>
+              <comment><![CDATA[
+                Choose <strong>Yes</strong> to use configurable product's image in search.
+                This change will take place during the next data sync via Cron, CLI Command or manual sync.
+              ]]></comment>
             </field>
 		<field id="image_width" translate="label comment" sortOrder="128" showInStore="1" showInDefault="1">
                 <label>Image Width</label>
@@ -195,7 +254,9 @@
 	<field id="collection_method" translate="label comment" sortOrder="300" type="select" showInDefault="1">
           <label>Use Collection Method</label>
           <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-          <comment><![CDATA[Use Collection Method]]></comment>
+        <comment><![CDATA[
+        <strong>Recommended.</strong> Use this option to choose between Collection Method and Object Method for loading products during data synchronisation.
+        Learn more here: <a href="https://support.klevu.com/knowledgebase/enabling-collection-method-to-sync-data-magento-2" target="_blank">Object vs Collection Method</a>.]]></comment>
         </field>
         <field id="force_log" translate="label comment" sortOrder="300" type="select" showInDefault="1">
           <label>Force Logging</label>
@@ -205,7 +266,7 @@
         <field id="log_level" translate="label" sortOrder="310" type="select" showInDefault="1">
           <label>Log level</label>
           <source_model>Klevu\Search\Model\System\Config\Source\Log\Level</source_model>
-        </field>		
+        </field>
 	<field id="download_log_button" type="button" sortOrder="401" showInDefault="1">
             <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Logdownload</frontend_model>
             <comment><![CDATA[]]></comment>
@@ -228,6 +289,27 @@
             <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Trigger\Button</frontend_model>
         </field>
       </group>
+        <group id="notification" translate="label comment" sortOrder="1000" showInDefault="1">
+            <label>Notification Settings</label>
+            <field id="object_vs_collection" translate="label comment" sortOrder="100" type="select" showInDefault="1">
+                <label>Object vs Collection Method</label>
+                <source_model>Klevu\Search\Model\System\Config\Source\NotificationOptions</source_model>
+                <comment><![CDATA[
+                This notification will appear when we detect you are using Object Method instead of the more efficient Collection Method.
+                If you have reviewed this already and decided to stick with Object Method, please disable this warning.
+                Learn more here: <a href="https://support.klevu.com/knowledgebase/enabling-collection-method-to-sync-data-magento-2" target="_blank">Object vs Collection Method</a>
+                ]]></comment>
+            </field>
+            <field id="lock_file" translate="label comment" sortOrder="200" type="select" showInDefault="1">
+                <label>Lock Files</label>
+                <source_model>Klevu\Search\Model\System\Config\Source\NotificationOptions</source_model>
+                <comment><![CDATA[
+                This notification will appear when we detect a Lock file older than the period you have specified in 'Data Sync Settings > Automatic Lock File Removal'.
+                <strong>Warning:</strong> By specifying 'At the top of every Magento Admin page', an attempt to read multiple files from disk will take place on every page of your admin panel, which can impact performance.
+                Learn more here: <a href="https://support.klevu.com/knowledgebase/magento-2-lock-files" target="_blank">Magento 2 Lock Files</a>
+            ]]></comment>
+            </field>
+        </group>
     </section>
         <section id="tax" translate="label" sortOrder="430" showInDefault="1" showInWebsite="1" showInStore="1">
             <group id="display" translate="label" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
@@ -237,7 +319,8 @@
                         <field id="type">3</field>
                     </depends>
                     <source_model>Klevu\Search\Model\System\Config\Source\Tax\Display\Type</source_model>
-                    <comment><![CDATA[Choose 'Including Tax' to show prices with Tax in Klevu search results.]]></comment>
+                    <comment><![CDATA[Choose 'Including Tax' to show prices with Tax in Klevu search results. </br>
+                    This change will take place during the next data sync via Cron, CLI Command or manual sync. ]]></comment>
                 </field>
             </group>
         </section>
