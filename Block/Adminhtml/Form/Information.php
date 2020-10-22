@@ -79,9 +79,9 @@ class Information extends \Magento\Config\Block\System\Config\Form\Fieldset
             $html .= '<div class="message message-error">' . $str . '</div>';
         }
 
-        $objVsColFlag = $this->isShowObjectVsCollectionWarning();
+        $objVsColFlag = $this->_searchHelperConfig->isCollectionMethodEnabled();
         $option = (int)$this->_searchHelperConfig->getObjMethodNotificationOption();
-        if ($objVsColFlag && $option !== NotificationOptions::LOCK_WARNING_DISABLE) {
+        if (!$objVsColFlag && $option !== NotificationOptions::LOCK_WARNING_DISABLE) {
             $str = __(
                 'Klevu Search is currently using Object method, which may be impacting your data sync performance.</br>
             Please read <a href="%1" target="_blank">Object vs Collection Method</a> for more information.
@@ -134,16 +134,6 @@ class Information extends \Magento\Config\Block\System\Config\Form\Fieldset
     public function getFeatures()
     {
         $this->_searchHelperConfig->getFeatures();
-    }
-
-    /**
-     * Returns whether to show object vs collection warning
-     *
-     * @return bool
-     */
-    private function isShowObjectVsCollectionWarning() {
-
-        return true;
     }
 }
 
