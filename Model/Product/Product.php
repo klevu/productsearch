@@ -34,9 +34,9 @@ class Product extends DataObject implements ProductInterface
     public function getBaseUrl($store)
     {
         if ($this->_configHelper->isSecureUrlEnabled($store->getId())) {
-             $base_url = $this->_storeModelStoreManagerInterface->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_LINK, true);
+            $base_url = $this->_storeModelStoreManagerInterface->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_LINK, true);
         } else {
-             $base_url = $this->_storeModelStoreManagerInterface->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_LINK);
+            $base_url = $this->_storeModelStoreManagerInterface->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_LINK);
         }
 
         return $base_url;
@@ -234,15 +234,15 @@ class Product extends DataObject implements ProductInterface
 
         return $product['product_type'];
     }
-	
-	public function getVisibility($key,$attributes,$parent,$item,$product,$store) {
-		if($parent){
+
+    public function getVisibility($key,$attributes,$parent,$item,$product,$store) {
+        if($parent){
             $product['visibility'] = $parent->getData('visibility');
         }else{
             $product['visibility'] = $item->getData('visibility');
         }
         return $product['visibility'];
-	}
+    }
 
     public function isCustomOptionsAvailable($parent,$item){
         $productType = array("grouped", "configurable", "bundle", "downloadable");
@@ -258,8 +258,8 @@ class Product extends DataObject implements ProductInterface
 
         return $product['isCustomOptionsAvailable'];
     }
-	
-	
+
+
 
     public function getCategory($parent,$item){
         if ($parent) {
@@ -285,16 +285,41 @@ class Product extends DataObject implements ProductInterface
 
     public function getAllCategoryId($parent,$item){
         if ($parent) {
+
             //category ids parent
-            $parentCategorys = $parent->getCategoryIds();
-            $product['categoryIds'] = implode(";",(is_array($parentCategorys)?$parentCategorys:[]));
+            $product['categoryIds'] = $this->getAllCategoryIdProcessed($parent);
         } elseif ($item->getCategoryIds()) {
-            $itemCategorys = $item->getCategoryIds();
-            $product['categoryIds'] = implode(";",(is_array($itemCategorys)?$itemCategorys:[]));
+            $product['categoryIds'] = $this->getAllCategoryIdProcessed($item);
         } else {
             $product['categoryIds'] = "";
         }
         return $product['categoryIds'];
+    }
+
+    private function getAllCategoryIdProcessed($item){
+        $itemCategorys = $item->getCategoryIds();
+        $return = array();
+        $category_paths_ids = $this->getData('category_path_ids');
+        $category_anchors = $this->getData('category_anchors');
+        $isCatAnchorSingle = $this->_configHelper->getTreatCategoryAnchorAsSingle($this->_storeModelStoreManagerInterface->getStore()->getId());
+        if($isCatAnchorSingle && is_array($itemCategorys)){
+            foreach ($itemCategorys as $id){
+                if (isset($category_paths_ids[$id])) {
+                    if(count($category_paths_ids[$id]) > 0) {
+                        foreach($category_paths_ids[$id] as $catIsAnchor){
+                            if(isset($category_anchors[$catIsAnchor])){
+                                if (isset($category_paths_ids[$catIsAnchor])) {
+                                    $return[] = end($category_paths_ids[$catIsAnchor]);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            $return = array_merge($return,$itemCategorys);
+            $itemCategorys = array_unique($return);
+        }
+        return  implode(";",(is_array($itemCategorys)?$itemCategorys:[]));
     }
 
     public function getAllCategoryPaths($parent,$item){
@@ -385,16 +410,34 @@ class Product extends DataObject implements ProductInterface
     public function getLongestPathCategoryName(array $categories)
     {
         $category_paths = $this->getCategoryPaths();
+        $category_anchors = $this->getData('category_anchors');
+        $category_paths_ids = $this->getData('category_path_ids');
+        $isCatAnchorSingle = $this->_configHelper->getTreatCategoryAnchorAsSingle($this->_storeModelStoreManagerInterface->getStore()->getId());
         $length = 0;
-        $name = "";
+        $name = array();
         foreach ($categories as $id) {
             if (isset($category_paths[$id])) {
                 //if (count($category_paths[$id]) > $length) {
                 //$length = count($category_paths[$id]);
-                $name .= end($category_paths[$id]).";";
+                $name[]= end($category_paths[$id]).";";
                 //}
+                //added to support category anchors
+                if($isCatAnchorSingle){
+                    if(count($category_paths[$id]) > 0) {
+                        foreach($category_paths_ids[$id] as $catIsAnchor){
+                            if(isset($category_anchors[$catIsAnchor])){
+                                if (isset($category_paths[$catIsAnchor])) {
+                                    $name[] = end($category_paths[$catIsAnchor]).";";
+                                }
+                            }
+                        }
+                    }
+                }
+
             }
         }
+        $name = array_unique($name);
+        $name = implode("",$name);
         return substr($name, 0, strrpos($name, ";")+1-1);
     }
 
@@ -410,11 +453,30 @@ class Product extends DataObject implements ProductInterface
     public function getCategoryNames(array $categories)
     {
         $category_paths = $this->getCategoryPaths();
+        $category_paths_ids = $this->getData('category_path_ids');
+        $category_anchors = $this->getData('category_anchors');
+        $isCatAnchorSingle = $this->_configHelper->getTreatCategoryAnchorAsSingle($this->_storeModelStoreManagerInterface->getStore()->getId());
         $result = ["KLEVU_PRODUCT"];
         foreach ($categories as $category) {
             if (isset($category_paths[$category])) {
                 if(count($category_paths[$category]) > 0) {
                     $cat_path[$category][] = implode(";",$category_paths[$category]);
+                    //added to support category anchors
+                    if($isCatAnchorSingle){
+                        foreach($category_paths_ids[$category] as $catIsAnchor){
+                            if(isset($category_anchors[$catIsAnchor])){
+                                if (isset($category_paths[$catIsAnchor])) {
+                                    if(count($category_paths[$catIsAnchor]) > 0) {
+                                        $cat_path[$catIsAnchor][] = implode(";",$category_paths[$catIsAnchor]);
+                                    } else {
+                                        $cat_path[$catIsAnchor] = $category_paths[$catIsAnchor];
+                                    }
+
+                                    $result = array_merge($result, $cat_path[$catIsAnchor]);
+                                }
+                            }
+                        }
+                    }
                 } else {
                     $cat_path[$category] = $category_paths[$category];
                 }
@@ -436,6 +498,9 @@ class Product extends DataObject implements ProductInterface
     {
         $category_paths = $this->getData('category_paths_and_ids');
         $category_ids = $this->getData('category_path_ids');
+        $category_anchors = $this->getData('category_anchors');
+        $isCatAnchorSingle = $this->_configHelper->getTreatCategoryAnchorAsSingle($this->_storeModelStoreManagerInterface->getStore()->getId());
+
         $result = [];
         foreach ($categories as $category) {
             if (isset($category_paths[$category])) {
@@ -443,15 +508,42 @@ class Product extends DataObject implements ProductInterface
                     $catName = implode(";",$category_paths[$category]);
                     $catId = implode("/",$category_ids[$category]);
                     $cat_path[$category][] = $catName . '::' . $catId;
+                    // check if need to treat anchors as standalone
+                    if($isCatAnchorSingle){
+                        foreach($category_ids[$category] as $isCatAnchor){
+                            if(isset($category_anchors[$isCatAnchor])){
+                                if (isset($category_paths[$isCatAnchor])) {
+                                    if(count($category_paths[$isCatAnchor]) > 0) {
+                                        $catName = implode(";",$category_paths[$isCatAnchor]);
+                                        $catId = implode("/",$category_ids[$isCatAnchor]);
+                                        $cat_path[$isCatAnchor][] = $catName . '::' . $catId;
+                                    } else {
+                                        $catName = $category_paths[$isCatAnchor];
+                                        $catId = $category_ids[$isCatAnchor];
+                                        if(!is_array($catName) && !is_array($catId)) {
+                                            $cat_path[$isCatAnchor] = $catName . '::' . $catId;
+                                        } else {
+                                            $cat_path[$isCatAnchor] = 	array();
+                                        }
+                                    }
+                                    $result = array_merge($result, $cat_path[$isCatAnchor]);
+                                }
+                            }
+                        }
+                    }
+
+
                 } else {
                     $catName = $category_paths[$category];
                     $catId = $category_ids[$category];
-					if(!is_array($catName) && !is_array($catId)) {
-						$cat_path[$category] = $catName . '::' . $catId;
-					} else {
-						$cat_path[$category] = 	array();
-					}                  
+                    if(!is_array($catName) && !is_array($catId)) {
+                        $cat_path[$category] = $catName . '::' . $catId;
+                    } else {
+                        $cat_path[$category] = 	array();
+                    }
                 }
+
+
                 $result = array_merge($result, $cat_path[$category]);
             }
         }
@@ -475,32 +567,39 @@ class Product extends DataObject implements ProductInterface
             $this->setData('catFieldStoreID', $this->_storeModelStoreManagerInterface->getStore()->getId());
             $category_paths = [];
             $category_ids = [];
-			$category_paths_and_ids = [];
+            $category_paths_and_ids = [];
             $rootId = $this->_storeModelStoreManagerInterface->getStore()->getRootCategoryId();
             $collection = \Magento\Framework\App\ObjectManager::getInstance()
                 ->create('\Magento\Catalog\Model\ResourceModel\Category\Collection')
                 ->setStoreId($this->_storeModelStoreManagerInterface->getStore()->getId())
-				->addAttributeToSelect('is_exclude_cat')
+                ->addAttributeToSelect('is_exclude_cat')
+                ->addAttributeToSelect('is_anchor')
                 ->addFieldToFilter('level', ['gt' => 1])
                 ->addFieldToFilter('path', ['like'=> "1/$rootId/%"])
                 ->addIsActiveFilter()
                 ->addNameToResult();
+
+            $category_anchors = [];
             foreach ($collection as $category) {
+                if($category->getIsAnchor()){
+                    $category_anchors[$category->getId()] = $category->getId();
+                }
                 $category_paths[$category->getId()] = [];
-				$category_paths_and_ids[$category->getId()] = [];
+                $category_paths_and_ids[$category->getId()] = [];
                 $category_ids[$category->getId()] = [];
                 $path_ids = $category->getPathIds();
                 foreach ($path_ids as $id) {
                     if ($item = $collection->getItemById($id)) {
-						$category_ids[$category->getId()][] = $item->getId();
-						$category_paths_and_ids[$category->getId()][] = $item->getName();
-						if($category->getIsExcludeCat() != 1) {
-							$category_paths[$category->getId()][] = $item->getName();
-						}	
+                        $category_ids[$category->getId()][] = $item->getId();
+                        $category_paths_and_ids[$category->getId()][] = $item->getName();
+                        if($category->getIsExcludeCat() != 1) {
+                            $category_paths[$category->getId()][] = $item->getName();
+                        }
                     }
                 }
             }
-			$this->setData('category_paths_and_ids',$category_paths_and_ids);
+            $this->setData('category_anchors',$category_anchors);
+            $this->setData('category_paths_and_ids',$category_paths_and_ids);
             $this->setData('category_path_ids', $category_ids);
             $this->setData('category_paths', $category_paths);
         }

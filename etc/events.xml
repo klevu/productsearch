@@ -16,8 +16,8 @@
     <event name="after_reindex_process_catalog_url">
         <observer name="klevu_search_product_sync" instance="Klevu\Search\Model\Observer\ScheduleProductSync"/>
     </event>
-    <event name="catalog_inventory_stock_item_save_commit_after">
-        <observer name="klevu_search_product_sync" instance="Klevu\Search\Model\Observer\ScheduleProductSync"/>
+    <event name="cataloginventory_stock_item_save_commit_after">
+        <observer name="klevu_search_product_sync" instance="Klevu\Search\Model\Observer\StockItemSync"/>
     </event>
     <event name="catalog_product_delete_commit_after">
         <observer name="klevu_search_product_sync" instance="Klevu\Search\Model\Observer\ScheduleProductSync"/>
@@ -47,6 +47,9 @@
     </event>
     <event name="catalogrule_rule_delete_before">
         <observer name="RuleUpdate" instance="Klevu\Search\Model\Observer\RuleUpdate"/>
+    </event>
+    <event name="catalog_category_save_before">
+        <observer name="updateLastSyncCategoryBefore" instance="Klevu\Search\Model\Observer\UpdateLastSyncCategoryBefore"/>
     </event>
     <event name="catalog_category_save_commit_after">
         <observer name="updateLastSyncCategory" instance="Klevu\Search\Model\Observer\UpdateLastSyncCategory"/>

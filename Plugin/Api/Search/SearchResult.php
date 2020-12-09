@@ -57,7 +57,8 @@ class SearchResult
                     if (!empty($this->registry->registry('search_ids'))) {
                         $flag = $key = 0;
                         $ids = array_reverse($this->registry->registry('search_ids'));
-
+                        //this will fix any issues with non associated requests as the request is uninterrupted between cleaner and this point.
+                        $this->registry->unregister('search_ids');
                         $result_key = array();
                         $returned_ids = array();
                         foreach ($result as $item) {

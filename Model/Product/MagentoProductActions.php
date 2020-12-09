@@ -147,18 +147,24 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
             //$productCollection->setPageSize($limit);
         }
 
-        $m_product_ids = $childIds = array();
+        $m_product_ids = array();
+        $childIds = array();
         foreach ($productCollection->getData() as $key => $value) {
             $childIds[] = $value['entity_id'];
         }
         //$parent_ids_all = $this->_klevuProductParentInterface->getParentIdsByChild($childIds);
         $parent_ids_all = $this->getParentRelationsByChild($childIds);
         foreach ($productCollection->getData() as $key => $value) {
-            if (!empty($parent_ids_all)) {
+            /*if (!empty($parent_ids_all)) {
                 foreach ($parent_ids_all as $pkey => $pvalue) {
                     if ($pvalue['product_id'] == $value['entity_id']) {
                         $m_product_ids[] = $pvalue['entity_id'] . "-" . $value['entity_id'];
                     }
+                }
+            }*/
+            if (isset($parent_ids_all[$value['entity_id']]) == true) {
+                foreach ($parent_ids_all[$value['entity_id']] as $pkey => $pvalue) {
+                    $m_product_ids[] = $pvalue['entity_id'] . "-" . $value['entity_id'];
                 }
             }
             $parent_id = 0;
@@ -185,11 +191,16 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
         //$parent_ids = $this->_klevuProductParentInterface->getParentIdsByChild($notVisibleChildIDs);
         $parent_ids = $this->getParentRelationsByChild($notVisibleChildIDs);
         foreach ($productCollection->getData() as $key => $value) {
-            if (!empty($parent_ids)) {
+            /*if (!empty($parent_ids)) {
                 foreach ($parent_ids as $pkey => $pvalue) {
                     if ($pvalue['product_id'] == $value['entity_id']) {
                         $m_product_ids[] = $pvalue['entity_id'] . "-" . $value['entity_id'];
                     }
+                }
+            }*/
+            if (isset($parent_ids[$value['entity_id']]) == true) {
+                foreach ($parent_ids[$value['entity_id']] as $pkey => $pvalue) {
+                    $m_product_ids[] = $pvalue['entity_id'] . "-" . $value['entity_id'];
                 }
             }
         }
@@ -209,7 +220,7 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
         // disable not working for flat indexing  so checking for enabled product only
         $productCollection->addAttributeToFilter('status', array('eq' => \Magento\Catalog\Model\Product\Attribute\Source\Status::STATUS_ENABLED));
         foreach ($productCollection->getData() as $key => $value) {
-            $enable_parent_ids[] = $value['entity_id'];
+            $enable_parent_ids[$value['entity_id']] = $value['entity_id'];
         }
 
         $k_product_ids = array();
@@ -223,7 +234,8 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
         foreach ($products_to_add as $key => $value) {
             $ids = explode('-', $value);
             if ($ids[0] !== "0") {
-                if (in_array($ids[0], $enable_parent_ids)) {
+                //if (in_array($ids[0], $enable_parent_ids)) {
+                if (isset($enable_parent_ids[$ids[0]]) == true) {
                     $products_ids_add[$value]['parent_id'] = $ids[0];
                     $products_ids_add[$value]['product_id'] = $ids[1];
                 }
@@ -253,18 +265,24 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
         } else {
             $productCollection->addAttributeToFilter('visibility', array('in' => array(\Magento\Catalog\Model\Product\Visibility::VISIBILITY_BOTH, \Magento\Catalog\Model\Product\Visibility::VISIBILITY_IN_SEARCH, \Magento\Catalog\Model\Product\Visibility::VISIBILITY_NOT_VISIBLE)));
         }
-        $m_product_ids = $delChildIDs = array();
+        $m_product_ids = array();
+        $delChildIDs = array();
         foreach ($productCollection->getData() as $key => $value) {
             $delChildIDs[] = $value['entity_id'];
         }
         //$parent_ids = $this->_klevuProductParentInterface->getParentIdsByChild($delChildIDs);
         $parent_ids = $this->getParentRelationsByChild($delChildIDs);
         foreach ($productCollection->getData() as $key => $value) {
-            if (!empty($parent_ids)) {
+            /*if (!empty($parent_ids)) {
                 foreach ($parent_ids as $pkey => $pvalue) {
                     if ($pvalue['product_id'] == $value['entity_id']) {
                         $m_product_ids[] = $pvalue['entity_id'] . "-" . $value['entity_id'];
                     }
+                }
+            }*/
+            if (isset($parent_ids[$value['entity_id']]) == true) {
+                foreach ($parent_ids[$value['entity_id']] as $pkey => $pvalue) {
+                    $m_product_ids[] = $pvalue['entity_id'] . "-" . $value['entity_id'];
                 }
             }
             $parent_id = 0;
@@ -287,7 +305,8 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
         $productCollection->addAttributeToFilter('status', array('eq' => \Magento\Catalog\Model\Product\Attribute\Source\Status::STATUS_ENABLED));
 
         foreach ($productCollection->getData() as $key => $value) {
-            $enable_parent_ids[] = $value['entity_id'];
+            //$enable_parent_ids[] = $value['entity_id'];
+            $enable_parent_ids[$value['entity_id']] = $value['entity_id'];
         }
 
         $k_product_ids = array();
@@ -295,7 +314,8 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
         foreach ($klevuCollection as $k_key => $k_value) {
             $k_product_ids[] = $k_value['parent_id'] . "-" . $k_value['product_id'];
             if ($k_value['parent_id'] !== "0") {
-                if (!in_array($k_value['parent_id'], $enable_parent_ids)) {
+                //if (!in_array($k_value['parent_id'], $enable_parent_ids)) {
+                if (isset($enable_parent_ids[$k_value['parent_id']]) == false) {
                     $products_ids_delete[$k_value['product_id']]['parent_id'] = $k_value['parent_id'];
                     $products_ids_delete[$k_value['product_id']]['product_id'] = $k_value['product_id'];
 
@@ -752,7 +772,12 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
      */
     public function getParentRelationsByChild($ids)
     {
-        $select = $this->_frameworkModelResource->getConnection()
+
+        /** @var \Magento\Framework\DB\Adapter\Pdo\Mysql $connection */
+        $connection = $this->_frameworkModelResource->getConnection();
+
+        /** @var \Magento\Framework\Db\Select $select */
+        $select = $connection
             ->select()
             ->from(['l' => $this->_frameworkModelResource->getTableName('catalog_product_super_link')], [])
             ->join(
@@ -760,8 +785,21 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
                 'e.'. $this->_magentoOptionProvider->getProductEntityLinkField() . ' = l.parent_id',
                 ['e.entity_id']
             )->where('l.product_id IN(?)', $ids);
+        $select->reset('columns');
         $select->columns(array('e.entity_id', 'l.product_id', 'l.parent_id'));
-        return $this->_frameworkModelResource->getConnection()->fetchAll($select);
+
+        $result = [];
+        $list = $this->_frameworkModelResource->getConnection()->fetchAll($select);
+        if (empty($list)) {
+            return $result;
+        }
+        foreach ($list as $row) {
+            if (isset($result[$row['product_id']]) == false) {
+                $result[$row['product_id']] = [];
+            }
+            $result[$row['product_id']][] = $row;
+        }
+        return $result;
     }
 
     /**

@@ -188,6 +188,16 @@
                 <field id="info_attribute" translate="label comment" sortOrder="100" type="label" showInDefault="1" showInWebsite="1">
                   <comment><![CDATA[Switch to Store View scope to manage.]]></comment>
                 </field>
+                <field id="categoryanchor" translate="label comment" sortOrder="1000" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Respect is anchor Category</label>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment><![CDATA[
+                      With this option set to "No", Klevu will treat each category-product association independently and will only link products that are directly added to a category. By setting this to "Yes", Klevu will respect the "is anchor" setting of each category and category-product association will be inherited.
+                    ]]></comment>
+                </field>
                 <field id="boosting" translate="label comment" sortOrder="800" type="select" showInDefault="1" showInStore="1">
                   <label>Boosting Attribute</label>
                   <source_model>Klevu\Search\Model\System\Config\Source\Boosting\Attribute</source_model>

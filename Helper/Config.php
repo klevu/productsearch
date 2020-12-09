@@ -86,6 +86,7 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     const XML_PATH_ATTRIBUTES_AUTOMATIC  = "klevu_search/attributes/automatic";
     const XML_PATH_ATTRIBUTES_OTHER       = "klevu_search/attributes/other";
     const XML_PATH_ATTRIBUTES_BOOSTING       = "klevu_search/attributes/boosting";
+    const XML_PATH_CATEGORY_ANCHOR   = "klevu_search/attributes/categoryanchor";
     const XML_PATH_ORDER_SYNC_ENABLED   = "klevu_search/product_sync/order_sync_enabled";
     const XML_PATH_ORDER_SYNC_FREQUENCY = "klevu_search/order_sync/frequency";
     const XML_PATH_ORDER_SYNC_LAST_RUN = "klevu_search/order_sync/last_run";
@@ -1279,5 +1280,15 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     public function isPreserveLayoutLogEnabled()
     {
         return $this->_appConfigScopeConfigInterface->isSetFlag(static::XML_PATH_PRESERVE_LAYOUT_LOG_ENABLED);
+    }
+    /**
+     * Returns notification flag for lock file warning
+     *
+     * @param int $store
+     * @return int
+     */
+    public function getTreatCategoryAnchorAsSingle($store=0){
+
+        return (int)$this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_CATEGORY_ANCHOR, \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $store);
     }
 }
