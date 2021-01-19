@@ -748,7 +748,7 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
         }
         $whereType = $this->_frameworkModelResource->getConnection('core_write')->quoteInto('type = ?', $recordType);
         $where = sprintf("(product_id IN(%s) OR parent_id IN(%s)) AND %s", $ids, $ids, $whereType);
-        if ($stores !== null) {
+        if (!empty($stores)) {
             if (is_array($stores)) {
                 $storeIds = implode(',', $stores);
             } else {
@@ -810,7 +810,7 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
     {
         $whereType = $this->_frameworkModelResource->getConnection('core_write')->quoteInto('type = ?', 'categories');
         $where = sprintf(" %s", $whereType);
-        if ($stores !== null) {
+        if (!empty($stores)) {
             if (is_array($stores)) {
                 $storeIds = implode(',', $stores);
             } else {

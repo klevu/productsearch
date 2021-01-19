@@ -96,12 +96,13 @@ class LoadAttribute extends  AbstractModel implements LoadAttributeInterface
                 if ($this->_searchHelperConfig->isCollectionMethodEnabled()) {
                     $item = $data->getItemById($product['product_id']);
                     $parent = ($product['parent_id'] != 0) ?  $data->getItemById($product['parent_id']) : null;
-                    $this->_searchHelperData->log(\Zend\Log\Logger::DEBUG, sprintf("Load by collection method for product ID %d", $product['product_id']));
+                    $this->logLoadByMessage($product, true);
+
                 } else {
                     $item = \Magento\Framework\App\ObjectManager::getInstance()->create('\Magento\Catalog\Model\Product')->load($product['product_id']);
                     $item->setCustomerGroupId(\Magento\Customer\Model\Group::NOT_LOGGED_IN_ID);
                     $parent = ($product['parent_id'] != 0) ?  \Magento\Framework\App\ObjectManager::getInstance()->create('\Magento\Catalog\Model\Product')->load($product['parent_id'])->setCustomerGroupId(\Magento\Customer\Model\Group::NOT_LOGGED_IN_ID): null;
-                    $this->_searchHelperData->log(\Zend\Log\Logger::DEBUG, sprintf("Load by object method for product ID %d", $product['product_id']));
+                    $this->logLoadByMessage($product);
                 }
 
                 if (!$item) {
@@ -598,5 +599,22 @@ class LoadAttribute extends  AbstractModel implements LoadAttributeInterface
 			->addFieldToFilter($klevu->getKlevuField('parent_id'), $parent_id)
             ->addFieldToFilter($klevu->getKlevuField('store_id'), $store_id);
 		return $klevuCollection->load();
+    }
+
+    /**
+     * Logs load by message
+     *
+     * @param $product
+     * @param false $isCollectionMethodFlag
+     */
+    protected function logLoadByMessage($product, $isCollectionMethodFlag = false)
+    {
+        $id = $product['parent_id'] ? $product['parent_id'] . '-' : null;
+        if ($isCollectionMethodFlag) {
+            $msg = "Load by collection method for product ID " . $id . $product['product_id'];
+        } else {
+            $msg = "Load by object method for product ID " . $id . $product['product_id'];
+        }
+        $this->_searchHelperData->log(\Zend\Log\Logger::DEBUG, $msg);
     }
 }

@@ -1291,4 +1291,5 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
 
         return (int)$this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_CATEGORY_ANCHOR, \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $store);
     }
+
 }

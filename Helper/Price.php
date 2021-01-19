@@ -164,7 +164,7 @@ class Price extends \Magento\Framework\App\Helper\AbstractHelper
      *
      * @return float
      */
-    protected function convertPrice($price, $store)
+    public function convertPrice($price, $store)
     {
         return $this->priceCurrency->convert($price, $store);
     }
@@ -390,6 +390,18 @@ class Price extends \Magento\Framework\App\Helper\AbstractHelper
 				}
 			}
 		}
+    }
+
+    /**
+     * Get round value.
+     *
+     * @param float price.
+     *
+     * @return float
+     */
+    public  function roundPrice($price){
+
+        return $this->priceCurrency->round($price);
     }
 	
 }

@@ -66,7 +66,12 @@ class VersionReader extends \Magento\Framework\App\Helper\AbstractHelper
         try {
             $version = 'unavailable';
             $path = $this->getModuleDirectory($moduleName) . '/' . self::KLEVU_FILE_NAME;
-            $composerPkg = new Package(json_decode(file_get_contents($path)));
+            $composerObj = json_decode(file_get_contents($path));
+            //check if composer.json is valid or not
+            if (gettype($composerObj) !== 'object' && !$composerObj instanceof \stdClass) {
+                return $version;
+            }
+            $composerPkg = new Package($composerObj);
             if ($composerPkg->get('version')) {
                 return $composerPkg->get('version');
             } else {

@@ -9,6 +9,7 @@ namespace Klevu\Search\Model\Order;
 use Klevu\Search\Model\Sync as KlevuSync;
 use Magento\Framework\Model\AbstractModel;
 use Magento\GroupedProduct\Model\Product\Type\Grouped as GroupedProduct;
+use Klevu\Search\Helper\Price as Klevu_Helper_Price;
 
 /**
  * Class Sync
@@ -57,7 +58,7 @@ class Sync extends AbstractModel
      * @var \Klevu\Search\Model\Sync
      */
     protected $_klevuSyncModel;
-
+    protected $_priceHelper;
 
     public function __construct(
         \Magento\Framework\App\ResourceConnection $frameworkModelResource,
@@ -75,6 +76,7 @@ class Sync extends AbstractModel
         \Magento\Framework\Registry $registry,
         \Magento\Framework\Model\ResourceModel\AbstractResource $resource = null,
         \Magento\Framework\Data\Collection\AbstractDb $resourceCollection = null,
+        Klevu_Helper_Price $klevuPriceHelper,
         array $data = []
     )
     {
@@ -90,6 +92,7 @@ class Sync extends AbstractModel
         $this->_apiActionProducttracking = $apiActionProducttracking;
         $this->_frameworkModelDate = $frameworkModelDate;
         $this->_groupedProduct = $groupedProduct;
+        $this->_priceHelper = $klevuPriceHelper;
     }
 
     public function getJobCode()
@@ -295,6 +298,13 @@ class Sync extends AbstractModel
                 $klevu_productId = $this->_searchHelperData->getKlevuProductId($item->getProductId(), ($parent) ? $parent->getProductId() : 0);
             }
 
+            // multiple currency store processing
+            $store = $this->_storeModelStoreManagerInterface->getStore($item->getStoreId());
+            $klevu_salePrice = $item->getBasePriceInclTax() ? $item->getBasePriceInclTax() : ($parent ? $parent->getBasePriceInclTax() : null);
+            $klevu_current_store_currency_salePrice = $this->_priceHelper->convertPrice($klevu_salePrice,$store);
+            $klevu_current_store_currency_salePrice_round =  $this->_priceHelper->roundPrice($klevu_current_store_currency_salePrice);
+
+
             $response = $this->_apiActionProducttracking
                 ->setStore($this->_storeModelStoreManagerInterface->getStore($item->getStoreId()))
                 ->execute([
@@ -302,7 +312,7 @@ class Sync extends AbstractModel
                     "klevu_type" => "checkout",
                     "klevu_productId" => $klevu_productId,
                     "klevu_unit" => $item->getQtyOrdered() ? $item->getQtyOrdered() : ($parent ? $parent->getQtyOrdered() : null),
-                    "klevu_salePrice" => $item->getPriceInclTax() ? $item->getPriceInclTax() : ($parent ? $parent->getPriceInclTax() : null),
+                    "klevu_salePrice" => $klevu_current_store_currency_salePrice_round,
                     "klevu_currency" => $this->getStoreCurrency($item->getStoreId()),
                     "klevu_shopperIP" => $this->getOrderIP($item->getOrderId()),
                     "Klevu_sessionId" => $sess_id,
@@ -319,6 +329,7 @@ class Sync extends AbstractModel
                 return $response->getMessage();
             }
         } catch (\Exception $e) {
+            $this->log(\Zend\Log\Logger::CRIT, sprintf("Order Sync:: Exception thrown in %s::%s - %s", __CLASS__, __METHOD__, $e->getMessage()));
             // Catch the exception that was thrown, log it, then throw a new exception to be caught the Magento cron.
             $this->log(\Zend\Log\Logger::INFO, sprintf("Order Itemid %s skipped for Klevu Order Sync ", $item->getOrderId()));
         }
