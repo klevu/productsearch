@@ -7,6 +7,7 @@
 namespace Klevu\Search\Model\Order;
 
 use Klevu\Search\Model\Sync as KlevuSync;
+use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Model\AbstractModel;
 use Magento\GroupedProduct\Model\Product\Type\Grouped as GroupedProduct;
 use Klevu\Search\Helper\Price as Klevu_Helper_Price;
@@ -76,7 +77,7 @@ class Sync extends AbstractModel
         \Magento\Framework\Registry $registry,
         \Magento\Framework\Model\ResourceModel\AbstractResource $resource = null,
         \Magento\Framework\Data\Collection\AbstractDb $resourceCollection = null,
-        Klevu_Helper_Price $klevuPriceHelper,
+        Klevu_Helper_Price $klevuPriceHelper = null,
         array $data = []
     )
     {
@@ -92,7 +93,7 @@ class Sync extends AbstractModel
         $this->_apiActionProducttracking = $apiActionProducttracking;
         $this->_frameworkModelDate = $frameworkModelDate;
         $this->_groupedProduct = $groupedProduct;
-        $this->_priceHelper = $klevuPriceHelper;
+        $this->_priceHelper = $klevuPriceHelper ?: ObjectManager::getInstance()->get(Klevu_Helper_Price::class);
     }
 
     public function getJobCode()
@@ -297,6 +298,13 @@ class Sync extends AbstractModel
             }  else {
                 $klevu_productId = $this->_searchHelperData->getKlevuProductId($item->getProductId(), ($parent) ? $parent->getProductId() : 0);
             }
+            /**
+             * if klevu_productId has value 11-7 then
+             * klevu_productGroupId will be 11 and
+             * klevu_productVariantId will be 7
+             */
+            $klevu_productGroupId = ($parent) ? $parent->getProductId() :  $klevu_productId;
+            $klevu_productVariantId = ($parent) ? $item->getProductId() : $klevu_productId;
 
             // multiple currency store processing
             $store = $this->_storeModelStoreManagerInterface->getStore($item->getStoreId());
@@ -321,7 +329,9 @@ class Sync extends AbstractModel
                     "klevu_storeTimezone" => $this->_searchHelperData->getStoreTimeZone($item->getStoreId()),
                     "Klevu_clientIp" => $ip_address,
                     "klevu_checkoutDate" => $checkout_date,
-                    "klevu_productPosition" => "1"
+                    "klevu_productPosition" => "1",
+                    "klevu_productGroupId" => $klevu_productGroupId,
+                    "klevu_productVariantId"=> $klevu_productVariantId
                 ]);
             if ($response->isSuccess()) {
                 return true;
