@@ -174,9 +174,6 @@ class Sync extends AbstractModel
         $records_count['numberOfRecord_delete'] = $this->_klevuSyncModel->getRegistry()->registry("numberOfRecord_delete");
         return $records_count;
     }
-	
-	
-
 
     public function runStore($store)
     {
@@ -188,8 +185,19 @@ class Sync extends AbstractModel
             $this->syncData($store);
             $this->runCategory($store);
             $this->reset();
+
             return true;
         } catch (\Exception $e) {
+            $this->_searchHelperData->log(
+                \Zend\Log\Logger::CRIT,
+                sprintf(
+                    "Exception thrown in %s::%s - %s",
+                    __CLASS__,
+                    __METHOD__,
+                    $e->getMessage()
+                )
+            );
+
             return false;
         }
     }

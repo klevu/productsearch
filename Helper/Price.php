@@ -4,19 +4,19 @@ use \Magento\CatalogRule\Model\Rule;
 use Magento\Framework\Pricing\PriceCurrencyInterface;
 class Price extends \Magento\Framework\App\Helper\AbstractHelper
 {
-	
+
 	/**
      * Price currency
      *
      * @var PriceCurrencyInterface
      */
     protected $priceCurrency;
-	
+
 	/**
      * @var \Magento\Catalog\Helper\Data
      */
     protected $_catalogTaxHelper;
-	
+
     /**
      * @var \Magento\Store\Model\StoreManagerInterface
      */
@@ -26,22 +26,22 @@ class Price extends \Magento\Framework\App\Helper\AbstractHelper
      * @var \Klevu\Search\Helper\Config
      */
     protected $_searchHelperConfig;
-	
+
 	/**
      * @var \Magento\Framework\Stdlib\DateTime\TimezoneInterface
      */
     protected $_localeDate;
-	
+
 	/**
      * @var \Magento\CatalogRule\Observer\RulePricesStorage
      */
     protected $_rulePricesStorage;
-	
+
 	/**
      * @var \Magento\CatalogRule\Model\ResourceModel\RuleFactory
      */
     protected $_resourceRuleFactory;
-	
+
 	/**
      * @var \Klevu\Search\Helper\Stock
      */
@@ -49,7 +49,7 @@ class Price extends \Magento\Framework\App\Helper\AbstractHelper
 
     public function __construct(
 	\Magento\Framework\Stdlib\DateTime\TimezoneInterface $localeDate,
-	\Klevu\Search\Helper\Config $searchHelperConfig, 
+	\Klevu\Search\Helper\Config $searchHelperConfig,
 	\Klevu\Search\Helper\Data $searchHelperData,
 	\Magento\CatalogRule\Observer\RulePricesStorage $rulePricesStorage,
 	\Magento\Catalog\Helper\Data $catalogTaxHelper,
@@ -152,7 +152,7 @@ class Price extends \Magento\Framework\App\Helper\AbstractHelper
 				$processed_price = $this->processPrice($price,'regular_price',$item,$store);
 				$productPrice['price'] = $processed_price;
 			}
-	
+
 		}
 		return $productPrice;
     }
@@ -183,7 +183,7 @@ class Price extends \Magento\Framework\App\Helper\AbstractHelper
         if ($price < 0) {
             $price = 0;
         }
-		
+
 		if($this->_searchHelperConfig->getPriceIncludesTax($store) == 1) {
 			if($this->_searchHelperConfig->getPriceDisplaySettings($store) == \Magento\Tax\Model\Config::DISPLAY_TYPE_BOTH){
 				if($this->_searchHelperConfig->isTaxCalRequired($store)){
@@ -202,9 +202,9 @@ class Price extends \Magento\Framework\App\Helper\AbstractHelper
 				}
 			}
 		}
-		
+
 		return $this->priceCurrency->round($price);
-		
+
     }
 
     /**
@@ -280,8 +280,8 @@ class Price extends \Magento\Framework\App\Helper\AbstractHelper
             return $priceGroupData;
         }
     }
-	
-	
+
+
 	    /**
      Get Original price for group product.
      *
@@ -297,8 +297,12 @@ class Price extends \Magento\Framework\App\Helper\AbstractHelper
             $groupPrices = [];
             foreach ($groupProductIds as $ids) {
                 foreach ($ids as $id) {
+                    if ((int)$id === (int)$product->getId()) {
+                        continue;
+                    }
+
                     $groupProduct = \Magento\Framework\App\ObjectManager::getInstance()->create('\Magento\Catalog\Model\Product')->load($id);
-					
+
 					if($groupProduct->getStatus() == 1) {
 						if(!$this->_searchHelperConfig->displayOutofstock()){
 							if($this->_stockHelper->getKlevuStockStatus(null,$groupProduct) == "yes") {
@@ -318,7 +322,7 @@ class Price extends \Magento\Framework\App\Helper\AbstractHelper
             $this->_searchHelperData->log(\Zend\Log\Logger::WARN, sprintf("Unable to get original group price for product id %s", $product->getId()));
         }
     }
-    
+
     /**
      Get Min price for group product.
      *
@@ -331,9 +335,13 @@ class Price extends \Magento\Framework\App\Helper\AbstractHelper
         $groupProductIds = $product->getTypeInstance()->getChildrenIds($product->getId());
         $config = $this->_searchHelperConfig;
         $groupPrices = [];
-		
+
         foreach ($groupProductIds as $ids) {
             foreach ($ids as $id) {
+                if ((int)$id === (int)$product->getId()) {
+                    continue;
+                }
+
                 $groupProduct = \Magento\Framework\App\ObjectManager::getInstance()->create('\Magento\Catalog\Model\Product')->load($id);
 				if($groupProduct->getStatus() == 1) {
 					if(!$this->_searchHelperConfig->displayOutofstock()){
@@ -348,11 +356,11 @@ class Price extends \Magento\Framework\App\Helper\AbstractHelper
 				}
             }
         }
-		
+
         asort($groupPrices);
         return array_shift($groupPrices);
     }
-    
+
     /**
      * Get Min price for group product.
      *
@@ -375,7 +383,7 @@ class Price extends \Magento\Framework\App\Helper\AbstractHelper
 					return $item->getPriceModel()->getTotalPrices($item, null, true, false);
 				}
 			}
-			
+
 		}else {
 			//including
 			if($this->_searchHelperConfig->getPriceDisplaySettings($store) == \Magento\Tax\Model\Config::DISPLAY_TYPE_INCLUDING_TAX){
@@ -403,5 +411,5 @@ class Price extends \Magento\Framework\App\Helper\AbstractHelper
 
         return $this->priceCurrency->round($price);
     }
-	
+
 }

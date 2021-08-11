@@ -15,6 +15,10 @@ use Klevu\Search\Helper\Config as KlevuConfig;
 use \Magento\Framework\App\Request\Http as Magento_Request;
 use Klevu\Search\Model\ContextFE as KlevuCoreContext;
 
+/**
+ *
+ * @deprecated  Replaced with Plugin Klevu\Search\Plugin\Framework\Search\Request\CleanerPlugin
+ */
 class Cleaner extends \Magento\Framework\Search\Request\Cleaner
 {
 
