@@ -60,17 +60,29 @@ class CleanerPlugin
      */
     protected $klevuHelperConfig;
 
+    /**
+     * @param MagentoRequest $magentoRequest
+     * @param MagentoRegistry $mageRegistry
+     * @param MagentoCleaner $mageCleaner
+     * @param MagentoPageCache $magePageCache
+     * @param MageSessionManager $sessionManager
+     * @param MutableScopeConfig $mutableScopeConfig
+     * @param SessionFactory $sessionFactory
+     * @param KlevuProductApi $klevuProductRequest
+     * @param KlevuHelperData $klevuHelperData
+     * @param KlevuHelperConfig $klevuHelperConfig
+     */
     public function __construct(
-        MagentoRequest $magentoRequest,
-        MagentoRegistry $mageRegistry,
-        MagentoCleaner $mageCleaner,
-        MagentoPageCache $magePageCache,
+        MagentoRequest     $magentoRequest,
+        MagentoRegistry    $mageRegistry,
+        MagentoCleaner     $mageCleaner,
+        MagentoPageCache   $magePageCache,
         MageSessionManager $sessionManager,
         MutableScopeConfig $mutableScopeConfig,
-        SessionFactory $sessionFactory,
-        KlevuProductApi $klevuProductRequest,
-        KlevuHelperData $klevuHelperData,
-        KlevuHelperConfig $klevuHelperConfig
+        SessionFactory     $sessionFactory,
+        KlevuProductApi    $klevuProductRequest,
+        KlevuHelperData    $klevuHelperData,
+        KlevuHelperConfig  $klevuHelperConfig
     )
     {
         $this->magentoRequest = $magentoRequest;
@@ -99,12 +111,12 @@ class CleanerPlugin
         try {
             //Check if query is for quick_search_container ( catalog search page )
             if (!isset($result['queries']['quick_search_container'])) {
-            	return $result;
+                return $result;
             }
 
             //Return if landing is not enabled or module found disabled
             if ($this->klevuHelperConfig->isLandingEnabled() != 1 || !$this->klevuHelperConfig->isExtensionConfigured()) {
-            	return $result;
+                return $result;
             }
 
             $klevuRequestData = $this->klevuQueryCleanup($result);
@@ -132,7 +144,7 @@ class CleanerPlugin
 
         //check if search array generated or not
         if (!isset($requestData['queries']['search'])) {
-            if($this->klevuHelperConfig->isPreserveLayoutLogEnabled()) {
+            if ($this->klevuHelperConfig->isPreserveLayoutLogEnabled()) {
                 $this->klevuHelperData->preserveLayoutLog("Search array is not found in CleanerPlugin");
             }
             return $requestData;
@@ -142,7 +154,7 @@ class CleanerPlugin
 
         //check if dimensions array found or not
         if (!isset($requestData['dimensions']['scope'])) {
-            if($this->klevuHelperConfig->isPreserveLayoutLogEnabled()) {
+            if ($this->klevuHelperConfig->isPreserveLayoutLogEnabled()) {
                 $this->klevuHelperData->preserveLayoutLog("Dimension array is not found in CleanerPlugin");
             }
             return $requestData;
@@ -170,22 +182,28 @@ class CleanerPlugin
         $this->magentoRegistry->unregister('parentChildIDs');
         $this->magentoRegistry->register('parentChildIDs', $parentChildIDs);
 
-
         $currentEngine = $this->getCurrentSearchEngine();
         //if no ids there then no need to set new handler for mysql only
         if (empty($idList) && $currentEngine === 'mysql') {
-            if($this->klevuHelperConfig->isPreserveLayoutLogEnabled()) {
+            if ($this->klevuHelperConfig->isPreserveLayoutLogEnabled()) {
                 $this->klevuHelperData->preserveLayoutLog("MySQL Search Engine is selected and No Ids were found in CleanerPlugin");
             }
             return $requestData;
         }
-        
+
         //find the search query term and override the processor
         foreach ($requestData['queries']['quick_search_container']['queryReference'] as $key => $filter) {
-            if ($filter['ref'] == 'search') $requestData['queries']['quick_search_container']['queryReference'][$key] = array('clause' => 'must', 'ref' => 'klevu_id_search');
+            if ($filter['ref'] == 'search') {
+                $requestData['queries']['quick_search_container']['queryReference'][$key] = array('clause' => 'must', 'ref' => 'klevu_id_search');
+            } elseif ($filter['ref'] == 'partial_search') {
+                unset($requestData['queries']['quick_search_container']['queryReference'][$key]);
+            }
         }
         //unset original handler so it will not interfere with query
         unset($requestData['queries']['search']);
+        if (isset($requestData['queries']['partial_search'])) {
+            unset($requestData['queries']['partial_search']);
+        }
 
         //build the new handler for the ids
         $requestData['queries']['klevu_id_search'] = array(
@@ -241,7 +259,7 @@ class CleanerPlugin
             }
         }
 
-        if($this->klevuHelperConfig->isPreserveLayoutLogEnabled()) {
+        if ($this->klevuHelperConfig->isPreserveLayoutLogEnabled()) {
             //convert requestData object into array
             $requestDataToArray = json_decode(json_encode($requestData), true);
             $this->klevuHelperData->preserveLayoutLog(
@@ -249,6 +267,16 @@ class CleanerPlugin
             );
         }
         return $requestData;
+    }
+
+    /**
+     * Return current catalog search engine
+     *
+     * @return mixed
+     */
+    private function getCurrentSearchEngine()
+    {
+        return $this->klevuHelperConfig->getCurrentEngine();
     }
 
     /**
@@ -285,15 +313,6 @@ class CleanerPlugin
         }
     }
 
-    /**
-     * Return current catalog search engine
-     *
-     * @return mixed
-     */
-    private function getCurrentSearchEngine()
-    {
-        return $this->klevuHelperConfig->getCurrentEngine();
-    }
-
 
 }
+
