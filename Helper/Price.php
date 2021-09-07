@@ -1,5 +1,6 @@
 <?php
 namespace Klevu\Search\Helper;
+use Klevu\Logger\Constants as LoggerConstants;
 use \Magento\CatalogRule\Model\Rule;
 use Magento\Framework\Pricing\PriceCurrencyInterface;
 class Price extends \Magento\Framework\App\Helper\AbstractHelper
@@ -319,7 +320,7 @@ class Price extends \Magento\Framework\App\Helper\AbstractHelper
             asort($groupPrices);
             $product->setPrice(array_shift($groupPrices));
         } catch (\Exception $e) {
-            $this->_searchHelperData->log(\Zend\Log\Logger::WARN, sprintf("Unable to get original group price for product id %s", $product->getId()));
+            $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_WARN, sprintf("Unable to get original group price for product id %s", $product->getId()));
         }
     }
 

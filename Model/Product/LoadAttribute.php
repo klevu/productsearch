@@ -3,6 +3,7 @@
  * Class \Klevu\Search\Model\Product\MagentoProductActionsInterface
  */
 namespace Klevu\Search\Model\Product;
+use Klevu\Logger\Constants as LoggerConstants;
 use \Klevu\Search\Model\Product\ProductInterface as Klevu_ProductData;
 use \Magento\Framework\Model\AbstractModel as AbstractModel;
 use \Magento\Catalog\Model\ResourceModel\Product\Attribute\Collection as Klevu_Product_Attribute_Collection;
@@ -110,7 +111,7 @@ class LoadAttribute extends  AbstractModel implements LoadAttributeInterface
                     // Remove it from the list to skip syncing it
                     $rejectedProducts[$rp]['product_id'] = $product['product_id'];
                     $rejectedProducts[$rp]['parent_id'] = $product['parent_id'];
-                    $this->_searchHelperData->log(\Zend\Log\Logger::WARN, sprintf("Failed to retrieve data for product ID %d", $product['product_id']));
+                    $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_WARN, sprintf("Failed to retrieve data for product ID %d", $product['product_id']));
                     unset($products[$index]);
                     $rp++;
                     continue;
@@ -118,7 +119,7 @@ class LoadAttribute extends  AbstractModel implements LoadAttributeInterface
                 if((!isset($parent) || is_null($parent)) && $product['parent_id'] != 0){
                     $rejectedProducts[$rp]['product_id'] = $product['product_id'];
                     $rejectedProducts[$rp]['parent_id'] = $product['parent_id'];
-                    $this->_searchHelperData->log(\Zend\Log\Logger::WARN, sprintf("Failed to retrieve data for parent ID %d", $product['parent_id']));
+                    $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_WARN, sprintf("Failed to retrieve data for parent ID %d", $product['parent_id']));
                     unset($products[$index]);
                     $rp++;
                     continue;
@@ -223,7 +224,7 @@ class LoadAttribute extends  AbstractModel implements LoadAttributeInterface
                     $parent = null;
                 }
             } catch (\Exception $e) {
-                $this->_searchHelperData->log(\Zend\Log\Logger::CRIT, sprintf("Exception thrown in %s::%s - %s", __CLASS__, __METHOD__, $e->getMessage()));
+                $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_CRIT, sprintf("Exception thrown in %s::%s - %s", __CLASS__, __METHOD__, $e->getMessage()));
                 $markAsSync = [];
                 if (!empty($product['parent_id']) && !empty($product['product_id'])) {
                     $markAsSync[] = [$product['product_id'],$product['parent_id'],$this->_storeModelStoreManagerInterface->getStore()->getId(),0,$this->_searchHelperCompat->now(),"products"];
@@ -262,10 +263,10 @@ class LoadAttribute extends  AbstractModel implements LoadAttributeInterface
                         $r++;
                     }
                 }
-                $this->_searchHelperData->log(\Zend\Log\Logger::WARN, sprintf("Because of indexing issue or invalid data we cannot synchronize product IDs %s", implode(',', array_map(function($el){ return $el['product_id']; }, $rejectedProducts_data))));
+                $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_WARN, sprintf("Because of indexing issue or invalid data we cannot synchronize product IDs %s", implode(',', array_map(function($el){ return $el['product_id']; }, $rejectedProducts_data))));
                 \Magento\Framework\App\ObjectManager::getInstance()->create('Klevu\Search\Model\Product\MagentoProductActionsInterface')->deleteProducts($rejectedProducts_data);
             } else {
-                $this->_searchHelperData->log(\Zend\Log\Logger::WARN, sprintf("Because of indexing issue or invalid data we cannot synchronize product IDs %s", implode(',', array_map(function($el){ return $el['product_id']; }, $rejectedProducts))));
+                $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_WARN, sprintf("Because of indexing issue or invalid data we cannot synchronize product IDs %s", implode(',', array_map(function($el){ return $el['product_id']; }, $rejectedProducts))));
                 \Magento\Framework\App\ObjectManager::getInstance()->create('Klevu\Search\Model\Product\MagentoProductActionsInterface')->deleteProducts($rejectedProducts);
 
             }
@@ -560,7 +561,7 @@ class LoadAttribute extends  AbstractModel implements LoadAttributeInterface
                         if (isset($attribute_data[$code]['values'][$valueOption])) {
                             $values[$key] = $attribute_data[$code]['values'][$valueOption];
                         } else { // If no label was found, log an error and unset the value.
-                            $this->_searchHelperData->log(\Zend\Log\Logger::WARN, sprintf("Attribute: %s option label was not found, option ID provided: %s", $code, $valueOption));
+                            $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_WARN, sprintf("Attribute: %s option label was not found, option ID provided: %s", $code, $valueOption));
                             unset($values[$key]);
                         }
                     }
@@ -615,6 +616,6 @@ class LoadAttribute extends  AbstractModel implements LoadAttributeInterface
         } else {
             $msg = "Load by object method for product ID " . $id . $product['product_id'];
         }
-        $this->_searchHelperData->log(\Zend\Log\Logger::DEBUG, $msg);
+        $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_DEBUG, $msg);
     }
 }

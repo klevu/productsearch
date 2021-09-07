@@ -2,6 +2,7 @@
 
 namespace Klevu\Search\Block\Catalog\Product;
 
+use Klevu\Logger\Constants as LoggerConstants;
 use Klevu\Search\Helper\Config as KlevuConfig;
 use Klevu\Search\Helper\Data as Klevu_HelperData;
 use Magento\Catalog\Api\Data\ProductInterface;
@@ -9,7 +10,6 @@ use Magento\Catalog\Block\Product\Context as ProductBlockContext;
 use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Registry as CoreRegistry;
 use Magento\Framework\View\Element\Template as TemplateBase;
-use Zend\Log\Logger;
 
 /**
  * Class Tracking
@@ -89,7 +89,7 @@ class Tracking extends TemplateBase
             $return = json_encode($product);
         } catch (\Exception $e) {
             $this->_searchHelperData->log(
-                Logger::ERR,
+                LoggerConstants::ZEND_LOG_ERR,
                 sprintf("Exception thrown in %s::%s - %s", __CLASS__, __METHOD__, $e->getMessage())
             );
         }
@@ -104,14 +104,14 @@ class Tracking extends TemplateBase
     {
         $product = $this->_coreRegistry->registry('product');
         if (!$product) {
-            $this->_searchHelperData->log(Logger::WARN, "No product object found in registry");
+            $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_WARN, "No product object found in registry");
 
             return null;
         }
 
         if (!$product instanceof ProductInterface) {
             $this->_searchHelperData->log(
-                Logger::ERR,
+                LoggerConstants::ZEND_LOG_ERR,
                 sprintf(
                     "Product object in registry expected to be of type %s; %s encountered",
                     ProductInterface::class,

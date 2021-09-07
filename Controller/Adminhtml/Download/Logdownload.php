@@ -2,22 +2,37 @@
 
 namespace Klevu\Search\Controller\Adminhtml\Download;
 
+use Klevu\Logger\Api\LogFileNameProviderInterface;
+use Klevu\Logger\Api\StoreScopeResolverInterface;
+use Klevu\Logger\Controller\Adminhtml\AbstractLogDownload;
+use Klevu\Logger\Validator\ArgumentValidationTrait;
 use Klevu\Search\Helper\Data as Klevu_HelperData;
 use Magento\Backend\App\Action\Context as ActionContext;
 use Magento\Framework\App\Filesystem\DirectoryList;
+use Magento\Framework\App\ObjectManager;
 use Magento\Framework\App\Response\Http\FileFactory;
 use Magento\Framework\Archive\Zip;
+use Magento\Framework\Filesystem\Io\File as FileIo;
 use Magento\Framework\Stdlib\DateTime\TimezoneInterface as TimezoneInterface;
+use Psr\Log\LoggerInterface;
 
-class Logdownload extends \Magento\Backend\App\Action
+class Logdownload extends AbstractLogDownload
 {
+    use ArgumentValidationTrait;
 
     /**
-     * Construct
-     *
-     * @param \Magento\Backend\App\Action\Context $context
-     * @param \Magento\Framework\Stdlib\DateTime\TimezoneInterface $timezone
-     * @param \Magento\Framework\App\Filesystem\DirectoryList $directoryList
+     * Logdownload constructor.
+     * @param ActionContext $context
+     * @param TimezoneInterface $timezone
+     * @param DirectoryList $directoryList
+     * @param Zip $zip
+     * @param FileFactory $fileFactory
+     * @param Klevu_HelperData $klevuHelperData
+     * @param LoggerInterface|null $logger
+     * @param FileIo|null $fileIo
+     * @param StoreScopeResolverInterface|null $storeScopeResolver
+     * @param LogFileNameProviderInterface|null $logFileNameProvider
+     * @param int|null $maxFileSize
      */
     public function __construct(
         ActionContext $context,
@@ -25,53 +40,23 @@ class Logdownload extends \Magento\Backend\App\Action
         DirectoryList $directoryList,
         Zip $zip,
         FileFactory $fileFactory,
-        Klevu_HelperData $klevuHelperData
-    )
-    {
-        parent::__construct($context);
-        $this->_context = $context;
-        $this->_timezone = $timezone;
-        $this->_directoryList = $directoryList;
-        $this->_zip = $zip;
-        $this->_fileFactory = $fileFactory;
-        $this->_searchHelperData = $klevuHelperData;
+        Klevu_HelperData $klevuHelperData,
+        LoggerInterface $logger = null,
+        FileIo $fileIo = null,
+        StoreScopeResolverInterface $storeScopeResolver = null,
+        LogFileNameProviderInterface $logFileNameProvider = null,
+        $maxFileSize = null
+    ) {
+        parent::__construct(
+            $context,
+            $logger ?: ObjectManager::getInstance()->get(LoggerInterface::class),
+            $fileIo ?: ObjectManager::getInstance()->get(FileIo::class),
+            $directoryList,
+            $storeScopeResolver ?: ObjectManager::getInstance()->get(StoreScopeResolverInterface::class),
+            $logFileNameProvider ?: ObjectManager::getInstance()->get(LogFileNameProviderInterface::class),
+            $zip,
+            $fileFactory,
+            $maxFileSize
+        );
     }
-
-    public function execute()
-    {
-
-        try {
-            //$dir = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Framework\App\Filesystem\DirectoryList');
-            $logdir = $this->_directoryList->getPath('log');
-            $vardir = $this->_directoryList->getPath('var');
-            $path = $logdir . "/Klevu_Search.log";
-
-
-            if (filesize($path) <= 1073741824) {
-                $this->_zip->pack($logdir . "/Klevu_Search.log", $vardir . '/Klevu_Search.zip');
-                $file = $vardir . "/Klevu_Search.zip";
-                $contentToGen =
-                [
-                    'type' => 'filename',
-                    'value' => $file,
-                    'rm' => true
-                ];
-                return $this->_fileFactory->create("Klevu_Search.zip", $contentToGen, \Magento\Framework\App\Filesystem\DirectoryList::ROOT, 'application/zip');
-                //return $this->_fileFactory->create("Klevu_Search.zip", @file_get_contents($file));
-            }
-        } catch (\Exception $e) {
-            $message = __($e->getMessage());
-            $this->_context->getMessageManager()->addErrorMessage($message);
-            $this->_searchHelperData->log(\Zend\Log\Logger::CRIT, sprintf("Exception thrown in while downloading file. %s::%s - %s", __CLASS__, __METHOD__, $message));
-        }
-        $this->_redirect('adminhtml/system_config/edit/section/klevu_search');
-    }
-
-    protected function _isAllowed()
-    {
-        return true;
-    }
-
-
 }
-

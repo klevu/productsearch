@@ -5,99 +5,56 @@
  */
 namespace Klevu\Search\Controller\Adminhtml\Download;
 
-use Magento\Backend\App\Action;
+use Klevu\Logger\Api\ArchiveLogFileServiceInterface;
+use Klevu\Logger\Api\LogFileNameProviderInterface;
+use Klevu\Logger\Api\StoreScopeResolverInterface;
+use Klevu\Logger\Controller\Adminhtml\AbstractLogClear;
+use Klevu\Search\Helper\Config as Klevu_HelperConfig;
+use Klevu\Search\Helper\Data as Klevu_HelperData;
 use Magento\Backend\App\Action\Context as ActionContext;
+use Magento\Framework\App\ObjectManager;
+use Magento\Framework\Filesystem\Io\File as FileIo;
 use Magento\Framework\Stdlib\DateTime\TimezoneInterface as TimezoneInterface;
 use Magento\Framework\App\Filesystem\DirectoryList;
-use Klevu\Search\Helper\Data as Klevu_HelperData;
+use Psr\Log\LoggerInterface;
 
-class Logclear extends Action
+class Logclear extends AbstractLogClear
 {
-    /**
-     * Timezone
-     *
-     * @var \Magento\Framework\Stdlib\DateTime\TimezoneInterface
-     */
-    private $_timezone;
-
-    /**
-     * Context
-     *
-     * @var \Magento\Backend\App\Action\Context
-     */
-    private $_context;
-
-    /**
-     * Klevu Helper
-     *
-     * @var \Klevu\Search\Helper\Data
-     */
-    private $klevuHelperData;
+    const ADMIN_RESOURCE = Klevu_HelperConfig::ADMIN_RESOURCE_CONFIG;
 
     /**
      * Construct
      *
-     * @param \Magento\Backend\App\Action\Context $context
-     * @param \Magento\Framework\Stdlib\DateTime\TimezoneInterface $timezone
-     * @param \Magento\Framework\App\Filesystem\DirectoryList $directoryList
+     * @param ActionContext $context
+     * @param TimezoneInterface $timezone
+     * @param DirectoryList $directoryList
+     * @param Klevu_HelperData $klevuHelperData
+     * @param LoggerInterface|null $logger
+     * @param FileIo|null $fileIo
+     * @param StoreScopeResolverInterface|null $storeScopeResolver
+     * @param LogFileNameProviderInterface|null $logFileNameProvider
+     * @param ArchiveLogFileServiceInterface|null $archiveLogFileService
+     * @note Unused arguments retained for backwards compatibility
      */
     public function __construct(
         ActionContext $context,
         TimezoneInterface $timezone,
         DirectoryList $directoryList,
-        Klevu_HelperData $klevuHelperData
-    )
-    {
-        parent::__construct($context);
-        $this->_context = $context;
-        $this->_timezone = $timezone;
-        $this->_directoryList = $directoryList;
-        $this->_searchHelperData = $klevuHelperData;
-
+        Klevu_HelperData $klevuHelperData,
+        LoggerInterface $logger = null,
+        FileIo $fileIo = null,
+        StoreScopeResolverInterface $storeScopeResolver = null,
+        LogFileNameProviderInterface $logFileNameProvider = null,
+        ArchiveLogFileServiceInterface $archiveLogFileService = null
+    ) {
+        parent::__construct(
+            $context,
+            $logger ?: ObjectManager::getInstance()->get(LoggerInterface::class),
+            $directoryList,
+            $fileIo ?: ObjectManager::getInstance()->get(FileIo::class),
+            $storeScopeResolver ?: ObjectManager::getInstance()->get(StoreScopeResolverInterface::class),
+            $logFileNameProvider ?: ObjectManager::getInstance()->get(LogFileNameProviderInterface::class),
+            $archiveLogFileService ?: ObjectManager::getInstance()->get(ArchiveLogFileServiceInterface::class)
+        );
     }
-
-    /**
-     * @return \Magento\Backend\Model\View\Result\Redirect
-     * @throws \Magento\Framework\Exception\FileSystemException |  Exception
-     */
-    public function execute()
-    {
-        $logFileTitle = \Klevu\Search\Helper\Data::LOG_FILE;
-        try {
-            $filePath = $this->_directoryList->getPath('log') . "/".$logFileTitle;
-            if (file_exists($filePath)) {
-                if(!is_writable($filePath)) {
-                    throw new \Magento\Framework\Exception\FileSystemException(
-                        __($logFileTitle.' file is not writable!')
-                    );
-                }
-                $fileName = $this->_directoryList->getPath('log').'/Klevu_Search_'.$this->_timezone->scopeTimeStamp().'.log';
-                if(rename( $filePath, $fileName )) {
-                    $this->_context->getMessageManager()->addSuccessMessage(__($logFileTitle.' file has been renamed successfully!'));
-                }
-            }else {
-                $this->_context->getMessageManager()->addNoticeMessage(__($logFileTitle.' file not found!'));
-            }
-        } catch (\Exception $e) {
-            $message = __($e->getMessage());
-            $this->_context->getMessageManager()->addErrorMessage($message);
-            $this->_searchHelperData->log(\Zend\Log\Logger::CRIT, sprintf("Exception thrown in %s::%s - %s", __CLASS__, __METHOD__, $message));
-
-        } catch(\Magento\Framework\Exception\FileSystemException $e) {
-            $message = $e->getMessage();
-            $this->_searchHelperData->log(\Zend\Log\Logger::CRIT, sprintf("File System Exception thrown while renaming log file : %s", $e->getMessage()));
-            $this->_context->getMessageManager()->addErrorMessage($message);
-        }
-        $this->_redirect('adminhtml/system_config/edit/section/klevu_search');
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    protected function _isAllowed()
-    {
-        return true;
-    }
-
-
 }

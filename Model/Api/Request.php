@@ -2,6 +2,8 @@
 
 namespace Klevu\Search\Model\Api;
 
+use Klevu\Logger\Constants as LoggerConstants;
+
 class Request extends \Magento\Framework\DataObject
 {
     /**
@@ -169,22 +171,22 @@ class Request extends \Magento\Framework\DataObject
         }
 
         $raw_request = $this->build();
-        $this->_searchHelperData->log(\Zend\Log\Logger::DEBUG, sprintf("API EndPoint: %s", $this->getEndpoint()));
-        $this->_searchHelperData->log(\Zend\Log\Logger::DEBUG, sprintf("API request:\n%s", $this->__toString()));
+        $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_DEBUG, sprintf("API EndPoint: %s", $this->getEndpoint()));
+        $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_DEBUG, sprintf("API request:\n%s", $this->__toString()));
 
         try {
             $raw_response = $raw_request->send();
         } catch (\Zend\Http\Client\Exception $e) {
             // Return an empty response
-            $this->_searchHelperData->log(\Zend\Log\Logger::ERR, sprintf("HTTP error: %s", $e->getMessage()));
+            $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_ERR, sprintf("HTTP error: %s", $e->getMessage()));
             return $this->_apiResponseEmpty;
         }
         $content = $raw_response->getBody();
         $logLevel = $this->_searchHelperConfig->getLogLevel();
-        if ($logLevel >= \Zend\Log\Logger::DEBUG) {
+        if ($logLevel >= LoggerConstants::ZEND_LOG_DEBUG) {
             $content = $this->applyMaskingOnResponse($content);
         }
-        $this->_searchHelperData->log(\Zend\Log\Logger::DEBUG, sprintf(
+        $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_DEBUG, sprintf(
             "API response:\n%s",
             $content
         ));
@@ -273,7 +275,7 @@ class Request extends \Magento\Framework\DataObject
                     break;
             }
         } catch (\Exception $e) {
-            $this->_searchHelperData->log(\Zend\Log\Logger::ERR, sprintf("Exception while masking: %s", $e->getMessage()));
+            $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_ERR, sprintf("Exception while masking: %s", $e->getMessage()));
             return $originalString;
         }
         return $content;

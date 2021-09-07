@@ -2,20 +2,35 @@
 
 namespace Klevu\Search\Model\System\Config\Source\Log;
 
+use Klevu\Logger\Model\Source\LogLevel\Zend as ZendLogLevelSource;
+
+/**
+ * @deprecated Use Klevu\Logger\Model\Source\LogLevel\Zend
+ * @see Klevu\Logger\Model\Source\LogLevel\Zend
+ */
 class Level
 {
+    /**
+     * @var ZendLogLevelSource
+     */
+    private $zendLogLevelSource;
 
+    /**
+     * Level constructor.
+     * @param ZendLogLevelSource $zendLogLevelSource
+     */
+    public function __construct(
+        ZendLogLevelSource $zendLogLevelSource
+    ) {
+        $this->zendLogLevelSource = $zendLogLevelSource;
+    }
+
+    /**
+     * @deprecated Use Klevu\Logger\Model\Source\LogLevel\Zend
+     * @see Klevu\Logger\Model\Source\LogLevel\Zend::toOptionArray
+     */
     public function toOptionArray()
     {
-        return [
-            ['value' => \Zend\Log\Logger::EMERG,  'label' => __("Emergency")],
-            ['value' => \Zend\Log\Logger::ALERT,  'label' => __("Alert")],
-            ['value' => \Zend\Log\Logger::CRIT,   'label' => __("Critical")],
-            ['value' => \Zend\Log\Logger::ERR,    'label' => __("Error")],
-            ['value' => \Zend\Log\Logger::WARN,   'label' => __("Warning")],
-            ['value' => \Zend\Log\Logger::NOTICE, 'label' => __("Notice")],
-            ['value' => \Zend\Log\Logger::INFO,   'label' => __("Information")],
-            ['value' => \Zend\Log\Logger::DEBUG,  'label' => __("Debug")]
-        ];
+        return $this->zendLogLevelSource->toOptionArray();
     }
 }

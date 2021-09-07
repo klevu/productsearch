@@ -4,6 +4,7 @@
  */
 namespace Klevu\Search\Model;
 
+use Klevu\Logger\Constants as LoggerConstants;
 use Klevu\Search\Model\Klevu\Cron\SchedulerInterface as SchedulerInterface;
 use Klevu\Search\Model\Klevu\Category\CategoryInterface as CategoryInterface;
 use Klevu\Search\Model\Klevu\HelperManager as KlevuHelperManager;
@@ -14,8 +15,6 @@ use Magento\Framework\Model\ResourceModel\AbstractResource;
 use Magento\Framework\Registry as Magento_Registry;
 use Magento\Framework\UrlInterface as Magento_UrlInterface;
 use Magento\Framework\App\Filesystem\DirectoryList as DirectoryList;
-
-use Zend\Log\Logger;
 use Symfony\Component\Process\PhpExecutableFinder as PhpExecutableFinderFactory;
 use Magento\Framework\Shell;
 
@@ -101,7 +100,7 @@ class Sync extends AbstractModel
 		   $logDir = $this->directoryList->getPath(DirectoryList::VAR_DIR);
 		   $subprocess_file = $logDir."/klevu_subprocess.lock";
 		   fopen($subprocess_file, 'w');
-		   $this->log(Logger::CRIT, "can not execute subprocess $command ".$e->getMessage());
+		   $this->log(LoggerConstants::ZEND_LOG_CRIT, "can not execute subprocess $command ".$e->getMessage());
 		   throw new \Exception($e->getMessage()); 
            return false;
        }
@@ -251,7 +250,7 @@ class Sync extends AbstractModel
     public function rescheduleIfOutOfMemory()
     {
         if (!$this->isBelowMemoryLimit()) {
-            $this->log(Logger::INFO, "Memory limit reached. Stopped and rescheduled.");
+            $this->log(LoggerConstants::ZEND_LOG_INFO, "Memory limit reached. Stopped and rescheduled.");
             $cron_status = $this->_klevuHelperManager->getConfigHelper()->isExternalCronEnabled();
             if ($cron_status) {
                 $this->schedule();
@@ -273,7 +272,7 @@ class Sync extends AbstractModel
         $usage = memory_get_usage(true);
 
         if ($php_memory_limit < 0) {
-            $this->log(Logger::DEBUG, sprintf(
+            $this->log(LoggerConstants::ZEND_LOG_DEBUG, sprintf(
                 "Memory usage: %s of %s.",
                 $this->_klevuHelperManager->getDataHelper()->bytesToHumanReadable($usage),
                 $php_memory_limit
@@ -282,7 +281,7 @@ class Sync extends AbstractModel
         }
         $limit = $this->_klevuHelperManager->getDataHelper()->humanReadableToBytes($php_memory_limit);
 
-        $this->log(Logger::DEBUG, sprintf(
+        $this->log(LoggerConstants::ZEND_LOG_DEBUG, sprintf(
             "Memory usage: %s of %s.",
             $this->_klevuHelperManager->getDataHelper()->bytesToHumanReadable($usage),
             $this->_klevuHelperManager->getDataHelper()->bytesToHumanReadable($limit)

@@ -2,6 +2,7 @@
 
 namespace Klevu\Search\Plugin\Framework\Search\Request;
 
+use Klevu\Logger\Constants as LoggerConstants;
 use Klevu\Search\Helper\Config as KlevuHelperConfig;
 use Klevu\Search\Helper\Data as KlevuHelperData;
 use Klevu\Search\Model\Api\Magento\Request\ProductInterface as KlevuProductApi;
@@ -56,11 +57,18 @@ class CleanerPlugin
     protected $klevuHelperData;
 
     /**
+     * @var isKlevuPreserveLogEnabled
+     */
+    protected $isKlevuPreserveLogEnabled = false;
+
+    /**
      * @var KlevuHelperConfig
      */
     protected $klevuHelperConfig;
 
     /**
+     * CleanerPlugin constructor.
+     *
      * @param MagentoRequest $magentoRequest
      * @param MagentoRegistry $mageRegistry
      * @param MagentoCleaner $mageCleaner
@@ -73,16 +81,16 @@ class CleanerPlugin
      * @param KlevuHelperConfig $klevuHelperConfig
      */
     public function __construct(
-        MagentoRequest     $magentoRequest,
-        MagentoRegistry    $mageRegistry,
-        MagentoCleaner     $mageCleaner,
-        MagentoPageCache   $magePageCache,
+        MagentoRequest $magentoRequest,
+        MagentoRegistry $mageRegistry,
+        MagentoCleaner $mageCleaner,
+        MagentoPageCache $magePageCache,
         MageSessionManager $sessionManager,
         MutableScopeConfig $mutableScopeConfig,
-        SessionFactory     $sessionFactory,
-        KlevuProductApi    $klevuProductRequest,
-        KlevuHelperData    $klevuHelperData,
-        KlevuHelperConfig  $klevuHelperConfig
+        SessionFactory $sessionFactory,
+        KlevuProductApi $klevuProductRequest,
+        KlevuHelperData $klevuHelperData,
+        KlevuHelperConfig $klevuHelperConfig
     )
     {
         $this->magentoRequest = $magentoRequest;
@@ -102,6 +110,8 @@ class CleanerPlugin
     }
 
     /**
+     * afterPlugin for klevu queries and filters
+     *
      * @param $subject
      * @param $result
      * @param $requestData
@@ -118,11 +128,11 @@ class CleanerPlugin
             if ($this->klevuHelperConfig->isLandingEnabled() != 1 || !$this->klevuHelperConfig->isExtensionConfigured()) {
                 return $result;
             }
-
+            $this->isKlevuPreserveLogEnabled = $this->klevuHelperConfig->isPreserveLayoutLogEnabled();
             $klevuRequestData = $this->klevuQueryCleanup($result);
             return $klevuRequestData;
         } catch (\Exception $e) {
-            $this->klevuHelperData->log(\Zend\Log\Logger::CRIT, sprintf("Klevu_Search_Cleaner::Cleaner ERROR occured %s", $e->getMessage()));
+            $this->klevuHelperData->log(LoggerConstants::ZEND_LOG_CRIT, sprintf("Klevu_Search_Cleaner::Cleaner ERROR occured %s", $e->getMessage()));
             return $result;
         }
         return $result;
@@ -136,6 +146,14 @@ class CleanerPlugin
      */
     public function klevuQueryCleanup($requestData)
     {
+        if ($this->isKlevuPreserveLogEnabled) {
+            $this->writeToPreserveLayoutLog("searchCleanerPlugin:: klevuQueryCleanup execution started");
+            //Adding this to identify in the logs which cleaner is triggering
+            $this->magentoRegistry->unregister('klReqCleanerType');
+            $this->magentoRegistry->register('klReqCleanerType', 'SRLPRequestInitiated');
+        }
+
+
         $categoryFilter = $this->magentoRequest->getParam('productFilter');
         $categoryFilter = isset($categoryFilter) ? $categoryFilter : '';
 
@@ -144,8 +162,8 @@ class CleanerPlugin
 
         //check if search array generated or not
         if (!isset($requestData['queries']['search'])) {
-            if ($this->klevuHelperConfig->isPreserveLayoutLogEnabled()) {
-                $this->klevuHelperData->preserveLayoutLog("Search array is not found in CleanerPlugin");
+            if ($this->isKlevuPreserveLogEnabled) {
+                $this->writeToPreserveLayoutLog("searchCleanerPlugin:: Search array is not found in CleanerPlugin");
             }
             return $requestData;
         } else {
@@ -154,8 +172,8 @@ class CleanerPlugin
 
         //check if dimensions array found or not
         if (!isset($requestData['dimensions']['scope'])) {
-            if ($this->klevuHelperConfig->isPreserveLayoutLogEnabled()) {
-                $this->klevuHelperData->preserveLayoutLog("Dimension array is not found in CleanerPlugin");
+            if ($this->isKlevuPreserveLogEnabled) {
+                $this->writeToPreserveLayoutLog("searchCleanerPlugin:: Dimension array is not found in CleanerPlugin");
             }
             return $requestData;
         } else {
@@ -185,8 +203,8 @@ class CleanerPlugin
         $currentEngine = $this->getCurrentSearchEngine();
         //if no ids there then no need to set new handler for mysql only
         if (empty($idList) && $currentEngine === 'mysql') {
-            if ($this->klevuHelperConfig->isPreserveLayoutLogEnabled()) {
-                $this->klevuHelperData->preserveLayoutLog("MySQL Search Engine is selected and No Ids were found in CleanerPlugin");
+            if ($this->isKlevuPreserveLogEnabled) {
+                $this->writeToPreserveLayoutLog("searchCleanerPlugin:: MySQL Search Engine is selected and No Ids were found in CleanerPlugin");
             }
             return $requestData;
         }
@@ -246,6 +264,9 @@ class CleanerPlugin
             }
 
             $current_order = $this->magentoRegistry->registry('current_order');
+            if ($this->isKlevuPreserveLogEnabled) {
+                $this->writeToPreserveLayoutLog("searchCleanerPlugin:: currentRegistryOrder-" . $current_order);
+            }
             if (!empty($current_order)) {
                 if ($current_order == "personalized") {
                     $this->magentoRegistry->unregister('from');
@@ -259,14 +280,23 @@ class CleanerPlugin
             }
         }
 
-        if ($this->klevuHelperConfig->isPreserveLayoutLogEnabled()) {
+        if ($this->isKlevuPreserveLogEnabled) {
             //convert requestData object into array
             $requestDataToArray = json_decode(json_encode($requestData), true);
-            $this->klevuHelperData->preserveLayoutLog(
-                "Request data in CleanerPlugin" . PHP_EOL . print_r($requestDataToArray, true)
-            );
+            $this->writeToPreserveLayoutLog("searchCleanerPlugin:: Request data in CleanerPlugin" . PHP_EOL . print_r($requestDataToArray, true));
         }
         return $requestData;
+    }
+
+    /**
+     * Writes logs to the Klevu_Search_Preserve_Layout.log file
+     *
+     * @param string $message
+     * @return void
+     */
+    private function writeToPreserveLayoutLog($message)
+    {
+        $this->klevuHelperData->preserveLayoutLog($message);
     }
 
     /**
@@ -281,6 +311,7 @@ class CleanerPlugin
 
     /**
      * Return the product id field
+     *
      * @return string
      */
     private function getProductIdField()
@@ -312,7 +343,4 @@ class CleanerPlugin
                 break;
         }
     }
-
-
 }
-

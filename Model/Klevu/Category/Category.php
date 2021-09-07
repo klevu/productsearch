@@ -4,6 +4,7 @@
  */
 namespace Klevu\Search\Model\Klevu\Category;
 
+use Klevu\Logger\Constants as LoggerConstants;
 use Klevu\Search\Model\Klevu\HelperManager as KlevuHelperManager;
 use Klevu\Search\Model\Klevu\KlevuFactory;
 use Magento\Catalog\Model\CategoryFactory;
@@ -15,7 +16,6 @@ use Magento\Framework\Registry as Magento_Registry;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Catalog\Model\Indexer\Category\Flat\State as Magento_Category_Flat_State;
 use Exception;
-use Zend\Log\Logger;
 
 class Category extends AbstractModel implements CategoryInterface
 {
@@ -142,7 +142,7 @@ class Category extends AbstractModel implements CategoryInterface
                     break;
             }
         } catch (Exception $e) {
-            $this->_klevuHelperManager->getDataHelper()->log(Logger::ERR, sprintf("Error in loading category for action %s - %s", $action, $e->getMessage()));
+            $this->_klevuHelperManager->getDataHelper()->log(LoggerConstants::ZEND_LOG_ERR, sprintf("Error in loading category for action %s - %s", $action, $e->getMessage()));
             return array();
         }
 

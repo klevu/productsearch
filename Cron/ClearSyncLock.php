@@ -3,13 +3,13 @@
 namespace Klevu\Search\Cron;
 
 use Exception;
+use Klevu\Logger\Constants as LoggerConstants;
 use Klevu\Search\Helper\Config as KlevuHelperConfig;
 use Klevu\Search\Helper\Data as KlevuHelperData;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Filesystem;
 use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Model\StoreManagerInterface;
-use Zend\Log\Logger;
 
 /**
  * Class ClearSyncLock
@@ -113,7 +113,7 @@ class ClearSyncLock
                 }
             }
         } catch (Exception $e) {
-            $this->klevuHelperData->log(Logger::DEBUG, sprintf('Lock File Remove Error : %s', $e->getMessage()));
+            $this->klevuHelperData->log(LoggerConstants::ZEND_LOG_DEBUG, sprintf('Lock File Remove Error : %s', $e->getMessage()));
         }
     }
 

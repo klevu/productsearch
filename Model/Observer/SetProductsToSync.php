@@ -9,6 +9,7 @@
 
 namespace Klevu\Search\Model\Observer;
 
+use Klevu\Logger\Constants as LoggerConstants;
 use Klevu\Search\Model\Product\MagentoProductActionsInterface;
 use Magento\Framework\Event\ObserverInterface;
 
@@ -46,7 +47,7 @@ class SetProductsToSync implements ObserverInterface
             }
             $this->magentoProductActions->markRecordIntoQueue($product_ids, 'products');
         } catch (\Exception $e) {
-            $this->_searchHelperData->log(\Zend\Log\Logger::DEBUG, sprintf("Marking products sync error:: SetProductsToSync :: %s", $e->getMessage()));
+            $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_DEBUG, sprintf("Marking products sync error:: SetProductsToSync :: %s", $e->getMessage()));
         }
     }
 }

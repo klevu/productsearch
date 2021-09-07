@@ -8,6 +8,7 @@
 
 namespace Klevu\Search\Model\Observer;
 
+use Klevu\Logger\Constants as LoggerConstants;
 use Magento\Framework\Event\ObserverInterface;
 
 class ScheduleOrderSync implements ObserverInterface
@@ -72,12 +73,12 @@ class ScheduleOrderSync implements ObserverInterface
         try {
             $store = $this->_storeModelStoreManagerInterface->getStore($observer->getEvent()->getStore());
             if (!$store instanceof \Magento\Store\Api\Data\StoreInterface) {
-                $this->_searchHelperData->log(\Zend\Log\Logger::INFO, sprintf("OrderQueue:: Store(%s) Valid Instance not found, Order not added in queue.", $store->getName()));
+                $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_INFO, sprintf("OrderQueue:: Store(%s) Valid Instance not found, Order not added in queue.", $store->getName()));
                 return;
             }
             //Does nothing if order sync disabled
             if (!$this->_searchHelperConfig->isOrderSyncEnabled($store->getId())) {
-                $this->_searchHelperData->log(\Zend\Log\Logger::INFO, sprintf("OrderQueue:: Found Sales Order Queue option disabled for Store (%s), Order not added in queue.", $store->getName()));
+                $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_INFO, sprintf("OrderQueue:: Found Sales Order Queue option disabled for Store (%s), Order not added in queue.", $store->getName()));
                 return;
             }
             $model = $this->_modelOrderSync;
@@ -89,7 +90,7 @@ class ScheduleOrderSync implements ObserverInterface
                 $model->schedule();
             }
         } catch (\Exception $e) {
-            $this->_searchHelperData->log(\Zend\Log\Logger::CRIT, sprintf("OrderQueue:: Exception thrown %s::%s - %s", __CLASS__, __METHOD__, $e->getMessage()));
+            $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_CRIT, sprintf("OrderQueue:: Exception thrown %s::%s - %s", __CLASS__, __METHOD__, $e->getMessage()));
         }
 
     }

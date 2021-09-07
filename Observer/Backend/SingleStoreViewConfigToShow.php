@@ -1,6 +1,7 @@
 <?php
 namespace Klevu\Search\Observer\Backend;
 
+use Klevu\Logger\Constants as LoggerConstants;
 use Magento\Framework\App\RequestInterface as RequestInterface;
 use Magento\Framework\Event\Observer as EventObserver;
 use Magento\Framework\Event\ObserverInterface;
@@ -53,7 +54,7 @@ class SingleStoreViewConfigToShow implements ObserverInterface
 			$klevuConfig->setGlobalConfig( $klevuConfig::XML_PATH_RESTHOSTNAME , $restHostName );
 
         } catch (\Exception $e) {
-            $klevuDataHelper->log(\Zend\Log\Logger::CRIT, sprintf("Exception thrown for single store view %s::%s - %s", __CLASS__, __METHOD__, $e->getMessage()));
+            $klevuDataHelper->log(LoggerConstants::ZEND_LOG_CRIT, sprintf("Exception thrown for single store view %s::%s - %s", __CLASS__, __METHOD__, $e->getMessage()));
             return;
         }
     }

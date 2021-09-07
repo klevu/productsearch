@@ -6,6 +6,8 @@
 
 namespace Klevu\Search\Model\Order;
 
+use Klevu\Logger\Api\StoreScopeResolverInterface;
+use Klevu\Logger\Constants as LoggerConstants;
 use Klevu\Search\Model\Sync as KlevuSync;
 use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Model\AbstractModel;
@@ -61,6 +63,11 @@ class Sync extends AbstractModel
     protected $_klevuSyncModel;
     protected $_priceHelper;
 
+    /**
+     * @var StoreScopeResolverInterface
+     */
+    private $storeScopeResolver;
+
     public function __construct(
         \Magento\Framework\App\ResourceConnection $frameworkModelResource,
         \Magento\Store\Model\StoreManagerInterface $storeModelStoreManagerInterface,
@@ -78,9 +85,9 @@ class Sync extends AbstractModel
         \Magento\Framework\Model\ResourceModel\AbstractResource $resource = null,
         \Magento\Framework\Data\Collection\AbstractDb $resourceCollection = null,
         Klevu_Helper_Price $klevuPriceHelper = null,
-        array $data = []
-    )
-    {
+        array $data = [],
+        StoreScopeResolverInterface $storeScopeResolver = null
+    ) {
         parent::__construct($context, $registry, $resource, $resourceCollection, $data);
         $this->_klevuSyncModel = $klevuSyncModel;
         $this->_klevuSyncModel->setJobCode($this->getJobCode());
@@ -94,6 +101,8 @@ class Sync extends AbstractModel
         $this->_frameworkModelDate = $frameworkModelDate;
         $this->_groupedProduct = $groupedProduct;
         $this->_priceHelper = $klevuPriceHelper ?: ObjectManager::getInstance()->get(Klevu_Helper_Price::class);
+        $this->storeScopeResolver = $storeScopeResolver
+            ?: ObjectManager::getInstance()->get(StoreScopeResolverInterface::class);
     }
 
     public function getJobCode()
@@ -204,20 +213,29 @@ class Sync extends AbstractModel
     public function run()
     {
         try {
+            $currentStoreScopeStore = $this->storeScopeResolver->getCurrentStore();
+            $currentStoreScopeStoreId = (int)$currentStoreScopeStore->getId();
+        } catch (NoSuchEntityException $e) {
+            $currentStoreScopeStoreId = 0;
+        }
+
+        try {
             if ($this->isRunning(2)) {
                 // Stop if another copy is already running
-                $this->log(\Zend\Log\Logger::INFO, "Another copy is already running. Stopped.");
+                $this->log(LoggerConstants::ZEND_LOG_INFO, "Another copy is already running. Stopped.");
                 return;
             }
 
             $stores = $this->_storeModelStoreManagerInterface->getStores();
             foreach ($stores as $store) {
+                $this->storeScopeResolver->setCurrentStore($store);
+
                 //Skip it if no API keys found
                 if (!$this->getApiKey($store->getId())) {
-                    $this->log(\Zend\Log\Logger::INFO, sprintf("Order Sync :: No API Key found for Store Name:(%s), Website:(%s).", $store->getName(), $store->getWebsite()->getName()));
+                    $this->log(LoggerConstants::ZEND_LOG_INFO, sprintf("Order Sync :: No API Key found for Store Name:(%s), Website:(%s).", $store->getName(), $store->getWebsite()->getName()));
                     continue;
                 }
-                $this->log(\Zend\Log\Logger::INFO, sprintf("Starting Order Sync for Store Name:(%s), Website:(%s).", $store->getName(), $store->getWebsite()->getName()));
+                $this->log(LoggerConstants::ZEND_LOG_INFO, sprintf("Starting Order Sync for Store Name:(%s), Website:(%s).", $store->getName(), $store->getWebsite()->getName()));
                 $items_synced = 0;
                 $errors = 0;
                 $item = $this->_modelOrderItem;
@@ -240,26 +258,28 @@ class Sync extends AbstractModel
                                     $this->removeItemFromQueue($value['order_item_id']);
                                     $items_synced++;
                                 } else {
-                                    $this->log(\Zend\Log\Logger::INFO, sprintf("Skipped Order Item %d: %s", $value['order_item_id'], $result));
+                                    $this->log(LoggerConstants::ZEND_LOG_INFO, sprintf("Skipped Order Item %d: %s", $value['order_item_id'], $result));
                                     $errors++;
                                 }
                             }
                         } else {
-                            $this->log(\Zend\Log\Logger::ERR, sprintf("Skipped Order Item %d: Send Order Items to Klevu Option not enabled for Store Name:(%s), Website:(%s).", $value['order_item_id'], $store->getName(), $store->getWebsite()->getName()));
+                            $this->log(LoggerConstants::ZEND_LOG_ERR, sprintf("Skipped Order Item %d: Send Order Items to Klevu Option not enabled for Store Name:(%s), Website:(%s).", $value['order_item_id'], $store->getName(), $store->getWebsite()->getName()));
                             //It should not remove item from queue due to send sync is disabled. It can be enable in future.
                             //$this->removeItemFromQueue($value['order_item_id']);
                         }
                     } else {
-                        $this->log(\Zend\Log\Logger::ERR, sprintf("Order Item %d does not exist: Removed from sync!", $value['order_item_id']));
+                        $this->log(LoggerConstants::ZEND_LOG_ERR, sprintf("Order Item %d does not exist: Removed from sync!", $value['order_item_id']));
                         $this->removeItemFromQueue($value['order_item_id']);
                         $errors++;
                     }
                 }
-                $this->log(\Zend\Log\Logger::INFO, sprintf("Order Sync finished for Store Name:(%s), Website:(%s) and %d Items synced.", $store->getName(), $store->getWebsite()->getName(), $items_synced));
+                $this->log(LoggerConstants::ZEND_LOG_INFO, sprintf("Order Sync finished for Store Name:(%s), Website:(%s) and %d Items synced.", $store->getName(), $store->getWebsite()->getName(), $items_synced));
             }
+            $this->storeScopeResolver->setCurrentStoreById($currentStoreScopeStoreId);
         } catch (\Exception $e) {
             // Catch the exception that was thrown, log it, then throw a new exception to be caught the Magento cron.
-            $this->log(\Zend\Log\Logger::CRIT, sprintf("Order Sync:: Exception thrown in %s::%s - %s", __CLASS__, __METHOD__, $e->getMessage()));
+            $this->log(LoggerConstants::ZEND_LOG_CRIT, sprintf("Order Sync:: Exception thrown in %s::%s - %s", __CLASS__, __METHOD__, $e->getMessage()));
+            $this->storeScopeResolver->setCurrentStoreById($currentStoreScopeStoreId);
             throw $e;
         }
     }
@@ -339,9 +359,9 @@ class Sync extends AbstractModel
                 return $response->getMessage();
             }
         } catch (\Exception $e) {
-            $this->log(\Zend\Log\Logger::CRIT, sprintf("Order Sync:: Exception thrown in %s::%s - %s", __CLASS__, __METHOD__, $e->getMessage()));
+            $this->log(LoggerConstants::ZEND_LOG_CRIT, sprintf("Order Sync:: Exception thrown in %s::%s - %s", __CLASS__, __METHOD__, $e->getMessage()));
             // Catch the exception that was thrown, log it, then throw a new exception to be caught the Magento cron.
-            $this->log(\Zend\Log\Logger::INFO, sprintf("Order Itemid %s skipped for Klevu Order Sync ", $item->getOrderId()));
+            $this->log(LoggerConstants::ZEND_LOG_INFO, sprintf("Order Itemid %s skipped for Klevu Order Sync ", $item->getOrderId()));
         }
     }
 

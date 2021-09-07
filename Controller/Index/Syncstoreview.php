@@ -2,6 +2,8 @@
 
 namespace Klevu\Search\Controller\Index;
 
+use Klevu\Logger\Constants as LoggerConstants;
+
 /**
  * Class Syncstoreview
  * @package Klevu\Search\Controller\Index
@@ -76,7 +78,7 @@ class Syncstoreview extends \Magento\Framework\App\Action\Action
             $store_rest_api = hash('sha256',$this->_klevuSyncModel->getHelper()->getConfigHelper()->getRestApiKey((int)$store_id));
             if ($store_rest_api == $hashkey) {
                 $this->_storeInterface->setCurrentStore($store_id);
-                $this->_searchHelperData->log(\Zend\Log\Logger::INFO, sprintf(
+                $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_INFO, sprintf(
                     "Updates only data sync action performed from Magento Admin Panel %s (%s).",
                     $store_object->getWebsite()->getName(),
                     $store_object->getName()
