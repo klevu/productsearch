@@ -8,6 +8,8 @@
  */
 namespace Klevu\Search\Model\Api;
 
+use Klevu\Logger\Constants as LoggerConstants;
+
 class Response extends \Magento\Framework\DataObject
 {
     /**
@@ -96,7 +98,7 @@ class Response extends \Magento\Framework\DataObject
                     // Failed to parse XML
                     $this->successful = false;
                     $this->setMessage("Failed to parse a response from Klevu.");
-                    $this->_searchHelperData->log(\Zend\Log\Logger::ERR, sprintf("Failed to parse XML response: %s", $e->getMessage()));
+                    $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_ERR, sprintf("Failed to parse XML response: %s", $e->getMessage()));
                     return $this;
                 }
 
@@ -106,7 +108,7 @@ class Response extends \Magento\Framework\DataObject
                 // Response contains no content
                 $this->successful = false;
                 $this->setMessage('Failed to parse a response from Klevu.');
-                $this->_searchHelperData->log(\Zend\Log\Logger::ERR, "API response content is empty.");
+                $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_ERR, "API response content is empty.");
             }
         } else {
             // Unsuccessful HTTP response
@@ -152,7 +154,7 @@ class Response extends \Magento\Framework\DataObject
 			} else {
 				$this->setMessage(sprintf("Failed to connect to Klevu: %s", $message));
 			}
-            $this->_searchHelperData->log(\Zend\Log\Logger::ERR, sprintf("Unsuccessful HTTP response: %s %s", $response->getStatusCode(), $response->toString()));
+            $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_ERR, sprintf("Unsuccessful HTTP response: %s %s", $response->getStatusCode(), $response->toString()));
         }
 
         return $this;

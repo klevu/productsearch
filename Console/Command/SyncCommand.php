@@ -3,7 +3,7 @@
 namespace Klevu\Search\Console\Command;
 
 use Exception;
-use Klevu\Content\Model\Content;
+use Klevu\Logger\Api\StoreScopeResolverInterface;
 use Klevu\Search\Model\Order\Sync as Order;
 use Klevu\Search\Model\Product\MagentoProductActionsInterface as MagentoProductActions;
 use Magento\Framework\App\Filesystem\DirectoryList as DirectoryList;
@@ -19,7 +19,6 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Process\PhpExecutableFinder as PhpExecutableFinderFactory;
-use Klevu\Search\Helper\Data as KlevuSearchHelperData;
 
 /**
  * Class SyncCommand
@@ -52,7 +51,15 @@ class SyncCommand extends Command
      */
     protected $_phpExecutableFinder;
 
-    private $_logger;
+    /**
+     * @var LoggerInterface
+     */
+    private $logger;
+
+    /**
+     * @var StoreScopeResolverInterface
+     */
+    private $storeScopeResolver;
 
     protected $websiteList = array();
     protected $allStoreList = array();
@@ -67,15 +74,18 @@ class SyncCommand extends Command
         DirectoryList $directoryList,
         Shell $shell,
         PhpExecutableFinderFactory $phpExecutableFinderFactory,
-        LoggerInterface $logger
-    )
-    {
+        LoggerInterface $logger,
+        StoreScopeResolverInterface $storeScopeResolver = null
+    ) {
         $this->appState = $appState;
         $this->directoryList = $directoryList;
         $this->storeInterface = $storeInterface;
         $this->_shell = $shell;
         $this->_phpExecutableFinder = $phpExecutableFinderFactory;
-        $this->_logger = $logger;
+        $this->logger = $logger;
+        $this->storeScopeResolver = $storeScopeResolver
+            ?: ObjectManager::getInstance()->get(StoreScopeResolverInterface::class);
+
         parent::__construct();
     }
 
@@ -104,6 +114,7 @@ HELP
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        $this->storeScopeResolver->setCurrentStoreById(0);
         $logDir = $this->directoryList->getPath(DirectoryList::VAR_DIR);
         $file = $logDir . "/" . self::LOCK_FILE;
         $areacodeFile = $logDir . "/" . self::AREA_CODE_LOCK_FILE;
@@ -114,7 +125,7 @@ HELP
             $this->appState->setAreaCode('frontend');
         } catch (\Exception $e) {
             fopen($areacodeFile, 'w');
-            $this->_logger->critical($e->getMessage());
+            $this->logger->error($e->getMessage());
             throw $e;
         }
         if (file_exists($file)) {
@@ -125,12 +136,8 @@ HELP
         }
 
         fopen($file, 'w');
-        //get the helper for logging
-        $this->klevuSearchHelperData = ObjectManager::getInstance()->get(KlevuSearchHelperData::class);
 
-        $returnValue = Cli::RETURN_FAILURE;
         try {
-
             $storeList = $this->storeInterface->getStores();
             $lockStoresList = array();
             foreach ($storeList as $store) {
@@ -140,8 +147,10 @@ HELP
                     $lockStoresList[] = $store->getCode();
                     continue;
                 }
-                
-                if(!isset($this->websiteList[$store->getWebsiteId()])) $this->websiteList[$store->getWebsiteId()] = array();
+
+                if (!isset($this->websiteList[$store->getWebsiteId()])) {
+                    $this->websiteList[$store->getWebsiteId()] = array();
+                }
                 $this->websiteList[$store->getWebsiteId()] = array_unique(array_merge($this->websiteList[$store->getWebsiteId()], array($store->getCode())));
                 $this->allStoreList[$store->getCode()] = $store->getWebsiteId();
             }
@@ -179,14 +188,18 @@ HELP
             $phpPath = $this->_phpExecutableFinder->find() ?: 'php';
             foreach ($this->websiteList as $storeList) {
                 $output->writeln('<info>' . $webKey . '. Started for store code(s): ' . implode(",", $storeList) . '</info>');
-                $this->klevuSearchHelperData->log(
-                    \Zend\Log\Logger::INFO,
-                    sprintf(
+
+                $originalStore = $this->storeScopeResolver->getCurrentStore();
+                foreach ($storeList as $storeCode) {
+                    $this->storeScopeResolver->setCurrentStoreByCode($storeCode);
+                    $this->logger->info(sprintf(
                         "Synchronize product data for the specified store codes: %s /bin/magento klevu:syncstore:storecode %s",
                         $phpPath,
                         implode(',', $storeList)
-                    )
-                );
+                    ));
+                }
+                $this->storeScopeResolver->setCurrentStore($originalStore);
+
                 $this->_shell->execute(
                     $phpPath . ' %s klevu:syncstore:storecode ' . implode(",", $storeList),
                     [
@@ -211,30 +224,32 @@ HELP
                 $output->writeln('<info>All Data has been synchronized with Klevu</info>');
             } elseif ($input->hasParameterOption('--updatesonly')) {
                 if ($klevusession->getKlevuFailedFlag() == 1) {
-                    $this->klevuSearchHelperData->log(\Zend\Log\Logger::ERR, "Product sync failed using SyncCommand. Please consult var/log/Klevu_Search.log file for more information.");
+                    $this->logger->error("Product sync failed using SyncCommand. Please consult var/log/Klevu_Search.log file for more information.");
                     $output->writeln("<error>Data sync failed. Please consult var/log/Klevu_Search.log file for more information.</error>");
                     $klevusession->setKlevuFailedFlag(0);
                 } else {
-                    $this->klevuSearchHelperData->log(\Zend\Log\Logger::INFO, "Data updates have been sent to Klevu using SyncCommand.");
+                    $this->logger->info("Data updates have been sent to Klevu using SyncCommand.");
                     $output->writeln('<info>Data updates have been sent to Klevu</info>');
                     $klevusession->setKlevuFailedFlag(0);
                 }
             } else {
-                $this->klevuSearchHelperData->log(\Zend\Log\Logger::INFO, "Data updates have been sent to Klevu.");
+                $this->logger->info("Data updates have been sent to Klevu.");
                 $output->writeln('<info>Data updates have been sent to Klevu</info>');
                 $klevusession->setKlevuFailedFlag(0);
             }
         } catch (LocalizedException $e) {
-            $this->klevuSearchHelperData->log(\Zend\Log\Logger::ERR,sprintf("LocalizedException %s",$e->getMessage()));
+            $this->logger->error(sprintf("LocalizedException %s",$e->getMessage()));
             $output->writeln('<error>LocalizedException: ' . $e->getMessage() . '</error>');
         } catch (Exception $e) {
-            $this->klevuSearchHelperData->log(\Zend\Log\Logger::ERR,sprintf("Exception: Not able to complete the synchronization due to %s",$e->getMessage()));
+            $this->logger->error(sprintf("Exception: Not able to complete the synchronization due to %s",$e->getMessage()));
             $output->writeln('<error>Exception: Not able to complete the synchronization due to ' . $e->getMessage() . '</error>');
         }
 
         if (file_exists($file)) {
             unlink($file);
         }
+
+        return Cli::RETURN_SUCCESS;
     }
 
     public function getInputList()

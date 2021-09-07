@@ -2,6 +2,8 @@
 
 namespace Klevu\Search\Helper;
 
+use Klevu\Logger\Constants as LoggerConstants;
+
 class Image extends \Magento\Framework\App\Helper\AbstractHelper
 {
     /**
@@ -164,7 +166,7 @@ class Image extends \Magento\Framework\App\Helper\AbstractHelper
                 }
             }
         } catch (\Exception $e) {
-            $this->_searchHelperData->log(\Zend\Log\Logger::DEBUG, sprintf("ImageHelper:: Image Error:\n%s", $e->getMessage()));
+            $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_DEBUG, sprintf("ImageHelper:: Image Error:\n%s", $e->getMessage()));
         }
     }
 
@@ -283,7 +285,7 @@ class Image extends \Magento\Framework\App\Helper\AbstractHelper
                 }
             }
         } catch (\Exception $e) {
-            $this->_searchHelperData->log(\Zend\Log\Logger::DEBUG, sprintf("ImageHelper:: Exception while forcefully regenerating image :%s", $e->getMessage()));
+            $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_DEBUG, sprintf("ImageHelper:: Exception while forcefully regenerating image :%s", $e->getMessage()));
         }
     }
 }

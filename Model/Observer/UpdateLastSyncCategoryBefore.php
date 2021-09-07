@@ -9,6 +9,7 @@
 
 namespace Klevu\Search\Model\Observer;
 
+use Klevu\Logger\Constants as LoggerConstants;
 use Klevu\Search\Model\Product\MagentoProductActionsInterface;
 use Magento\Framework\Event\ObserverInterface;
 
@@ -68,7 +69,7 @@ class UpdateLastSyncCategoryBefore implements ObserverInterface
             //getAllIds will return array
 
         } catch (\Exception $e) {
-            $this->_searchHelperData->log(\Zend\Log\Logger::CRIT, sprintf("Marking products sync error:: UpdateLastSyncCategory :: %s", $e->getMessage()));
+            $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_CRIT, sprintf("Marking products sync error:: UpdateLastSyncCategory :: %s", $e->getMessage()));
         }
     }
 }

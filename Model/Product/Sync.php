@@ -8,6 +8,7 @@
 
 namespace Klevu\Search\Model\Product;
 
+use Klevu\Logger\Constants as LoggerConstants;
 use Klevu\Search\Model\Product\MagentoProductActionsInterface as Klevu_MagentoProductActions;
 use Klevu\Search\Model\Product\KlevuProductActionsInterface as Klevu_KlevuProductActions;
 use Klevu\Search\Model\Category\MagentoCategoryActions as Klevu_MagentoCategoryActions;
@@ -104,8 +105,8 @@ class Sync extends AbstractModel
     public function run()
     {
         try {
-			
-			
+
+
 
             /* mark for update special price product */
             //$this->_magentoProductActions->markProductForUpdate();
@@ -129,7 +130,7 @@ class Sync extends AbstractModel
 
             if ($this->isRunning(2)) {
                 // Stop if another copy is already running
-                $this->log(\Zend\Log\Logger::INFO, "Stopping because another copy is already running.");
+                $this->log(LoggerConstants::ZEND_LOG_INFO, "Stopping because another copy is already running.");
                 return;
             }
 
@@ -144,10 +145,10 @@ class Sync extends AbstractModel
                 $this->reset();
             }
 
-          
+
         } catch (\Exception $e) {
             // Catch the exception that was thrown, log it, then throw a new exception to be caught the Magento cron.
-            $this->_searchHelperData->log(\Zend\Log\Logger::CRIT, sprintf("Exception thrown in %s::%s - %s", __CLASS__, __METHOD__, $e->getMessage()));
+            $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_CRIT, sprintf("Exception thrown in %s::%s - %s", __CLASS__, __METHOD__, $e->getMessage()));
             throw $e;
         }
     }
@@ -189,7 +190,7 @@ class Sync extends AbstractModel
             return true;
         } catch (\Exception $e) {
             $this->_searchHelperData->log(
-                \Zend\Log\Logger::CRIT,
+                LoggerConstants::ZEND_LOG_CRIT,
                 sprintf(
                     "Exception thrown in %s::%s - %s",
                     __CLASS__,
@@ -206,7 +207,7 @@ class Sync extends AbstractModel
     {
         try {
 
-            $this->_searchHelperData->log(\Zend\Log\Logger::INFO,"Sync action performed thorugh Magento Cron");
+            $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_INFO,"Sync action performed through Magento Cron");
             /* mark for update special price product */
             //$this->_magentoProductActions->markProductForUpdate();
 
@@ -229,7 +230,7 @@ class Sync extends AbstractModel
 
             if ($this->isRunning(2)) {
                 // Stop if another copy is already running
-                $this->log(\Zend\Log\Logger::INFO, "Stopping because another copy is already running.");
+                $this->log(LoggerConstants::ZEND_LOG_INFO, "Stopping because another copy is already running.");
                 return;
             }
 
@@ -247,10 +248,10 @@ class Sync extends AbstractModel
             }
 
             // update rating flag after all store view sync
-            
+
         } catch (\Exception $e) {
             // Catch the exception that was thrown, log it, then throw a new exception to be caught the Magento cron.
-            $this->_searchHelperData->log(\Zend\Log\Logger::CRIT, sprintf("Exception thrown in %s::%s - %s", __CLASS__, __METHOD__, $e->getMessage()));
+            $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_CRIT, sprintf("Exception thrown in %s::%s - %s", __CLASS__, __METHOD__, $e->getMessage()));
             throw $e;
         }
     }
@@ -265,26 +266,26 @@ class Sync extends AbstractModel
 
         $config = $this->_searchHelperConfig;
         if (!$config->isProductSyncEnabled($store->getId())) {
-            $this->_searchHelperData->log(\Zend\Log\Logger::INFO, sprintf("Product Sync found disabled for %s (%s).", $store->getWebsite()->getName(), $store->getName()));
+            $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_INFO, sprintf("Product Sync found disabled for %s (%s).", $store->getWebsite()->getName(), $store->getName()));
             return;
         }
         $firstSync = $this->_searchModelSession->getFirstSync();
 
         try {
-            $rating_upgrade_flag = $this->_searchHelperConfig->getRatingUpgradeFlag($store);	
+            $rating_upgrade_flag = $this->_searchHelperConfig->getRatingUpgradeFlag($store);
             if ($rating_upgrade_flag == 0) {
                 $this->_magentoProductActions->updateProductsRating($store);
 				// update rating flag after all store view sync
 				$this->_searchHelperConfig->saveRatingUpgradeFlag(1,$store);
-				
+
             }
         } catch (\Exception $e) {
-            $this->_searchHelperData->log(\Zend\Log\Logger::WARN, sprintf("Unable to update rating attribute %s", $e->getMessage()));
+            $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_WARN, sprintf("Unable to update rating attribute %s", $e->getMessage()));
         }
 
         //set current store so will get proper bundle price
         $this->_storeModelStoreManagerInterface->setCurrentStore($store->getId());
-        $this->_searchHelperData->log(\Zend\Log\Logger::INFO, sprintf("Starting sync for %s (%s).", $store->getWebsite()->getName(), $store->getName()));
+        $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_INFO, sprintf("Starting sync for %s (%s).", $store->getWebsite()->getName(), $store->getName()));
 
         $actions = array('delete','update','add');
         $errors = 0;
@@ -293,12 +294,12 @@ class Sync extends AbstractModel
             if ($this->rescheduleIfOutOfMemory()) {
                 return;
             }
-            $pids = array();	
+            $pids = array();
 			$pids = $this->getProductsIds($action,$store);
             $method = $action . "Products";
             $products = array_values($pids);  //resetting key index
             $total = count($pids);
-            $this->_searchHelperData->log(\Zend\Log\Logger::INFO, sprintf("Found %d products to %s.", $total, $action));
+            $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_INFO, sprintf("Found %d products to %s.", $total, $action));
             $pages = ceil($total / static::RECORDS_PER_PAGE);
             for ($page = 1; $page <= $pages; $page++) {
                 if ($this->rescheduleIfOutOfMemory()) {
@@ -308,7 +309,7 @@ class Sync extends AbstractModel
                 $result = $this->_magentoProductActions->$method(array_slice($products, $offset, static::RECORDS_PER_PAGE));
                 if ($result !== true) {
                     $errors++;
-                    $this->_searchHelperData->log(\Zend\Log\Logger::ERR, sprintf(
+                    $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_ERR, sprintf(
                         "Errors occurred while attempting to %s products %d - %d: %s",
                         $action,
                         $offset + 1,
@@ -318,13 +319,13 @@ class Sync extends AbstractModel
                 }
             }
         }
-        $this->_searchHelperData->log(\Zend\Log\Logger::INFO, sprintf("Finished sync for %s (%s).", $store->getWebsite()->getName(), $store->getName()));
+        $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_INFO, sprintf("Finished sync for %s (%s).", $store->getWebsite()->getName(), $store->getName()));
 
         if (!$config->isExtensionEnabled($store)) {
             // Enable Klevu Search after the first sync
             if (!empty($firstSync)) {
                 $config->setExtensionEnabledFlag(true, $store);
-                $this->_searchHelperData->log(\Zend\Log\Logger::INFO, sprintf(
+                $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_INFO, sprintf(
                     "Automatically enabled Klevu Search on Frontend for %s (%s).",
                     $store->getWebsite()->getName(),
                     $store->getName()
@@ -332,8 +333,8 @@ class Sync extends AbstractModel
             }
         }
     }
-	
-	protected function getProductsIds($action = null, $store = null) 
+
+	protected function getProductsIds($action = null, $store = null)
 	{
 		if (is_null($action)) return array();
 		$storeId = $store->getId();
@@ -343,7 +344,7 @@ class Sync extends AbstractModel
             if ($this->_storeModelStoreManagerInterface->getStore()->getId() != $storeId)
                 $this->_storeModelStoreManagerInterface->setCurrentStore($storeId);
         }
-		
+
 		try{
 			switch ($action) {
 				case "delete" :
@@ -358,7 +359,7 @@ class Sync extends AbstractModel
 			}
 			return $pids;
 		} catch (\Exception $e) {
-			$this->_searchHelperData->log(\Zend\Log\Logger::ERR, sprintf("Error in collecting product ids for action %s - %s", $action, $e->getMessage()));
+			$this->_searchHelperData->log(LoggerConstants::ZEND_LOG_ERR, sprintf("Error in collecting product ids for action %s - %s", $action, $e->getMessage()));
 			return array();
 		}
 
@@ -427,10 +428,10 @@ class Sync extends AbstractModel
     {
         if (!$this->_searchHelperConfig->getCategorySyncEnabledFlag($store->getId())) {
             $msg = sprintf("Category Sync option found disabled for %s (%s).", $store->getWebsite()->getName(), $store->getName());
-            $this->_searchHelperData->log(\Zend\Log\Logger::INFO,$msg);
+            $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_INFO,$msg);
             return $msg;
         }
-        $this->_searchHelperData->log(\Zend\Log\Logger::INFO, sprintf("Starting sync for category %s (%s).", $store->getWebsite()->getName(), $store->getName()));
+        $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_INFO, sprintf("Starting sync for category %s (%s).", $store->getWebsite()->getName(), $store->getName()));
 
         // replace below code
         //$actions = $this->_klevuMagentoCategoryAction->getCategorySyncDataActions($store);
@@ -445,7 +446,7 @@ class Sync extends AbstractModel
             $method = $action . "Category";
             $category_pages = $this->_klevuMagentoCategoryAction->getCategorySyncDataActions($store, $action);
             $total = count($category_pages);
-            $this->_searchHelperData->log(\Zend\Log\Logger::INFO, sprintf("Found %d category Pages to %s.", $total, $action));
+            $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_INFO, sprintf("Found %d category Pages to %s.", $total, $action));
             $pages = ceil($total / static ::RECORDS_PER_PAGE);
             for ($page = 1; $page <= $pages; $page++) {
                 if ($this->rescheduleIfOutOfMemory()) {
@@ -455,11 +456,11 @@ class Sync extends AbstractModel
                 $result = $this->_klevuMagentoCategoryAction->$method(array_slice($category_pages, $offset, static ::RECORDS_PER_PAGE));
                 if ($result !== true) {
                     $errors++;
-                    $this->_searchHelperData->log(\Zend\Log\Logger::ERR, sprintf("Errors occurred while attempting to %s categories pages %d - %d: %s", $action, $offset + 1, ($offset + static ::RECORDS_PER_PAGE <= $total) ? $offset + static ::RECORDS_PER_PAGE : $total, $result));
+                    $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_ERR, sprintf("Errors occurred while attempting to %s categories pages %d - %d: %s", $action, $offset + 1, ($offset + static ::RECORDS_PER_PAGE <= $total) ? $offset + static ::RECORDS_PER_PAGE : $total, $result));
                 }
             }
         }
-        $this->_searchHelperData->log(\Zend\Log\Logger::INFO, sprintf("Finished category page sync for %s (%s).", $store->getWebsite()->getName(), $store->getName()));
+        $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_INFO, sprintf("Finished category page sync for %s (%s).", $store->getWebsite()->getName(), $store->getName()));
     }
 
 

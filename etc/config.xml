@@ -29,7 +29,7 @@
                 <force_log>1</force_log>
                 <log_level>6</log_level>
                 <preserve_layout_log_enabled>0</preserve_layout_log_enabled>
-                <!-- Log level default is set in the backend model and getter as it uses Zend_Log constants -->
+                <!-- See configuration at klevu_logger/preserve_layout_configuration/min_log_level -->
             </developer>
             <searchlanding>
                 <landenabled>2</landenabled>
@@ -48,6 +48,11 @@
                 <lock_file>1</lock_file>
             </notification>
         </klevu_search>
+        <klevu_logger>
+            <preserve_layout_configuration>
+                <min_log_level>6</min_log_level>
+            </preserve_layout_configuration>
+        </klevu_logger>
         <tax>
             <display>
                 <typeinsearch>1</typeinsearch>

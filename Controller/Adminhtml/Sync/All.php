@@ -1,16 +1,17 @@
 <?php
 namespace Klevu\Search\Controller\Adminhtml\Sync;
+
+use Klevu\Logger\Constants as LoggerConstants;
+use Klevu\Search\Helper\Config;
+use Klevu\Search\Model\Product\Sync;
+use Klevu\Search\Helper\Data;
+use Klevu\Search\Model\Product\MagentoProductActionsInterface as MagentoProductActions;
 use Magento\Backend\App\Action;
 use Magento\Backend\App\Action\Context;
 use Magento\Framework\View\Result\PageFactory;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Backend\Model\Session;
-use Klevu\Search\Helper\Config;
-use Klevu\Search\Model\Product\Sync;
-use Klevu\Search\Helper\Data;
 use Magento\Framework\Event\ManagerInterface;
-use Klevu\Search\Model\Product\MagentoProductActionsInterface as MagentoProductActions;
-
 
 class All extends \Magento\Backend\App\Action
 {
@@ -90,7 +91,7 @@ class All extends \Magento\Backend\App\Action
 						->markAllProductsForUpdate($store);
 					}
 
-                    $this->_searchHelperData->log(\Zend\Log\Logger::INFO, sprintf(
+                    $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_INFO, sprintf(
                         "Product Sync scheduled to re-sync ALL products in %s (%s).",
                         $store->getWebsite()->getName(),
                         $store->getName()
@@ -102,7 +103,7 @@ class All extends \Magento\Backend\App\Action
                     ));
                 } else {
                     $this->_magentoProductActions->markAllProductsForUpdate();
-                    $this->_searchHelperData->log(\Zend\Log\Logger::INFO, "Product Sync scheduled to re-sync ALL products.");
+                    $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_INFO, "Product Sync scheduled to re-sync ALL products.");
                     $this->messageManager->addSuccessMessage(__("Klevu Search Sync scheduled to be run on the next cron run for ALL products."));
                 }
             } else {
@@ -150,7 +151,7 @@ class All extends \Magento\Backend\App\Action
             $this->messageManager->addSuccessMessage(__("Data updates have been sent to Klevu"));
 
         } catch (\Magento\Framework\Model\Store\Exception $e) {
-            $this->_searchHelperData->log(\Zend\Log\Logger::ERR, sprintf("Error thrown while scheduling product sync %s", $e->getMessage()));
+            $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_ERR, sprintf("Error thrown while scheduling product sync %s", $e->getMessage()));
         }
         return $this->_redirect($this->_redirect->getRefererUrl());
     }

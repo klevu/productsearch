@@ -4,7 +4,7 @@
 
 	<!--<preference for="Magento\Framework\Search\Adapter\Mysql\ScoreBuilder" type="Klevu\Search\Adapter\Mysql\ScoreBuilder"/>
 	<preference for="Magento\CatalogSearch\Model\Search\TableMapper" type="Klevu\Search\Model\Search\TableMapper"/>-->
-	
+
 	<preference for="Klevu\Search\Model\Klevu\Cron\SchedulerInterface" type="Klevu\Search\Model\Klevu\Cron\Scheduler" />
 	<preference for="Klevu\Search\Model\Klevu\Category\CategoryInterface" type="Klevu\Search\Model\Klevu\Category\Category" />
 	<preference for="Klevu\Search\Model\Api\Magento\Request\ProductInterface" type="Klevu\Search\Model\Api\Magento\Request\Product" />
@@ -32,6 +32,18 @@
     <type name="Magento\CatalogInventory\Api\StockRegistryInterface">
         <plugin name="Klevu_Search::addStockRegistryProductsInQueue" type="Klevu\Search\Plugin\Api\StockUpdatePlugin"/>
     </type>
+
+    <type name="Klevu\Search\Console\Command\SyncCommand">
+        <arguments>
+            <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
+        </arguments>
+    </type>
+    <type name="Klevu\Search\Console\Command\SyncStoreView">
+        <arguments>
+            <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
+        </arguments>
+    </type>
+
 	<type name="Magento\Framework\Console\CommandList">
 		<arguments>
 			<argument name="commands" xsi:type="array">
@@ -40,8 +52,8 @@
 				<item name="syncStoreViewData" xsi:type="object">Klevu\Search\Console\Command\SyncStoreView</item>
 				<item name="RatingGeneration" xsi:type="object">Klevu\Search\Console\Command\RatingGeneration</item>
 				<item name="ImageGeneration" xsi:type="object">Klevu\Search\Console\Command\ImageGeneration</item>
-                                <item name="sync_category" xsi:type="object">Klevu\Search\Console\Command\SyncCategoryCommand</item>
-                        </argument>
+                <item name="sync_category" xsi:type="object">Klevu\Search\Console\Command\SyncCategoryCommand</item>
+            </argument>
 		</arguments>
 	</type>
 
@@ -51,4 +63,76 @@
                 disabled="false"/>
     </type>
 
+	<!-- LOGGER CONFIGURATION -->
+	<!-- Search -->
+	<virtualType name="Klevu\Search\Service\LogFileNameProvider\Search" type="Klevu\Logger\Service\LogFileNameProvider">
+		<arguments>
+			<argument name="baseFileName" xsi:type="const">Klevu\Search\Helper\Data::LOG_FILE</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="Klevu\Search\Service\LoggingEnabledService\Search" type="Klevu\Logger\Service\LoggingEnabledService">
+		<arguments>
+			<argument name="isEnabledConfigPath" xsi:type="const">Klevu\Search\Helper\Config::XML_PATH_FORCE_LOG</argument>
+			<argument name="minLogLevelConfigPath" xsi:type="const">Klevu\Search\Helper\Config::XML_PATH_LOG_LEVEL</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="Klevu\Search\Logger\Handler\LogIfConfigured\Search" type="Klevu\Logger\Logger\Handler\LogIfConfigured">
+		<arguments>
+			<argument name="logFileNameProvider" xsi:type="object">Klevu\Search\Service\LogFileNameProvider\Search</argument>
+			<argument name="loggingEnabledService" xsi:type="object">Klevu\Search\Service\LoggingEnabledService\Search</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="Klevu\Search\Logger\Logger\Search" type="Klevu\Logger\Logger\Logger">
+		<arguments>
+			<argument name="handlers" xsi:type="array">
+				<item name="klevu_logger" xsi:type="object">Klevu\Search\Logger\Handler\LogIfConfigured\Search</item>
+			</argument>
+		</arguments>
+	</virtualType>
+
+	<!-- Preserve Layout -->
+	<virtualType name="Klevu\Search\Service\LogFileNameProvider\PreserveLayout" type="Klevu\Logger\Service\LogFileNameProvider">
+		<arguments>
+			<argument name="baseFileName" xsi:type="const">Klevu\Search\Helper\Data::PRESERVE_LAYOUT_LOG_FILE</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="Klevu\Search\Service\LoggingEnabledService\PreserveLayout" type="Klevu\Logger\Service\LoggingEnabledService">
+		<arguments>
+			<argument name="isEnabledConfigPath" xsi:type="const">Klevu\Search\Helper\Config::XML_PATH_PRESERVE_LAYOUT_LOG_ENABLED</argument>
+            <argument name="minLogLevelConfigPath" xsi:type="const">Klevu\Search\Helper\Config::XML_PATH_PRESERVE_LAYOUT_MIN_LOG_LEVEL</argument>
+        </arguments>
+	</virtualType>
+
+	<virtualType name="Klevu\Search\Logger\Handler\LogIfConfigured\PreserveLayout" type="Klevu\Logger\Logger\Handler\LogIfConfigured">
+		<arguments>
+			<argument name="logFileNameProvider" xsi:type="object">Klevu\Search\Service\LogFileNameProvider\PreserveLayout</argument>
+			<argument name="loggingEnabledService" xsi:type="object">Klevu\Search\Service\LoggingEnabledService\PreserveLayout</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="Klevu\Search\Logger\Logger\PreserveLayout" type="Klevu\Logger\Logger\Logger">
+		<arguments>
+			<argument name="handlers" xsi:type="array">
+				<item name="klevu_logger" xsi:type="object">Klevu\Search\Logger\Handler\LogIfConfigured\PreserveLayout</item>
+			</argument>
+		</arguments>
+	</virtualType>
+
+	<type name="Klevu\Search\Helper\Data">
+		<arguments>
+            <argument name="convertLogLevelService" xsi:type="object">Klevu\Logger\Service\ConvertLogLevel\ZendToMonolog</argument>
+			<argument name="searchLogger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
+			<argument name="preserveLayoutLogger" xsi:type="object">Klevu\Search\Logger\Logger\PreserveLayout</argument>
+		</arguments>
+	</type>
+
+    <type name="Klevu\Search\Helper\Image">
+        <arguments>
+            <argument name="requireJs" xsi:type="object">Magento\Backend\Block\Page\RequireJs\Proxy</argument>
+        </arguments>
+    </type>
 </config>

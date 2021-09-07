@@ -24,5 +24,67 @@
         </arguments>
     </type>
 
+    <!-- Stores Config Log Action Buttons -->
+    <type name="Klevu\Search\Block\Adminhtml\Form\Field\Logdownload">
+        <arguments>
+            <argument name="logFileNameProvider" xsi:type="object">Klevu\Search\Service\LogFileNameProvider\Search</argument>
+            <argument name="destinationUrl" xsi:type="string"><![CDATA[klevu_search/download/logdownload]]></argument>
+            <argument name="buttonLabel" xsi:type="string"><![CDATA[Download Klevu Search Log]]></argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Block\Adminhtml\Form\Field\Logclear">
+        <arguments>
+            <argument name="logFileNameProvider" xsi:type="object">Klevu\Search\Service\LogFileNameProvider\Search</argument>
+            <argument name="destinationUrl" xsi:type="string"><![CDATA[klevu_search/download/logclear]]></argument>
+            <argument name="buttonLabel" xsi:type="string"><![CDATA[Rename Klevu Search Log]]></argument>
+        </arguments>
+    </type>
+
+    <virtualType name="Klevu\Search\Block\Adminhtml\Form\Field\Logdownload\PreserveLayout" type="Klevu\Logger\Block\Adminhtml\Form\Button\LogDownloadButton">
+        <arguments>
+            <argument name="logFileNameProvider" xsi:type="object">Klevu\Search\Service\LogFileNameProvider\PreserveLayout</argument>
+            <argument name="destinationUrl" xsi:type="string"><![CDATA[klevu_search/download_preserveLayout/logdownload]]></argument>
+            <argument name="buttonLabel" xsi:type="string"><![CDATA[Download Preserve Layout Log]]></argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="Klevu\Search\Block\Adminhtml\Form\Field\Logclear\PreserveLayout" type="Klevu\Logger\Block\Adminhtml\Form\Button\LogClearButton">
+        <arguments>
+            <argument name="logFileNameProvider" xsi:type="object">Klevu\Search\Service\LogFileNameProvider\PreserveLayout</argument>
+            <argument name="destinationUrl" xsi:type="string"><![CDATA[klevu_search/download_preserveLayout/logclear]]></argument>
+            <argument name="buttonLabel" xsi:type="string"><![CDATA[Rename Preserve Layout Log]]></argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Controllers -->
+    <type name="Klevu\Search\Controller\Adminhtml\Download\Logclear">
+        <arguments>
+            <argument name="logFileNameProvider" xsi:type="object">Klevu\Search\Service\LogFileNameProvider\Search</argument>
+            <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Controller\Adminhtml\Download\Logdownload">
+        <arguments>
+            <argument name="logFileNameProvider" xsi:type="object">Klevu\Search\Service\LogFileNameProvider\Search</argument>
+            <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Controller\Adminhtml\Download\PreserveLayout\Logclear">
+        <arguments>
+            <argument name="logFileNameProvider" xsi:type="object">Klevu\Search\Service\LogFileNameProvider\PreserveLayout</argument>
+            <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\PreserveLayout</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Controller\Adminhtml\Download\PreserveLayout\Logdownload">
+        <arguments>
+            <argument name="logFileNameProvider" xsi:type="object">Klevu\Search\Service\LogFileNameProvider\PreserveLayout</argument>
+            <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\PreserveLayout</argument>
+            <argument name="archiveService" xsi:type="object">Magento\Framework\Archive\Zip</argument>
+        </arguments>
+    </type>
 </config>
 

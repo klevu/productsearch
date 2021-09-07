@@ -115,7 +115,7 @@
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     <comment><![CDATA[
                       <strong>Recommended.</strong> Klevu Search uses transactional data as a ranking factor to show the most popular products to your customers.
-                      Enable this option to send recent Orders to Klevu every day at 2AM local time via the native Magento internal cron.                      
+                      Enable this option to send recent Orders to Klevu every day at 2AM local time via the native Magento internal cron.
                     ]]></comment>
                 </field>
                 <field id="category_sync_enabled" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
@@ -212,7 +212,7 @@
                     This change will take place during the next data sync via Cron, CLI Command or manual sync.
                   ]]></comment>
                 </field>
-          </group>		
+          </group>
       <group id="secureurl_setting" translate="label comment" sortOrder="106" showInDefault="1" showInWebsite="1" showInStore="1">
             <label>Secure Url Settings</label>
             <field id="info_enabled" translate="label comment" sortOrder="100" type="label" showInDefault="1" showInWebsite="1">
@@ -275,7 +275,7 @@
         </field>
         <field id="log_level" translate="label" sortOrder="310" type="select" showInDefault="1">
           <label>Log level</label>
-          <source_model>Klevu\Search\Model\System\Config\Source\Log\Level</source_model>
+          <source_model>Klevu\Logger\Model\Source\LogLevel\Zend</source_model>
         </field>
 	<field id="download_log_button" type="button" sortOrder="401" showInDefault="1">
             <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Logdownload</frontend_model>
@@ -321,6 +321,51 @@
             </field>
         </group>
     </section>
+      <section id="klevu_logger">
+          <group id="search_configuration" translate="label comment" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+              <label>Search</label>
+              <comment><![CDATA[Logging configuration for search functionality. Log files can be found at var/log/Klevu_Search.{store_code}.log]]></comment>
+              <field id="enable_logging" translate="label comment" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                  <label>Enable Logging</label>
+                  <comment><![CDATA[Enable search related logging]]></comment>
+                  <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                  <config_path>klevu_search/developer/force_log</config_path>
+              </field>
+              <field id="min_log_level" translate="label comment" sortOrder="20" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
+                  <label>Minimum Log level</label>
+                  <comment><![CDATA[Log messages at selected level or higher]]></comment>
+                  <source_model>Klevu\Logger\Model\Source\LogLevel\Zend</source_model>
+                  <config_path>klevu_search/developer/log_level</config_path>
+              </field>
+              <field id="download_log_button" translate="label comment" type="button" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="1">
+                  <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Logdownload</frontend_model>
+              </field>
+              <field id="clear_log_button" translate="label comment" type="button" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="1">
+                  <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Logclear</frontend_model>
+              </field>
+          </group>
+          <group id="preserve_layout_configuration" translate="label comment" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+              <label>Preserve Layout</label>
+              <comment><![CDATA[Logging configuration for preserve layout functionality. Log files can be found at var/log/Klevu_Search_Preserve_Layout.{store_code}.log]]></comment>
+              <field id="enable_logging" translate="label comment" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                  <label>Enable Logging</label>
+                  <comment><![CDATA[Enable logging related to preserve layout functionality]]></comment>
+                  <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                  <config_path>klevu_search/developer/preserve_layout_log_enabled</config_path>
+              </field>
+              <field id="min_log_level" translate="label comment" sortOrder="20" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
+                  <label>Minimum Log level</label>
+                  <comment><![CDATA[Log messages at selected level or higher]]></comment>
+                  <source_model>Klevu\Logger\Model\Source\LogLevel\Zend</source_model>
+              </field>
+              <field id="download_log_button" translate="label comment" type="button" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="1">
+                  <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Logdownload\PreserveLayout</frontend_model>
+              </field>
+              <field id="clear_log_button" translate="label comment" type="button" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="1">
+                  <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Logclear\PreserveLayout</frontend_model>
+              </field>
+          </group>
+      </section>
         <section id="tax" translate="label" sortOrder="430" showInDefault="1" showInWebsite="1" showInStore="1">
             <group id="display" translate="label" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
                 <field id="typeinsearch" translate="label" type="select" sortOrder="12" showInDefault="1" showInWebsite="1" showInStore="1">

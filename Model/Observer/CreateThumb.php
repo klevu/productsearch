@@ -9,6 +9,7 @@
 
 namespace Klevu\Search\Model\Observer;
 
+use Klevu\Logger\Constants as LoggerConstants;
 use Klevu\Search\Model\Klevu\HelperManager as Klevu_HelperManager;
 use Magento\Catalog\Model\Product as ProductModel;
 use Magento\Framework\App\Filesystem\DirectoryList;
@@ -95,11 +96,11 @@ class CreateThumb implements ObserverInterface
         //getStoreId() returns 0 (admin store)
         $storeIds = $observer->getEvent()->getProduct()->getStoreIds();
         if (empty($storeIds)) {
-            $this->_searchHelperData->log(\Zend\Log\Logger::DEBUG, sprintf("ProductObserver:: StoreIDs not found for ProductID: %s", $catalogProduct->getId()));
+            $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_DEBUG, sprintf("ProductObserver:: StoreIDs not found for ProductID: %s", $catalogProduct->getId()));
             return;
         }
         if (!$catalogProduct instanceof ProductModel) {
-            $this->_searchHelperData->log(\Zend\Log\Logger::DEBUG, sprintf("ProductObserver:: Product not found"));
+            $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_DEBUG, sprintf("ProductObserver:: Product not found"));
             return;
         }
 
@@ -134,7 +135,7 @@ class CreateThumb implements ObserverInterface
                         if ($width > $image_width && $height > $image_height) {
                             if (file_exists($klevuImagePath)) {
                                 if (!unlink($orgMediaDir . '/klevu_images/' . $resize_folder . $image)) {
-                                    $this->_searchHelperData->log(\Zend\Log\Logger::DEBUG, sprintf("ProductObserver:: Image Deleting Error:\n%s", $image));
+                                    $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_DEBUG, sprintf("ProductObserver:: Image Deleting Error:\n%s", $image));
                                 }
                             }
                             $this->_searchHelperImage->thumbImageObj($catalogImagePath, $klevuImagePath, $image_width, $image_height);
@@ -142,7 +143,7 @@ class CreateThumb implements ObserverInterface
                     }
                 }
             } catch (\Exception $e) {
-                $this->_searchHelperData->log(\Zend\Log\Logger::DEBUG, sprintf("Product_Save_After:: Image Error:\n%s", $e->getMessage()));
+                $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_DEBUG, sprintf("Product_Save_After:: Image Error:\n%s", $e->getMessage()));
             }
         }
     }

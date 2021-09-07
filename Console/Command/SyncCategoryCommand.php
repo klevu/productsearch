@@ -3,6 +3,7 @@
 namespace Klevu\Search\Console\Command;
 
 
+use Klevu\Logger\Api\StoreScopeResolverInterface;
 use Klevu\Search\Model\Product\MagentoProductActionsInterface as MagentoProductActions;
 use Klevu\Search\Model\Product\KlevuProductActionsInterface as KlevuProductActions;
 use Klevu\Search\Model\Product\Sync as Sync;
@@ -47,24 +48,31 @@ class SyncCategoryCommand extends Command
     protected $klevuProductActions;
 
     /**
-     * SyncCategoryCommand constructor.
-     *
+     * @var StoreScopeResolverInterface
+     */
+    private $storeScopeResolver;
+
+    /**
      * @param State $state
      * @param StoreManagerInterface $storeInterface
      * @param DirectoryList $directoryList
      * @param LoggerInterface $logger
+     * @param StoreScopeResolverInterface|null $storeScopeResolver
      */
     public function __construct(
         State $state,
         StoreManagerInterface $storeInterface,
         DirectoryList $directoryList,
-        LoggerInterface $logger
-    )
-    {
+        LoggerInterface $logger,
+        StoreScopeResolverInterface $storeScopeResolver = null
+    ) {
         $this->state = $state;
         $this->directoryList = $directoryList;
         $this->storeInterface = $storeInterface;
         $this->_logger = $logger;
+        $this->storeScopeResolver = $storeScopeResolver
+            ?: ObjectManager::getInstance()->get(StoreScopeResolverInterface::class);
+
         parent::__construct();
     }
 
@@ -103,6 +111,7 @@ HELP
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        $this->storeScopeResolver->setCurrentStoreById(0);
         $logDir = $this->directoryList->getPath(DirectoryList::VAR_DIR);
         $storeLockFile = '';
         $areaCodeFile = $logDir . "/" . self::AREA_CODE_LOCK_FILE;
@@ -148,6 +157,7 @@ HELP
 
             if (count($storeCodesAll) > 0) {
                 foreach ($storeCodesAll as $rowStoreCode) {
+                    $this->storeScopeResolver->setCurrentStoreByCode($rowStoreCode);
 
                     $storeLockFile = $logDir . "/" . $rowStoreCode . "_" . self::LOCK_FILE;
                     if (file_exists($storeLockFile)) {
@@ -187,6 +197,7 @@ HELP
                     }
                     $output->writeln("<info>********************************</info>");
                 }
+                $this->storeScopeResolver->setCurrentStoreById(0);
             }
 
         } catch (\Exception $e) {
@@ -196,6 +207,8 @@ HELP
                     unlink($storeLockFile);
                 }
             }
+            $this->storeScopeResolver->setCurrentStoreById(0);
+
             return \Magento\Framework\Console\Cli::RETURN_FAILURE;
         }
         $output->writeln('');
@@ -205,6 +218,7 @@ HELP
         if (!empty($syncFailed)) {
             $output->writeln('<error>Category Sync did not complete for store code(s): ' . implode(",", $syncFailed) . '</error>');
         }
+
         return \Magento\Framework\Console\Cli::RETURN_SUCCESS;
     }
 

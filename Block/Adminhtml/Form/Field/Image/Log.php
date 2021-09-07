@@ -9,6 +9,8 @@
 
 namespace Klevu\Search\Block\Adminhtml\Form\Field\Image;
 
+use Klevu\Logger\Constants as LoggerConstants;
+
 class Log extends \Magento\Config\Block\System\Config\Form\Field
 {
 
@@ -68,7 +70,7 @@ class Log extends \Magento\Config\Block\System\Config\Form\Field
             }
             return $buttonLabel;
         } catch (\Exception $e) {
-            $_searchHelper->log(\Zend\Log\Logger::CRIT, sprintf("Exception thrown in %s::%s - %s", __CLASS__, __METHOD__, $e->getMessage()));
+            $_searchHelper->log(LoggerConstants::ZEND_LOG_CRIT, sprintf("Exception thrown in %s::%s - %s", __CLASS__, __METHOD__, $e->getMessage()));
         }
     }
 }

@@ -2,20 +2,19 @@
 
 namespace Klevu\Search\Console\Command;
 
+use Klevu\Logger\Api\StoreScopeResolverInterface;
 use Klevu\Search\Model\Product\Sync as Sync;
 use Magento\Framework\App\Filesystem\DirectoryList as DirectoryList;
 use Magento\Framework\App\ObjectManager;
 use Magento\Framework\App\State as AppState;
+use Magento\Framework\Console\Cli;
 use Magento\Store\Model\StoreManagerInterface as StoreManagerInterface;
 use Psr\Log\LoggerInterface as LoggerInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Magento\Framework\ObjectManagerInterface;
 use Klevu\Content\Model\ContentInterface as KlevuContent;
-use Klevu\Search\Helper\Data as KlevuSearchHelperData;
 
 /**
  * Class SyncStoreView
@@ -51,28 +50,39 @@ class SyncStoreView extends Command
     protected $websiteList = array();
     protected $allStoreList = array();
     protected $runStoreList = array();
-    private $_logger;
+
+    /**
+     * @var LoggerInterface
+     */
+    private $logger;
+
+    /**
+     * @var StoreScopeResolverInterface
+     */
+    private $storeScopeResolver;
 
     /**
      * Inject dependencies
-     *
      * @param AppState $appState
      * @param StoreManagerInterface $storeInterface
      * @param DirectoryList $directoryList
-     * @param Sync $sync
-     * @param \Psr\Log\LoggerInterface $logger
+     * @param LoggerInterface $logger
+     * @param StoreScopeResolverInterface|null $storeScopeResolver
      */
     public function __construct(
         AppState $appState,
         StoreManagerInterface $storeInterface,
         DirectoryList $directoryList,
-        LoggerInterface $logger
-    )
-    {
+        LoggerInterface $logger,
+        StoreScopeResolverInterface $storeScopeResolver = null
+    ) {
         $this->appState = $appState;
         $this->directoryList = $directoryList;
         $this->storeInterface = $storeInterface;
-        $this->_logger = $logger;
+        $this->logger = $logger;
+        $this->storeScopeResolver = $storeScopeResolver
+            ?: ObjectManager::getInstance()->get(StoreScopeResolverInterface::class);
+
         parent::__construct();
     }
 
@@ -113,6 +123,7 @@ HELP
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        $this->storeScopeResolver->setCurrentStoreById(0);
         $logDir = $this->directoryList->getPath(DirectoryList::VAR_DIR);
         $areacodeFile = $logDir . "/" . self::AREA_CODE_LOCK_FILE;
         try {
@@ -122,16 +133,19 @@ HELP
             $this->appState->setAreaCode('frontend');
         } catch (\Exception $e) {
             fopen($areacodeFile, 'w');
-            $this->_logger->critical($e->getMessage());
+            $this->logger->error($e->getMessage());
+
             throw $e;
         }
         $storeList = $this->storeInterface->getStores();
         $syncFailed = $syncSuccess = array();
         $this->sync = ObjectManager::getInstance()->get(Sync::class);
-        $this->klevuSearchHelperData = ObjectManager::getInstance()->get(KlevuSearchHelperData::class);
-        $this->klevuSearchHelperData->log(\Zend\Log\Logger::INFO,"SyncStoreView command executed via CLI");
+
         foreach ($storeList as $store) {
-            if (!isset($this->websiteList[$store->getWebsiteId()])) $this->websiteList[$store->getWebsiteId()] = array();
+
+            if (!isset($this->websiteList[$store->getWebsiteId()])) {
+                $this->websiteList[$store->getWebsiteId()] = array();
+            }
             $this->websiteList[$store->getWebsiteId()] = array_unique(array_merge($this->websiteList[$store->getWebsiteId()], array($store->getCode())));
             $this->allStoreList[$store->getCode()] = $store->getWebsiteId();
         }
@@ -142,7 +156,6 @@ HELP
             $output->writeln("=== Available stores grouped by website ===");
             $output->writeln('');
             foreach ($this->websiteList as $websiteId => $websiteStores) {
-
                 $output->writeln("<info>Website ID " . $websiteId . " having store code(s): " . implode(",", $websiteStores) . " </info>");
                 $output->writeln('');
             }
@@ -162,25 +175,39 @@ HELP
             $output->writeln("=== Starting storewise data sync ===");
             $output->writeln('');
             try {
+                $originalStore = $this->storeScopeResolver->getCurrentStore();
                 $array_store = explode(",", $storeCode);
+                foreach ($array_store as $array_storeCode) {
+                    $this->storeScopeResolver->setCurrentStoreByCode($array_storeCode);
+                    $this->logger->info("SyncStoreView command executed via CLI");
+                }
+
                 $rejectedSites = $this->validateStoreCodes($array_store);
-
-
                 if (!empty($rejectedSites)) {
                     $storeCodeError = "Error: Sync did not run for store code(s): " . implode(",", $rejectedSites) . ". Please ensure all store codes belong to the same website.";
-                    $this->klevuSearchHelperData->log(\Zend\Log\Logger::DEBUG, $storeCodeError);
+
+                    foreach ($rejectedSites as $rejectedStoreCode) {
+                        $this->storeScopeResolver->setCurrentStoreByCode($rejectedStoreCode);
+                        $this->logger->debug($storeCodeError);
+                    }
+
                     $output->writeln("<error>" . $storeCodeError . "</error>");
                     $output->writeln("");
                 }
+                $this->storeScopeResolver->setCurrentStore($originalStore);
+
                 if (count($this->runStoreList) > 0) {
                     foreach ($this->runStoreList as $value) {
-                       $file = $logDir . "/" . $value . "_" . self::LOCK_FILE;
-                  $this->sync = ObjectManager::getInstance()->get(Sync::class);
-                  $this->cmsSync = ObjectManager::getInstance()->get(KlevuContent::class);
+                        // Set the logger's store scope to the current store
+                        $this->storeScopeResolver->setCurrentStoreByCode($value);
+
+                        $file = $logDir . "/" . $value . "_" . self::LOCK_FILE;
+                        $this->sync = ObjectManager::getInstance()->get(Sync::class);
+                        $this->cmsSync = ObjectManager::getInstance()->get(KlevuContent::class);
 
                         if (file_exists($file)) {
                             $lockFileError = "Klevu index process cannot start because a lock file exists for store code: ' . $value . ', skipping this store.";
-                            $this->klevuSearchHelperData->log(\Zend\Log\Logger::INFO,$lockFileError);
+                            $this->logger->info($lockFileError);
                             $output->writeln('<error>'.$lockFileError.'</error>');
                             $output->writeln("");
                             $syncFailed[] = $value;
@@ -200,35 +227,35 @@ HELP
                                 }
 
                                 $productSyncStart = "Product Sync started for store code : " . $oneStore->getCode();
-                                $this->klevuSearchHelperData->log(\Zend\Log\Logger::INFO,$productSyncStart);
+                                $this->logger->info($productSyncStart);
                                 $output->writeln("<info>".$productSyncStart. "</info>");
 
                                 $this->sync->runStore($oneStore);
 
                                 $productSyncEnd = "Product Sync completed for store code : " . $oneStore->getCode();
-                                $this->klevuSearchHelperData->log(\Zend\Log\Logger::INFO,$productSyncEnd);
+                                $this->logger->info($productSyncEnd);
                                 $output->writeln("<info>".$productSyncEnd . "</info>");
                                 $output->writeln('');
 
                                 $cmsSyncStart = "CMS Sync started for store code : " . $oneStore->getCode();
-                                $this->klevuSearchHelperData->log(\Zend\Log\Logger::INFO,$cmsSyncStart);
+                                $this->logger->info($cmsSyncStart);
                                 $output->writeln("<info>".$cmsSyncStart . "</info>");
 
                                 $this->cmsSync->syncCmsData($oneStore);
 
                                 $cmsSyncEnd = "CMS Sync completed for store code : " . $oneStore->getCode();
-                                $this->klevuSearchHelperData->log(\Zend\Log\Logger::INFO,$cmsSyncEnd);
+                                $this->logger->info($cmsSyncEnd);
                                 $output->writeln("<info>".$cmsSyncEnd . "</info>");
                                 $output->writeln('');
                                 $syncSuccess[] = $oneStore->getCode();
                             }
 
                             $syncComplete =  "Sync was done for store code : ".$oneStore->getCode();
-                            $this->klevuSearchHelperData->log(\Zend\Log\Logger::INFO,$syncComplete);
+                            $this->logger->info($syncComplete);
                             $output->writeln("<info>".$syncComplete."</info>");
                             $output->writeln("<info>********************************</info>");
                         } catch (\Exception $e) {
-                            $this->klevuSearchHelperData->log(\Zend\Log\Logger::ERR,sprintf("Error thrown in Storewise sync %s for STORE %s:",$e->getMessage(),$value));
+                            $this->logger->error(sprintf("Error thrown in Storewise sync %s for STORE %s:",$e->getMessage(),$value));
                             $output->writeln('<error>Error thrown in Storewise sync ' . $e->getMessage() ." for STORE => ".$value. '</error>');
                         }
 
@@ -236,28 +263,53 @@ HELP
                             unlink($file);
                         }
                     }
+
+                    $this->storeScopeResolver->setCurrentStoreById(0);
                 }
             } catch (\Exception $e) {
-                $this->klevuSearchHelperData->log(\Zend\Log\Logger::DEBUG,sprintf("Error thrown in Storewise sync store %s:",$e->getMessage()));
+                $this->logger->error(sprintf("Error thrown in Storewise sync store %s:", $e->getMessage()));
                 $output->writeln('<error>Error thrown in Storewise sync: ' . $e->getMessage() . '</error>');
-                if(isset($file)) {
-                    if (file_exists($file)) {
-                        unlink($file);
-                    }
+                if (isset($file) && file_exists($file)) {
+                    unlink($file);
                 }
+
+                $this->storeScopeResolver->setCurrentStoreById(0);
+
                 // we must have an exit code higher than zero to indicate something was wrong
-                return \Magento\Framework\Console\Cli::RETURN_FAILURE;
+                return Cli::RETURN_FAILURE;
             }
             $output->writeln('');
-            if (!empty($syncSuccess)) {
-                $this->klevuSearchHelperData->log(\Zend\Log\Logger::INFO,sprintf("Sync successfully completed for store code(s) %s:",implode(",", $syncSuccess)));
+
+            if ($syncSuccess) {
+                $originalStore = $this->storeScopeResolver->getCurrentStore();
+                foreach ($syncSuccess as $successStoreCode) {
+                    $this->storeScopeResolver->setCurrentStoreByCode($successStoreCode);
+                    $this->logger->info(sprintf(
+                        "Sync successfully completed for store code(s) %s:",
+                        implode(",", $syncSuccess)
+                    ));
+                }
+                $this->storeScopeResolver->setCurrentStore($originalStore);
+
                 $output->writeln('<info>Sync successfully completed for store code(s): ' . implode(",", $syncSuccess) . '</info>');
             }
-            if (!empty($syncFailed)) {
-                $this->klevuSearchHelperData->log(\Zend\Log\Logger::DEBUG,sprintf("Sync did not complete for store code(s) %s:", implode(",", $syncFailed)));
+
+            if ($syncFailed) {
+                $originalStore = $this->storeScopeResolver->getCurrentStore();
+                foreach ($syncFailed as $failedStoreCode) {
+                    $this->storeScopeResolver->setCurrentStoreByCode($failedStoreCode);
+                    $this->logger->info(sprintf(
+                        "Sync did not complete for store code(s) %s:",
+                        implode(",", $syncFailed)
+                    ));
+                }
+                $this->storeScopeResolver->setCurrentStore($originalStore);
+
                 $output->writeln('<error>Sync did not complete for store code(s): ' . implode(",", $syncFailed) . '</error>');
             }
         }
+
+        return Cli::RETURN_SUCCESS;
     }
 
     /**

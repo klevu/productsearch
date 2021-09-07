@@ -9,6 +9,7 @@
 
 namespace Klevu\Search\Model\Observer;
 
+use Klevu\Logger\Constants as LoggerConstants;
 use Magento\Framework\Event\ObserverInterface;
 
 class RatingsUpdate implements ObserverInterface
@@ -106,7 +107,7 @@ class RatingsUpdate implements ObserverInterface
                 }
             }
         } catch (\Exception $e) {
-            $this->_searchHelperData->log(\Zend\Log\Logger::CRIT, sprintf("Exception thrown in %s::%s - %s", __CLASS__, __METHOD__, $e->getMessage()));
+            $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_CRIT, sprintf("Exception thrown in %s::%s - %s", __CLASS__, __METHOD__, $e->getMessage()));
         }
     }
 }

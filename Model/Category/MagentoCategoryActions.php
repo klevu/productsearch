@@ -5,6 +5,7 @@
 
 namespace Klevu\Search\Model\Category;
 
+use Klevu\Logger\Constants as LoggerConstants;
 use Klevu\Search\Model\Category\KlevuCategoryActions as Klevu_Category_Actions;
 use \Magento\Framework\Model\AbstractModel as AbstractModel;
 use \Magento\Eav\Model\Config as Eav_Config;
@@ -76,7 +77,7 @@ class MagentoCategoryActions extends AbstractModel implements MagentoCategoryAct
             }
             return $catPages;
         } catch (\Exception $e) {
-            $this->_searchHelperData->log(\Zend\Log\Logger::ERR, sprintf("Error in collecting category pages for action %s - %s", $action, $e->getMessage()));
+            $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_ERR, sprintf("Error in collecting category pages for action %s - %s", $action, $e->getMessage()));
             return array();
         }
     }

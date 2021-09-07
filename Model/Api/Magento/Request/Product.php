@@ -4,6 +4,7 @@
  */
 namespace Klevu\Search\Model\Api\Magento\Request;
 
+use Klevu\Logger\Constants as LoggerConstants;
 use Klevu\Search\Helper\Config as KlevuHelperConfig;
 use Klevu\Search\Helper\Data as KlevuHelperData;
 use Klevu\Search\Model\Api\Action\Idsearch as KlevuApiIdsearch;
@@ -11,7 +12,6 @@ use Klevu\Search\Model\Api\Action\Searchtermtracking as KlevuApiSearchtermtracki
 use \Magento\Framework\App\Request\Http as Magento_Request;
 use \Magento\Catalog\Model\CategoryFactory as Magento_CategoryFactory;
 use \Magento\Catalog\Model\Category as Category_Model;
-use Zend\Log\Logger as Logger;
 
 class Product implements ProductInterface
 {
@@ -134,7 +134,7 @@ class Product implements ProductInterface
             }
 
             $this->_klevu_product_ids = array_unique($this->_klevu_product_ids);
-            $this->_searchHelperData->log(Logger::DEBUG, sprintf("Products count returned: %s", count($this->_klevu_product_ids)));
+            $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_DEBUG, sprintf("Products count returned: %s", count($this->_klevu_product_ids)));
         }
         $this->_klevu_product_ids = array_values($this->_klevu_product_ids);
         return $this->_klevu_product_ids;
@@ -195,7 +195,7 @@ class Product implements ProductInterface
             }
         } catch (\Exception $e) {
             // Catch the exception that was thrown, log it
-            $this->_searchHelperData->log(Logger::CRIT, sprintf("Exception thrown in %s::%s - %s", __CLASS__, __METHOD__, $e->getMessage()));
+            $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_CRIT, sprintf("Exception thrown in %s::%s - %s", __CLASS__, __METHOD__, $e->getMessage()));
             $category = $this->_klevu_type_of_records;
         }
 

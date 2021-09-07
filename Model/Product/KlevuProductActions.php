@@ -8,6 +8,7 @@
 
 namespace Klevu\Search\Model\Product;
 
+use Klevu\Logger\Constants as LoggerConstants;
 use Klevu\Search\Model\Context as Klevu_Context;
 use Magento\Framework\DataObject;
 
@@ -53,12 +54,12 @@ class KlevuProductActions  extends DataObject implements KlevuProductActionsInte
         $config = $this->_searchHelperConfig;
 	//Moved to each of the specific product sync
         /*if (!$config->isProductSyncEnabled($store->getId())) {
-            $this->_searchHelperData->log(\Zend\Log\Logger::INFO, sprintf("Disabled for %s (%s).", $store->getWebsite()->getName(), $store->getName()));
+            $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_INFO, sprintf("Disabled for %s (%s).", $store->getWebsite()->getName(), $store->getName()));
             return null;
         }*/
         $api_key = $config->getRestApiKey($store->getId());
         if (!$api_key) {
-            $this->_searchHelperData->log(\Zend\Log\Logger::INFO, sprintf("No API key found for %s (%s).", $store->getWebsite()->getName(), $store->getName()));
+            $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_INFO, sprintf("No API key found for %s (%s).", $store->getWebsite()->getName(), $store->getName()));
             return null;
         }
 
@@ -75,20 +76,20 @@ class KlevuProductActions  extends DataObject implements KlevuProductActionsInte
             $this->_searchModelSession->setKlevuSessionId($response->getSessionId());
             return true;
         } else {
-            $this->_searchHelperData->log(\Zend\Log\Logger::ERR, sprintf(
+            $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_ERR, sprintf(
                 "Failed to start a session for %s (%s): %s",
                 $store->getWebsite()->getName(),
                 $store->getName(),
                 $response->getMessage()
             ));
             if ($response instanceof \Klevu\Search\Model\Api\Response\Rempty) {
-                $this->_searchHelperData->log(\Zend\Log\Logger::ERR, sprintf(
+                $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_ERR, sprintf(
                     "Product Sync failed for %s (%s): Could not contact Klevu.",
                     $store->getWebsite()->getName(),
                     $store->getName()
                 ));
             } else {
-                $this->_searchHelperData->log(\Zend\Log\Logger::ERR, sprintf(
+                $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_ERR, sprintf(
                     "Product Sync failed for %s (%s): %s",
                     $store->getWebsite()->getName(),
                     $store->getName(),

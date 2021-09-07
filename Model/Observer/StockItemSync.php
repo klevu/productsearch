@@ -7,6 +7,7 @@
 
 namespace Klevu\Search\Model\Observer;
 
+use Klevu\Logger\Constants as LoggerConstants;
 use Magento\Framework\Event\ObserverInterface;
 use Klevu\Search\Model\Product\MagentoProductActionsInterface;
 
@@ -69,7 +70,7 @@ class StockItemSync implements ObserverInterface
                 }
             }
         } catch (\Exception $e) {
-            $this->_searchHelperData->log(\Zend\Log\Logger::CRIT, sprintf("Marking change stock item sync error::StockItemSync :: %s", $e->getMessage()));
+            $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_CRIT, sprintf("Marking change stock item sync error::StockItemSync :: %s", $e->getMessage()));
         }
     }
 }

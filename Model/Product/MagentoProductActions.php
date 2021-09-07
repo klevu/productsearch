@@ -5,6 +5,7 @@
 
 namespace Klevu\Search\Model\Product;
 
+use Klevu\Logger\Constants as LoggerConstants;
 use Klevu\Search\Helper\Config as Klevu_Config;
 use Klevu\Search\Model\Context as Klevu_Context;
 use Klevu\Search\Model\Klevu\HelperManager as Klevu_HelperManager;
@@ -621,7 +622,7 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
                 $this->updateSpecificProductIds($special_pro_ids);
             }
         } catch (\Exception $e) {
-            $this->_searchHelperData->log(\Zend\Log\Logger::CRIT, sprintf("Exception thrown in markforupdate %s::%s - %s", __CLASS__, __METHOD__, $e->getMessage()));
+            $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_CRIT, sprintf("Exception thrown in markforupdate %s::%s - %s", __CLASS__, __METHOD__, $e->getMessage()));
         }
     }
 
@@ -696,7 +697,7 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
                     $this->_klevuCatalogProductAction->updateAttributes([$value['entity_pk_value']], ['rating' => 0], 0);
                 }
                 $this->_klevuCatalogProductAction->updateAttributes([$value['entity_pk_value']], ['rating' => $value['sum']], $store->getId());
-                $this->_searchHelperData->log(\Zend\Log\Logger::DEBUG, sprintf("Rating is updated for product id %s", $value['entity_pk_value']));
+                $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_DEBUG, sprintf("Rating is updated for product id %s", $value['entity_pk_value']));
             }
         }
     }

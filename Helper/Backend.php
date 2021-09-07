@@ -2,6 +2,7 @@
 
 namespace Klevu\Search\Helper;
 
+use Klevu\Logger\Constants as LoggerConstants;
 use Klevu\Search\Model\Klevu\HelperManager as Klevu_HelperManager;
 use Klevu\Search\Model\Product\Indexer as Klevu_ProductIndexer;
 use Klevu\Search\Model\ProductCollection as Klevu_ProductCollection;
@@ -137,7 +138,7 @@ class Backend extends \Magento\Framework\App\Helper\AbstractHelper
             }
             return $flag;
         } catch (\Exception $e) {
-            $this->_searchHelperData->log(\Zend\Log\Logger::CRIT, sprintf("Klevu Lock File Notification Exception: %s", $e->getMessage()));
+            $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_CRIT, sprintf("Klevu Lock File Notification Exception: %s", $e->getMessage()));
         }
         return $flag;
     }

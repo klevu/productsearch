@@ -2,6 +2,9 @@
 
 namespace Klevu\Search\Helper;
 
+use Klevu\Logger\Api\ConvertLogLevelServiceInterface;
+use Magento\Framework\App\ObjectManager;
+use Magento\Framework\Debug;
 use \Magento\Store\Model\StoreManagerInterface;
 use \Magento\Backend\Model\Url;
 use \Klevu\Search\Helper\Config;
@@ -43,27 +46,27 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      * @var \Magento\Tax\Helper\Data
      */
     protected $_taxHelperData;
-    
+
     /**
      * @var \Magento\Eav\Model\Entity\Type
      */
     protected $_modelEntityType;
-    
+
     /**
      * @var \Magento\Eav\Model\Entity\Attribute
      */
     protected $_modelEntityAttribute;
-    
+
     /**
      * @var \Magento\Framework\Locale\CurrencyInterface
      */
     protected $_localeCurrency;
-    
+
     /**
      * @var Magento\Directory\Model\CurrencyFactory
      */
     protected $_currencyFactory;
-	
+
 	/**
      * @var Magento\Config\Model\ResourceModel\Config\Data\Collection
      */
@@ -78,6 +81,34 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
     protected $_klevu_enabled_feature_response;
 
+    private $convertLogLevelService;
+
+    /**
+     * @var LoggerInterface
+     */
+    private $searchLogger;
+
+    /**
+     * @var LoggerInterface
+     */
+    private $preserveLayoutLogger;
+
+    /**
+     * Data constructor.
+     * @param StoreManagerInterface $storeModelStoreManagerInterface
+     * @param Url $backendModelUrl
+     * @param \Klevu\Search\Helper\Config $searchHelperConfig
+     * @param LoggerInterface $psrLogLoggerInterface
+     * @param Product $catalogModelProduct
+     * @param \Magento\Catalog\Helper\Data $taxHelperData
+     * @param \Magento\Eav\Model\Entity\Type $modelEntityType
+     * @param \Magento\Eav\Model\Entity\Attribute $modelEntityAttribute
+     * @param \Magento\Directory\Model\CurrencyFactory $currencyFactory
+     * @param \Magento\Framework\Locale\CurrencyInterface $localeCurrency
+     * @param Collection $configDataCollection
+     * @param LoggerInterface|null $searchLogger
+     * @param LoggerInterface|null $preserveLayoutLogger
+     */
     public function __construct(
         \Magento\Store\Model\StoreManagerInterface $storeModelStoreManagerInterface,
         \Magento\Backend\Model\Url $backendModelUrl,
@@ -89,9 +120,11 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         \Magento\Eav\Model\Entity\Attribute $modelEntityAttribute,
         \Magento\Directory\Model\CurrencyFactory $currencyFactory,
         \Magento\Framework\Locale\CurrencyInterface $localeCurrency,
-		\Magento\Config\Model\ResourceModel\Config\Data\Collection $configDataCollection
+		\Magento\Config\Model\ResourceModel\Config\Data\Collection $configDataCollection,
+        ConvertLogLevelServiceInterface $convertLogLevelService = null,
+        LoggerInterface $searchLogger = null,
+        LoggerInterface $preserveLayoutLogger = null
     ) {
-    
         $this->_storeModelStoreManagerInterface = $storeModelStoreManagerInterface;
         $this->_backendModelUrl = $backendModelUrl;
         $this->_searchHelperConfig = $searchHelperConfig;
@@ -103,7 +136,9 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         $this->_localeCurrency = $localeCurrency;
         $this->_currencyFactory = $currencyFactory;
 		$this->_configDataCollection = $configDataCollection;
-
+		$this->convertLogLevelService = $convertLogLevelService;
+        $this->searchLogger = $searchLogger ?: ObjectManager::getInstance()->get(LoggerInterface::class);
+        $this->preserveLayoutLogger = $preserveLayoutLogger ?: ObjectManager::getInstance()->get(LoggerInterface::class);
     }
 
 
@@ -112,7 +147,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     const PRESERVE_LAYOUT_LOG_FILE = "Klevu_Search_Preserve_Layout.log";
 
     const ID_SEPARATOR = "-";
-	
+
 	const SKU_SEPARATOR = ";;;;";
 
     const SANITISE_STRING = "/:|,|;/";
@@ -145,7 +180,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             return $this->getLanguageFromLocale($store->getConfig(\Magento\Directory\Helper\Data::XML_PATH_DEFAULT_LOCALE));
         }
     }
-    
+
     /**
      * Return the timezone for the given store.
      *
@@ -238,13 +273,13 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function humanReadableToBytes($string)
     {
-        $suffix = strtolower(substr($string, -1));        
+        $suffix = strtolower(substr($string, -1));
 		$result = intval(substr($string, 0, -1));
         switch ($suffix) {
             case 'g':
-                $result *= 1024;				
+                $result *= 1024;
             case 'm':
-                $result *= 1024;				
+                $result *= 1024;
             case 'k':
                 $result *= 1024;
                 break;
@@ -274,30 +309,31 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      *
      * @param int    $level
      * @param string $message
+     * @return void
+     * @deprecated Logging should be handled through implementation of LoggerInterface provided by Klevu_Logger
+     * @see Klevu\Logger\Logger\Logger
      */
     public function log($level, $message)
     {
-        $config = $this->_searchHelperConfig;
-        if ($level <= $config->getLogLevel()) {
-            $writer = new \Zend\Log\Writer\Stream(BP . '/var/log/'.static::LOG_FILE);
-            $logger = new \Zend\Log\Logger();
-            $logger->addWriter($writer);
-            $logger->info($message);
+        if ($this->convertLogLevelService) {
+            // Levels may be passed in Zend format, but logger requires Monolog levels
+            $level = $this->convertLogLevelService->toNumeric((string)$level);
         }
+
+        $this->searchLogger->log($level, $message);
     }
 
     /**
      * Write a log message to the \Klevu\Search\preserve log file.
      *
      * @param string $message
+     * @return void
+     * @deprecated Logging should be handled through implementation of LoggerInterface provided by Klevu_Logger
+     * @see Klevu\Logger\Logger\Logger
      */
     public function preserveLayoutLog($message)
     {
-        $writer = new \Zend\Log\Writer\Stream(BP . '/var/log/'.static::PRESERVE_LAYOUT_LOG_FILE);
-        $logger = new \Zend\Log\Logger();
-        $logger->addWriter($writer);
-        $logger->info($message);
-
+        $this->preserveLayoutLogger->info($message);
     }
 
     /**
@@ -344,7 +380,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             return $product_sku;
         }
     }
-    
+
 
     /**
      * Get the is active attribute id
@@ -359,7 +395,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         $attribute = $attributecollection->getFirstItem();
         return $attribute->getAttributeId();
     }
-    
+
     /**
      * Get the attribute id for media gallery
      *
@@ -373,7 +409,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         $attribute = $attributecollection->getFirstItem();
         return $attribute->getAttributeId();
     }
-    
+
     /**
      * Get the is active attribute id
      *
@@ -387,22 +423,22 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         $attribute = $attributecollection->getFirstItem();
         return $attribute->getAttributeId();
     }
-	
+
 	public function processIp($ips)
 	{
-		$iplist = explode(',', $ips);	
+		$iplist = explode(',', $ips);
 		if(count($iplist) > 1) {
             foreach ($iplist as $ip) {
 				if (filter_var(trim($ip), FILTER_VALIDATE_IP, FILTER_FLAG_IPV4))
-				{                    
+				{
 					return $ip;
-				}	
+				}
             }
 		} else {
 			return $ips;
-		}	
+		}
 	}
-    
+
     /**
      * Get the client ip
      *
@@ -426,10 +462,10 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         } else {
             $ip = 'UNKNOWN';
         }
-     
+
         return $this->processIp($ip);
     }
-    
+
     /**
      * Get the currecy switcher data
      *
@@ -455,7 +491,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             }
         }
     }
-	
+
 	/**
      * get for base domain
      *
@@ -468,7 +504,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 			return $base_url_value['host'];
 		}
     }
-	
+
 	/**
      * return JsApiKey
      *
@@ -477,7 +513,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 	public function getJsApiKey() {
 		return $this->_searchHelperConfig->getJsApiKey();
     }
-	
+
 	/**
      * Return the value of store id from api key.
      *
