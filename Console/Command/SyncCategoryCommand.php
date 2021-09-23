@@ -32,25 +32,51 @@ class SyncCategoryCommand extends Command
     const UPDATESONLY_CATEGORY_DESC = 'Only send those Category records which have been modified since the last sync with Klevu.';
 
     /**
+     * @var State
+     */
+    protected $state;
+
+    /**
+     * @var StoreManagerInterface
+     */
+    protected $storeInterface;
+
+    /**
+     * @var DirectoryList
+     */
+    protected $directoryList;
+
+    /**
+     * @var LoggerInterface
+     */
+    protected $_logger;
+
+    /**
+     * @deprecated
      * @var Sync
      */
     protected $sync;
 
     /**
-     * @var MagentoProductActions
+     * @deprecated
+     * @var null
      */
     protected $magentoProductActions;
-
-
-    /**
-     * @var KlevuProductActions
-     */
-    protected $klevuProductActions;
 
     /**
      * @var StoreScopeResolverInterface
      */
     private $storeScopeResolver;
+
+    /**
+     * @var string|null
+     */
+    private $klevuLoggerFQCN;
+
+    /**
+     * @var KlevuProductActions
+     */
+    protected $klevuProductActions;
 
     /**
      * @param State $state
@@ -64,14 +90,17 @@ class SyncCategoryCommand extends Command
         StoreManagerInterface $storeInterface,
         DirectoryList $directoryList,
         LoggerInterface $logger,
-        StoreScopeResolverInterface $storeScopeResolver = null
+        StoreScopeResolverInterface $storeScopeResolver = null,
+        $klevuLoggerFQCN = null
     ) {
         $this->state = $state;
-        $this->directoryList = $directoryList;
         $this->storeInterface = $storeInterface;
+        $this->directoryList = $directoryList;
         $this->_logger = $logger;
-        $this->storeScopeResolver = $storeScopeResolver
-            ?: ObjectManager::getInstance()->get(StoreScopeResolverInterface::class);
+        $this->storeScopeResolver = $storeScopeResolver;
+        if (is_string($klevuLoggerFQCN)) {
+            $this->klevuLoggerFQCN = $klevuLoggerFQCN;
+        }
 
         parent::__construct();
     }
@@ -111,6 +140,10 @@ HELP
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        // See comments against methods for background. Ref: KS-7853
+        $this->initLogger();
+        $this->initStoreScopeResolver();
+
         $this->storeScopeResolver->setCurrentStoreById(0);
         $logDir = $this->directoryList->getPath(DirectoryList::VAR_DIR);
         $storeLockFile = '';
@@ -243,5 +276,46 @@ HELP
         return $inputList;
     }
 
-}
+    /**
+     * Check that the logger property is of the expected class and, if not, create using OM
+     *
+     * In order to support updates from 2.3.x to 2.4.x, which introduced the logger module,
+     *  we can't inject the actual logger through DI as all CLI commands are instantiated
+     *  by bin/magento. This prevents setup:upgrade running and enabling the logger module
+     *  because the logger module isn't already enabled.
+     * As such, we pass an FQCN for the desired logger class and then check that it matches
+     *  at the start of any method utilising it
+     * We avoid temporal coupling by falling back to the standard LoggerInterface in the
+     *  constructor
+     *
+     * @return void
+     */
+    private function initLogger()
+    {
+        if (!($this->_logger instanceof LoggerInterface)) {
+            $objectManager = ObjectManager::getInstance();
+            if ($this->klevuLoggerFQCN && !($this->_logger instanceof $this->klevuLoggerFQCN)) {
+                $this->_logger = $objectManager->get($this->klevuLoggerFQCN);
+            } elseif (!$this->_logger) {
+                $this->_logger = $objectManager->get(LoggerInterface::class);
+            }
+        }
+    }
 
+    /**
+     * Instantiate the StoreScopeResolver property
+     *
+     * For the same reasons as initLogger is required, we can't inject a class from a new
+     *  module into a CLI command. Unlike initLogger, however, this is a new property so
+     *  the usual $this->>storeScopeResolver = $storeScopeResolver ?: ObjectManager::getInstance()->get(StoreScopeResolverInterface::class)
+     *  logic can effectively be used without checking for a class mismatch
+     *
+     * @return void
+     */
+    private function initStoreScopeResolver()
+    {
+        if (null === $this->storeScopeResolver) {
+            $this->storeScopeResolver = ObjectManager::getInstance()->get(StoreScopeResolverInterface::class);
+        }
+    }
+}

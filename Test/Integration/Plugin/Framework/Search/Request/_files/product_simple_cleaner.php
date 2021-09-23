@@ -12,6 +12,9 @@ use Magento\Catalog\Api\Data\ProductExtensionInterfaceFactory;
 /** @var \Magento\TestFramework\ObjectManager $objectManager */
 $objectManager = \Magento\TestFramework\Helper\Bootstrap::getObjectManager();
 
+/** @var \Magento\Framework\App\ProductMetadataInterface $productMetadata */
+$productMetadata = $objectManager->get(\Magento\Framework\App\ProductMetadataInterface::class);
+
 /** @var \Magento\Catalog\Api\CategoryLinkManagementInterface $categoryLinkManagement */
 $categoryLinkManagement = $objectManager->get(\Magento\Catalog\Api\CategoryLinkManagementInterface::class);
 
@@ -24,11 +27,16 @@ $tpExtensionAttributesFactory = $objectManager->get(ProductTierPriceExtensionFac
 $productExtensionAttributesFactory = $objectManager->get(ProductExtensionInterfaceFactory::class);
 
 $adminWebsite = $objectManager->get(\Magento\Store\Api\WebsiteRepositoryInterface::class)->get('admin');
-$tierPriceExtensionAttributes1 = $tpExtensionAttributesFactory->create()
-    ->setWebsiteId($adminWebsite->getId());
-$productExtensionAttributesWebsiteIds = $productExtensionAttributesFactory->create(
-    ['website_ids' => $adminWebsite->getId()]
-);
+$tierPriceExtensionAttributes1 = $tpExtensionAttributesFactory->create();
+if (method_exists($tierPriceExtensionAttributes1, 'setWebsiteId')) {
+    $tierPriceExtensionAttributes1->setWebsiteId($adminWebsite->getId());
+}
+$productExtensionAttributesWebsiteIds = null;
+if (version_compare($productMetadata->getVersion(), '2.2.0', '>=')) {
+    $productExtensionAttributesWebsiteIds = $productExtensionAttributesFactory->create(
+        ['website_ids' => $adminWebsite->getId()]
+    );
+}
 
 $tierPrices[] = $tierPriceFactory->create(
     [
@@ -70,9 +78,13 @@ $tierPrices[] = $tierPriceFactory->create(
     ]
 )->setExtensionAttributes($tierPriceExtensionAttributes1);
 
-$tierPriceExtensionAttributes2 = $tpExtensionAttributesFactory->create()
-    ->setWebsiteId($adminWebsite->getId())
-    ->setPercentageValue(50);
+$tierPriceExtensionAttributes2 = $tpExtensionAttributesFactory->create();
+if (method_exists($tierPriceExtensionAttributes2, 'setPercentageValue')) {
+    $tierPriceExtensionAttributes2->setPercentageValue(50);
+}
+if (method_exists($tierPriceExtensionAttributes2, 'setWebsiteId')) {
+    $tierPriceExtensionAttributes2->setWebsiteId($adminWebsite->getId());
+}
 
 $tierPrices[] = $tierPriceFactory->create(
     [
@@ -103,9 +115,11 @@ Available in M tolerance or E tolerance (ground) inserts
 Optional chip breakers for lightweight machine tools
 Dedicated range for plunge milling
 Double sided insert gives 4 usable cutting edges
-Negative insert with the strongest cutting edge</p>')
-    ->setExtensionAttributes($productExtensionAttributesWebsiteIds)
-    ->setMetaTitle('meta title')
+Negative insert with the strongest cutting edge</p>');
+if ($productExtensionAttributesWebsiteIds) {
+    $product->setExtensionAttributes($productExtensionAttributesWebsiteIds);
+}
+$product->setMetaTitle('meta title')
     ->setMetaKeyword('meta keyword')
     ->setMetaDescription('meta description')
     ->setVisibility(\Magento\Catalog\Model\Product\Visibility::VISIBILITY_BOTH)

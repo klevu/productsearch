@@ -57,7 +57,8 @@ class CleanerPlugin
     protected $klevuHelperData;
 
     /**
-     * @var isKlevuPreserveLogEnabled
+     * @deprecated as logger module will handle checks for relevant store
+     * @var bool
      */
     protected $isKlevuPreserveLogEnabled = false;
 
@@ -146,12 +147,10 @@ class CleanerPlugin
      */
     public function klevuQueryCleanup($requestData)
     {
-        if ($this->isKlevuPreserveLogEnabled) {
-            $this->writeToPreserveLayoutLog("searchCleanerPlugin:: klevuQueryCleanup execution started");
-            //Adding this to identify in the logs which cleaner is triggering
-            $this->magentoRegistry->unregister('klReqCleanerType');
-            $this->magentoRegistry->register('klReqCleanerType', 'SRLPRequestInitiated');
-        }
+        $this->writeToPreserveLayoutLog("searchCleanerPlugin:: klevuQueryCleanup execution started");
+        //Adding this to identify in the logs which cleaner is triggering
+        $this->magentoRegistry->unregister('klReqCleanerType');
+        $this->magentoRegistry->register('klReqCleanerType', 'SRLPRequestInitiated');
 
 
         $categoryFilter = $this->magentoRequest->getParam('productFilter');
@@ -162,9 +161,8 @@ class CleanerPlugin
 
         //check if search array generated or not
         if (!isset($requestData['queries']['search'])) {
-            if ($this->isKlevuPreserveLogEnabled) {
-                $this->writeToPreserveLayoutLog("searchCleanerPlugin:: Search array is not found in CleanerPlugin");
-            }
+            $this->writeToPreserveLayoutLog("searchCleanerPlugin:: Search array is not found in CleanerPlugin");
+
             return $requestData;
         } else {
             $queryTerm = $requestData['queries']['search']['value'];
@@ -172,9 +170,8 @@ class CleanerPlugin
 
         //check if dimensions array found or not
         if (!isset($requestData['dimensions']['scope'])) {
-            if ($this->isKlevuPreserveLogEnabled) {
-                $this->writeToPreserveLayoutLog("searchCleanerPlugin:: Dimension array is not found in CleanerPlugin");
-            }
+            $this->writeToPreserveLayoutLog("searchCleanerPlugin:: Dimension array is not found in CleanerPlugin");
+
             return $requestData;
         } else {
             $queryScope = $requestData['dimensions']['scope']['value'];
@@ -203,9 +200,8 @@ class CleanerPlugin
         $currentEngine = $this->getCurrentSearchEngine();
         //if no ids there then no need to set new handler for mysql only
         if (empty($idList) && $currentEngine === 'mysql') {
-            if ($this->isKlevuPreserveLogEnabled) {
-                $this->writeToPreserveLayoutLog("searchCleanerPlugin:: MySQL Search Engine is selected and No Ids were found in CleanerPlugin");
-            }
+            $this->writeToPreserveLayoutLog("searchCleanerPlugin:: MySQL Search Engine is selected and No Ids were found in CleanerPlugin");
+
             return $requestData;
         }
 
@@ -264,9 +260,8 @@ class CleanerPlugin
             }
 
             $current_order = $this->magentoRegistry->registry('current_order');
-            if ($this->isKlevuPreserveLogEnabled) {
-                $this->writeToPreserveLayoutLog("searchCleanerPlugin:: currentRegistryOrder-" . $current_order);
-            }
+            $this->writeToPreserveLayoutLog("searchCleanerPlugin:: currentRegistryOrder-" . $current_order);
+
             if (!empty($current_order)) {
                 if ($current_order == "personalized") {
                     $this->magentoRegistry->unregister('from');
@@ -280,11 +275,10 @@ class CleanerPlugin
             }
         }
 
-        if ($this->isKlevuPreserveLogEnabled) {
-            //convert requestData object into array
-            $requestDataToArray = json_decode(json_encode($requestData), true);
-            $this->writeToPreserveLayoutLog("searchCleanerPlugin:: Request data in CleanerPlugin" . PHP_EOL . print_r($requestDataToArray, true));
-        }
+        //convert requestData object into array
+        $requestDataToArray = json_decode(json_encode($requestData), true);
+        $this->writeToPreserveLayoutLog("searchCleanerPlugin:: Request data in CleanerPlugin" . PHP_EOL . print_r($requestDataToArray, true));
+
         return $requestData;
     }
 
