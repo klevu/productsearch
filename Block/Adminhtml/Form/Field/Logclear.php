@@ -10,7 +10,6 @@ use Magento\Backend\Block\Template\Context as Template_Context;
 use Magento\Framework\App\Filesystem\DirectoryList as DirectoryList;
 use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Filesystem\Io\File as FileIo;
-use Magento\Store\Model\StoreManagerInterface;
 
 /**
  * @deprecated See \Klevu\Logger\Block\Adminhtml\Form\Button\LogClearButton
@@ -25,7 +24,6 @@ class Logclear extends LogClearButton
      * @param array $data
      * @param KlevuLoggerInterface|null $logger
      * @param FileIo|null $fileIo
-     * @param StoreManagerInterface|null $storeManager
      * @param LogFileNameProviderInterface|null $logFileNameProvider
      * @param string $destinationUrl
      * @param string $buttonLabel
@@ -38,7 +36,6 @@ class Logclear extends LogClearButton
         array $data = [],
         KlevuLoggerInterface $logger = null,
         FileIo $fileIo = null,
-        StoreManagerInterface $storeManager = null,
         LogFileNameProviderInterface $logFileNameProvider = null,
         $destinationUrl = 'klevu_search/download/logclear',
         $buttonLabel = 'Rename Klevu Search Log'
@@ -48,7 +45,6 @@ class Logclear extends LogClearButton
             $logger ?: ObjectManager::getInstance()->get(KlevuLoggerInterface::class),
             $directoryList ?: ObjectManager::getInstance()->get(DirectoryList::class),
             $fileIo ?: ObjectManager::getInstance()->get(FileIo::class),
-            $storeManager ?: ObjectManager::getInstance()->get(StoreManagerInterface::class),
             $logFileNameProvider ?: ObjectManager::getInstance()->get(LogFileNameProviderInterface::class),
             $destinationUrl,
             $buttonLabel,

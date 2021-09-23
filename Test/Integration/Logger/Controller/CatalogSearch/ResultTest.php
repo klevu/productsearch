@@ -39,6 +39,8 @@ class ResultTest extends AbstractControllerTestCase
      * @magentoAppIsolation enabled
      * @magentoDbIsolation disabled
      * @magentoDataFixture loadStoreFixtures
+     * @magentoDataFixture loadWebsiteFixtures
+     * @magentoDataFixture loadProductFixtures
      * @magentoConfigFixture es_es_store klevu_search/general/enabled 1
      * @magentoConfigFixture es_es_store klevu_search/general/js_api_key klevu-1234567890
      * @magentoConfigFixture es_es_store klevu_search/general/rest_api_key ABCDEFG1234567890
@@ -58,9 +60,23 @@ class ResultTest extends AbstractControllerTestCase
 
         $this->storeManager->setCurrentStore('es_es');
 
-        $indexer = $this->indexerFactory->create();
-        $indexer->load('catalogsearch_fulltext');
-        $indexer->reindexAll();
+        $indexes = [
+            'catalog_product_attribute',
+            'catalog_product_price',
+            'inventory',
+            'cataloginventory_stock',
+            'catalogsearch_fulltext',
+        ];
+        foreach ($indexes as $index) {
+            $indexer = $this->indexerFactory->create();
+            try {
+                $indexer->load($index);
+                $indexer->reindexAll();
+            } catch (\InvalidArgumentException $e) {
+                // Support for older versions of Magento which may not have all indexers
+                continue;
+            }
+        }
 
         /** @var ProductCollection $productCollection */
         $productCollection = $this->objectManager->create(ProductCollection::class);
@@ -71,7 +87,7 @@ class ResultTest extends AbstractControllerTestCase
         );
         $this->objectManager->addSharedInstance($requestPartialMock, ApiGetRequest::class);
 
-        $this->dispatch('catalogsearch/result/index/?q=jacket');
+        $this->dispatch('catalogsearch/result/index/?q=simple');
 
         $this->assertTrue(
             false === stripos($this->getResponse()->getBody(), 'Your search returned no results'),
@@ -79,6 +95,70 @@ class ResultTest extends AbstractControllerTestCase
         );
 
         $this->assertTrue(file_exists($logFilePath), 'Log file ' . $logFileName . ' exists after search results dispatch');
+    }
+
+    /**
+     * @magentoAppArea frontend
+     * @magentoCache all disabled
+     * @magentoAppIsolation enabled
+     * @magentoDbIsolation disabled
+     * @magentoDataFixture loadStoreFixtures
+     * @magentoDataFixture loadWebsiteFixtures
+     * @magentoDataFixture loadProductFixtures
+     * @magentoConfigFixture es_es_store klevu_search/general/enabled 1
+     * @magentoConfigFixture es_es_store klevu_search/general/js_api_key klevu-1234567890
+     * @magentoConfigFixture es_es_store klevu_search/general/rest_api_key ABCDEFG1234567890
+     * @magentoConfigFixture es_es_store klevu_search/searchlanding/landenabled 1
+     * @magentoConfigFixture es_es_store klevu_search/developer/preserve_layout_log_enabled 0
+     * @magentoConfigFixture es_es_store klevu_logger/preserve_layout_configuration/min_log_level 7
+     */
+    public function testPreserveLayoutLoggingDisabled()
+    {
+        $this->setupPhp5();
+
+        $logFileName = 'Klevu_Search_Preserve_Layout.es_es.log';
+        $logFilePath = $this->installDir . '/var/log/' . $logFileName;
+
+        $this->removeExistingLogFile($logFilePath);
+        $this->assertFalse(file_exists($logFilePath), 'Log file ' . $logFileName . ' exists before search results dispatch');
+
+        $this->storeManager->setCurrentStore('es_es');
+
+        $indexes = [
+            'catalog_product_attribute',
+            'catalog_product_price',
+            'inventory',
+            'cataloginventory_stock',
+            'catalogsearch_fulltext',
+        ];
+        foreach ($indexes as $index) {
+            $indexer = $this->indexerFactory->create();
+            try {
+                $indexer->load($index);
+                $indexer->reindexAll();
+            } catch (\InvalidArgumentException $e) {
+                // Support for older versions of Magento which may not have all indexers
+                continue;
+            }
+        }
+
+        /** @var ProductCollection $productCollection */
+        $productCollection = $this->objectManager->create(ProductCollection::class);
+        $productCollection->addFieldToFilter('visibility', ['in' => [3,4]]);
+        $productCollection->addFieldToFilter('status', 1);
+        $requestPartialMock = $this->getApiRequestPartialMock(
+            $this->getResponseDataObject($productCollection)
+        );
+        $this->objectManager->addSharedInstance($requestPartialMock, ApiGetRequest::class);
+
+        $this->dispatch('catalogsearch/result/index/?q=simple');
+
+        $this->assertTrue(
+            false === stripos($this->getResponse()->getBody(), 'Your search returned no results'),
+            'SRLP should return results'
+        );
+
+        $this->assertFalse(file_exists($logFilePath), 'Log file ' . $logFileName . ' does not exist after search results dispatch');
     }
 
     /**
@@ -112,6 +192,42 @@ class ResultTest extends AbstractControllerTestCase
     }
 
     /**
+     * Loads website creation scripts because annotations use a relative path
+     *  from integration tests root
+     */
+    public static function loadWebsiteFixtures()
+    {
+        include __DIR__ . '/../../../_files/websiteFixtures.php';
+    }
+
+    /**
+     * Rolls back website creation scripts because annotations use a relative path
+     *  from integration tests root
+     */
+    public static function loadWebsiteFixturesRollback()
+    {
+        include __DIR__ . '/../../../_files/websiteFixtures_rollback.php';
+    }
+
+    /**
+     * Loads product creation scripts because annotations use a relative path
+     *  from integration tests root
+     */
+    public static function loadProductFixtures()
+    {
+        include __DIR__ . '/../../../_files/productFixtures.php';
+    }
+
+    /**
+     * Rolls back product creation scripts because annotations use a relative path
+     *  from integration tests root
+     */
+    public static function loadProductFixturesRollback()
+    {
+        include __DIR__ . '/../../../_files/productFixtures_rollback.php';
+    }
+
+    /**
      * @param $filePath
      * @return void
      */
@@ -131,10 +247,33 @@ class ResultTest extends AbstractControllerTestCase
      */
     private function getApiRequestPartialMock(ResponseData $response)
     {
+        if (!method_exists($this, 'createPartialMock')) {
+            return $this->getApiRequestPartialMockLegacy($response);
+        }
+
         $requestPartialMock = $this->createPartialMock(ApiGetRequest::class, [
             'send',
         ]);
         $requestPartialMock->method('send')->willReturn($response);
+
+        return $requestPartialMock;
+    }
+
+    /**
+     * @param ResponseData $response
+     * @return ApiGetRequest|\PHPUnit_Framework_MockObject_MockObject
+     * @see getApiRequestPartialMock
+     */
+    private function getApiRequestPartialMockLegacy(ResponseData $response)
+    {
+        $requestPartialMock = $this->getMockBuilder(ApiGetRequest::class)
+            ->setMethods(['send'])
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $requestPartialMock->expects($this->any())
+            ->method('send')
+            ->willReturn($response);
 
         return $requestPartialMock;
     }

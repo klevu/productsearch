@@ -10,7 +10,6 @@ use Magento\Backend\Block\Template\Context as Template_Context;
 use Magento\Framework\App\Filesystem\DirectoryList as DirectoryList;
 use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Filesystem\Io\File as FileIo;
-use Magento\Store\Model\StoreManagerInterface;
 
 /**
  * @deprecated See \Klevu\Logger\Block\Adminhtml\Form\Button\LogDownloadButton
@@ -24,7 +23,6 @@ class Logdownload extends LogDownloadButton
      * @param Klevu_HelperData $klevuHelperData
      * @param array $data
      * @param FileIo|null $fileIo
-     * @param StoreManagerInterface|null $storeManager
      * @param KlevuLoggerInterface|null $logger
      * @param LogFileNameProviderInterface|null $logFileNameProvider
      * @param string $destinationUrl
@@ -37,7 +35,6 @@ class Logdownload extends LogDownloadButton
         Klevu_HelperData $klevuHelperData,
         array $data = [],
         FileIo $fileIo = null,
-        StoreManagerInterface $storeManager = null,
         KlevuLoggerInterface $logger = null,
         LogFileNameProviderInterface $logFileNameProvider = null,
         $destinationUrl = 'klevu_search/download/logdownload',
@@ -48,7 +45,6 @@ class Logdownload extends LogDownloadButton
             $logger ?: ObjectManager::getInstance()->get(KlevuLoggerInterface::class),
             $directoryList,
             $fileIo ?: ObjectManager::getInstance()->get(FileIo::class),
-            $storeManager ?: ObjectManager::getInstance()->get(StoreManagerInterface::class),
             $logFileNameProvider ?: ObjectManager::getInstance()->get(LogFileNameProviderInterface::class),
             $destinationUrl,
             $buttonLabel,

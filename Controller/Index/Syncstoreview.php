@@ -2,50 +2,116 @@
 
 namespace Klevu\Search\Controller\Index;
 
+use Klevu\Content\Model\ContentInterface;
 use Klevu\Logger\Constants as LoggerConstants;
+use Klevu\Search\Helper\Data;
+use Klevu\Search\Model\Api\Action\Debuginfo;
+use Klevu\Search\Model\Product\Sync;
+use Klevu\Search\Model\Session;
+use Klevu\Search\Model\Sync as Klevu_ModelSync;
+use Magento\Framework\App\Action\Action;
+use Magento\Framework\App\Action\Context;
+use Magento\Framework\App\Cache\Frontend\Pool;
+use Magento\Framework\App\Cache\StateInterface;
+use Magento\Framework\App\Cache\TypeListInterface;
+use Magento\Framework\App\ResponseInterface;
+use Magento\Framework\Controller\ResultInterface;
+use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Framework\Filesystem;
+use Magento\Framework\View\Result\PageFactory;
+use Magento\Store\Model\StoreManagerInterface;
 
 /**
  * Class Syncstoreview
  * @package Klevu\Search\Controller\Index
  */
-class Syncstoreview extends \Magento\Framework\App\Action\Action
+class Syncstoreview extends Action
 {
-
     /**
-     * @var \Magento\Framework\App\Action\Context
+     * @var TypeListInterface
+     */
+    private $_cacheTypeList;
+    /**
+     * @var StateInterface
+     */
+    private $_cacheState;
+    /**
+     * @var Pool
+     */
+    private $_cacheFrontendPool;
+    /**
+     * @var PageFactory
+     */
+    private $resultPageFactory;
+    /**
+     * @var Sync
+     */
+    private $_modelProductSync;
+    /**
+     * @var Filesystem
+     */
+    private $_magentoFrameworkFilesystem;
+    /**
+     * @var Debuginfo
+     */
+    private $_apiActionDebuginfo;
+    /**
+     * @var Session
+     */
+    private $_frameworkModelSession;
+    /**
+     * @var Data
+     */
+    private $_searchHelperData;
+    /**
+     * @var Klevu_ModelSync
+     */
+    private $_klevuSyncModel;
+    /**
+     * @var StoreManagerInterface
+     */
+    private $_storeInterface;
+    /**
+     * @var ContentInterface
+     */
+    private $_klevuSyncContent;
+    /**
+     * @var Context
      */
     protected $_context;
 
     /**
-     * Syncstoreview constructor.
-     * @param \Magento\Framework\App\Action\Context $context
-     * @param \Magento\Framework\App\Cache\TypeListInterface $cacheTypeList
-     * @param \Magento\Framework\App\Cache\StateInterface $cacheState
-     * @param \Magento\Framework\App\Cache\Frontend\Pool $cacheFrontendPool
-     * @param \Magento\Framework\View\Result\PageFactory $resultPageFactory
-     * @param \Magento\Framework\Filesystem $magentoFrameworkFilesystem
-     * @param \Magento\Store\Model\StoreManagerInterface $storeInterface
-     * @param \Klevu\Search\Model\Product\Sync $modelProductSync
-     * @param \Klevu\Search\Model\Api\Action\Debuginfo $apiActionDebuginfo
-     * @param \Klevu\Search\Model\Session $frameworkModelSession
-     * @param \Klevu\Search\Helper\Data $searchHelperData
-     * @param \Klevu\Search\Model\Sync $modelSync
+     * Sync store view constructor.
+     * @param Context $context
+     * @param TypeListInterface $cacheTypeList
+     * @param StateInterface $cacheState
+     * @param Pool $cacheFrontendPool
+     * @param PageFactory $resultPageFactory
+     * @param Sync $modelProductSync
+     * @param Filesystem $magentoFrameworkFilesystem
+     * @param Debuginfo $apiActionDebuginfo
+     * @param Session $frameworkModelSession
+     * @param Data $searchHelperData
+     * @param Klevu_ModelSync $modelSync
+     * @param StoreManagerInterface $storeInterface
+     * @param ContentInterface $modelSyncContent
      */
     public function __construct(
-        \Magento\Framework\App\Action\Context $context,
-        \Magento\Framework\App\Cache\TypeListInterface $cacheTypeList,
-        \Magento\Framework\App\Cache\StateInterface $cacheState,
-        \Magento\Framework\App\Cache\Frontend\Pool $cacheFrontendPool,
-        \Magento\Framework\View\Result\PageFactory $resultPageFactory,
-        \Klevu\Search\Model\Product\Sync $modelProductSync,
-        \Magento\Framework\Filesystem $magentoFrameworkFilesystem,
-        \Klevu\Search\Model\Api\Action\Debuginfo $apiActionDebuginfo,
-        \Klevu\Search\Model\Session $frameworkModelSession,
-        \Klevu\Search\Helper\Data $searchHelperData,
-		\Klevu\Search\Model\Sync $modelSync,
-		\Magento\Store\Model\StoreManagerInterface $storeInterface,
-        \Klevu\Content\Model\ContentInterface $modelSyncContent
-    ) {
+        Context               $context,
+        TypeListInterface     $cacheTypeList,
+        StateInterface        $cacheState,
+        Pool                  $cacheFrontendPool,
+        PageFactory           $resultPageFactory,
+        Sync                  $modelProductSync,
+        Filesystem            $magentoFrameworkFilesystem,
+        Debuginfo             $apiActionDebuginfo,
+        Session               $frameworkModelSession,
+        Data                  $searchHelperData,
+        Klevu_ModelSync       $modelSync,
+        StoreManagerInterface $storeInterface,
+        ContentInterface      $modelSyncContent
+    )
+    {
 
         parent::__construct($context);
         $this->_cacheTypeList = $cacheTypeList;
@@ -57,13 +123,17 @@ class Syncstoreview extends \Magento\Framework\App\Action\Action
         $this->_apiActionDebuginfo = $apiActionDebuginfo;
         $this->_frameworkModelSession = $frameworkModelSession;
         $this->_searchHelperData = $searchHelperData;
-		$this->_klevuSyncModel = $modelSync;
-		$this->_storeInterface = $storeInterface;
-		$this->_klevuSyncContent = $modelSyncContent;
-		$this->_context = $context;
+        $this->_klevuSyncModel = $modelSync;
+        $this->_storeInterface = $storeInterface;
+        $this->_klevuSyncContent = $modelSyncContent;
+        $this->_context = $context;
         $this->_request = $this->_context->getRequest();
     }
-    
+
+    /**
+     * Triggers ajax call from the search/index/syncstore action
+     * @return ResponseInterface|ResultInterface|void
+     */
     public function execute()
     {
         try {
@@ -75,7 +145,7 @@ class Syncstoreview extends \Magento\Framework\App\Action\Action
 
             $store_object = $this->_storeInterface->getStore($store_id);
             $hashkey = urlencode($this->_request->getParam('hashkey'));
-            $store_rest_api = hash('sha256',$this->_klevuSyncModel->getHelper()->getConfigHelper()->getRestApiKey((int)$store_id));
+            $store_rest_api = hash('sha256', $this->_klevuSyncModel->getHelper()->getConfigHelper()->getRestApiKey((int)$store_id));
             if ($store_rest_api == $hashkey) {
                 $this->_storeInterface->setCurrentStore($store_id);
                 $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_INFO, sprintf(
@@ -92,13 +162,13 @@ class Syncstoreview extends \Magento\Framework\App\Action\Action
                 $this->_klevuSyncModel->getRegistry()->register("numberOfRecord_delete", 0);
                 $this->_klevuSyncModel->getRegistry()->register("numberOfRecord_update", 0);
                 $records_count = $this->_modelProductSync->syncStoreView($store_object);
-                $result['numberOfRecord_add'] = $records_count["numberOfRecord_add"];
-                $result['numberOfRecord_delete'] = $records_count["numberOfRecord_delete"];
-                $result['numberOfRecord_update'] = $records_count["numberOfRecord_update"];
+                $result['numberOfRecord_add'] = isset($records_count["numberOfRecord_add"]) ? $records_count["numberOfRecord_add"] : null;
+                $result['numberOfRecord_delete'] = isset($records_count["numberOfRecord_delete"]) ? $records_count["numberOfRecord_delete"] : null;
+                $result['numberOfRecord_update'] = isset($records_count["numberOfRecord_update"]) ? $records_count["numberOfRecord_update"] : null;
             } else {
                 $result['msg'] = __("Rest API key not found for requested store.");
             }
-        } catch (\Magento\Framework\Exception\NoSuchEntityException $e) {
+        } catch (NoSuchEntityException $e) {
             $result['msg'] = __("No Such Entity found  : " . $e->getMessage());
         } catch (\Exception $e) {
             $result['msg'] = __("Exception thrown : " . $e->getMessage());
@@ -107,6 +177,5 @@ class Syncstoreview extends \Magento\Framework\App\Action\Action
         $this->getResponse()->setHeader('Content-type', 'application/json');
         $this->getResponse()->setBody(json_encode($result));
     }
-
 }
 

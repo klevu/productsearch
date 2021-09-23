@@ -27,16 +27,21 @@ use Symfony\Component\Process\PhpExecutableFinder as PhpExecutableFinderFactory;
 class SyncCommand extends Command
 {
     const LOCK_FILE = 'klevu_running_index.lock';
-
     const AREA_CODE_LOCK_FILE = 'klevu_areacode.lock';
+
+    const ALLDATA_DESC = 'Send all items to Klevu.';
+    const UPDATESONLY_DESC = 'Only send items which have been modified since the last sync with Klevu.';
+
     /**
      * @var AppState
      */
     protected $appState;
+
     /**
      * @var StoreManagerInterface
      */
     protected $storeInterface;
+
     /**
      * @var DirectoryList
      */
@@ -46,6 +51,7 @@ class SyncCommand extends Command
      * @var ShellInterface
      */
     protected $_shell;
+
     /**
      * @var \Symfony\Component\Process\PhpExecutableFinder
      */
@@ -61,13 +67,36 @@ class SyncCommand extends Command
      */
     private $storeScopeResolver;
 
+    /**
+     * @var string|null
+     */
+    private $klevuLoggerFQCN;
+
+    /**
+     * @var array
+     */
     protected $websiteList = array();
+
+    /**
+     * @var array
+     */
     protected $allStoreList = array();
+
+    /**
+     * @var array
+     */
     protected $runStoreList = array();
 
-    const ALLDATA_DESC = 'Send all items to Klevu.';
-    const UPDATESONLY_DESC = 'Only send items which have been modified since the last sync with Klevu.';
-
+    /**
+     * @param AppState $appState
+     * @param StoreManagerInterface $storeInterface
+     * @param DirectoryList $directoryList
+     * @param Shell $shell
+     * @param PhpExecutableFinderFactory $phpExecutableFinderFactory
+     * @param LoggerInterface $logger
+     * @param StoreScopeResolverInterface|null $storeScopeResolver
+     * @param string|null $klevuLoggerFQCN
+     */
     public function __construct(
         AppState $appState,
         StoreManagerInterface $storeInterface,
@@ -75,7 +104,8 @@ class SyncCommand extends Command
         Shell $shell,
         PhpExecutableFinderFactory $phpExecutableFinderFactory,
         LoggerInterface $logger,
-        StoreScopeResolverInterface $storeScopeResolver = null
+        StoreScopeResolverInterface $storeScopeResolver = null,
+        $klevuLoggerFQCN = null
     ) {
         $this->appState = $appState;
         $this->directoryList = $directoryList;
@@ -83,8 +113,10 @@ class SyncCommand extends Command
         $this->_shell = $shell;
         $this->_phpExecutableFinder = $phpExecutableFinderFactory;
         $this->logger = $logger;
-        $this->storeScopeResolver = $storeScopeResolver
-            ?: ObjectManager::getInstance()->get(StoreScopeResolverInterface::class);
+        $this->storeScopeResolver = $storeScopeResolver;
+        if (is_string($klevuLoggerFQCN)) {
+            $this->klevuLoggerFQCN = $klevuLoggerFQCN;
+        }
 
         parent::__construct();
     }
@@ -114,6 +146,10 @@ HELP
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        // See comments against methods for background. Ref: KS-7853
+        $this->initLogger();
+        $this->initStoreScopeResolver();
+
         $this->storeScopeResolver->setCurrentStoreById(0);
         $logDir = $this->directoryList->getPath(DirectoryList::VAR_DIR);
         $file = $logDir . "/" . self::LOCK_FILE;
@@ -273,5 +309,46 @@ HELP
         return $inputList;
     }
 
-}
+    /**
+     * Check that the logger property is of the expected class and, if not, create using OM
+     *
+     * In order to support updates from 2.3.x to 2.4.x, which introduced the logger module,
+     *  we can't inject the actual logger through DI as all CLI commands are instantiated
+     *  by bin/magento. This prevents setup:upgrade running and enabling the logger module
+     *  because the logger module isn't already enabled.
+     * As such, we pass an FQCN for the desired logger class and then check that it matches
+     *  at the start of any method utilising it
+     * We avoid temporal coupling by falling back to the standard LoggerInterface in the
+     *  constructor
+     *
+     * @return void
+     */
+    private function initLogger()
+    {
+        if (!($this->logger instanceof LoggerInterface)) {
+            $objectManager = ObjectManager::getInstance();
+            if ($this->klevuLoggerFQCN && !($this->logger instanceof $this->klevuLoggerFQCN)) {
+                $this->logger = $objectManager->get($this->klevuLoggerFQCN);
+            } elseif (!$this->logger) {
+                $this->logger = $objectManager->get(LoggerInterface::class);
+            }
+        }
+    }
 
+    /**
+     * Instantiate the StoreScopeResolver property
+     *
+     * For the same reasons as initLogger is required, we can't inject a class from a new
+     *  module into a CLI command. Unlike initLogger, however, this is a new property so
+     *  the usual $this->>storeScopeResolver = $storeScopeResolver ?: ObjectManager::getInstance()->get(StoreScopeResolverInterface::class)
+     *  logic can effectively be used without checking for a class mismatch
+     *
+     * @return void
+     */
+    private function initStoreScopeResolver()
+    {
+        if (null === $this->storeScopeResolver) {
+            $this->storeScopeResolver = ObjectManager::getInstance()->get(StoreScopeResolverInterface::class);
+        }
+    }
+}
