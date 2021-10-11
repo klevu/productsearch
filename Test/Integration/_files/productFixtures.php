@@ -9,14 +9,15 @@ use Magento\Store\Model\Website;
 
 $objectManager = Bootstrap::getObjectManager();
 
-/** @var Website $website */
+/** @var Website $baseWebsite */
 $baseWebsite = $objectManager->create(Website::class);
 $baseWebsite->load('base', 'code');
 
-/** @var Website $website */
+/** @var Website $website1 */
 $website1 = $objectManager->create(Website::class);
 $website1->load('klevu_test_website_1', 'code');
 
+/** @var Website $website2 */
 $website2 = $objectManager->create(Website::class);
 $website2->load('klevu_test_website_2', 'code');
 

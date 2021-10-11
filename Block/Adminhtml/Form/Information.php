@@ -12,7 +12,7 @@ use Klevu\Search\Helper\Backend as Klevu_HelperBackend;
 class Information extends \Magento\Config\Block\System\Config\Form\Fieldset
 {
     const SUBPROCESS_LOCK_FILE = 'klevu_subprocess.lock';
-    const AREA_CODE_LOCK_FILE = 'klevu_areacode.lock';
+    const AREA_CODE_LOCK_FILE = 'klevu_areacode*.lock';
     protected $_template = 'klevu/search/form/information.phtml';
     protected $_searchHelperConfig;
     protected $_directoryList;

@@ -7,8 +7,14 @@
     </head>
     <body>
         <referenceBlock name="content">
-            <block class="Klevu\Search\Block\Search\Index" template="Klevu_Search::klevu/search/index.phtml"
-                   name="search_index_klevutemplate"/>
+            <block class="Klevu\Search\Block\Search\Index"
+                   template="Klevu_Search::klevu/search/index.phtml"
+                   name="search_index_klevutemplate">
+                <block class="Klevu\Search\Block\Search\ConfigurableSortBy"
+                       template="Klevu_Search::klevu/search/configurable_sortby.phtml"
+                       name="search_index_klevutemplate.configurable_sortby"
+                       as="configurable_sortby"/>
+            </block>
         </referenceBlock>
     </body>
 </page>

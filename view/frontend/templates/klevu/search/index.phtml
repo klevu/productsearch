@@ -33,12 +33,17 @@
         <div class="kuSortHeader">
           <div class="kuSortingOpt">
             <div class="kuSortby">
-              <label id="klevuSortLbl"><?php echo __('Sort by');?>:</label>
-              <select name="kuSortby" id="kuSortby" onchange="klevu_changeSortingOptionsForLandigPage(this.value);">
-                <option id="klevuRelSort" value="rel"><?php echo __('Relevance');?></option>
-                <option id="klevuLthSort" value="lth"><?php echo __('Price').":".__('Low to high');?></option>
-                <option id="klevuHtlSort" value="htl"><?php echo __('Price').":".__('High to low');?></option>
-              </select>
+                <label id="klevuSortLbl"><?php echo __('Sort by');?>:</label>
+                <?php $configurableSortByHtml = $block->getChildHtml('configurable_sortby'); ?>
+                <?php if (trim((string)$configurableSortByHtml)): ?>
+                    <?php /** @noEscape  */ echo $configurableSortByHtml; ?>
+                <?php else: ?>
+                    <select name="kuSortby" id="kuSortby" onchange="klevu_changeSortingOptionsForLandigPage(this.value);">
+                        <option id="klevuRelSort" value="rel"><?php echo $block->escapeHtml(__('Relevance'));?></option>
+                        <option id="klevuLthSort" value="lth"><?php echo $block->escapeHtml(__('Price').":".__('Low to high'));?></option>
+                        <option id="klevuHtlSort" value="htl"><?php echo $block->escapeHtml(__('Price').":".__('High to low'));?></option>
+                    </select>
+                <?php endif; ?>
             </div>
 
             <div class="kuPerPage">

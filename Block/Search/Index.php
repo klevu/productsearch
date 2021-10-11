@@ -32,7 +32,7 @@ class Index extends Template
     protected $_requestInterface;
 
     /**
-     * Index constructor
+     * Index constructor.
      *
      * @param Magento_TemplateContext $context
      * @param DirectoryList $directorylist

@@ -18,6 +18,9 @@
                 <last_run>Never</last_run>
                 <sync_options>1</sync_options>
                 <order_sync_enabled>1</order_sync_enabled>
+                <order_sync_frequency>0 2 * * *</order_sync_frequency>
+                <order_sync_frequency_custom/>
+                <order_sync_max_batch_size/>
 				<lockfile>172800</lockfile>
 				<category_sync_enabled>1</category_sync_enabled>
             </product_sync>
@@ -34,6 +37,7 @@
             <searchlanding>
                 <landenabled>2</landenabled>
                 <klevu_search_relevance>1</klevu_search_relevance>
+                <klevu_search_sort_orders><![CDATA[[]]]></klevu_search_sort_orders>
                 <relevance_label>Relevance</relevance_label>
             </searchlanding>
             <image_setting>

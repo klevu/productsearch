@@ -9,10 +9,15 @@ namespace Klevu\Search\Model\Order;
 use Klevu\Logger\Api\StoreScopeResolverInterface;
 use Klevu\Logger\Constants as LoggerConstants;
 use Klevu\Search\Model\Sync as KlevuSync;
+use Magento\Framework\App\Filesystem\DirectoryList;
+use Magento\Framework\Exception\FileSystemException;
 use Magento\Framework\App\ObjectManager;
+use Magento\Framework\DB\Select;
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Model\AbstractModel;
 use Magento\GroupedProduct\Model\Product\Type\Grouped as GroupedProduct;
 use Klevu\Search\Helper\Price as Klevu_Helper_Price;
+use Magento\Store\Api\Data\StoreInterface;
 
 /**
  * Class Sync
@@ -20,6 +25,8 @@ use Klevu\Search\Helper\Price as Klevu_Helper_Price;
  */
 class Sync extends AbstractModel
 {
+    const LOCK_FILE = 'klevu_running_order_sync.lock';
+    const LOCK_FILE_TTL = 3600;
 
     /**
      * @var \Magento\Framework\App\ResourceConnection
@@ -68,6 +75,16 @@ class Sync extends AbstractModel
      */
     private $storeScopeResolver;
 
+    /**
+     * @var DirectoryList
+     */
+    private $directoryList;
+
+    /**
+     * @var string[]
+     */
+    private $storeCodesToRun = [];
+
     public function __construct(
         \Magento\Framework\App\ResourceConnection $frameworkModelResource,
         \Magento\Store\Model\StoreManagerInterface $storeModelStoreManagerInterface,
@@ -86,7 +103,8 @@ class Sync extends AbstractModel
         \Magento\Framework\Data\Collection\AbstractDb $resourceCollection = null,
         Klevu_Helper_Price $klevuPriceHelper = null,
         array $data = [],
-        StoreScopeResolverInterface $storeScopeResolver = null
+        StoreScopeResolverInterface $storeScopeResolver = null,
+        DirectoryList $directoryList = null
     ) {
         parent::__construct($context, $registry, $resource, $resourceCollection, $data);
         $this->_klevuSyncModel = $klevuSyncModel;
@@ -103,11 +121,44 @@ class Sync extends AbstractModel
         $this->_priceHelper = $klevuPriceHelper ?: ObjectManager::getInstance()->get(Klevu_Helper_Price::class);
         $this->storeScopeResolver = $storeScopeResolver
             ?: ObjectManager::getInstance()->get(StoreScopeResolverInterface::class);
+        $this->directoryList = $directoryList ?: ObjectManager::getInstance()->get(DirectoryList::class);
     }
 
+    /**
+     * @return string
+     */
     public function getJobCode()
     {
         return "klevu_search_order_sync";
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getStoreCodesToRun()
+    {
+        return $this->storeCodesToRun;
+    }
+
+    /**
+     * @param array $storeCodesToRun
+     * @return $this
+     */
+    public function setStoreCodesToRun($storeCodesToRun)
+    {
+        if (null === $storeCodesToRun) {
+            $storeCodesToRun = [];
+        }
+        if (!is_array($storeCodesToRun)) {
+            throw new \InvalidArgumentException(sprintf(
+                'Store Codes argument must be an array or null; "%s" encountered',
+                is_object($storeCodesToRun) ? get_class($storeCodesToRun) : gettype($storeCodesToRun)
+            ));
+        }
+
+        $this->storeCodesToRun = array_map('trim', $storeCodesToRun);
+
+        return $this;
     }
 
     /**
@@ -142,7 +193,7 @@ class Sync extends AbstractModel
                         }
                     }
                 }
-            //For group product, only one item will be sync with id of Group Product
+                //For group product, only one item will be sync with id of Group Product
             } elseif ($item->getProductType() == GroupedProduct::TYPE_CODE) {
                 if ($item->getId() != null && $this->checkItemId($item->getId()) !== true) {
                     $group_product_data = $item->getProductOptions();
@@ -210,6 +261,10 @@ class Sync extends AbstractModel
         return $result->rowCount();
     }
 
+    /**
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws \Zend_Db_Statement_Exception
+     */
     public function run()
     {
         try {
@@ -225,9 +280,21 @@ class Sync extends AbstractModel
                 $this->log(LoggerConstants::ZEND_LOG_INFO, "Another copy is already running. Stopped.");
                 return;
             }
+            $this->createLockFile();
 
+            $connection = $this->_frameworkModelResource->getConnection();
             $stores = $this->_storeModelStoreManagerInterface->getStores();
+            if ($this->getStoreCodesToRun()) {
+                $stores = array_filter($stores, function (StoreInterface $store) {
+                    return in_array($store->getCode(), $this->getStoreCodesToRun(), true);
+                });
+            }
+
             foreach ($stores as $store) {
+                if (!$this->isOrderSyncSendOptionEnabled($store->getId())) {
+                    continue;
+                }
+
                 $this->storeScopeResolver->setCurrentStore($store);
 
                 //Skip it if no API keys found
@@ -236,43 +303,36 @@ class Sync extends AbstractModel
                     continue;
                 }
                 $this->log(LoggerConstants::ZEND_LOG_INFO, sprintf("Starting Order Sync for Store Name:(%s), Website:(%s).", $store->getName(), $store->getWebsite()->getName()));
+
+                $maxBatchSize = (int)$this->_searchHelperConfig->getOrderSyncMaxBatchSize((int)$store->getId());
+                $items_processed = 0;
                 $items_synced = 0;
                 $errors = 0;
-                $item = $this->_modelOrderItem;
-                $stmt = $this->_frameworkModelResource->getConnection()->query($this->getSyncQueueSelect());
-                $itemsToSend = $stmt->fetchAll();
-                foreach ($itemsToSend as $key => $value) {
-                    if ($this->rescheduleIfOutOfMemory()) {
-                        return;
+
+                $select = $this->getSyncQueueSelect((int)$store->getId());
+                do {
+                    $selectLimit = ($maxBatchSize && $maxBatchSize < 1000)
+                        ? $maxBatchSize
+                        : 1000;
+                    $select->limit($selectLimit, $errors);
+
+                    $stmt = $connection->query($select);
+                    $itemsToSend = $stmt->fetchAll();
+                    if (!$itemsToSend) {
+                        break;
                     }
-                    $item->setData([]);
-                    $item->load($value['order_item_id']);
-                    if ($item->getId()) {
-                        //Checking if Option Order Sync Send is enabled or not for such store item
-                        if ($this->isOrderSyncSendOptionEnabled($item->getStoreId())) {
-                            //Instead of checking API keys, comparing the Store IDs
-                            //if ($this->getApiKey($item->getStoreId())) {
-                            if ($item->getStoreId() == $store->getStoreId()) {
-                                $result = $this->sync($item, $value['klevu_session_id'], $value['ip_address'], $value['date'], $value['idcode'], $value['checkoutdate']);
-                                if ($result === true) {
-                                    $this->removeItemFromQueue($value['order_item_id']);
-                                    $items_synced++;
-                                } else {
-                                    $this->log(LoggerConstants::ZEND_LOG_INFO, sprintf("Skipped Order Item %d: %s", $value['order_item_id'], $result));
-                                    $errors++;
-                                }
-                            }
-                        } else {
-                            $this->log(LoggerConstants::ZEND_LOG_ERR, sprintf("Skipped Order Item %d: Send Order Items to Klevu Option not enabled for Store Name:(%s), Website:(%s).", $value['order_item_id'], $store->getName(), $store->getWebsite()->getName()));
-                            //It should not remove item from queue due to send sync is disabled. It can be enable in future.
-                            //$this->removeItemFromQueue($value['order_item_id']);
-                        }
-                    } else {
-                        $this->log(LoggerConstants::ZEND_LOG_ERR, sprintf("Order Item %d does not exist: Removed from sync!", $value['order_item_id']));
-                        $this->removeItemFromQueue($value['order_item_id']);
-                        $errors++;
-                    }
-                }
+
+                    $this->log(LoggerConstants::ZEND_LOG_DEBUG, sprintf(
+                        'Processing next %s unsynced order items for Store Name:(%s), Website:(%s)',
+                        $selectLimit,
+                        $store->getName(),
+                        $store->getWebsite()->getName()
+                    ));
+
+                    $this->processItemsToSync($itemsToSend, $store, $items_synced, $errors);
+                    $items_processed += count($itemsToSend);
+                } while ($items_processed < $maxBatchSize);
+
                 $this->log(LoggerConstants::ZEND_LOG_INFO, sprintf("Order Sync finished for Store Name:(%s), Website:(%s) and %d Items synced.", $store->getName(), $store->getWebsite()->getName(), $items_synced));
             }
             $this->storeScopeResolver->setCurrentStoreById($currentStoreScopeStoreId);
@@ -281,6 +341,57 @@ class Sync extends AbstractModel
             $this->log(LoggerConstants::ZEND_LOG_CRIT, sprintf("Order Sync:: Exception thrown in %s::%s - %s", __CLASS__, __METHOD__, $e->getMessage()));
             $this->storeScopeResolver->setCurrentStoreById($currentStoreScopeStoreId);
             throw $e;
+        } finally {
+            $this->clearLockFile();
+        }
+    }
+
+    /**
+     * Processes an array of sync items and hands each off to the sync method
+     *
+     * @param array[] $items
+     * @param StoreInterface $store
+     * @param int $items_synced Running total of successful sync calls
+     * @param int $errors Running total of unsuccessful sync calls
+     */
+    private function processItemsToSync(
+        array $items,
+        StoreInterface $store,
+        &$items_synced,
+        &$errors
+    ) {
+        foreach ($items as $key => $value) {
+            if ($this->rescheduleIfOutOfMemory()) {
+                return;
+            }
+
+            $item = $this->_modelOrderItem;
+            $item->setData([]);
+            $item->load($value['order_item_id']);
+            if (!$item->getId()) {
+                $this->log(\Zend\Log\Logger::ERR, sprintf("Order Item %d does not exist: Removed from sync!", $value['order_item_id']));
+                $this->removeItemFromQueue($value['order_item_id']);
+                $errors++;
+
+                continue;
+            }
+
+            //Instead of checking API keys, comparing the Store IDs
+            //if ($this->getApiKey($item->getStoreId())) {
+            if ($item->getStoreId() != $store->getStoreId()) {
+                $this->log(\Zend\Log\Logger::INFO, sprintf("Skipped Order Item %d: %s", $value['order_item_id'], $result));
+                $errors++;
+
+                continue;
+            }
+
+            $result = $this->sync($item, $value['klevu_session_id'], $value['ip_address'], $value['date'], $value['idcode'], $value['checkoutdate']);
+            if ($result === true) {
+                $this->removeItemFromQueue($value['order_item_id']);
+                $items_synced++;
+            } else {
+                $this->log(\Zend\Log\Logger::WARN, sprintf('Skipped Order Item %d: %s', $value['order_item_id'], $result));
+            }
         }
     }
 
@@ -333,26 +444,25 @@ class Sync extends AbstractModel
             $klevu_current_store_currency_salePrice_round =  $this->_priceHelper->roundPrice($klevu_current_store_currency_salePrice);
 
 
-            $response = $this->_apiActionProducttracking
-                ->setStore($this->_storeModelStoreManagerInterface->getStore($item->getStoreId()))
-                ->execute([
-                    "klevu_apiKey" => $this->getApiKey($item->getStoreId()),
-                    "klevu_type" => "checkout",
-                    "klevu_productId" => $klevu_productId,
-                    "klevu_unit" => $item->getQtyOrdered() ? $item->getQtyOrdered() : ($parent ? $parent->getQtyOrdered() : null),
-                    "klevu_salePrice" => $klevu_current_store_currency_salePrice_round,
-                    "klevu_currency" => $this->getStoreCurrency($item->getStoreId()),
-                    "klevu_shopperIP" => $this->getOrderIP($item->getOrderId()),
-                    "Klevu_sessionId" => $sess_id,
-                    "klevu_orderDate" => date_format(date_create($order_date), "Y-m-d"),
-                    "klevu_emailId" => $order_email,
-                    "klevu_storeTimezone" => $this->_searchHelperData->getStoreTimeZone($item->getStoreId()),
-                    "Klevu_clientIp" => $ip_address,
-                    "klevu_checkoutDate" => $checkout_date,
-                    "klevu_productPosition" => "1",
-                    "klevu_productGroupId" => $klevu_productGroupId,
-                    "klevu_productVariantId"=> $klevu_productVariantId
-                ]);
+            $this->_apiActionProducttracking->setStore($this->_storeModelStoreManagerInterface->getStore($item->getStoreId()));
+            $response = $this->_apiActionProducttracking->execute([
+                "klevu_apiKey" => $this->getApiKey($item->getStoreId()),
+                "klevu_type" => "checkout",
+                "klevu_productId" => $klevu_productId,
+                "klevu_unit" => $item->getQtyOrdered() ? $item->getQtyOrdered() : ($parent ? $parent->getQtyOrdered() : null),
+                "klevu_salePrice" => $klevu_current_store_currency_salePrice_round,
+                "klevu_currency" => $this->getStoreCurrency($item->getStoreId()),
+                "klevu_shopperIP" => $this->getOrderIP($item->getOrderId()),
+                "Klevu_sessionId" => $sess_id,
+                "klevu_orderDate" => date_format(date_create($order_date), "Y-m-d"),
+                "klevu_emailId" => $order_email,
+                "klevu_storeTimezone" => $this->_searchHelperData->getStoreTimeZone($item->getStoreId()),
+                "Klevu_clientIp" => $ip_address,
+                "klevu_checkoutDate" => $checkout_date,
+                "klevu_productPosition" => "1",
+                "klevu_productGroupId" => $klevu_productGroupId,
+                "klevu_productVariantId"=> $klevu_productVariantId
+            ]);
             if ($response->isSuccess()) {
                 return true;
             } else {
@@ -477,14 +587,29 @@ class Sync extends AbstractModel
     /**
      * Return a select statement for getting all items in the sync queue.
      *
-     * @return \Zend\Db\Select
+     * @return Select
      */
-    protected function getSyncQueueSelect()
+    protected function getSyncQueueSelect($storeId = null)
     {
-        return $this->_frameworkModelResource->getConnection()
-            ->select()
-            ->from($this->_frameworkModelResource->getTableName("klevu_order_sync"))
-            ->where("send = 0");
+        $connection = $this->_frameworkModelResource->getConnection();
+        $select = $connection->select();
+        $select->from(
+            ['main_table' => $this->_frameworkModelResource->getTableName('klevu_order_sync')]
+        );
+
+        if (null !== $storeId) {
+            $select->join(
+                ['order_item' => $this->_frameworkModelResource->getTableName('sales_order_item')],
+                'order_item.item_id = main_table.order_item_id',
+                []
+            );
+            $select->where('order_item.store_id = ?', $storeId);
+        }
+
+        $select->where('send = ?', 0);
+        $select->order('main_table.order_item_id ASC');
+
+        return $select;
     }
 
     /**
@@ -493,6 +618,7 @@ class Sync extends AbstractModel
      * @param $order_item_ids
      *
      * @return int
+     * @todo Move addItemsToQueue to ResourceModel
      */
     protected function addItemsToQueue($order_item_ids)
     {
@@ -512,6 +638,7 @@ class Sync extends AbstractModel
      * @param $order_item_id
      *
      * @return bool
+     * @todo Move removeItemFromQueue to ResourceModel
      */
     protected function removeItemFromQueue($order_item_id)
     {
@@ -549,7 +676,86 @@ class Sync extends AbstractModel
      */
     public function isRunning($copies = 1)
     {
+        if ($this->lockFileExists()) {
+            if (!$this->lockFileExpired()) {
+                return true;
+            }
+
+            $this->clearLockFile();
+        }
+
         return $this->_klevuSyncModel->isRunning($copies);
+    }
+
+    /**
+     * Tests whether lock file for this process exists
+     *
+     * @return bool
+     * @throws FileSystemException
+     */
+    private function lockFileExists()
+    {
+        return file_exists($this->getLockFilePath());
+    }
+
+    /**
+     * Checks whether existing lock file is older than TTL
+     * Note: will return false if file does not exist
+     *
+     * @return bool
+     * @throws FileSystemException
+     */
+    private function lockFileExpired()
+    {
+        if (!$this->lockFileExists()) {
+            return false;
+        }
+
+        return (time() - static::LOCK_FILE_TTL) > filemtime($this->getLockFilePath());
+    }
+
+    /**
+     * Creates or updates filemtime of lock file for this process
+     *
+     * @throws FileSystemException
+     */
+    public function createLockFile()
+    {
+        $lockFilePath = $this->getLockFilePath();
+
+        if (!touch($lockFilePath)) {
+            throw new FileSystemException(__('Could not create lock file at "%1"', $lockFilePath));
+        }
+    }
+
+    /**
+     * Removes lock file for process if exists
+     *
+     * @throws FileSystemException
+     */
+    public function clearLockFile()
+    {
+        if (!$this->lockFileExists()) {
+            return;
+        }
+
+        $lockFilePath = $this->getLockFilePath();
+        if (!unlink($lockFilePath)) {
+            throw new FileSystemException(__('Could not clear lock file at "%1"', $lockFilePath));
+        }
+    }
+
+    /**
+     * Returns absolute location of lock file path for process
+     *
+     * @return string
+     * @throws FileSystemException
+     */
+    private function getLockFilePath()
+    {
+        return $this->directoryList->getPath(DirectoryList::VAR_DIR)
+            . DIRECTORY_SEPARATOR
+            . static::LOCK_FILE;
     }
 
     /**
