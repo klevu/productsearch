@@ -7,6 +7,7 @@ use \Klevu\Search\Model\Product\Sync;
 use \Klevu\Search\Model\Api\Action\Features;
 use \Magento\Framework\App\Config\ScopeConfigInterface;
 use \Magento\Framework\UrlInterface;
+use Magento\Store\Model\ScopeInterface;
 use \Magento\Store\Model\StoreManagerInterface;
 use \Magento\Framework\Model\Store;
 
@@ -89,7 +90,9 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     const XML_PATH_ATTRIBUTES_BOOSTING       = "klevu_search/attributes/boosting";
     const XML_PATH_CATEGORY_ANCHOR   = "klevu_search/attributes/categoryanchor";
     const XML_PATH_ORDER_SYNC_ENABLED   = "klevu_search/product_sync/order_sync_enabled";
-    const XML_PATH_ORDER_SYNC_FREQUENCY = "klevu_search/order_sync/frequency";
+    const XML_PATH_ORDER_SYNC_FREQUENCY = "klevu_search/product_sync/order_sync_frequency";
+    const XML_PATH_ORDER_SYNC_FREQUENCY_CUSTOM = "klevu_search/product_sync/order_sync_frequency_custom";
+    const XML_PATH_ORDER_SYNC_MAX_BATCH_SIZE = 'klevu_search/product_sync/order_sync_max_batch_size';
     const XML_PATH_ORDER_SYNC_LAST_RUN = "klevu_search/order_sync/last_run";
     const XML_PATH_FORCE_LOG = "klevu_search/developer/force_log";
     const XML_PATH_LOG_LEVEL = "klevu_search/developer/log_level";
@@ -117,6 +120,7 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     const XML_PATH_PRICE_TYPEINSEARCH_METHOD = "tax/display/typeinsearch";
     const XML_PATH_CATALOGINVENTRY_OPTIONS_STOCK ="cataloginventory/options/show_out_of_stock";
     const XML_PATH_CATALOG_SEARCH_RELEVANCE = "klevu_search/searchlanding/klevu_search_relevance";
+    const XML_PATH_CATALOG_SEARCH_SORT_ORDERS = 'klevu_search/searchlanding/klevu_search_sort_orders';
 	const XML_PATH_PRODUCT_SYNC_CATALOGVISIBILITY   = "klevu_search/product_sync/catalogvisibility";
 	const  XML_PATH_SEARCHENGINE = 'catalog/search/engine';
 	const XML_PATH_PRICE_PER_CUSTOMER_GROUP_METHOD = "klevu_search/price_per_customer_group/enabled";
@@ -574,7 +578,11 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function getOrderSyncEnabledFlag($store = 0)
     {
-        return (int)$this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_ORDER_SYNC_ENABLED, \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $store);
+        return (int)$this->_appConfigScopeConfigInterface->getValue(
+            static::XML_PATH_ORDER_SYNC_ENABLED,
+            \Magento\Store\Model\ScopeInterface::SCOPE_STORE,
+            $store
+        );
     }
 
     /**
@@ -601,6 +609,21 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     public function getOrderSyncFrequency()
     {
         return $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_ORDER_SYNC_FREQUENCY);
+    }
+
+    /**
+     * @param int|null $storeId
+     * @return int|null
+     */
+    public function getOrderSyncMaxBatchSize($storeId = null)
+    {
+        $configValue = (int)$this->_appConfigScopeConfigInterface->getValue(
+            static::XML_PATH_ORDER_SYNC_MAX_BATCH_SIZE,
+            ScopeInterface::SCOPE_STORES,
+            $storeId
+        );
+
+        return $configValue ?: null;
     }
 
     /**

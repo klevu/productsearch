@@ -6,7 +6,7 @@
             <config_path>klevu_search/product_sync/frequency</config_path>
         </job>
         <job name="klevu_search_order_sync" instance="Klevu\Search\Model\Order\Sync" method="run">
-            <schedule>0 2 * * *</schedule>
+            <config_path>klevu_search/product_sync/order_sync_frequency</config_path>
         </job>
         <job name="klevu_search_clear_sync_lock" instance="Klevu\Search\Cron\ClearSyncLock" method="execute">
             <schedule>0 */6 * * *</schedule>

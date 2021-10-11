@@ -24,6 +24,18 @@
         </arguments>
     </type>
 
+    <type name="Klevu\Search\Block\Adminhtml\Form\Field\ProductListSortOrder\SortOrderCodeColumn">
+        <arguments>
+            <argument name="productListSortOrdersSource" xsi:type="object">Klevu\Search\Model\Source\ProductListSortOrders</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Block\Adminhtml\Form\Field\ProductListSortOrder">
+        <arguments>
+            <argument name="serializer" xsi:type="object">Klevu\Search\Serializer\Json</argument>
+        </arguments>
+    </type>
+
     <!-- Stores Config Log Action Buttons -->
     <type name="Klevu\Search\Block\Adminhtml\Form\Field\Logdownload">
         <arguments>

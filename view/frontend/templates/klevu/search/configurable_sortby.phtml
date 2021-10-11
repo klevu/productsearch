@@ -1,0 +1,27 @@
+<?php
+    /** @var Klevu\Search\Block\Search\ConfigurableSortBy $block */
+    $productListSortOrderOptions = $block->getProductListSortOrderOptions();
+?>
+<?php if ($productListSortOrderOptions): ?>
+    <?php $landingSortDefaultValueOption = current($productListSortOrderOptions); ?>
+    <script type="text/javascript">
+        var klevu_landingSortDefaultValue = '<?php echo $block->escapeQuote($landingSortDefaultValueOption['value']); ?>';
+    </script>
+    <select name="kuSortby"
+            id="kuSortby"
+            data-klevu-is-configurable-sort-by="1"
+            onchange="klevu_changeSortingOptionsForLandigPage(this.value);">
+        <?php foreach ($productListSortOrderOptions as $option): ?>
+            <?php
+                $value = isset($option['value']) ? $option['value'] : '';
+                if (!$value) {
+                    continue;
+                }
+
+                $label = (string)(isset($option['label']) ? $option['label'] : $value);
+            ?>
+            <option value="<?php echo $block->escapeQuote($value); ?>"
+                ><?php echo $block->escapeHtml($label); ?></option>
+        <?php endforeach; ?>
+    </select>
+<?php endif; ?>

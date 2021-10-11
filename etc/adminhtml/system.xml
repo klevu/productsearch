@@ -67,14 +67,31 @@
 				  <comment><![CDATA[Select Search Result Page.]]></comment>
                   <source_model>Klevu\Search\Model\System\Config\Source\Landingoptions</source_model>
                 </field>
-                <field id="klevu_search_relevance" translate="label" type="select" sortOrder="121" showInDefault="1" showInStore="1">
+                <field id="klevu_search_sort_orders" translate="label comment" sortOrder="120" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Product List Sort Order Options</label>
+                    <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\ProductListSortOrder</frontend_model>
+                    <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
+                    <depends>
+                        <field id="landenabled">2</field>
+                    </depends>
+                    <comment><![CDATA[Select the sort order options available on the frontend. Leaving the Label Override field blank will use the system label shown in the dropdown field.<br />
+                    If you do not add any sort order options, the default sort orders provided by Klevu will be used by default.<br />
+                    For further details, see <a href="https://support.klevu.com/knowledgebase/sort-order-options/" target="_blank">this knowledgebase article</a>]]></comment>
+                </field>
+                <field id="klevu_search_relevance" translate="label comment" type="select" sortOrder="130" showInDefault="1" showInStore="1">
                     <label>Sort by Klevu Relevance</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <depends>
+                        <field id="landenabled">1</field>
+                    </depends>
                     <comment><![CDATA[When option "Klevu Powered - Preserve Theme Layout" is selected.]]></comment>
                 </field>
-                <field id="relevance_label" translate="label" type="text" sortOrder="122" showInDefault="1" showInStore="1">
+                <field id="relevance_label" translate="label comment" type="text" sortOrder="140" showInDefault="1" showInStore="1">
                     <label>Sort Relevance Label</label>
                     <validate>required-entry</validate>
+                    <depends>
+                        <field id="landenabled">1</field>
+                    </depends>
                     <comment><![CDATA[On the Search Results Page, text label will be shown in the sorting drop-down.</br> Default label will be as <strong>Relevance</strong>.]]></comment>
                 </field>
             </group>
@@ -102,9 +119,9 @@
                     ]]></comment>
                 </field>
                 <field id="frequency" translate="label comment" sortOrder="10" type="select" showInDefault="1">
-                  <label>Frequency</label>
-                  <source_model>Klevu\Search\Model\System\Config\Source\Frequency</source_model>
-                  <comment><![CDATA[
+                    <label>Frequency</label>
+                    <source_model>Klevu\Search\Model\System\Config\Source\Frequency\ProductSync</source_model>
+                    <comment><![CDATA[
                     Configure how often Klevu will synchronise changes to Products, Categories and CMS data.
                     Learn more about the available options for synchronising data here:
                     <a href="https://support.klevu.com/knowledgebase/magento-data-sync" target="_blank">Magento 2 Data Sync</a>.
@@ -115,7 +132,37 @@
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     <comment><![CDATA[
                       <strong>Recommended.</strong> Klevu Search uses transactional data as a ranking factor to show the most popular products to your customers.
-                      Enable this option to send recent Orders to Klevu every day at 2AM local time via the native Magento internal cron.
+                      Enable this option to send recent Orders to Klevu via the native Magento internal cron.<br />
+                      Schedule set in the Order Sync Frequency field.
+                    ]]></comment>
+                </field>
+                <field id="order_sync_frequency" translate="label comment" sortOrder="61" type="select" showInDefault="1">
+                    <label>Order Sync Frequency</label>
+                    <source_model>Klevu\Search\Model\System\Config\Source\Frequency\OrderSync</source_model>
+                    <depends>
+                        <field id="order_sync_enabled">1</field>
+                    </depends>
+                    <comment><![CDATA[
+                    Configure how often to send order information to Klevu.
+                    Learn more about the available options for synchronising data here:
+                    <a href="https://support.klevu.com/knowledgebase/magento-data-sync" target="_blank">Magento 2 Data Sync</a>.
+                  ]]></comment>
+                </field>
+                <field id="order_sync_frequency_custom" translate="label comment" sortOrder="62" showInDefault="1">
+                    <label>Custom Order Sync Frequency</label>
+                    <depends>
+                        <field id="order_sync_enabled">1</field>
+                        <field id="order_sync_frequency">custom</field>
+                    </depends>
+                    <comment><![CDATA[
+                        Crontab schedule for order synchronisation, see our <a href="https://support.klevu.com/knowledgebase/magento-data-sync" target="_blank">Magento 2 Data Sync</a>
+                        article for help generating and testing schedules.<br />
+                        Some common schedules include
+                        <ul style="padding-left: 20px">
+                            <li><code>0 * * * *</code> : Hourly on the hour</li>
+                            <li><code>0 2 * * *</code> : 2am every day (local time)</li>
+                            <li><code>0 */6 * * *</code> : Every six hours, on the hour, starting at midnight</li>
+                        </ul>
                     ]]></comment>
                 </field>
                 <field id="category_sync_enabled" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
@@ -267,14 +314,30 @@
         <comment><![CDATA[
         <strong>Recommended.</strong> Use this option to choose between Collection Method and Object Method for loading products during data synchronisation.
         Learn more here: <a href="https://support.klevu.com/knowledgebase/enabling-collection-method-to-sync-data-magento-2" target="_blank">Object vs Collection Method</a>.]]></comment>
-        </field>
-        <field id="force_log" translate="label comment" sortOrder="300" type="select" showInDefault="1">
-          <label>Force Logging</label>
-          <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-          <comment><![CDATA[Use this setting to override default Magento log settings and enable logging. Log messages are saved in Klevu_Search.log]]></comment>
-        </field>
-        <field id="log_level" translate="label" sortOrder="310" type="select" showInDefault="1">
-          <label>Log level</label>
+                </field>
+                <field id="order_sync_max_batch_size" translate="label comment" sortOrder="302" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Order Sync Max Batch Size</label>
+                    <depends>
+                        <field id="klevu_search/product_sync/order_sync_enabled">1</field>
+                    </depends>
+                    <comment><![CDATA[
+                    By default (with no value entered in the field above), the synchronisation process will attempt to push all unsent
+                    order records.<br />
+                    Setting a maximum batch size limits each cron execution to sending <em>at most</em> the configured number of orders.
+                    Additional orders will be sent in a subsequent cron job, resuming from the earliest unsynced order.<br />
+                    If you are encountering issues with memory or execution time limits, a lower batch size combined with more frequent synchronisations may mitigate the issue,
+                    however there is a danger of orders backing up if the combination of frequency and batch size are not sufficient to process
+                    average daily order volumes.
+                ]]></comment>
+                    <config_path>klevu_search/product_sync/order_sync_max_batch_size</config_path>
+                </field>
+                <field id="force_log" translate="label comment" sortOrder="305" type="select" showInDefault="1">
+                    <label>Force Logging</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment><![CDATA[Use this setting to override default Magento log settings and enable logging. Log messages are saved in Klevu_Search.log]]></comment>
+                </field>
+                <field id="log_level" translate="label" sortOrder="310" type="select" showInDefault="1">
+                    <label>Log level</label>
           <source_model>Klevu\Logger\Model\Source\LogLevel\Zend</source_model>
         </field>
 	<field id="download_log_button" type="button" sortOrder="401" showInDefault="1">
@@ -293,10 +356,8 @@
         <field id="trigger_options_info" translate="label comment" sortOrder="420"  type="select" showInDefault="1">
             <label>Using an ERP OR 3rd party tool for product updates</label>
             <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+            <backend_model>Klevu\Search\Model\Config\Backend\Trigger</backend_model>
             <comment><![CDATA[If store is integrated with an ERP OR 3rd party tool for product updates (i.e stock or price data),set this value to 'Yes'.]]></comment>
-        </field>
-        <field id="trigger_button" type="button" sortOrder="430" showInDefault="1">
-            <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Trigger\Button</frontend_model>
         </field>
       </group>
         <group id="notification" translate="label comment" sortOrder="1000" showInDefault="1">

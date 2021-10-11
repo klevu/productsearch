@@ -16,13 +16,13 @@ class Response extends \Magento\Framework\DataObject
      * @var \Klevu\Search\Helper\Data
      */
     protected $_searchHelperData;
-	
+
 	/**
      * @var \Magento\AdminNotification\Model\InboxFactory
      */
     protected $_messageManager;
-	
-	
+
+
 
     public function __construct(\Klevu\Search\Helper\Data $searchHelperData,
 	\Magento\AdminNotification\Model\InboxFactory $messageManager)
@@ -132,7 +132,7 @@ class Response extends \Magento\Framework\DataObject
             }
             if($response->getStatusCode() == 400) {
 				$storefromscope = $this->_searchHelperData->storeFromScopeId();
-				
+
 				$datatest[] = [
 					'severity' => "1",
 					'title' => "Klevu : Product Sync failed",
@@ -143,10 +143,10 @@ class Response extends \Magento\Framework\DataObject
 						$message),
 					'url' => "http://support.klevu.com/knowledgebase/base-urls/"
 				];
-				
+
 				$this->_messageManager->create()->parse($datatest);
 
-				
+
 				$this->setMessage(sprintf("Product Sync failed for %s (%s): %s",
 						$storefromscope->getWebsite()->getName(),
 						$storefromscope->getName(),
@@ -158,5 +158,15 @@ class Response extends \Magento\Framework\DataObject
         }
 
         return $this;
+    }
+
+    /**
+     * Added to allow test suite to mock object
+     *
+     * @return string|null
+     */
+    public function getMessage()
+    {
+        return $this->getData('message');
     }
 }

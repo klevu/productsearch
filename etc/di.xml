@@ -1,9 +1,12 @@
 <?xml version="1.0"?>
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+	<preference for="Klevu\Search\Api\SerializerInterface" type="Klevu\Search\Serializer\Json"/>
 	<preference for="Magento\Config\Block\System\Config\Form\Field" type="Klevu\Search\Block\Adminhtml\System\Config\Form\Field"/>
 
 	<!--<preference for="Magento\Framework\Search\Adapter\Mysql\ScoreBuilder" type="Klevu\Search\Adapter\Mysql\ScoreBuilder"/>
     <preference for="Magento\CatalogSearch\Model\Search\TableMapper" type="Klevu\Search\Model\Search\TableMapper"/>-->
+
+	<preference for="Klevu\Search\Api\Provider\CommonProviderInterface" type="Klevu\Search\Model\Product\Provider\CommonProvider"/>
 
 	<preference for="Klevu\Search\Model\Klevu\Cron\SchedulerInterface" type="Klevu\Search\Model\Klevu\Cron\Scheduler" />
 	<preference for="Klevu\Search\Model\Klevu\Category\CategoryInterface" type="Klevu\Search\Model\Klevu\Category\Category" />
@@ -17,6 +20,7 @@
 	<preference for="Klevu\Search\Model\Category\KlevuCategoryActionsInterface" type="Klevu\Search\Model\Category\KlevuCategoryActions"/>
 	<preference for="Klevu\Search\Model\Product\ProductParentInterface" type="Klevu\Search\Model\Product\ProductParent"/>
 	<preference for="Klevu\Search\Model\Product\ProductIndividualInterface" type="Klevu\Search\Model\Product\ProductIndividual"/>
+	<preference for="Klevu\Search\Model\Product\ProductCommonUpdaterInterface" type="Klevu\Search\Model\Product\ProductCommonUpdater"/>
 	<type name="Magento\Catalog\Block\Product\ProductList\Toolbar">
 		<plugin name="klevu_search_toolbar" type="Klevu\Search\Plugin\Catalog\Block\Toolbar" sortOrder="101"/>
 	</type>
@@ -28,6 +32,9 @@
 	</type>
 	<type name="Magento\Framework\Api\Search\SearchResult">
 		<plugin name="Klevu_Search_Plugin_Api_Search_SearchResult" type="Klevu\Search\Plugin\Api\Search\SearchResult" sortOrder="101"/>
+	</type>
+	<type name="Magento\Cron\Model\ConfigInterface">
+		<plugin name="Klevu_Search_SetCustomCronFrequencyPlugin" type="Klevu\Search\Plugin\Cron\Model\Config\SetCustomCronFrequencyPlugin"/>
 	</type>
 	<type name="Magento\CatalogInventory\Api\StockRegistryInterface">
 		<plugin name="Klevu_Search::addStockRegistryProductsInQueue" type="Klevu\Search\Plugin\Api\StockUpdatePlugin"/>
@@ -58,6 +65,7 @@
 				<item name="RatingGeneration" xsi:type="object">Klevu\Search\Console\Command\RatingGeneration</item>
 				<item name="ImageGeneration" xsi:type="object">Klevu\Search\Console\Command\ImageGeneration</item>
 				<item name="sync_category" xsi:type="object">Klevu\Search\Console\Command\SyncCategoryCommand\Proxy</item>
+                <item name="sync_order" xsi:type="object">Klevu\Search\Console\Command\SyncOrderCommand\Proxy</item>
 			</argument>
 		</arguments>
 	</type>
@@ -67,6 +75,12 @@
 				type="Klevu\Search\Plugin\Framework\Search\Request\CleanerPlugin"
 				disabled="false"/>
 	</type>
+
+    <type name="Klevu\Search\Helper\Image">
+        <arguments>
+            <argument name="requireJs" xsi:type="object">Magento\Backend\Block\Page\RequireJs\Proxy</argument>
+        </arguments>
+    </type>
 
 	<!-- LOGGER CONFIGURATION -->
 	<!-- Search -->
@@ -135,9 +149,58 @@
 		</arguments>
 	</type>
 
+    <!-- Source Models -->
+    <virtualType name="Klevu\Search\Model\System\Config\Source\Frequency\ProductSync" type="Klevu\Search\Model\System\Config\Source\Frequency">
+        <arguments>
+            <argument name="options" xsi:type="array">
+                <item name="Hourly" xsi:type="const">Klevu\Search\Model\System\Config\Source\Frequency::CRON_HOURLY</item>
+                <item name="Every 3 hours" xsi:type="const">Klevu\Search\Model\System\Config\Source\Frequency::CRON_EVERY_3_HOURS</item>
+                <item name="Every 6 hours" xsi:type="const">Klevu\Search\Model\System\Config\Source\Frequency::CRON_EVERY_6_HOURS</item>
+                <item name="Every 12 hours" xsi:type="const">Klevu\Search\Model\System\Config\Source\Frequency::CRON_EVERY_12_HOURS</item>
+                <item name="Daily" xsi:type="const">Klevu\Search\Model\System\Config\Source\Frequency::CRON_DAILY</item>
+                <item name="Never" xsi:type="const">Klevu\Search\Model\System\Config\Source\Frequency::CRON_NEVER</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="Klevu\Search\Model\System\Config\Source\Frequency\OrderSync" type="Klevu\Search\Model\System\Config\Source\Frequency">
+        <arguments>
+            <argument name="options" xsi:type="array">
+                <item name="Hourly" xsi:type="const">Klevu\Search\Model\System\Config\Source\Frequency::CRON_HOURLY</item>
+                <item name="Every 3 hours (from 2am)" xsi:type="string">0 2,5,8,11,14,17,20,23 * * *</item>
+                <item name="Every 6 hours (from 2am)" xsi:type="string">0 2,8,14,20 * * */</item>
+                <item name="Every 12 hours (from 2am)" xsi:type="string">0 2,14 * * *</item>
+                <item name="Daily (at 2am)" xsi:type="string">0 2 * * *</item>
+                <item name="Custom" xsi:type="const">Klevu\Search\Model\System\Config\Source\Frequency::CRON_CUSTOM</item>
+                <item name="Never" xsi:type="const">Klevu\Search\Model\System\Config\Source\Frequency::CRON_NEVER</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
 	<type name="Klevu\Search\Helper\Image">
 		<arguments>
 			<argument name="requireJs" xsi:type="object">Magento\Backend\Block\Page\RequireJs\Proxy</argument>
 		</arguments>
 	</type>
+
+    <!-- Common Provider for queue up products -->
+    <type name="Klevu\Search\Model\Product\Provider\CommonProvider">
+        <arguments>
+            <argument name="providers" xsi:type="array">
+                <item name="grouped" xsi:type="object">Klevu\Search\Model\Product\Provider\GroupedProvider</item>
+                <item name="bundle" xsi:type="object">Klevu\Search\Model\Product\Provider\BundleProvider</item>
+                <item name="simple" xsi:type="object">Klevu\Search\Model\Product\Provider\SimpleProvider</item>
+            </argument>
+        </arguments>
+    </type>
+    <!-- Simple Provider for queue up products -->
+    <type name="Klevu\Search\Model\Product\Provider\SimpleProvider">
+        <arguments>
+            <argument name="providers" xsi:type="array">
+                <item name="grouped" xsi:type="object">Klevu\Search\Model\Product\Provider\GroupedProvider</item>
+                <item name="bundle" xsi:type="object">Klevu\Search\Model\Product\Provider\BundleProvider</item>
+                <!-- add a custom parent type if custom parent type have a simple as a child -->
+            </argument>
+        </arguments>
+    </type>
 </config>

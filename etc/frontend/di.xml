@@ -8,4 +8,11 @@
 			</argument>
 		</arguments>
 	</type>
+
+	<type name="Klevu\Search\Block\Search\ConfigurableSortBy">
+		<arguments>
+			<argument name="serializer" xsi:type="object">Klevu\Search\Serializer\Json</argument>
+			<argument name="productListSortOrdersSource" xsi:type="object">Klevu\Search\Model\Source\ProductListSortOrders</argument>
+		</arguments>
+	</type>
 </config>
