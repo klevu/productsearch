@@ -36,7 +36,11 @@ class CronConfigInterfaceTest extends TestCase
         $cronConfigModel = $this->objectManager->get(CronConfigInterface::class);
         $actualResult = $cronConfigModel->getJobs();
 
-        $this->assertIsArray($actualResult);
+        if (method_exists($this, 'assertIsArray')) {
+            $this->assertIsArray($actualResult);
+        } else {
+            $this->assertTrue(is_array($actualResult), 'Is Array');
+        }
         $this->assertTrue(isset($actualResult['default']['klevu_search_order_sync']['config_path']));
         $this->assertSame(
             'klevu_search/product_sync/order_sync_frequency',
@@ -66,7 +70,11 @@ class CronConfigInterfaceTest extends TestCase
         $cronConfigModel = $this->objectManager->get(CronConfigInterface::class);
         $actualResult = $cronConfigModel->getJobs();
 
-        $this->assertIsArray($actualResult);
+        if (method_exists($this, 'assertIsArray')) {
+            $this->assertIsArray($actualResult);
+        } else {
+            $this->assertTrue(is_array($actualResult), 'Is Array');
+        }
         $this->assertTrue(isset($actualResult['default']['klevu_search_order_sync']['config_path']));
         $this->assertSame(
             'klevu_search/product_sync/order_sync_frequency_custom',

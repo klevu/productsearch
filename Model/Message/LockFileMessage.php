@@ -83,7 +83,7 @@ class LockFileMessage implements MessageInterface
             Please read about <a href="%2" target="_blank">Magento Lock Files</a> for more information.
             This warning can be disabled via <a href="%1#row_klevu_search_notification_lock_file">Notification Settings</a>',
             $url,
-            'https://support.klevu.com/knowledgebase/magento-2-lock-files/'
+            'https://help.klevu.com/support/solutions/articles/5000871506-lock-files-for-data-sync/'
         );
         //@codingStandardsIgnoreEnd
     }

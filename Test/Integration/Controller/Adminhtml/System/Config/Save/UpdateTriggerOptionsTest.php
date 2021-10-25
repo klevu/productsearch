@@ -534,6 +534,10 @@ class UpdateTriggerOptionsTest extends AbstractBackendControllerTestCase
      */
     private function setupPhp5()
     {
+        if (!isset($this->expectedNoAccessResponseCode)) {
+            $this->expectedNoAccessResponseCode = 403;
+        }
+
         $this->objectManager = Bootstrap::getObjectManager();
         $this->resourceConnection = $this->objectManager->get(ResourceConnection::class);
         $this->connection = $this->resourceConnection->getConnection();

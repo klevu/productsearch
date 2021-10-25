@@ -124,7 +124,7 @@ class Response extends \Magento\Framework\DataObject
                     $message = "API server unavailable.";
                     break;
 				case 400:
-                    $message = "Klevu Product sync has issues indexing your products. <b>".$this->_searchHelperData->getBaseDomain()."</b> is not listed as an allowed base URL for the Klevu Search API key <b>'".$this->_searchHelperData->getJsApiKey()."'</b>. Please <a href='http://support.klevu.com/knowledgebase/base-urls
+                    $message = "Klevu Product sync has issues indexing your products. <b>".$this->_searchHelperData->getBaseDomain()."</b> is not listed as an allowed base URL for the Klevu Search API key <b>'".$this->_searchHelperData->getJsApiKey()."'</b>. Please <a href='https://help.klevu.com/support/solutions/articles/5000871512-secure-base-urls
 ' target='_blank'>click here</a> for more information.";
 					break;
                 default:
@@ -141,7 +141,7 @@ class Response extends \Magento\Framework\DataObject
 						$storefromscope->getWebsite()->getName(),
 						$storefromscope->getName(),
 						$message),
-					'url' => "http://support.klevu.com/knowledgebase/base-urls/"
+					'url' => "https://help.klevu.com/support/solutions/articles/5000871512-secure-base-urls/"
 				];
 
 				$this->_messageManager->create()->parse($datatest);

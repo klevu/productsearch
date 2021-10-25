@@ -41,7 +41,7 @@ class InstallSchema implements InstallSchemaInterface
         // the notification the next time cron runs
         $installer->getConnection()->insert($notifications_table, [
             "type" => "cron_check",
-            "message" => __('Klevu Search relies on cron for normal operations. Please check that you have Magento cron set up correctly. You can find instructions on how to set up Magento Cron <a target="_blank" href="http://support.klevu.com/knowledgebase/setup-a-cron/">here</a>.')
+            "message" => __('Klevu Search relies on cron for normal operations. Please check that you have Magento cron set up correctly. You can find instructions on how to set up Magento Cron <a target="_blank" href="https://help.klevu.com/support/solutions/articles/5000871452-setup-external-cron-job">here</a>.')
         ]);
 
         $now = date_create("now")->format("Y-m-d H:i:00");

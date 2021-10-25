@@ -57,14 +57,14 @@ class Information extends \Magento\Config\Block\System\Config\Form\Fieldset
             foreach ($files as $key => $value) {
                 $params['filename'] = basename($value);
                 $url_lock = $this->_context->getUrlBuilder()->getUrl("klevu_search/sync/clearlock", $params);
-                $html .= '<div class="message message-error">Magento is not able to execute subprocess command and due to this, data sync has stopped. </br> Klevu has generated Cron Lock file since ' . date("Y-m-d H:i:s", filemtime($value)) . '. To resolve this, Please follow the <a href="https://support.klevu.com/knowledgebase/run-klevu-cron-independent-of-magento-2-cron/" target="_blank">guide</a> to setup external Klevu Cron which is independent of Magento Cron. Once the external Klevu Cron is setup, please <a href=' . $url_lock . '>Click here </a> to remove the Cron lock file.</div>';
+                $html .= '<div class="message message-error">Magento is not able to execute subprocess command and due to this, data sync has stopped. </br> Klevu has generated Cron Lock file since ' . date("Y-m-d H:i:s", filemtime($value)) . '. To resolve this, Please follow the <a href="https://help.klevu.com/support/solutions/articles/5000871452-setup-external-cron-job" target="_blank">guide</a> to setup external Klevu Cron which is independent of Magento Cron. Once the external Klevu Cron is setup, please <a href=' . $url_lock . '>Click here </a> to remove the Cron lock file.</div>';
             }
         }
         if (!empty($AreaCodefile)) {
             foreach ($AreaCodefile as $key => $value) {
                 $params['filename'] = basename($value);
                 $url_lock = $this->_context->getUrlBuilder()->getUrl("klevu_search/sync/clearlock", $params);
-                $html .= '<div class="message message-error">Klevu Search has detected an <b>Area code is already set</b> error, data sync may not be working correctly. For more information on what this means and how to resolve it, please follow the steps in <a href="https://support.klevu.com/knowledgebase/resolving-area-code-already-set/" target="_blank">this guide</a>.</div>';
+                $html .= '<div class="message message-error">Klevu Search has detected an <b>Area code is already set</b> error, data sync may not be working correctly. For more information on what this means and how to resolve it, please follow the steps in <a href="https://help.klevu.com/support/solutions/articles/5000871360-area-code-is-already-set" target="_blank">this guide</a>.</div>';
             }
         }
 
@@ -75,7 +75,7 @@ class Information extends \Magento\Config\Block\System\Config\Form\Fieldset
                 'Klevu Search has detected one or more outdated Lock Files, data sync may not be working correctly.</br>
             Please read about <a href="%1" target="_blank">Magento Lock Files</a> for more information.
             This warning can be disabled via <a href="#row_klevu_search_notification_lock_file">Notification Settings</a>',
-                'https://support.klevu.com/knowledgebase/magento-2-lock-files/');
+                'https://help.klevu.com/support/solutions/articles/5000871506-lock-files-for-data-sync/');
             $html .= '<div class="message message-error">' . $str . '</div>';
         }
 
@@ -86,7 +86,7 @@ class Information extends \Magento\Config\Block\System\Config\Form\Fieldset
                 'Klevu Search is currently using Object method, which may be impacting your data sync performance.</br>
             Please read <a href="%1" target="_blank">Object vs Collection Method</a> for more information.
             This warning can be disabled via <a href="#row_klevu_search_notification_object_vs_collection">Notification Settings</a>.',
-                'https://support.klevu.com/knowledgebase/enabling-collection-method-to-sync-data-magento-2');
+                'https://help.klevu.com/support/solutions/articles/5000871455-sync-data-using-collection-method');
             $html .= '<div class="message message-error">' . $str . '</div>';
         }
 
@@ -94,9 +94,9 @@ class Information extends \Magento\Config\Block\System\Config\Form\Fieldset
         $html .= '<div class="message kuInfo-fRight">
       <ul>
          <li><b>Quick Links:</b></li>
-         <li><a target="_blank" href="https://support.klevu.com/knowledgebase/integration-steps-for-magento-2/">Integration Steps</a></li>
-         <li><a target="_blank" href="https://support.klevu.com/section/manuals/magento2-manuals/migrating-from-staging-to-live/">Migrating from Staging to Live</a></li>
-         <li><a target="_blank" href="https://support.klevu.com/faq/faqs/how-to-upgrade-my-current-plan/">How to upgrade plan?</a></li>
+         <li><a target="_blank" href="https://help.klevu.com/support/solutions/articles/5000871252-integration-steps-for-magento-2">Integration Steps</a></li>
+         <li><a target="_blank" href="https://help.klevu.com/support/solutions/folders/5000308570">Migrating from Staging to Live</a></li>
+         <li><a target="_blank" href="https://help.klevu.com/support/solutions/articles/5000871369-how-to-upgrade-my-plan-">How to upgrade plan?</a></li>
          <li><a target="_blank" href="https://box.klevu.com/">Klevu Merchant Center</a></li>
       </ul></div>';
 
@@ -122,7 +122,7 @@ class Information extends \Magento\Config\Block\System\Config\Form\Fieldset
         $html .= '<div class="kuInfoClear"></div>';
 
         $html .= '<p><b>Prerequisites:</b><br>
-		  1. Ensure cron is running (<a target="_blank" href="https://support.klevu.com/knowledgebase/setting-up-a-cron-magento-2/">Click here </a>for more information on setting up a cron )<br>
+		  1. Ensure cron is running (<a target="_blank" href="hhttps://help.klevu.com/support/solutions/articles/5000871452-setup-external-cron-job">Click here </a>for more information on setting up a cron )<br>
 		  2. Indices are uptodate (System &gt; Index Management)<br>
 		  3. Products should be enabled and have the visibility set to catalog and search</p>';
 

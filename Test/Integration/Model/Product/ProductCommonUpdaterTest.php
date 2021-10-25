@@ -84,7 +84,11 @@ class ProductCommonUpdaterTest extends TestCase
         $ids = [$groupedProduct->getId(), $simpleProduct->getId()];
         //Get klevu_product_sync for 1 grouped product having two children's - not empty exists with last_synced_at - not 0
         $klevuProductsBefore = $this->getKlevuProducts($ids, true);
-        $this->assertIsArray($klevuProductsBefore);
+        if (method_exists($this, 'assertIsArray')) {
+            $this->assertIsArray($klevuProductsBefore);
+        } else {
+            $this->assertTrue(is_array($klevuProductsBefore), 'Is Array');
+        }
         $this->assertEmpty($klevuProductsBefore);
 
         //Mark update
@@ -92,7 +96,11 @@ class ProductCommonUpdaterTest extends TestCase
 
         //Get klevu_product_sync for 1 grouped product having two children's - not empty exists with last_synced_at - 0
         $klevuProductsAfter = $this->getKlevuProducts($ids, false);
-        $this->assertIsArray($klevuProductsAfter);
+        if (method_exists($this, 'assertIsArray')) {
+            $this->assertIsArray($klevuProductsAfter);
+        } else {
+            $this->assertTrue(is_array($klevuProductsAfter), 'Is Array');
+        }
         $this->assertCount(2, $klevuProductsAfter);
 
         //forcefully rollbacks here as loadProductFixturesRollback not a part of a @magentoDataFixture
@@ -132,13 +140,21 @@ class ProductCommonUpdaterTest extends TestCase
         $ids = [$groupedProduct->getId(), $simpleProduct->getId()];
 
         $klevuProductsBefore = $this->getKlevuProducts($ids, true);
-        $this->assertIsArray($klevuProductsBefore);
+        if (method_exists($this, 'assertIsArray')) {
+            $this->assertIsArray($klevuProductsBefore);
+        } else {
+            $this->assertTrue(is_array($klevuProductsBefore), 'Is Array');
+        }
         $this->assertEmpty($klevuProductsBefore);
 
         $this->productCommonUpdater->markProductToQueue($groupedProduct);
 
         $klevuProductsAfter = $this->getKlevuProducts($ids, false);
-        $this->assertIsArray($klevuProductsAfter);
+        if (method_exists($this, 'assertIsArray')) {
+            $this->assertIsArray($klevuProductsAfter);
+        } else {
+            $this->assertTrue(is_array($klevuProductsAfter), 'Is Array');
+        }
         $this->assertCount(2, $klevuProductsAfter);
 
         //forcefully rollbacks here as loadProductFixturesRollback not a part of a @magentoDataFixture
@@ -177,7 +193,11 @@ class ProductCommonUpdaterTest extends TestCase
         $ids = [$bundleProduct->getId(), $simpleProduct->getId()];
         //Get klevu_product_sync for 1 grouped product having two children's - not empty exists with last_synced_at - not 0
         $klevuProductsBefore = $this->getKlevuProducts($ids, true);
-        $this->assertIsArray($klevuProductsBefore);
+        if (method_exists($this, 'assertIsArray')) {
+            $this->assertIsArray($klevuProductsBefore);
+        } else {
+            $this->assertTrue(is_array($klevuProductsBefore), 'Is Array');
+        }
         $this->assertEmpty($klevuProductsBefore);
 
         //Mark update
@@ -185,7 +205,11 @@ class ProductCommonUpdaterTest extends TestCase
 
         //Get klevu_product_sync for 1 grouped product having two children's - not empty exists with last_synced_at - 0
         $klevuProductsAfter = $this->getKlevuProducts($ids, false);
-        $this->assertIsArray($klevuProductsAfter);
+        if (method_exists($this, 'assertIsArray')) {
+            $this->assertIsArray($klevuProductsAfter);
+        } else {
+            $this->assertTrue(is_array($klevuProductsAfter), 'Is Array');
+        }
         $this->assertCount(2, $klevuProductsAfter);
 
         //forcefully rollbacks here as loadProductFixturesRollback not a part of a @magentoDataFixture
@@ -224,13 +248,21 @@ class ProductCommonUpdaterTest extends TestCase
         $ids = [$bundleProduct->getId(), $simpleProduct->getId()];
 
         $klevuProductsBefore = $this->getKlevuProducts($ids, true);
-        $this->assertIsArray($klevuProductsBefore);
+        if (method_exists($this, 'assertIsArray')) {
+            $this->assertIsArray($klevuProductsBefore);
+        } else {
+            $this->assertTrue(is_array($klevuProductsBefore), 'Is Array');
+        }
         $this->assertEmpty($klevuProductsBefore);
 
         $this->productCommonUpdater->markProductToQueue($bundleProduct);
 
         $klevuProductsAfter = $this->getKlevuProducts($ids, false);
-        $this->assertIsArray($klevuProductsAfter);
+        if (method_exists($this, 'assertIsArray')) {
+            $this->assertIsArray($klevuProductsAfter);
+        } else {
+            $this->assertTrue(is_array($klevuProductsAfter), 'Is Array');
+        }
         $this->assertCount(2, $klevuProductsAfter);
 
         //forcefully rollbacks here as loadProductFixturesRollback not a part of a @magentoDataFixture

@@ -130,7 +130,7 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     const XML_PATH_NOTIFICATION_OBJECT_VS_COLLECTION   = "klevu_search/notification/object_vs_collection";
     const XML_PATH_NOTIFICATION_LOCK_FILE = "klevu_search/notification/lock_file";
 	const XML_PATH_PRESERVE_LAYOUT_LOG_ENABLED = "klevu_search/developer/preserve_layout_log_enabled";
-	const XML_PATH_PRESERVE_LAYOUT_MIN_LOG_LEVEL = "klevu_logger/preserve_layout_configuration/min_log_level";
+	const XML_PATH_PRESERVE_LAYOUT_MIN_LOG_LEVEL = "klevu_search/developer/preserve_layout_log_level";
 	const ADMIN_RESOURCE_CONFIG = 'Klevu_Search::config_search';
 
     /**

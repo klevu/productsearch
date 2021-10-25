@@ -348,7 +348,12 @@ class SyncTest extends TestCase
         $producttrackingActionMock
             ->method('execute')
             ->willReturnCallback(function ($arguments) use ($expectedArrayKeys, $response) {
-                $this->assertIsArray($arguments);
+                if (method_exists($this, 'assertIsArray')) {
+                    $this->assertIsArray($arguments);
+                } else {
+                    $this->assertTrue(is_array($arguments), 'Is Array');
+                }
+
                 foreach ($expectedArrayKeys as $expectedArrayKey) {
                     $this->assertArrayHasKey($expectedArrayKey, $arguments);
                 }

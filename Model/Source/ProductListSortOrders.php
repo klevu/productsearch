@@ -6,7 +6,7 @@ use Magento\Framework\Data\OptionSourceInterface;
 
 /**
  * Source model collating available sort order options
- * @link https://support.klevu.com/knowledgebase/sort-order-options/
+ * @link https://help.klevu.com/support/solutions/articles/5000871480-sort-order-options
  */
 class ProductListSortOrders implements OptionSourceInterface
 {
