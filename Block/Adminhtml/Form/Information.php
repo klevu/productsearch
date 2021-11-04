@@ -122,7 +122,7 @@ class Information extends \Magento\Config\Block\System\Config\Form\Fieldset
         $html .= '<div class="kuInfoClear"></div>';
 
         $html .= '<p><b>Prerequisites:</b><br>
-		  1. Ensure cron is running (<a target="_blank" href="hhttps://help.klevu.com/support/solutions/articles/5000871452-setup-external-cron-job">Click here </a>for more information on setting up a cron )<br>
+		  1. Ensure cron is running (<a target="_blank" href="https://help.klevu.com/support/solutions/articles/5000871452-setup-external-cron-job">Click here </a>for more information on setting up a cron )<br>
 		  2. Indices are uptodate (System &gt; Index Management)<br>
 		  3. Products should be enabled and have the visibility set to catalog and search</p>';
 
