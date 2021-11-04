@@ -76,7 +76,7 @@
                     </depends>
                     <comment><![CDATA[Select the sort order options available on the frontend. Leaving the Label Override field blank will use the system label shown in the dropdown field.<br />
                     If you do not add any sort order options, the default sort orders provided by Klevu will be used by default.<br />
-                    For further details, see <a href="https://support.klevu.com/knowledgebase/sort-order-options/" target="_blank">this knowledgebase article</a>]]></comment>
+                    For further details, see <a href="https://help.klevu.com/support/solutions/articles/5000871480-sort-order-options" target="_blank">this knowledgebase article</a>]]></comment>
                 </field>
                 <field id="klevu_search_relevance" translate="label comment" type="select" sortOrder="130" showInDefault="1" showInStore="1">
                     <label>Sort by Klevu Relevance</label>
@@ -124,7 +124,7 @@
                     <comment><![CDATA[
                     Configure how often Klevu will synchronise changes to Products, Categories and CMS data.
                     Learn more about the available options for synchronising data here:
-                    <a href="https://support.klevu.com/knowledgebase/magento-data-sync" target="_blank">Magento 2 Data Sync</a>.
+                    <a href="https://help.klevu.com/support/solutions/articles/5000871440-overview" target="_blank">Magento 2 Data Sync</a>.
                   ]]></comment>
                 </field>
                 <field id="order_sync_enabled" type="select" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="1">
@@ -145,7 +145,7 @@
                     <comment><![CDATA[
                     Configure how often to send order information to Klevu.
                     Learn more about the available options for synchronising data here:
-                    <a href="https://support.klevu.com/knowledgebase/magento-data-sync" target="_blank">Magento 2 Data Sync</a>.
+                    <a href="https://help.klevu.com/support/solutions/articles/5000871440-overview" target="_blank">Magento 2 Data Sync</a>.
                   ]]></comment>
                 </field>
                 <field id="order_sync_frequency_custom" translate="label comment" sortOrder="62" showInDefault="1">
@@ -155,7 +155,7 @@
                         <field id="order_sync_frequency">custom</field>
                     </depends>
                     <comment><![CDATA[
-                        Crontab schedule for order synchronisation, see our <a href="https://support.klevu.com/knowledgebase/magento-data-sync" target="_blank">Magento 2 Data Sync</a>
+                        Crontab schedule for order synchronisation, see our <a href="https://help.klevu.com/support/solutions/articles/5000871440-overview" target="_blank">Magento 2 Data Sync</a>
                         article for help generating and testing schedules.<br />
                         Some common schedules include
                         <ul style="padding-left: 20px">
@@ -197,7 +197,7 @@
                     <source_model>Klevu\Search\Model\System\Config\Source\LockFileOptions</source_model>
                     <comment><![CDATA[
                       Control how regularly old lock files are automatically removed.
-                      Learn more about <a href="https://support.klevu.com/knowledgebase/magento-2-lock-files" target="_blank">Klevu Lock Files.</a>
+                      Learn more about <a href="https://help.klevu.com/support/solutions/articles/5000871506-lock-files-for-data-sync" target="_blank">Klevu Lock Files.</a>
                     ]]></comment>
                 </field>
                 <field id="lock_file_status" translate="label" sortOrder="930" showInDefault="1" showInWebsite="1" showInStore="1">
@@ -205,7 +205,7 @@
                     <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Store\LockStatus</frontend_model>
                     <comment><![CDATA[
                     If any of the above lock files are quite old, there might be a problem with your sync.
-                    Learn more about <a href="https://support.klevu.com/knowledgebase/magento-2-lock-files" target="_blank">Klevu Lock Files.</a>
+                    Learn more about <a href="https://help.klevu.com/support/solutions/articles/5000871506-lock-files-for-data-sync" target="_blank">Klevu Lock Files.</a>
                     The dates come from the server files, so the timezone may be different to expected.
                   ]]></comment>
                 </field>
@@ -306,14 +306,14 @@
                 <comment><![CDATA[Recommended if using Customer Group Pricing. This will delay the rendering of prices on the page until the current customer’s group is available, which will ensure the customer group price is displayed rather than the default."]]></comment>
             </field>
       </group>
-      <group id="developer" translate="label comment" sortOrder="900" showInDefault="1">
+      <group id="developer" translate="label comment" sortOrder="900" showInDefault="1" showInWebsite="1" showInStore="1">
         <label>Developer Settings</label>
 	<field id="collection_method" translate="label comment" sortOrder="300" type="select" showInDefault="1">
           <label>Use Collection Method</label>
           <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
         <comment><![CDATA[
         <strong>Recommended.</strong> Use this option to choose between Collection Method and Object Method for loading products during data synchronisation.
-        Learn more here: <a href="https://support.klevu.com/knowledgebase/enabling-collection-method-to-sync-data-magento-2" target="_blank">Object vs Collection Method</a>.]]></comment>
+        Learn more here: <a href="https://help.klevu.com/support/solutions/articles/5000871455-sync-data-using-collection-method" target="_blank">Object vs Collection Method</a>.]]></comment>
                 </field>
                 <field id="order_sync_max_batch_size" translate="label comment" sortOrder="302" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Order Sync Max Batch Size</label>
@@ -331,28 +331,39 @@
                 ]]></comment>
                     <config_path>klevu_search/product_sync/order_sync_max_batch_size</config_path>
                 </field>
-                <field id="force_log" translate="label comment" sortOrder="305" type="select" showInDefault="1">
+
+                <!-- Logging -->
+                <field id="force_log" translate="label comment" sortOrder="305" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Force Logging</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                    <comment><![CDATA[Use this setting to override default Magento log settings and enable logging. Log messages are saved in Klevu_Search.log]]></comment>
+                    <comment><![CDATA[Use this setting to override default Magento log settings and enable logging. Log messages are saved in Klevu_Search.{store-code}.log]]></comment>
                 </field>
-                <field id="log_level" translate="label" sortOrder="310" type="select" showInDefault="1">
+                <field id="log_level" translate="label" sortOrder="310" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Log level</label>
-          <source_model>Klevu\Logger\Model\Source\LogLevel\Zend</source_model>
-        </field>
-	<field id="download_log_button" type="button" sortOrder="401" showInDefault="1">
-            <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Logdownload</frontend_model>
-            <comment><![CDATA[]]></comment>
-        </field>
-	<field id="clear_log_button" type="button" sortOrder="402" showInDefault="1" showInWebsite="1" showInStore="1">
-            <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Logclear</frontend_model>
-            <comment><![CDATA[]]></comment>
-        </field>
-          <field id="preserve_layout_log_enabled" translate="label" sortOrder="403" type="select" showInDefault="1">
-              <label>Enable Preserve Layout Log</label>
-              <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-              <comment><![CDATA[Use this setting to enable Klevu Preserve Layout log. Once this setting is set to "yes", it will log the Product data and Search request data in the file magento-root/var/log/Klevu_Search_Preserve_Layout.log. Please make sure to enable this option only when it is required to debug search request data otherwise it can impact the frontend search page. ]]></comment>
-          </field>
+                    <source_model>Klevu\Logger\Model\Source\LogLevel\Zend</source_model>
+                </field>
+                <field id="download_log_button" translate="label comment" type="button" sortOrder="315" showInDefault="1" showInWebsite="0" showInStore="1">
+                    <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Logdownload</frontend_model>
+                </field>
+                <field id="clear_log_button" translate="label comment" type="button" sortOrder="320" showInDefault="1" showInWebsite="0" showInStore="1">
+                    <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Logclear</frontend_model>
+                </field>
+                <field id="preserve_layout_log_enabled" translate="label" sortOrder="403" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Enable Preserve Layout Log</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment><![CDATA[Use this setting to enable Klevu Preserve Layout log.
+                        Once this setting is set to "yes", it will log the Product data and Search request data in the file
+                        magento-root/var/log/Klevu_Search_Preserve_Layout.{store-code}.log.
+                        Please make sure to enable this option only when it is required to debug search request data
+                        otherwise it can impact the frontend search page and category pages.]]></comment>
+                </field>
+                <field id="preserve_layout_download_log_button" translate="label comment" type="button" sortOrder="404" showInDefault="1" showInWebsite="0" showInStore="1">
+                    <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Logdownload\PreserveLayout</frontend_model>
+                </field>
+                <field id="preserve_layout_clear_log_button" translate="label comment" type="button" sortOrder="405" showInDefault="1" showInWebsite="0" showInStore="1">
+                    <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Logclear\PreserveLayout</frontend_model>
+                </field>
+
         <field id="trigger_options_info" translate="label comment" sortOrder="420"  type="select" showInDefault="1">
             <label>Using an ERP OR 3rd party tool for product updates</label>
             <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
@@ -368,7 +379,7 @@
                 <comment><![CDATA[
                 This notification will appear when we detect you are using Object Method instead of the more efficient Collection Method.
                 If you have reviewed this already and decided to stick with Object Method, please disable this warning.
-                Learn more here: <a href="https://support.klevu.com/knowledgebase/enabling-collection-method-to-sync-data-magento-2" target="_blank">Object vs Collection Method</a>
+                Learn more here: <a href="https://help.klevu.com/support/solutions/articles/5000871455-sync-data-using-collection-method" target="_blank">Object vs Collection Method</a>
                 ]]></comment>
             </field>
             <field id="lock_file" translate="label comment" sortOrder="200" type="select" showInDefault="1">
@@ -377,56 +388,11 @@
                 <comment><![CDATA[
                 This notification will appear when we detect a Lock file older than the period you have specified in 'Data Sync Settings > Automatic Lock File Removal'.
                 <strong>Warning:</strong> By specifying 'At the top of every Magento Admin page', an attempt to read multiple files from disk will take place on every page of your admin panel, which can impact performance.
-                Learn more here: <a href="https://support.klevu.com/knowledgebase/magento-2-lock-files" target="_blank">Magento 2 Lock Files</a>
+                Learn more here: <a href="https://help.klevu.com/support/solutions/articles/5000871506-lock-files-for-data-sync" target="_blank">Magento 2 Lock Files</a>
             ]]></comment>
             </field>
         </group>
     </section>
-      <section id="klevu_logger">
-          <group id="search_configuration" translate="label comment" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
-              <label>Search</label>
-              <comment><![CDATA[Logging configuration for search functionality. Log files can be found at var/log/Klevu_Search.{store_code}.log]]></comment>
-              <field id="enable_logging" translate="label comment" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
-                  <label>Enable Logging</label>
-                  <comment><![CDATA[Enable search related logging]]></comment>
-                  <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                  <config_path>klevu_search/developer/force_log</config_path>
-              </field>
-              <field id="min_log_level" translate="label comment" sortOrder="20" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
-                  <label>Minimum Log level</label>
-                  <comment><![CDATA[Log messages at selected level or higher]]></comment>
-                  <source_model>Klevu\Logger\Model\Source\LogLevel\Zend</source_model>
-                  <config_path>klevu_search/developer/log_level</config_path>
-              </field>
-              <field id="download_log_button" translate="label comment" type="button" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="1">
-                  <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Logdownload</frontend_model>
-              </field>
-              <field id="clear_log_button" translate="label comment" type="button" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="1">
-                  <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Logclear</frontend_model>
-              </field>
-          </group>
-          <group id="preserve_layout_configuration" translate="label comment" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
-              <label>Preserve Layout</label>
-              <comment><![CDATA[Logging configuration for preserve layout functionality. Log files can be found at var/log/Klevu_Search_Preserve_Layout.{store_code}.log]]></comment>
-              <field id="enable_logging" translate="label comment" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
-                  <label>Enable Logging</label>
-                  <comment><![CDATA[Enable logging related to preserve layout functionality]]></comment>
-                  <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                  <config_path>klevu_search/developer/preserve_layout_log_enabled</config_path>
-              </field>
-              <field id="min_log_level" translate="label comment" sortOrder="20" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
-                  <label>Minimum Log level</label>
-                  <comment><![CDATA[Log messages at selected level or higher]]></comment>
-                  <source_model>Klevu\Logger\Model\Source\LogLevel\Zend</source_model>
-              </field>
-              <field id="download_log_button" translate="label comment" type="button" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="1">
-                  <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Logdownload\PreserveLayout</frontend_model>
-              </field>
-              <field id="clear_log_button" translate="label comment" type="button" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="1">
-                  <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Logclear\PreserveLayout</frontend_model>
-              </field>
-          </group>
-      </section>
         <section id="tax" translate="label" sortOrder="430" showInDefault="1" showInWebsite="1" showInStore="1">
             <group id="display" translate="label" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
                 <field id="typeinsearch" translate="label" type="select" sortOrder="12" showInDefault="1" showInWebsite="1" showInStore="1">

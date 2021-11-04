@@ -58,7 +58,7 @@ class ObjectVsCollectionMessage implements MessageInterface
      */
     public function getText()
     {
-        $url = 'https://support.klevu.com/knowledgebase/enabling-collection-method-to-sync-data-magento-2';
+        $url = 'https://help.klevu.com/support/solutions/articles/5000871455-sync-data-using-collection-method';
         $configURL = $this->urlBuilder->getUrl('adminhtml/system_config/edit/section/klevu_search');
 
         $message = __('Klevu Search is currently using Object method, which may be impacting your data sync performance.');

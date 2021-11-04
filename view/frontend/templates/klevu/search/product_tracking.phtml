@@ -1,6 +1,6 @@
 <?php /** @var \Klevu\Search\Block\Catalog\Product\Tracking $block */ ?>
 <?php if ($block->isExtensionConfigured()) : ?>
-<script type="text/javascript">
+    <script type="text/javascript">
 require(['jquery'], function(){
         var referrer, search_term, klevu_search_product_tracking;
         referrer = document.referrer;
@@ -8,15 +8,20 @@ require(['jquery'], function(){
             var href = url ? url : window.location.href;
             var reg = new RegExp( '[?&]' + field + '=([^&#]*)', 'i' );
             var string = reg.exec(href);
-                return string ? string[1] : null;
+            if (!string) {
+                return null;
+            }
+
+            return decodeURIComponent(string[1].replace(/\+/g, " "));
         };
         search_term = getQueryString('q',referrer);
+
         if (referrer.indexOf('catalogsearch/result') > -1 && search_term) {
             klevu_search_product_tracking = <?php echo $block->getJsonTrackingData() ?>;
             klevu_search_product_tracking.klevu_term = search_term;
             var param = jQuery.param(klevu_search_product_tracking);
             <?php $isSecure = $block->getRequest()->isSecure();
-            $protocol = ($isSecure) ? 'https://' : 'http://'; ?>
+        $protocol = ($isSecure) ? 'https://' : 'http://'; ?>
             jQuery.ajax({
                 url:'<?php echo $protocol.$block->getAnalyticsUrl() ?>/analytics/productTracking',
                 type: 'GET',

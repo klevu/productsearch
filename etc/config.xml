@@ -32,7 +32,7 @@
                 <force_log>1</force_log>
                 <log_level>6</log_level>
                 <preserve_layout_log_enabled>0</preserve_layout_log_enabled>
-                <!-- See configuration at klevu_logger/preserve_layout_configuration/min_log_level -->
+                <preserve_layout_log_level>7</preserve_layout_log_level>
             </developer>
             <searchlanding>
                 <landenabled>2</landenabled>
@@ -53,6 +53,7 @@
             </notification>
         </klevu_search>
         <klevu_logger>
+            <!-- Deprecated -->
             <preserve_layout_configuration>
                 <min_log_level>6</min_log_level>
             </preserve_layout_configuration>

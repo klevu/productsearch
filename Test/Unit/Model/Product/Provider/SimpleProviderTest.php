@@ -120,8 +120,14 @@ class SimpleProviderTest extends TestCase
         // Even though grouped-1 has both children and parents, this class should never return any
         //  children as it expects a simple product; and simples do not have children
         $expectedResult = [];
-        $this->expectException('\InvalidArgumentException');
-        $this->expectExceptionMessage('Incorrect ProductTypeId grouped provided while fetching childIds');
+        if (method_exists($this, 'expectException')) {
+            $this->expectException(\InvalidArgumentException::class);
+        } else {
+            $this->setExpectedException(\InvalidArgumentException::class);
+        }
+        if (method_exists($this, 'expectExceptionMessage')) {
+            $this->expectExceptionMessage('Incorrect ProductTypeId grouped provided while fetching childIds');
+        }
         $actualResult = $simpleProvider->getChildIds($this->getProductMock('grouped-1', 'grouped'));
         $this->assertSame($expectedResult, $actualResult);
     }
@@ -197,8 +203,14 @@ class SimpleProviderTest extends TestCase
         // Even though grouped-1 has both children and parents, this class should never return any
         //  parents as it expects a simple product; and this is not a simple product
         $expectedResult = [];
-        $this->expectException('\InvalidArgumentException');
-        $this->expectExceptionMessage('Incorrect ProductTypeId grouped provided while fetching parentIds');
+        if (method_exists($this, 'expectException')) {
+            $this->expectException(\InvalidArgumentException::class);
+        } else {
+            $this->setExpectedException(\InvalidArgumentException::class);
+        }
+        if (method_exists($this, 'expectExceptionMessage')) {
+            $this->expectExceptionMessage('Incorrect ProductTypeId grouped provided while fetching parentIds');
+        }
         $actualResult = $simpleProvider->getParentIds($this->getProductMock('grouped-1', 'grouped'));
         $this->assertSame($expectedResult, $actualResult);
     }
