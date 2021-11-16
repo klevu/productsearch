@@ -2,6 +2,8 @@
 
 namespace Klevu\Search\Model\Config\Backend;
 
+use Klevu\Logger\Constants as LoggerConstants;
+
 /**
  * Class Trigger
  * @package Klevu\Search\Model\Config\Backend
@@ -79,7 +81,7 @@ class Trigger extends \Magento\Framework\App\Config\Value
                 }
             }
         } catch (\Exception $e) {
-            $this->searchHelperData->log(\Zend\Log\Logger::CRIT, sprintf("Exception thrown while SQL trigger: %s::%s - %s", __CLASS__, __METHOD__, $e->getMessage()));
+            $this->searchHelperData->log(LoggerConstants::ZEND_LOG_CRIT, sprintf("Exception thrown while SQL trigger: %s::%s - %s", __CLASS__, __METHOD__, $e->getMessage()));
         }
     }
 }
