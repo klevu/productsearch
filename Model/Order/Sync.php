@@ -369,7 +369,7 @@ class Sync extends AbstractModel
             $item->setData([]);
             $item->load($value['order_item_id']);
             if (!$item->getId()) {
-                $this->log(\Zend\Log\Logger::ERR, sprintf("Order Item %d does not exist: Removed from sync!", $value['order_item_id']));
+                $this->log(LoggerConstants::ZEND_LOG_ERR, sprintf("Order Item %d does not exist: Removed from sync!", $value['order_item_id']));
                 $this->removeItemFromQueue($value['order_item_id']);
                 $errors++;
 
@@ -379,7 +379,12 @@ class Sync extends AbstractModel
             //Instead of checking API keys, comparing the Store IDs
             //if ($this->getApiKey($item->getStoreId())) {
             if ($item->getStoreId() != $store->getStoreId()) {
-                $this->log(\Zend\Log\Logger::INFO, sprintf("Skipped Order Item %d: %s", $value['order_item_id'], $result));
+                $this->log(LoggerConstants::ZEND_LOG_INFO, sprintf(
+                    "Skipped Order Item %d: Item Store Id (%s) is different to current store id (%s)",
+                    $value['order_item_id'],
+                    $item->getStoreId(),
+                    $store->getStoreId()
+                ));
                 $errors++;
 
                 continue;
@@ -390,7 +395,7 @@ class Sync extends AbstractModel
                 $this->removeItemFromQueue($value['order_item_id']);
                 $items_synced++;
             } else {
-                $this->log(\Zend\Log\Logger::WARN, sprintf('Skipped Order Item %d: %s', $value['order_item_id'], $result));
+                $this->log(LoggerConstants::ZEND_LOG_WARN, sprintf('Skipped Order Item %d: %s', $value['order_item_id'], $result));
             }
         }
     }
