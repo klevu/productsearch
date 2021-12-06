@@ -169,6 +169,7 @@ HELP
                     $config->setRestApiKey($result["webstore"]->getRestApiKey(), $store);
                     $config->setHostname($result["webstore"]->getHostedOn(), $store);
                     $config->setCloudSearchUrl($result['webstore']->getCloudSearchUrl(), $store);
+                    $config->setCloudSearchV2Url($result['webstore']->getCloudSearchV2Url(), $store);
                     $config->setAnalyticsUrl($result['webstore']->getAnalyticsUrl(), $store);
                     $config->setJsUrl($result['webstore']->getJsUrl(), $store);
                     $config->setRestHostname($result['webstore']->getRestHostname(), $store);

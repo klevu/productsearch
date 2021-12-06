@@ -8,31 +8,31 @@ use Klevu\Search\Model\Klevu\HelperManager as Klevu_HelperManager;
 
 class Field extends \Magento\Config\Block\System\Config\Form\Field
 {
-	
-	private $_context;
 
-	private $storeManager;
-	
-	private $_klevuHelperManager;
-	
+    private $_context;
+
+    private $storeManager;
+
+    private $_klevuHelperManager;
+
     public function __construct(
         Template_Context $context,
-        Klevu_HelperManager $klevuHelperManager,		 
+        Klevu_HelperManager $klevuHelperManager,
         array $data = []
-		
+
     ) {
         $this->_klevuHelperManager = $klevuHelperManager;
         parent::__construct($context,$data);
-		$this->_context = $context;
-		 
+        $this->_context = $context;
+
     }
 
     /**
-  * Retrieve element HTML markup
-  *
-  * @param \Magento\Framework\Data\Form\Element\AbstractElement $element
-  * @return string
-  */
+     * Retrieve element HTML markup
+     *
+     * @param \Magento\Framework\Data\Form\Element\AbstractElement $element
+     * @return string
+     */
     protected function _getElementHtml(\Magento\Framework\Data\Form\Element\AbstractElement $element)
     {
         return $element->getElementHtml();
@@ -54,46 +54,46 @@ class Field extends \Magento\Config\Block\System\Config\Form\Field
             'klevu_search_cmscontent_excludecms_pages','klevu_search_secureurl_setting_enabled',
             'klevu_search_image_setting_enabled','klevu_search_image_setting_image_width',
             'klevu_search_image_setting_image_height','klevu_search_general_category_navigation_url',
-			'klevu_search_categorylanding_enabledcategorynavigation','klevu_search_categorylanding_max_no_of_products',
-			'klevu_search_categorylanding_klevu_cat_relevance','klevu_search_searchlanding_klevu_search_relevance');
-			
-		$this->storeManager = $this->_context->getStoreManager();
-		$store_mode = $this->storeManager->isSingleStoreMode();
-		
-		if( in_array( $element->getId(), $fieldToHide ) ) {
+            'klevu_search_categorylanding_max_no_of_products',
+            'klevu_search_categorylanding_klevu_cat_relevance','klevu_search_searchlanding_klevu_search_relevance');
+
+        $this->storeManager = $this->_context->getStoreManager();
+        $store_mode = $this->storeManager->isSingleStoreMode();
+
+        if( in_array( $element->getId(), $fieldToHide ) ) {
             //Removing checkbox when SSM is off and view is Global or Websites
-            if(!$store_mode && $element->getScope() != "stores" )  {                
-                $element->unsetData(null);                 
+            if(!$store_mode && $element->getScope() != "stores" )  {
+                $element->unsetData(null);
                 return;
             }elseif (!$store_mode && ( $element->getScope() == "stores" || $element->getScope() == "websites") ){
                 $isCheckboxRequired = false;
-            }             
+            }
         }
-		
+
         // Disable element if value is inherited from other scope. Flag has to be set before the value is rendered.
         if ($element->getInherit() == 1 && $isCheckboxRequired) {
             $element->setDisabled(true);
         }
-        
-        
-		$klevuConfig = $this->_klevuHelperManager->getConfigHelper();
+
+
+        $klevuConfig = $this->_klevuHelperManager->getConfigHelper();
         $features = $klevuConfig->getFeaturesUpdate($element->getHtmlId());
-				
-		if($store_mode) {
-			$labelsToHide = array('klevu_search_add_to_cart_enabled_info','klevu_search_attributes_info_attribute','klevu_search_cmscontent_enabledcmsfront_info','klevu_search_secureurl_setting_info_enabled','klevu_search_image_setting_info_enabled','klevu_search_categorylanding_enabledcategorynavigation_info');
+
+        if($store_mode) {
+            $labelsToHide = array('klevu_search_add_to_cart_enabled_info','klevu_search_attributes_info_attribute','klevu_search_cmscontent_enabledcmsfront_info','klevu_search_secureurl_setting_info_enabled','klevu_search_image_setting_info_enabled');
             if(in_array($element->getId(),$labelsToHide) && $element->getType()=='label') {
                 $element->unsetData(null);
             }
-			
-			 
-			$jsApiValue = $klevuConfig->getJsApiKey($this->storeManager->getStore());
-			$jsRestValue = $klevuConfig->getRestApiKey($this->storeManager->getStore());
-			$cloudSearchURL = $klevuConfig->getCloudSearchUrl($this->storeManager->getStore());
-			
-			$klevuConfig->setStoreConfig('klevu_search/general/js_api_key', $jsApiValue,$this->storeManager->getStore());
-			$klevuConfig->setStoreConfig('klevu_search/general/rest_api_key', $jsRestValue,$this->storeManager->getStore());
-			 	
-		}
+
+
+            $jsApiValue = $klevuConfig->getJsApiKey($this->storeManager->getStore());
+            $jsRestValue = $klevuConfig->getRestApiKey($this->storeManager->getStore());
+            $cloudSearchURL = $klevuConfig->getCloudSearchUrl($this->storeManager->getStore());
+
+            $klevuConfig->setStoreConfig('klevu_search/general/js_api_key', $jsApiValue,$this->storeManager->getStore());
+            $klevuConfig->setStoreConfig('klevu_search/general/rest_api_key', $jsRestValue,$this->storeManager->getStore());
+
+        }
         if (!empty($features)) {
             $style        = 'class="klevu-disabled"';
             $upgrade_text = '';
@@ -111,13 +111,13 @@ class Field extends \Magento\Config\Block\System\Config\Form\Field
             $style        = '';
             $upgrade_text = '';
         }
-        
+
         // Code added by klevu
         if (!empty($features)) {
             $element->setDisabled(true);
             $element->setValue(0);
         }
-        
+
         $html = '<td class="label"><label for="' .
             $element->getHtmlId() .
             '">' .
@@ -155,7 +155,7 @@ class Field extends \Magento\Config\Block\System\Config\Form\Field
         }
         if ($element->getHtmlId() == "klevu_search_searchlanding_landenabled") {
             $klevu_html ='';
-			$klevuConfig = $this->_klevuHelperManager->getConfigHelper();
+            $klevuConfig = $this->_klevuHelperManager->getConfigHelper();
             $check_preserve = $klevuConfig->getFeatures();
             if (!empty($check_preserve)) {
                 if (isset($check_preserve['disabled']) && !empty($check_preserve['disabled'])) {
@@ -166,16 +166,18 @@ class Field extends \Magento\Config\Block\System\Config\Form\Field
                             if (!empty($check_preserve['preserve_layout_message'])) {
                                 $klevu_html.=$check_preserve['preserve_layout_message'];
                             }
-                                    
+
                             $klevu_html.="</div>";
                         }
                     }
-                } else {
-                    $klevu_html = "Choose your Layout";
                 }
             }
-            
-            $html .= '<p class="note"><span>' . $klevu_html . '</span></p>';
+
+            if ($klevu_html) {
+                $html .= '<p class="note"><span>' . $klevu_html . '</span></p>';
+            } elseif ($element->getComment()) {
+                $html .= '<p class="note"><span>' . $element->getComment() . '</span></p>';
+            }
         } else {
             if ($element->getComment()) {
                 $html .= '<p class="note"><span>' . $element->getComment() . '</span></p>';
@@ -207,8 +209,8 @@ class Field extends \Magento\Config\Block\System\Config\Form\Field
             $checkedHtml .
             ' onclick="toggleValueElements(this, Element.previous(this.parentNode))" /> ';
         $html .= '<label for="' . $htmlId . '_inherit" class="inherit">' . $this->_getInheritCheckboxLabel(
-            $element
-        ) . '</label>';
+                $element
+            ) . '</label>';
         $html .= '</td>';
 
         return $html;

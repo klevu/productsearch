@@ -6,11 +6,17 @@
 
 namespace Klevu\Search\Setup;
 
+use Klevu\Addtocart\Helper\Data as AddtocartHelper;
+use Klevu\Search\Helper\Config as ConfigHelper;
+use Klevu\Search\Model\Source\ThemeVersion;
+use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Setup\InstallDataInterface;
 use Magento\Framework\Setup\ModuleContextInterface;
 use Magento\Framework\Setup\ModuleDataSetupInterface;
 use Magento\Eav\Setup\EavSetup;
 use Magento\Eav\Setup\EavSetupFactory;
+use Magento\Framework\App\Config\Storage\WriterInterface as ConfigWriterInterface;
 
 /**
  * @codeCoverageIgnore
@@ -22,15 +28,24 @@ class InstallData implements InstallDataInterface
      * @var \Magento\Eav\Setup\EavSetupFactory
      */
     private $eavSetupFactory;
-    
-   /**
-    * Constructor
-    *
-    * @param \Magento\Eav\Setup\EavSetupFactory $eavSetupFactory
-    */
-    public function __construct(EavSetupFactory $eavSetupFactory)
-    {
+
+    /**
+     * @var ConfigWriterInterface|mixed
+     */
+    private $configWriter;
+
+    /**
+     * Constructor
+     *
+     * @param EavSetupFactory $eavSetupFactory
+     * @param ConfigWriterInterface|null $configWriter
+     */
+    public function __construct(
+        EavSetupFactory $eavSetupFactory,
+        ConfigWriterInterface $configWriter = null
+    ) {
         $this->eavSetupFactory = $eavSetupFactory;
+        $this->configWriter = $configWriter ?: ObjectManager::getInstance()->get(ConfigWriterInterface::class);
     }
 
     /**
@@ -41,10 +56,10 @@ class InstallData implements InstallDataInterface
      */
     public function install(ModuleDataSetupInterface $setup, ModuleContextInterface $context)
     {
+        $entity_type = \Magento\Framework\App\ObjectManager::getInstance()->get('\Magento\Eav\Model\Entity\Type')->loadByCode("catalog_product");
+        $entity_typeid = $entity_type->getId();
+        $attributecollection = \Magento\Framework\App\ObjectManager::getInstance()->get('\Magento\Eav\Model\Entity\Attribute')->getCollection()->addFieldToFilter("entity_type_id", $entity_typeid)->addFieldToFilter("attribute_code", "rating");
 
-            $entity_type = \Magento\Framework\App\ObjectManager::getInstance()->get('\Magento\Eav\Model\Entity\Type')->loadByCode("catalog_product");
-            $entity_typeid = $entity_type->getId();
-            $attributecollection = \Magento\Framework\App\ObjectManager::getInstance()->get('\Magento\Eav\Model\Entity\Attribute')->getCollection()->addFieldToFilter("entity_type_id", $entity_typeid)->addFieldToFilter("attribute_code", "rating");
         if (empty($attributecollection->getFirstItem()->getData())) {
             $attribute = $attributecollection->getFirstItem();
             $data = [];
@@ -64,7 +79,7 @@ class InstallData implements InstallDataInterface
             $read = $setup->getConnection('core_read');
             $write = $setup->getConnection('core_write');
             $select = $read->select()->from($resource->getTable("eav_attribute_set"), [
-            'attribute_set_id'
+                'attribute_set_id'
             ])->where("entity_type_id=?", $entity_typeid);
             $attribute_sets = $read->fetchAll($select);
             foreach ($attribute_sets as $attribute_set) {
@@ -90,5 +105,24 @@ class InstallData implements InstallDataInterface
                 $write->commit();
             }
         }
+
+        // Ref: KS-8652. Set the theme version to v2 by default for new installations
+        // while leaving default value in config.xml as v1 to ensure continuity with
+        // existing stores
+        $this->configWriter->save(
+            ConfigHelper::XML_PATH_THEME_VERSION,
+            ThemeVersion::V2,
+            ScopeConfigInterface::SCOPE_TYPE_DEFAULT,
+            0
+        );
+
+        // Ref: KS-9465. Set add to cart to enabled for new installations so that stores
+        //  on theme v2 have the functionality enabled (output in v2 is based on KMC setting)
+        $this->configWriter->save(
+            AddtocartHelper::XML_PATH_ADDTOCART_ENABLED,
+            1,
+            ScopeConfigInterface::SCOPE_TYPE_DEFAULT,
+            0
+        );
     }
 }

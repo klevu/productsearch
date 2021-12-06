@@ -7,6 +7,7 @@
             <module name="Magento_Catalog"/>
             <module name="Magento_CatalogSearch"/>
             <module name="Klevu_Logger"/>
+            <module name="Klevu_Metadata"/>
         </sequence>
     </module>
 </config>

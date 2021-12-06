@@ -8,6 +8,7 @@ use Magento\Catalog\Model\Product\Attribute\Source\Status;
 use Magento\Catalog\Model\Product\Visibility;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Registry;
+use Magento\Indexer\Model\IndexerFactory;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\TestFramework\Helper\Bootstrap;
 
@@ -123,6 +124,26 @@ $groupedProduct->setProductLinks([
 $indexerProcessor->reindexRow($groupedProduct->getId());
 $groupedProduct = $productRepository->save($groupedProduct);
 $productRepository->cleanCache();
+
+// -------------------------------------------------------------------------------------
+
+$indexerFactory = $objectManager->get(IndexerFactory::class);
+$indexes = [
+    'catalog_product_attribute',
+    'catalog_product_price',
+    'inventory',
+    'cataloginventory_stock',
+];
+foreach ($indexes as $index) {
+    $indexer = $indexerFactory->create();
+    try {
+        $indexer->load($index);
+        $indexer->reindexAll();
+    } catch (\InvalidArgumentException $e) {
+        // Support for older versions of Magento which may not have all indexers
+        continue;
+    }
+}
 
 // -------------------------------------------------------------------------------------
 

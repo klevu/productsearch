@@ -203,4 +203,35 @@
             </argument>
         </arguments>
     </type>
+
+    <!-- Theme V2 -->
+    <type name="Klevu\Search\Service\ThemeV2\InteractiveOptionsProvider">
+        <arguments>
+            <argument name="isEnabledCondition" xsi:type="object">Klevu\Search\Service\ThemeV2\IsEnabledCondition</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\FrontendJs\Service\InteractiveOptionsGenerator">
+        <arguments>
+            <argument name="interactiveOptionsProviders" xsi:type="array">
+                <item name="_klevu_themev2" xsi:type="object">Klevu\Search\Service\ThemeV2\InteractiveOptionsProvider</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\FrontendJs\Service\IsEnabledDeterminer">
+        <arguments>
+            <argument name="isEnabledConditions" xsi:type="array">
+                <item name="_klevu_themev2" xsi:type="object">Klevu\Search\Service\ThemeV2\IsEnabledCondition</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Metadata\Service\IsEnabledDeterminer">
+        <arguments>
+            <argument name="isEnabledConditions" xsi:type="array">
+                <item name="_klevu_themev2" xsi:type="object">Klevu\Search\Service\ThemeV2\IsEnabledCondition</item>
+            </argument>
+        </arguments>
+    </type>
 </config>

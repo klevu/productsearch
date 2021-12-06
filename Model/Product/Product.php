@@ -296,11 +296,16 @@ class Product extends DataObject implements ProductInterface
         return $product['categoryIds'];
     }
 
-    private function getAllCategoryIdProcessed($item){
+    private function getAllCategoryIdProcessed($item)
+    {
         $itemCategorys = $item->getCategoryIds();
+        $category_paths_ids = $this->getCategoryPathIds();
+        if ($category_paths_ids) {
+            $itemCategorys = array_intersect($itemCategorys, array_keys($category_paths_ids));
+        }
+
+        $category_anchors = $this->getCategoryAnchors();
         $return = array();
-        $category_paths_ids = $this->getData('category_path_ids');
-        $category_anchors = $this->getData('category_anchors');
         $isCatAnchorSingle = $this->_configHelper->getTreatCategoryAnchorAsSingle($this->_storeModelStoreManagerInterface->getStore()->getId());
         if($isCatAnchorSingle && is_array($itemCategorys)){
             foreach ($itemCategorys as $id){
@@ -410,8 +415,8 @@ class Product extends DataObject implements ProductInterface
     public function getLongestPathCategoryName(array $categories)
     {
         $category_paths = $this->getCategoryPaths();
-        $category_anchors = $this->getData('category_anchors');
-        $category_paths_ids = $this->getData('category_path_ids');
+        $category_anchors = $this->getCategoryAnchors();
+        $category_paths_ids = $this->getCategryPathIds();
         $isCatAnchorSingle = $this->_configHelper->getTreatCategoryAnchorAsSingle($this->_storeModelStoreManagerInterface->getStore()->getId());
         $length = 0;
         $name = array();
@@ -453,8 +458,8 @@ class Product extends DataObject implements ProductInterface
     public function getCategoryNames(array $categories)
     {
         $category_paths = $this->getCategoryPaths();
-        $category_paths_ids = $this->getData('category_path_ids');
-        $category_anchors = $this->getData('category_anchors');
+        $category_paths_ids = $this->getCategoryPathIds();
+        $category_anchors = $this->getCategoryAnchors();
         $isCatAnchorSingle = $this->_configHelper->getTreatCategoryAnchorAsSingle($this->_storeModelStoreManagerInterface->getStore()->getId());
         $result = ["KLEVU_PRODUCT"];
         foreach ($categories as $category) {
@@ -496,9 +501,9 @@ class Product extends DataObject implements ProductInterface
      */
     public function getCategoryNamesAndPath(array $categories)
     {
-        $category_paths = $this->getData('category_paths_and_ids');
-        $category_ids = $this->getData('category_path_ids');
-        $category_anchors = $this->getData('category_anchors');
+        $category_paths = $this->getCategoryPathsAndIds();
+        $category_ids = $this->getCategoryPathIds();
+        $category_anchors = $this->getCategoryAnchors();
         $isCatAnchorSingle = $this->_configHelper->getTreatCategoryAnchorAsSingle($this->_storeModelStoreManagerInterface->getStore()->getId());
 
         $result = [];
@@ -560,7 +565,7 @@ class Product extends DataObject implements ProductInterface
      *               each category in the path, the last element being the
      *               name of the category referenced by the ID.
      */
-    protected function getCategoryPaths()
+    public function getCategoryPaths()
     {
         $currentStoreID = $this->_storeModelStoreManagerInterface->getStore()->getId();
         if ((!$category_paths = $this->getData('category_paths')) || ($currentStoreID != $this->getData('catFieldStoreID'))) {
@@ -574,13 +579,17 @@ class Product extends DataObject implements ProductInterface
                 ->setStoreId($this->_storeModelStoreManagerInterface->getStore()->getId())
                 ->addAttributeToSelect('is_exclude_cat')
                 ->addAttributeToSelect('is_anchor')
+                ->addAttributeToSelect('is_active')
                 ->addFieldToFilter('level', ['gt' => 1])
                 ->addFieldToFilter('path', ['like'=> "1/$rootId/%"])
-                ->addIsActiveFilter()
                 ->addNameToResult();
 
             $category_anchors = [];
             foreach ($collection as $category) {
+                if ($category->getIsExcludedCat() || !(int)$category->getIsActive()) {
+                    continue;
+                }
+
                 if($category->getIsAnchor()){
                     $category_anchors[$category->getId()] = $category->getId();
                 }
@@ -592,9 +601,7 @@ class Product extends DataObject implements ProductInterface
                     if ($item = $collection->getItemById($id)) {
                         $category_ids[$category->getId()][] = $item->getId();
                         $category_paths_and_ids[$category->getId()][] = $item->getName();
-                        if($category->getIsExcludeCat() != 1) {
-                            $category_paths[$category->getId()][] = $item->getName();
-                        }
+                        $category_paths[$category->getId()][] = $item->getName();
                     }
                 }
             }
@@ -604,6 +611,51 @@ class Product extends DataObject implements ProductInterface
             $this->setData('category_paths', $category_paths);
         }
         return $category_paths;
+    }
+
+    /**
+     * Ref: KS-7557 Added to triage temporal coupling with getCategoryPaths()
+     *  setting additional data
+     *
+     * @return array
+     */
+    public function getCategoryAnchors()
+    {
+        if (!$this->hasData('category_anchors')) {
+            $this->getCategoryPaths();
+        }
+
+        return $this->getData('category_anchors');
+    }
+
+    /**
+     * Ref: KS-7557 Added to triage temporal coupling with getCategoryPaths()
+     *  setting additional data
+     *
+     * @return array
+     */
+    public function getCategoryPathsAndIds()
+    {
+        if (!$this->hasData('category_paths_and_ids')) {
+            $this->getCategoryPaths();
+        }
+
+        return $this->getData('category_paths_and_ids');
+    }
+
+    /**
+     * Ref: KS-7557 Added to triage temporal coupling with getCategoryPaths()
+     *  setting additional data
+     *
+     * @return array
+     */
+    public function getCategoryPathIds()
+    {
+        if (!$this->hasData('category_path_ids')) {
+            $this->getCategoryPaths();
+        }
+
+        return $this->getData('category_path_ids');
     }
 
     /**

@@ -2,6 +2,8 @@
 
 namespace Klevu\Search\Helper;
 
+use Magento\Store\Model\ScopeInterface;
+
 class Api extends \Magento\Framework\App\Helper\AbstractHelper
 {
     /**
@@ -43,12 +45,12 @@ class Api extends \Magento\Framework\App\Helper\AbstractHelper
      * @var \Klevu\Search\Helper\Config
      */
     protected $_searchHelperConfig;
-    
+
     /**
      * @var \Klevu\Search\Model\Api\Action\Checkuserdetail
      */
     protected $_apiActionCheckuserdetail;
-	
+
 	/**
      * @var \Klevu\Search\Model\Session
      */
@@ -67,7 +69,7 @@ class Api extends \Magento\Framework\App\Helper\AbstractHelper
         \Magento\Framework\App\ProductMetadataInterface $productMetadataInterface,
 		\Klevu\Search\Model\Session $searchModelSession
     ) {
-    
+
         $this->_backendModelSession = $backendModelSession;
         $this->_appConfigScopeConfigInterface = $appConfigScopeConfigInterface;
         $this->_apiActionAdduser = $apiActionAdduser;
@@ -83,8 +85,10 @@ class Api extends \Magento\Framework\App\Helper\AbstractHelper
 
     const ENDPOINT_PROTOCOL = 'https://';
     const ENDPOINT_DEFAULT_HOSTNAME = 'box.klevu.com';
+    const ENDPOINT_CLOUD_SEARCH_URL = 'eucs.ksearchnet.com';
+    const ENDPOINT_CLOUD_SEARCH_V2_URL = 'eucsv2.klevu.com';
 	const ENDPOINT_DEFAULT_ANALYTICS_HOSTNAME = 'stats.klevu.com';
-	
+
     /**
      * Create a new Klevu user using the API and return the user details.
      *
@@ -152,7 +156,7 @@ class Api extends \Magento\Framework\App\Helper\AbstractHelper
             "email"    => $email,
             "password" => $password
         ]);
-        
+
         if ($response->isSuccess()) {
             $webstores = [];
 
@@ -191,7 +195,7 @@ class Api extends \Magento\Framework\App\Helper\AbstractHelper
             ];
         }
     }
-    
+
     /**
      * Retrieve the information of already Klevu user registered from the API.
      *
@@ -223,7 +227,7 @@ class Api extends \Magento\Framework\App\Helper\AbstractHelper
      * Create a Klevu Webstore using the API for the given Magento store.
      *
      * @param                       $customer_id
-     * @param \Magento\Framework\Model\Store $store
+     * @param \Magento\Store\Model\Store $store
      * @param bool                  $test_mode
      *
      * @return array An array with the following keys:
@@ -244,9 +248,12 @@ class Api extends \Magento\Framework\App\Helper\AbstractHelper
         $timezone = $store->getConfig(\Magento\Directory\Helper\Data::XML_PATH_DEFAULT_TIMEZONE);
         $country =  $store->getConfig(\Magento\Directory\Helper\Data::XML_PATH_DEFAULT_COUNTRY);
         $locale =   $store->getConfig(\Magento\Directory\Helper\Data::XML_PATH_DEFAULT_LOCALE);
-
         $version = $this->getVersion();
-
+        $jsVersion = $this->_appConfigScopeConfigInterface->getValue(
+            Config::XML_PATH_THEME_VERSION,
+            ScopeInterface::SCOPE_STORES,
+            (int)$store->getId()
+        );
 
         $response = $this->_apiActionAddwebstore->execute([
             "customerId" => $customer_id,
@@ -257,6 +264,7 @@ class Api extends \Magento\Framework\App\Helper\AbstractHelper
             "country"    => $country,
             "locale"     => $locale,
             "testMode"   => false,
+            "jsVersion"  => $jsVersion,
         ]);
 
         if ($response->isSuccess()) {
@@ -267,11 +275,11 @@ class Api extends \Magento\Framework\App\Helper\AbstractHelper
                 "test_account_enabled" => false,
                 "hosted_on"            => $response->getHostedOn(),
                 "cloud_search_url"     => $response->getCloudSearchUrl(),
+                "cloud_search_v2_url"  => $response->getData('cloud_search_url_a_p_iv_2'),
                 "analytics_url"        => $response->getAnalyticsUrl(),
                 "js_url"               => $response->getJsUrl(),
                 "rest_hostname"        => $response->getRestUrl(),
                 "tires_url"            => $response->getTiersUrl(),
-
             ]);
 			$this->_searchModelSession->setCurrentKlevuStoreId($store->getId());
 			$this->_searchModelSession->setCurrentKlevuRestApiKlevu($response->getRestApiKey());

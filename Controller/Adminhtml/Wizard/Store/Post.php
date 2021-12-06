@@ -33,7 +33,7 @@ class Post extends \Magento\Backend\App\Action
      * @var \Klevu\Search\Model\Order\Sync
      */
     protected $_modelOrderSync;
-	
+
 	/**
      * @var \Klevu\Search\Model\Product\MagentoProductActionsInterface
      */
@@ -48,7 +48,7 @@ class Post extends \Magento\Backend\App\Action
         \Klevu\Search\Model\Order\Sync $modelOrderSync,
 		\Klevu\Search\Model\Product\MagentoProductActionsInterface $magentoProductActions
     ) {
-    
+
         $this->_searchHelperConfig = $searchHelperConfig;
         $this->_searchHelperApi = $searchHelperApi;
         $this->_searchModelSession = $context->getSession();
@@ -99,6 +99,7 @@ class Post extends \Magento\Backend\App\Action
             $config->setRestApiKey($result["webstore"]->getRestApiKey(), $store);
             $config->setHostname($result["webstore"]->getHostedOn(), $store);
             $config->setCloudSearchUrl($result['webstore']->getCloudSearchUrl(), $store);
+            $config->setCloudSearchV2Url($result['webstore']->getData('cloud_search_v2_url'), $store);
             $config->setAnalyticsUrl($result['webstore']->getAnalyticsUrl(), $store);
             $config->setJsUrl($result['webstore']->getJsUrl(), $store);
             $config->setRestHostname($result['webstore']->getRestHostname(), $store);
@@ -106,7 +107,7 @@ class Post extends \Magento\Backend\App\Action
 			$config->saveRatingUpgradeFlag(0,$store);
 			$config->resetConfig();
             if (isset($result["message"])) {
-                $this->messageManager->addSuccessMessage(__($result["message"]));	
+                $this->messageManager->addSuccessMessage(__($result["message"]));
                 $this->_searchModelSession->setFirstSync($store_code);
             }
         } else {
@@ -130,7 +131,7 @@ class Post extends \Magento\Backend\App\Action
         $session->setConfiguredStoreCode($store_code);
 
         $this->messageManager->addSuccessMessage("Store configured successfully. Saved API credentials.");
-		
+
 		if($config->isExternalCronEnabled()) {
 			// Schedule a Product Sync
 			$this->_modelProductSync->schedule();

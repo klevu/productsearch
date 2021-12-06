@@ -1,12 +1,48 @@
 <?xml version="1.0"?>
 <page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" layout="1column"
       xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
-    <head>
-        <css src="Klevu_Search::css/klevu-landing-page-style.css" rel="stylesheet" type="text/css"/>
-        <css src="Klevu_Search::css/klevu-landing-responsive.css" rel="stylesheet" type="text/css"/>
-    </head>
     <body>
+        <referenceBlock name="head.additional">
+            <!-- Theme V1 CSS -->
+            <block class="Klevu\Search\Block\Search\CssIncludes"
+                   template="Klevu_Search::klevu/search/css_includes.phtml"
+                   name="klevu_search.search.css_includes" />
+        </referenceBlock>
+
+        <!-- Theme V2 JS -->
+        <referenceBlock name="klevu_frontendjs.js_includes">
+            <arguments>
+                <argument name="js_includes" xsi:type="array">
+                    <item name="klevu_themev2_srlp" xsi:type="array">
+                        <item name="if_config" xsi:type="array">
+                            <item name="frontend_enabled" xsi:type="array">
+                                <item name="path" xsi:type="const">Klevu\Search\Helper\Config::XML_PATH_EXTENSION_ENABLED</item>
+                                <item name="conditions" xsi:type="array">
+                                    <item name="eq" xsi:type="string">1</item>
+                                </item>
+                            </item>
+                            <item name="has_api_key" xsi:type="array">
+                                <item name="path" xsi:type="const">Klevu\Search\Helper\Config::XML_PATH_JS_API_KEY</item>
+                                <item name="conditions" xsi:type="array">
+                                    <item name="neq" xsi:type="null"/>
+                                </item>
+                            </item>
+                            <item name="themev2" xsi:type="array">
+                                <item name="path" xsi:type="const">Klevu\Search\Helper\Config::XML_PATH_THEME_VERSION</item>
+                                <item name="conditions" xsi:type="array">
+                                    <item name="eq" xsi:type="string">v2</item>
+                                </item>
+                            </item>
+                        </item>
+                        <item name="after" xsi:type="string">klevu_themev2_quicksearch</item>
+                        <item name="url" xsi:type="string"><![CDATA[//js.klevu.com/theme/default/v2/landing-page-theme.js]]></item>
+                    </item>
+                </argument>
+            </arguments>
+        </referenceBlock>
+
         <referenceBlock name="content">
+            <!-- Theme V1 -->
             <block class="Klevu\Search\Block\Search\Index"
                    template="Klevu_Search::klevu/search/index.phtml"
                    name="search_index_klevutemplate">
@@ -15,6 +51,10 @@
                        name="search_index_klevutemplate.configurable_sortby"
                        as="configurable_sortby"/>
             </block>
+            <!-- ThemeV2 -->
+            <block class="Klevu\Search\Block\Search\Index\ThemeV2"
+                   template="Klevu_Search::klevu/search/index/themev2.phtml"
+                   name="search_index_klevutemplate.themev2" />
         </referenceBlock>
     </body>
 </page>

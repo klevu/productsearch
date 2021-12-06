@@ -7,10 +7,13 @@ namespace Klevu\Search\Block\Search;
 
 use Klevu\Search\Helper\Backend as KlevuHelperBackend;
 use Klevu\Search\Helper\Config as KlevuConfig;
+use Klevu\Search\Model\Source\ThemeVersion;
 use Klevu\Search\Model\Sync as KlevuSync;
 use Magento\Framework\App\Filesystem\DirectoryList;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\View\Element\Template;
 use Magento\Framework\View\Element\Template\Context as Magento_TemplateContext;
+use Magento\Store\Model\ScopeInterface;
 
 
 /**
@@ -109,6 +112,10 @@ class Index extends Template
         return $this->_klevuDataHelper->getCurrencyData($this->getStore());
     }
 
+    /**
+     * @return \Magento\Store\Api\Data\StoreInterface
+     * @throws NoSuchEntityException
+     */
     protected function getStore()
     {
         return $this->_storeManager->getStore();
@@ -184,6 +191,34 @@ class Index extends Template
     public function isShowIndexerMessage()
     {
         return $this->_klevuHelperBackend->checkToShowIndexerMessage();
+    }
+
+    /**
+     * {@inheritdoc}
+     * @return string
+     */
+    protected function _toHtml()
+    {
+        try {
+            $store = $this->getStore();
+            $storeId = (int)$store->getId();
+        } catch (NoSuchEntityException $e) {
+            $this->_logger->error($e->getMessage());
+
+            return '';
+        }
+
+        $themeVersion = $this->_scopeConfig->getValue(
+            KlevuConfig::XML_PATH_THEME_VERSION,
+            ScopeInterface::SCOPE_STORES,
+            $storeId
+        );
+
+        if ((ThemeVersion::V2 === $themeVersion) || !$this->isExtensionConfigured()) {
+            return '';
+        }
+
+        return parent::_toHtml();
     }
 }
 
