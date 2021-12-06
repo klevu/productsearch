@@ -97,7 +97,7 @@ class JsVariables extends Template
      */
     public function isPubInUse()
     {
-        return 'pub' === $this->directoryList->getUrlPath(DirectoryList::PUB);
+        return 'pub' !== $this->directoryList->getUrlPath(DirectoryList::PUB);
     }
 
     /**
