@@ -1,0 +1,13 @@
+<?php
+/** @var Klevu\Search\Block\Html\Head\ThemeV2\JsVariables $block */
+$currencyCurrencyRates = $block->getCurrentCurrencyRates();
+?>
+<script type="text/javascript">
+    var klevu_lang = '<?php echo $block->escapeJsQuote($block->getStoreLanguage()); ?>';
+    var klevu_currentCurrencyCode = '<?php echo $block->escapeJsQuote($block->getCurrentCurrencyCode()); ?>';
+    <?php if ($currencyCurrencyRates): ?>
+        var klevu_currentCurrencyRates = {<?php echo /** @noEscape */ $currencyCurrencyRates; ?>};
+    <?php endif; ?>
+    var klevu_pubIsInUse = <?php echo $block->isPubInUse() ? "true" : "false"; ?>;
+    var klevu_current_version = '<?php echo $block->escapeJsQuote($block->getModuleVersion('Klevu_Search')); ?>';
+</script>

@@ -5,7 +5,10 @@ namespace Klevu\Search\Test\Integration\Model\Order;
 use Klevu\Search\Model\Api\Action\Producttracking;
 use Klevu\Search\Model\Api\Response;
 use Klevu\Search\Model\Order\Sync;
+use Magento\Framework\App\Area;
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\App\ProductMetadataInterface;
+use Magento\Framework\Config\ScopeInterface;
 use Magento\TestFramework\Helper\Bootstrap;
 use Magento\TestFramework\ObjectManager;
 use PHPUnit\Framework\TestCase;
@@ -21,6 +24,16 @@ class SyncTest extends TestCase
      * @var ObjectManager
      */
     private $objectManager;
+
+    /**
+     * @var ScopeInterface
+     */
+    private $scopeConfig;
+
+    /**
+     * @var ProductMetadataInterface
+     */
+    private $productMetadata;
 
     /**
      * @var int[]
@@ -39,7 +52,6 @@ class SyncTest extends TestCase
      *      and: Order information is sent via the API for klevu_test_store_2
      *      and: Order information for all stores contains required fields
      *
-     * @magentoAppArea crontab
      * @magentoAppIsolation enabled
      * @magentoDbIsolation disabled
      * @magentoCache all disabled
@@ -52,6 +64,11 @@ class SyncTest extends TestCase
     public function testRunTriggersApiRequest_SyncEnabledAllStores()
     {
         $this->setupPhp5();
+        // Support for Magento 2.1.x. See https://github.com/magento/magento2/issues/2907#issuecomment-169476734
+        $currentScope = version_compare($this->productMetadata->getVersion(), '2.2.0', '>=')
+            ? Area::AREA_CRONTAB
+            : 'cron';
+        $this->scopeConfig->setCurrentScope($currentScope);
 
         /** @var ScopeConfigInterface $scopeConfig */
         $scopeConfig = $this->objectManager->get(ScopeConfigInterface::class);
@@ -86,7 +103,6 @@ class SyncTest extends TestCase
      *      and: Order information is not sent via the API for klevu_test_store_2
      *      and: Order information for all stores contains required fields
      *
-     * @magentoAppArea crontab
      * @magentoAppIsolation enabled
      * @magentoDbIsolation disabled
      * @magentoCache all disabled
@@ -100,6 +116,11 @@ class SyncTest extends TestCase
     public function testRunTriggersApiRequest_SyncEnabledSingleStore()
     {
         $this->setupPhp5();
+        // Support for Magento 2.1.x. See https://github.com/magento/magento2/issues/2907#issuecomment-169476734
+        $currentScope = version_compare($this->productMetadata->getVersion(), '2.2.0', '>=')
+            ? Area::AREA_CRONTAB
+            : 'cron';
+        $this->scopeConfig->setCurrentScope($currentScope);
 
         $this->executeCallsPerApiKey = [
             'klevu-klevu_test_store_1' => 0,
@@ -130,7 +151,6 @@ class SyncTest extends TestCase
      *      and: Order information is sent for 5 records via the API for klevu_test_store_2
      *      and: Order information for all stores contains required fields
      *
-     * @magentoAppArea crontab
      * @magentoAppIsolation enabled
      * @magentoDbIsolation disabled
      * @magentoCache all disabled
@@ -145,6 +165,11 @@ class SyncTest extends TestCase
     public function testRunTriggersApiRequest_MaxBatchSizeApplied()
     {
         $this->setupPhp5();
+        // Support for Magento 2.1.x. See https://github.com/magento/magento2/issues/2907#issuecomment-169476734
+        $currentScope = version_compare($this->productMetadata->getVersion(), '2.2.0', '>=')
+            ? Area::AREA_CRONTAB
+            : 'cron';
+        $this->scopeConfig->setCurrentScope($currentScope);
 
         $this->executeCallsPerApiKey = [
             'klevu-klevu_test_store_1' => 0,
@@ -174,7 +199,6 @@ class SyncTest extends TestCase
      *      and: Order information is not sent via the API for klevu_test_store_2
      *      and: Order information for all stores contains required fields
      *
-     * @magentoAppArea crontab
      * @magentoAppIsolation enabled
      * @magentoDbIsolation disabled
      * @magentoCache all disabled
@@ -187,6 +211,11 @@ class SyncTest extends TestCase
     public function testRunTriggersApiRequest_ExplicitStores()
     {
         $this->setupPhp5();
+        // Support for Magento 2.1.x. See https://github.com/magento/magento2/issues/2907#issuecomment-169476734
+        $currentScope = version_compare($this->productMetadata->getVersion(), '2.2.0', '>=')
+            ? Area::AREA_CRONTAB
+            : 'cron';
+        $this->scopeConfig->setCurrentScope($currentScope);
 
         $this->executeCallsPerApiKey = [
             'klevu-klevu_test_store_1' => 0,
@@ -217,7 +246,6 @@ class SyncTest extends TestCase
      *     Then: No orders information is sent by API for any store
      *
      * @depends testRunTriggersApiRequest_SyncEnabledAllStores
-     * @magentoAppArea crontab
      * @magentoAppIsolation enabled
      * @magentoDbIsolation disabled
      * @magentoCache all disabled
@@ -230,6 +258,11 @@ class SyncTest extends TestCase
     public function testRunExitsIfLockFilePresent()
     {
         $this->setupPhp5();
+        // Support for Magento 2.1.x. See https://github.com/magento/magento2/issues/2907#issuecomment-169476734
+        $currentScope = version_compare($this->productMetadata->getVersion(), '2.2.0', '>=')
+            ? Area::AREA_CRONTAB
+            : 'cron';
+        $this->scopeConfig->setCurrentScope($currentScope);
 
         $sourceFilePath = $this->installDir . '/var/klevu_running_order_sync.lock';
         $this->createSourceFile($sourceFilePath, time());
@@ -266,7 +299,6 @@ class SyncTest extends TestCase
      *      and: Order information for all stores contains required fields
      *
      * @depends testRunExitsIfLockFilePresent
-     * @magentoAppArea crontab
      * @magentoAppIsolation enabled
      * @magentoDbIsolation disabled
      * @magentoCache all disabled
@@ -279,6 +311,11 @@ class SyncTest extends TestCase
     public function testRunClearsLockFileIfExpired()
     {
         $this->setupPhp5();
+        // Support for Magento 2.1.x. See https://github.com/magento/magento2/issues/2907#issuecomment-169476734
+        $currentScope = version_compare($this->productMetadata->getVersion(), '2.2.0', '>=')
+            ? Area::AREA_CRONTAB
+            : 'cron';
+        $this->scopeConfig->setCurrentScope($currentScope);
 
         $sourceFilePath = $this->installDir . '/var/klevu_running_order_sync.lock';
         $this->createSourceFile($sourceFilePath, time() - (60 * 60 * 2));
@@ -308,6 +345,8 @@ class SyncTest extends TestCase
     {
         $this->installDir = $GLOBALS['installDir'];
         $this->objectManager = Bootstrap::getObjectManager();
+        $this->scopeConfig = $this->objectManager->get(ScopeInterface::class);
+        $this->productMetadata = $this->objectManager->get(ProductMetadataInterface::class);
 
         $this->deleteSourceFile($this->installDir . '/var/klevu_running_order_sync.lock');
     }
@@ -377,6 +416,11 @@ class SyncTest extends TestCase
      */
     private function getProducttrackingActionMockLegacy($return)
     {
+        $response = $this->getResponseMock(
+            true === $return,
+            is_string($return) ? $return : null
+        );
+
         $producttrackingActionMock = $this->getMockBuilder(Producttracking::class)
             ->disableOriginalConstructor()
             ->getMock();
@@ -401,7 +445,11 @@ class SyncTest extends TestCase
             ->expects($this->any())
             ->method('execute')
             ->willReturnCallback(function ($arguments) use ($expectedArrayKeys, $response) {
-                $this->assertIsArray($arguments);
+                if (method_exists($this, 'assertIsArray')) {
+                    $this->assertIsArray($arguments);
+                } else {
+                    $this->assertTrue(is_array($arguments), 'Is Array');
+                }
                 foreach ($expectedArrayKeys as $expectedArrayKey) {
                     $this->assertArrayHasKey($expectedArrayKey, $arguments);
                 }

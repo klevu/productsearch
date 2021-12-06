@@ -7,6 +7,7 @@
                 <hostname>box.klevu.com</hostname>
                 <rest_hostname>rest.klevu.com</rest_hostname>
                 <cloud_search_url>eucs.klevu.com</cloud_search_url>
+                <cloud_search_v2_url>eucsv2.klevu.com</cloud_search_v2_url>
                 <analytics_url>stats.klevu.com</analytics_url>
                 <js_url>js.klevu.com</js_url>
                 <tiers_url>tiers.klevu.com</tiers_url>
@@ -33,6 +34,9 @@
                 <log_level>6</log_level>
                 <preserve_layout_log_enabled>0</preserve_layout_log_enabled>
                 <preserve_layout_log_level>7</preserve_layout_log_level>
+                <!-- See configuration at klevu_logger/preserve_layout_configuration/min_log_level -->
+                <theme_version>v1</theme_version>
+                <quicksearch_selector><![CDATA[input[type=text][name=q]]]></quicksearch_selector>
             </developer>
             <searchlanding>
                 <landenabled>2</landenabled>

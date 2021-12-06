@@ -220,7 +220,7 @@ foreach ($fixtures as $fixture) {
     $order->setBillingAddress($billingAddress);
     $order->setShippingAddress($shippingAddress);
     $order->addItem($orderItem);
-    $order->setPayment($payment);
+    $order->setPayment(clone $payment);
 
     $orderRepository->save($order);
 }

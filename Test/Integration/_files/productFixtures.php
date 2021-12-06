@@ -5,6 +5,7 @@ use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\Catalog\Model\Product;
 use Magento\Catalog\Model\Product\Attribute\Source\Status;
 use Magento\Catalog\Model\Product\Visibility;
+use Magento\Indexer\Model\IndexerFactory;
 use Magento\Store\Model\Website;
 
 $objectManager = Bootstrap::getObjectManager();
@@ -60,4 +61,22 @@ foreach ($fixtures as $fixture) {
     $product->addData($fixture);
 
     $productRepository->save($product);
+}
+
+$indexerFactory = $objectManager->get(IndexerFactory::class);
+$indexes = [
+    'catalog_product_attribute',
+    'catalog_product_price',
+    'inventory',
+    'cataloginventory_stock',
+];
+foreach ($indexes as $index) {
+    $indexer = $indexerFactory->create();
+    try {
+        $indexer->load($index);
+        $indexer->reindexAll();
+    } catch (\InvalidArgumentException $e) {
+        // Support for older versions of Magento which may not have all indexers
+        continue;
+    }
 }

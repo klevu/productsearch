@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceBlock name="klevu_frontendjs.js_includes">
+            <arguments>
+                <argument name="js_includes" xsi:type="array">
+                    <item name="klevu_themev2_quicksearch" xsi:type="array">
+                        <item name="if_config" xsi:type="array">
+                            <item name="frontend_enabled" xsi:type="array">
+                                <item name="path" xsi:type="const">Klevu\Search\Helper\Config::XML_PATH_EXTENSION_ENABLED</item>
+                                <item name="conditions" xsi:type="array">
+                                    <item name="eq" xsi:type="string">1</item>
+                                </item>
+                            </item>
+                            <item name="has_api_key" xsi:type="array">
+                                <item name="path" xsi:type="const">Klevu\Search\Helper\Config::XML_PATH_JS_API_KEY</item>
+                                <item name="conditions" xsi:type="array">
+                                    <item name="neq" xsi:type="null"/>
+                                </item>
+                            </item>
+                            <item name="themev2" xsi:type="array">
+                                <item name="path" xsi:type="const">Klevu\Search\Helper\Config::XML_PATH_THEME_VERSION</item>
+                                <item name="conditions" xsi:type="array">
+                                    <item name="eq" xsi:type="const">Klevu\Search\Model\Source\ThemeVersion::V2</item>
+                                </item>
+                            </item>
+                        </item>
+                        <item name="after" xsi:type="string">lib</item>
+                        <item name="url" xsi:type="string"><![CDATA[//js.klevu.com/theme/default/v2/quick-search-theme.js]]></item>
+                    </item>
+                </argument>
+            </arguments>
+        </referenceBlock>
+
+        <referenceBlock name="head.additional">
+            <block class="Klevu\Search\Block\Html\Head\ThemeV2\JsVariables"
+                   before="klevu_frontendjs.js_includes.core"
+                   template="Klevu_Search::html/head/themev2/js_variables.phtml"
+                   name="klevu_search.html_head.themev2.js_variables"/>
+        </referenceBlock>
+    </body>
+</page>

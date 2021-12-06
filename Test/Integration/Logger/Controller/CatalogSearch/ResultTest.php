@@ -63,8 +63,10 @@ class ResultTest extends AbstractControllerTestCase
         $indexes = [
             'catalog_product_attribute',
             'catalog_product_price',
-            'inventory',
             'cataloginventory_stock',
+            'inventory',
+            'catalog_category_product',
+            'catalog_product_category',
             'catalogsearch_fulltext',
         ];
         foreach ($indexes as $index) {
@@ -94,6 +96,7 @@ class ResultTest extends AbstractControllerTestCase
             'SRLP should return results'
         );
 
+        // Note: known failure in 2.1.x - ref KS-9240
         $this->assertTrue(file_exists($logFilePath), 'Log file ' . $logFileName . ' exists after search results dispatch');
     }
 
@@ -127,8 +130,10 @@ class ResultTest extends AbstractControllerTestCase
         $indexes = [
             'catalog_product_attribute',
             'catalog_product_price',
-            'inventory',
             'cataloginventory_stock',
+            'inventory',
+            'catalog_category_product',
+            'catalog_product_category',
             'catalogsearch_fulltext',
         ];
         foreach ($indexes as $index) {
