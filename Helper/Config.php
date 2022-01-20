@@ -196,7 +196,7 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     /**
      * Return the configuration flag for sending config image.
      *
-     * @param Mage_Core_Model_Store|int $store
+     * @param $store_id
      *
      * @return bool
      */
@@ -422,12 +422,16 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
     /**
-     * @param null $store
+     * @param int|StoreInterface|null $store
      * @return string
      */
-    public function getAnalyticsUrl()
+    public function getAnalyticsUrl($store = null)
     {
-        $url = $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_ANALYTICS_URL);
+        $url = $this->_appConfigScopeConfigInterface->getValue(
+        	static::XML_PATH_ANALYTICS_URL,
+        	\Magento\Store\Model\ScopeInterface::SCOPE_STORE,
+        	$store
+        );
         return ($url) ? $url : ApiHelper::ENDPOINT_DEFAULT_ANALYTICS_HOSTNAME;
     }
 
@@ -682,11 +686,17 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     /**
      * Check if default Magento log settings should be overridden to force logging for this module.
      *
+     * @param int $store
      * @return bool
+     * @deprecated
      */
-    public function isLoggingForced()
+    public function isLoggingForced($store = null)
     {
-        return $this->_appConfigScopeConfigInterface->isSetFlag(static::XML_PATH_FORCE_LOG);
+        return $this->_appConfigScopeConfigInterface->isSetFlag(
+            static::XML_PATH_FORCE_LOG,
+            ScopeInterface::SCOPE_STORE,
+            $store
+        );
     }
 
     /**
@@ -1188,10 +1198,9 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
 
 
 	/**
-     * Return Catalog Visibity Sync.
+     * Return Catalog Visibility Sync.
      *
-     * @param Mage_Core_Model_Store|int $store
-     *
+     * @param null $store_id
      * @return bool
      */
     public function useCatalogVisibitySync($store_id = null)
@@ -1200,9 +1209,7 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
     /**
-     * Return Catalog Visibity Sync.
-     *
-     * @param Mage_Core_Model_Store|int $store
+     * Return Current Configured Catalog search engine.
      *
      * @return bool
      */
@@ -1336,14 +1343,19 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
 
         return (int)$this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_NOTIFICATION_LOCK_FILE, ScopeInterface::SCOPE_STORE, $store);
     }
-	/**
+    /**
      * Check if Klevu preserve layout log enabled in settings
      *
+     * @param int $store
      * @return bool
      */
-    public function isPreserveLayoutLogEnabled()
+    public function isPreserveLayoutLogEnabled($store = null)
     {
-        return $this->_appConfigScopeConfigInterface->isSetFlag(static::XML_PATH_PRESERVE_LAYOUT_LOG_ENABLED);
+        return $this->_appConfigScopeConfigInterface->isSetFlag(
+            static::XML_PATH_PRESERVE_LAYOUT_LOG_ENABLED,
+            ScopeInterface::SCOPE_STORE,
+            $store
+        );
     }
     /**
      * Returns notification flag for lock file warning

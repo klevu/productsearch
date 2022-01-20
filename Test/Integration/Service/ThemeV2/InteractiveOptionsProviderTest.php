@@ -42,8 +42,9 @@ class InteractiveOptionsProviderTest extends TestCase
 
         $expectedResult = [
             'url' => [
+                'protocol' => 'https',
                 'landing' => '/search',
-                'search' => '//eucs999v2.klevu.com/cs/v2/search',
+                'search' => 'https://eucs999v2.klevu.com/cs/v2/search',
             ],
             'search' => [
                 'minChars' => 0,
@@ -85,8 +86,9 @@ class InteractiveOptionsProviderTest extends TestCase
 
         $expectedResult = [
             'url' => [
+                'protocol' => 'https',
                 'landing' => '/catalogsearch/result',
-                'search' => '//eucs999v2.klevu.com/cs/v2/search',
+                'search' => 'https://eucs999v2.klevu.com/cs/v2/search',
             ],
             'search' => [
                 'minChars' => 0,
@@ -172,3 +174,4 @@ class InteractiveOptionsProviderTest extends TestCase
         return $isEnabledConditionMock;
     }
 }
+

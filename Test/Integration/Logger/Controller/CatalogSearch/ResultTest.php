@@ -43,12 +43,16 @@ class ResultTest extends AbstractControllerTestCase
      * @magentoDataFixture loadProductFixtures
      * @magentoConfigFixture es_es_store klevu_search/general/enabled 1
      * @magentoConfigFixture es_es_store klevu_search/general/js_api_key klevu-1234567890
-     * @magentoConfigFixture es_es_store klevu_search/general/rest_api_key ABCDEFG1234567890
+     * @magentoConfigFixture es_es_store klevu_search/general/rest_api_key abcdef1234567890
      * @magentoConfigFixture es_es_store klevu_search/searchlanding/landenabled 1
+     * @magentoConfigFixture es_es_store klevu_search/searchlanding/klevu_search_relevance 1
+     * @magentoConfigFixture es_es_store klevu_search/developer/force_log 1
+     * @magentoConfigFixture es_es_store klevu_search/developer/log_level 7
+     * @magentoConfigFixture default/klevu_search/developer/preserve_layout_log_enabled 1
      * @magentoConfigFixture es_es_store klevu_search/developer/preserve_layout_log_enabled 1
      * @magentoConfigFixture es_es_store klevu_logger/preserve_layout_configuration/min_log_level 7
      */
-    public function testPreserveLayoutLoggingEnabled()
+    public function testPreserveLayoutLogging_EnabledGlobalEnabledStore()
     {
         $this->setupPhp5();
 
@@ -110,12 +114,16 @@ class ResultTest extends AbstractControllerTestCase
      * @magentoDataFixture loadProductFixtures
      * @magentoConfigFixture es_es_store klevu_search/general/enabled 1
      * @magentoConfigFixture es_es_store klevu_search/general/js_api_key klevu-1234567890
-     * @magentoConfigFixture es_es_store klevu_search/general/rest_api_key ABCDEFG1234567890
+     * @magentoConfigFixture es_es_store klevu_search/general/rest_api_key abcdef1234567890
      * @magentoConfigFixture es_es_store klevu_search/searchlanding/landenabled 1
+     * @magentoConfigFixture es_es_store klevu_search/searchlanding/klevu_search_relevance 1
+     * @magentoConfigFixture es_es_store klevu_search/developer/force_log 1
+     * @magentoConfigFixture es_es_store klevu_search/developer/log_level 7
+     * @magentoConfigFixture default/klevu_search/developer/preserve_layout_log_enabled 1
      * @magentoConfigFixture es_es_store klevu_search/developer/preserve_layout_log_enabled 0
      * @magentoConfigFixture es_es_store klevu_logger/preserve_layout_configuration/min_log_level 7
      */
-    public function testPreserveLayoutLoggingDisabled()
+    public function testPreserveLayoutLogging_EnabledGlobalDisabledStore()
     {
         $this->setupPhp5();
 
@@ -164,6 +172,76 @@ class ResultTest extends AbstractControllerTestCase
         );
 
         $this->assertFalse(file_exists($logFilePath), 'Log file ' . $logFileName . ' does not exist after search results dispatch');
+    }
+
+    /**
+     * @magentoAppArea frontend
+     * @magentoCache all disabled
+     * @magentoAppIsolation enabled
+     * @magentoDbIsolation disabled
+     * @magentoDataFixture loadStoreFixtures
+     * @magentoDataFixture loadWebsiteFixtures
+     * @magentoDataFixture loadProductFixtures
+     * @magentoConfigFixture es_es_store klevu_search/general/enabled 1
+     * @magentoConfigFixture es_es_store klevu_search/general/js_api_key klevu-1234567890
+     * @magentoConfigFixture es_es_store klevu_search/general/rest_api_key abcdef1234567890
+     * @magentoConfigFixture es_es_store klevu_search/searchlanding/landenabled 1
+     * @magentoConfigFixture es_es_store klevu_search/searchlanding/klevu_search_relevance 1
+     * @magentoConfigFixture es_es_store klevu_search/developer/force_log 1
+     * @magentoConfigFixture es_es_store klevu_search/developer/log_level 7
+     * @magentoConfigFixture default/klevu_search/developer/preserve_layout_log_enabled 0
+     * @magentoConfigFixture es_es_store klevu_search/developer/preserve_layout_log_enabled 1
+     * @magentoConfigFixture es_es_store klevu_logger/preserve_layout_configuration/min_log_level 7
+     */
+    public function testPreserveLayoutLogging_DisabledGlobalEnabledStore()
+    {
+        $this->setupPhp5();
+
+        $logFileName = 'Klevu_Search_Preserve_Layout.es_es.log';
+        $logFilePath = $this->installDir . '/var/log/' . $logFileName;
+
+        $this->removeExistingLogFile($logFilePath);
+        $this->assertFalse(file_exists($logFilePath), 'Log file ' . $logFileName . ' exists before search results dispatch');
+
+        $this->storeManager->setCurrentStore('es_es');
+
+        $indexes = [
+            'catalog_product_attribute',
+            'catalog_product_price',
+            'cataloginventory_stock',
+            'inventory',
+            'catalog_category_product',
+            'catalog_product_category',
+            'catalogsearch_fulltext',
+        ];
+        foreach ($indexes as $index) {
+            $indexer = $this->indexerFactory->create();
+            try {
+                $indexer->load($index);
+                $indexer->reindexAll();
+            } catch (\InvalidArgumentException $e) {
+                // Support for older versions of Magento which may not have all indexers
+                continue;
+            }
+        }
+
+        /** @var ProductCollection $productCollection */
+        $productCollection = $this->objectManager->create(ProductCollection::class);
+        $productCollection->addFieldToFilter('visibility', ['in' => [3,4]]);
+        $productCollection->addFieldToFilter('status', 1);
+        $requestPartialMock = $this->getApiRequestPartialMock(
+            $this->getResponseDataObject($productCollection)
+        );
+        $this->objectManager->addSharedInstance($requestPartialMock, ApiGetRequest::class);
+
+        $this->dispatch('catalogsearch/result/index/?q=jacket');
+
+        $this->assertTrue(
+            false === stripos($this->getResponse()->getBody(), 'Your search returned no results'),
+            'SRLP should return results'
+        );
+
+        $this->assertTrue(file_exists($logFilePath), 'Log file ' . $logFileName . ' exists after search results dispatch');
     }
 
     /**
