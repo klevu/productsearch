@@ -33,8 +33,13 @@ class SearchResult
      *
      * @param Registry $registry
      * @param KlevuConfig $klevuConfig
+     * @param KlevuHelperData $klevuHelperData
      */
-    public function __construct(Registry $registry, KlevuConfig $klevuConfig, KlevuHelperData $klevuHelperData)
+    public function __construct(
+        Registry              $registry,
+        KlevuConfig           $klevuConfig,
+        KlevuHelperData       $klevuHelperData
+    )
     {
         $this->registry = $registry;
         $this->klevuConfig = $klevuConfig;
@@ -48,17 +53,17 @@ class SearchResult
      */
     public function beforeSetItems(
         \Magento\Framework\Api\Search\SearchResult $subject,
-        $result)
+                                                   $result)
     {
         $current_order = $this->registry->registry('current_order');
         $klReqCleanerType = $this->registry->registry('klReqCleanerType');
         if ($this->klevuConfig->isPreserveLayoutLogEnabled()) {
             $process = rand(100000, 999999);
             $this->writeToPreserveLayoutLog(
-                $process . sprintf(" searchResultPlugin:: currentRegistryOrder-%s", $current_order)
+                $process . sprintf(" searchResultPlugin:: currentRegistryOrder: [%s]", $current_order)
             );
             $this->writeToPreserveLayoutLog(
-                $process . sprintf(" searchResultPlugin:: RequestType-%s", $klReqCleanerType)
+                $process . sprintf(" searchResultPlugin:: RequestType: [%s]", $klReqCleanerType)
             );
         }
         if (!empty($current_order)) {
@@ -161,5 +166,5 @@ class SearchResult
     {
         $this->klevuHelperData->preserveLayoutLog($message);
     }
-}
 
+}

@@ -27,9 +27,10 @@ class InteractiveOptionsProvider implements InteractiveOptionsProviderInterface
      * @param IsEnabledConditionInterface $isEnabledCondition
      */
     public function __construct(
-        ScopeConfigInterface $scopeConfig,
+        ScopeConfigInterface        $scopeConfig,
         IsEnabledConditionInterface $isEnabledCondition
-    ) {
+    )
+    {
         $this->scopeConfig = $scopeConfig;
         $this->isEnabledCondition = $isEnabledCondition;
     }
@@ -71,10 +72,11 @@ class InteractiveOptionsProvider implements InteractiveOptionsProviderInterface
 
         return [
             'url' => [
+                'protocol' => 'https',
                 'landing' => (int)$landingUri === Landingoptions::KlEVULAND
                     ? '/search'
                     : '/catalogsearch/result',
-                'search' => sprintf('//%s/cs/v2/search', $cloudSearchUrl),
+                'search' => sprintf('https://%s/cs/v2/search', $cloudSearchUrl),
             ],
             'search' => [
                 'minChars' => 0,
@@ -87,3 +89,4 @@ class InteractiveOptionsProvider implements InteractiveOptionsProviderInterface
         ];
     }
 }
+

@@ -56,7 +56,7 @@ class PageOutputTest extends AbstractControllerTestCase
                 'Initialisation script is present in response body'
             );
             $this->assertStringContainsString(
-                '"url":{"landing":"\/search"',
+                '"url":{"protocol":"https","landing":"\/search"',
                 $responseBody,
                 'JS options contain landing page URL'
             );
@@ -72,7 +72,7 @@ class PageOutputTest extends AbstractControllerTestCase
                 'Initialisation script is present in response body'
             );
             $this->assertContains(
-                '"url":{"landing":"\/search"',
+                '"url":{"protocol":"https","landing":"\/search"',
                 $responseBody,
                 'JS options contain landing page URL'
             );
@@ -160,7 +160,7 @@ class PageOutputTest extends AbstractControllerTestCase
                 'Initialisation script is present in response body'
             );
             $this->assertStringNotContainsString(
-                '"url":{"landing":"\/search"',
+                '"url":{"protocol":"https","landing":"\/search"',
                 $responseBody,
                 'JS options contain landing page URL'
             );
@@ -176,7 +176,7 @@ class PageOutputTest extends AbstractControllerTestCase
                 'Initialisation script is present in response body'
             );
             $this->assertNotContains(
-                '"url":{"landing":"\/search"',
+                '"url":{"protocol":"https","landing":"\/search"',
                 $responseBody,
                 'JS options contain landing page URL'
             );
@@ -240,7 +240,7 @@ class PageOutputTest extends AbstractControllerTestCase
                 'Initialisation script is present in response body'
             );
             $this->assertStringNotContainsString(
-                '"url":{"landing":"\/search"',
+                '"url":{"protocol":"https","landing":"\/search"',
                 $responseBody,
                 'JS options contain landing page URL'
             );
@@ -256,7 +256,7 @@ class PageOutputTest extends AbstractControllerTestCase
                 'Initialisation script is present in response body'
             );
             $this->assertNotContains(
-                '"url":{"landing":"\/search"',
+                '"url":{"protocol":"https","landing":"\/search"',
                 $responseBody,
                 'JS options contain landing page URL'
             );
@@ -321,7 +321,7 @@ class PageOutputTest extends AbstractControllerTestCase
                 'Initialisation script is present in response body'
             );
             $this->assertStringNotContainsString(
-                '"url":{"landing":"\/search"',
+                '"url":{"protocol":"https","landing":"\/search"',
                 $responseBody,
                 'JS options contain landing page URL'
             );
@@ -337,7 +337,7 @@ class PageOutputTest extends AbstractControllerTestCase
                 'Initialisation script is present in response body'
             );
             $this->assertNotContains(
-                '"url":{"landing":"\/search"',
+                '"url":{"protocol":"https","landing":"\/search"',
                 $responseBody,
                 'JS options contain landing page URL'
             );
