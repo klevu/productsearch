@@ -72,7 +72,7 @@ class InteractiveOptionsProvider implements InteractiveOptionsProviderInterface
 
         return [
             'url' => [
-                'protocol' => 'https',
+                'protocol' => 'https:',
                 'landing' => (int)$landingUri === Landingoptions::KlEVULAND
                     ? '/search'
                     : '/catalogsearch/result',

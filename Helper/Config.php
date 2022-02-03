@@ -129,6 +129,9 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
 	const XML_PATH_PRICE_PER_CUSTOMER_GROUP_METHOD = "klevu_search/price_per_customer_group/enabled";
     const XML_PATH_CATALOG_SEARCH_RELEVANCE_LABEL = "klevu_search/searchlanding/relevance_label";
     const XML_PATH_SYNC_LOCKFILE_OPTION = "klevu_search/product_sync/lockfile";
+    const XML_PATH_NOTIFICATION_ORDERS_WITH_SAME_IP = "klevu_search/notification/orders_with_same_ip";
+    const XML_PATH_DEVELOPER_ORDERS_PERCENTAGE = "klevu_search/developer/orders_percentage";
+    const XML_PATH_DEVELOPER_DAYS_CALCULATE_ORDERS = "klevu_search/developer/days_to_calculate_orders";
  	const XML_PATH_CATEGORY_SYNC_ENABLED   = "klevu_search/product_sync/category_sync_enabled";
     const XML_PATH_NOTIFICATION_OBJECT_VS_COLLECTION   = "klevu_search/notification/object_vs_collection";
     const XML_PATH_NOTIFICATION_LOCK_FILE = "klevu_search/notification/lock_file";
@@ -196,7 +199,7 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     /**
      * Return the configuration flag for sending config image.
      *
-     * @param $store_id
+     * @param Mage_Core_Model_Store|int $store
      *
      * @return bool
      */
@@ -1200,7 +1203,8 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
 	/**
      * Return Catalog Visibility Sync.
      *
-     * @param null $store_id
+     * @param Mage_Core_Model_Store|int $store
+     *
      * @return bool
      */
     public function useCatalogVisibitySync($store_id = null)
@@ -1368,4 +1372,48 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
         return (int)$this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_CATEGORY_ANCHOR, ScopeInterface::SCOPE_STORE, $store);
     }
 
+    /**
+     * Returns whether orders with same ip notification flag on or off
+     *
+     * @param int $store
+     * @return int
+     */
+    public function isOrdersWithSameIPNotificationOptionEnabled($store = 0)
+    {
+        return (int)$this->_appConfigScopeConfigInterface->getValue(
+            static::XML_PATH_NOTIFICATION_ORDERS_WITH_SAME_IP,
+            ScopeInterface::SCOPE_STORE,
+            $store
+        );
+    }
+
+    /**
+     * Returns % value for orders calculation
+     *
+     * @param int $store
+     * @return int
+     */
+    public function getPercentageOfOrders($store = 0)
+    {
+        return (int)$this->_appConfigScopeConfigInterface->getValue(
+            static::XML_PATH_DEVELOPER_ORDERS_PERCENTAGE,
+            ScopeInterface::SCOPE_STORE,
+            $store
+        );
+    }
+
+    /**
+     * Returns days to calculate orders
+     *
+     * @param int $store
+     * @return int
+     */
+    public function getDaysToCalculateOrders($store = 0)
+    {
+        return (int)$this->_appConfigScopeConfigInterface->getValue(
+            static::XML_PATH_DEVELOPER_DAYS_CALCULATE_ORDERS,
+            ScopeInterface::SCOPE_STORE,
+            $store
+        );
+    }
 }

@@ -80,7 +80,8 @@ class LoadAttribute extends  AbstractModel implements LoadAttributeInterface
         $url_rewrite_data = $this->getUrlRewriteData($product_ids);
         $attribute_map = $this->getAttributeMap();
         $base_url = $this->_productData->getBaseUrl($this->_storeModelStoreManagerInterface->getStore());
-        $currency = $this->_productData->getCurrency($this->_storeModelStoreManagerInterface->getStore());
+        $currency = $this->_productData->getCurrency();
+        $this->_storeModelStoreManagerInterface->getStore()->setCurrentCurrencyCode($currency);
         $rejectedProducts = array();
         $rc = 0;
         $rp = 0;

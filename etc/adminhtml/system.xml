@@ -415,6 +415,15 @@ Default: <code>input[type=text][name=q]</code>]]></comment>
                 Learn more here: <a href="https://help.klevu.com/support/solutions/articles/5000871506-lock-files-for-data-sync" target="_blank">Magento 2 Lock Files</a>
             ]]></comment>
                 </field>
+                <field id="orders_with_same_ip" translate="label comment" sortOrder="300" type="select" showInDefault="1">
+                    <label>Orders with same IP Address</label>
+                    <source_model>Klevu\Search\Model\System\Config\Source\NotificationOptions</source_model>
+                    <comment><![CDATA[
+                This persistent notification will appear when we detect orders from the same IP address in the sales_order table in last 30 days.
+                <strong>Warning:</strong> By specifying 'At the top of every Magento Admin page', we will attempt to read records from the order table on every single page of your admin panel, which can impact performance.
+                If you have reviewed this message already, you can choose to disable this warning.
+            ]]></comment>
+                </field>
             </group>
         </section>
         <section id="tax" translate="label" sortOrder="430" showInDefault="1" showInWebsite="1" showInStore="1">

@@ -42,7 +42,7 @@ class InteractiveOptionsProviderTest extends TestCase
 
         $expectedResult = [
             'url' => [
-                'protocol' => 'https',
+                'protocol' => 'https:',
                 'landing' => '/search',
                 'search' => 'https://eucs999v2.klevu.com/cs/v2/search',
             ],
@@ -86,7 +86,7 @@ class InteractiveOptionsProviderTest extends TestCase
 
         $expectedResult = [
             'url' => [
-                'protocol' => 'https',
+                'protocol' => 'https:',
                 'landing' => '/catalogsearch/result',
                 'search' => 'https://eucs999v2.klevu.com/cs/v2/search',
             ],
