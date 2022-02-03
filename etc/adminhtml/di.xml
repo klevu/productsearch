@@ -20,6 +20,7 @@
             <argument name="messages" xsi:type="array">
                 <item name="klevu_lock_file" xsi:type="string">Klevu\Search\Model\Message\LockFileMessage</item>
                 <item name="klevu_object_vs_collection" xsi:type="string">Klevu\Search\Model\Message\ObjectVsCollectionMessage</item>
+                <item name="klevu_same_ip_orders" xsi:type="string">Klevu\Search\Model\Message\OrdersWithSameIPMessage</item>
             </argument>
         </arguments>
     </type>
@@ -98,5 +99,10 @@
             <argument name="archiveService" xsi:type="object">Magento\Framework\Archive\Zip</argument>
         </arguments>
     </type>
-</config>
 
+    <type name="Klevu\Search\Model\Order\OrdersWithSameIPCollection">
+        <arguments>
+            <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
+        </arguments>
+    </type>
+</config>

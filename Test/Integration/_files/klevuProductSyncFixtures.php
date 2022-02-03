@@ -43,7 +43,7 @@ foreach ($productSkus as $productSku) {
             'product_id' => $product->getId(),
             'parent_id' => 0,
             'store_id' => $store->getId(),
-            'last_synced_at' => date('Y-m-d H:i:s'),
+            'last_synced_at' => date('Y-m-d H:i:s', time() - 86400),
             'type' => 'products',
             'error_flag' => 0,
         ];

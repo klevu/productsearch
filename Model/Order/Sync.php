@@ -10,6 +10,7 @@ use Klevu\Logger\Api\StoreScopeResolverInterface;
 use Klevu\Logger\Constants as LoggerConstants;
 use Klevu\Search\Model\Sync as KlevuSync;
 use Magento\Framework\App\Filesystem\DirectoryList;
+use Magento\Framework\DataObject;
 use Magento\Framework\Exception\FileSystemException;
 use Magento\Framework\App\ObjectManager;
 use Magento\Framework\DB\Select;
@@ -448,9 +449,7 @@ class Sync extends AbstractModel
             $klevu_current_store_currency_salePrice = $this->_priceHelper->convertPrice($klevu_salePrice,$store);
             $klevu_current_store_currency_salePrice_round =  $this->_priceHelper->roundPrice($klevu_current_store_currency_salePrice);
 
-
-            $this->_apiActionProducttracking->setStore($this->_storeModelStoreManagerInterface->getStore($item->getStoreId()));
-            $response = $this->_apiActionProducttracking->execute([
+            $parameters = [
                 "klevu_apiKey" => $this->getApiKey($item->getStoreId()),
                 "klevu_type" => "checkout",
                 "klevu_productId" => $klevu_productId,
@@ -467,7 +466,18 @@ class Sync extends AbstractModel
                 "klevu_productPosition" => "1",
                 "klevu_productGroupId" => $klevu_productGroupId,
                 "klevu_productVariantId"=> $klevu_productVariantId
+            ];
+            $eventData = new DataObject([
+                'order_item' => $item,
+                'parameters' => $parameters,
             ]);
+            $this->_eventManager->dispatch(
+                'klevu_search_order_sync_send_before',
+                ['event_data' => $eventData]
+            );
+
+            $this->_apiActionProducttracking->setStore($this->_storeModelStoreManagerInterface->getStore($item->getStoreId()));
+            $response = $this->_apiActionProducttracking->execute($eventData->getData('parameters'));
             if ($response->isSuccess()) {
                 return true;
             } else {

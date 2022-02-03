@@ -29,11 +29,11 @@ $fixtures = [
         'description' => '[Klevu Test Fixtures] Simple product 1',
         'short_description' => '[Klevu Test Fixtures] Simple product 1',
         'attribute_set_id' => 4,
-        'website_ids' => [
+        'website_ids' => array_filter([
             $baseWebsite->getId(),
             $website1->getId(),
             $website2->getId(),
-        ],
+        ]),
         'price' => 10,
         'weight' => 1,
         'tax_class_id' => 2,

@@ -42,8 +42,14 @@ class Product extends DataObject implements ProductInterface
         return $base_url;
     }
 
-    public function getCurrency(){
-        return $this->_storeModelStoreManagerInterface->getStore()->getDefaultCurrencyCode();
+    /**
+     * Returns Base Currency Code
+     *
+     * @return mixed
+     */
+    public function getCurrency()
+    {
+        return $this->_storeModelStoreManagerInterface->getStore()->getBaseCurrencyCode();
     }
 
     public function getBoostingAttribute($key,$attributes,$parent,$item,$product)

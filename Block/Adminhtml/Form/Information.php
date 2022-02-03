@@ -3,13 +3,22 @@
 namespace Klevu\Search\Block\Adminhtml\Form;
 
 use Klevu\Search\Helper\Config as Klevu_HelperConfig;
+use Klevu\Search\Model\Order\OrdersWithSameIPCollection;
 use Klevu\Search\Model\System\Config\Source\NotificationOptions;
+use Magento\Backend\Block\Context;
+use Magento\Backend\Model\Auth\Session;
+use Magento\Config\Block\System\Config\Form\Fieldset;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Filesystem;
 use Magento\Framework\Module\ModuleList;
 use Klevu\Search\Helper\Backend as Klevu_HelperBackend;
+use Magento\Framework\App\ObjectManager;
+use Magento\Framework\View\Helper\Js as FrameworkJS;
 
-class Information extends \Magento\Config\Block\System\Config\Form\Fieldset
+/**
+ *
+ */
+class Information extends Fieldset
 {
     const SUBPROCESS_LOCK_FILE = 'klevu_subprocess.lock';
     const AREA_CODE_LOCK_FILE = 'klevu_areacode*.lock';
@@ -18,18 +27,43 @@ class Information extends \Magento\Config\Block\System\Config\Form\Fieldset
     protected $_directoryList;
     protected $_moduleList;
     protected $_context;
+    /**
+     * @var Filesystem
+     */
+    protected $_fileSystem;
+    /**
+     * @var Klevu_HelperBackend
+     */
+    protected $_searchHelperBackend;
+    /**
+     * @var OrdersWithSameIPCollection|null
+     */
+    private $ordersWithSameIPCollection;
 
-
+    /**
+     * @param Context $context
+     * @param Session $authSession
+     * @param FrameworkJS $jsHelper
+     * @param Klevu_HelperConfig $config
+     * @param Klevu_HelperBackend $searchHelperBackend
+     * @param DirectoryList $directoryList
+     * @param ModuleList $moduleList
+     * @param Filesystem $fileSystem
+     * @param OrdersWithSameIPCollection|null $ordersWithSameIPCollection
+     * @param array $data
+     * @note Unused arguments retained for backwards compatibility
+     */
     public function __construct(
-        \Magento\Backend\Block\Context $context,
-        \Magento\Backend\Model\Auth\Session $authSession,
-        \Magento\Framework\View\Helper\Js $jsHelper,
-        Klevu_HelperConfig $config,
-        Klevu_HelperBackend $searchHelperBackend,
-        DirectoryList $directoryList,
-        ModuleList $moduleList,
-        Filesystem $fileSystem,
-        array $data = []
+        Context                    $context,
+        Session                    $authSession,
+        FrameworkJS                $jsHelper,
+        Klevu_HelperConfig         $config,
+        Klevu_HelperBackend        $searchHelperBackend,
+        DirectoryList              $directoryList,
+        ModuleList                 $moduleList,
+        Filesystem                 $fileSystem,
+        array                      $data = [],
+        OrdersWithSameIPCollection $ordersWithSameIPCollection = null
     )
     {
         $this->_searchHelperConfig = $config;
@@ -38,6 +72,7 @@ class Information extends \Magento\Config\Block\System\Config\Form\Fieldset
         $this->_fileSystem = $fileSystem;
         $this->_searchHelperBackend = $searchHelperBackend;
         $this->_context = $context;
+        $this->ordersWithSameIPCollection = $ordersWithSameIPCollection ?: ObjectManager::getInstance()->get(OrdersWithSameIPCollection::class);
         parent::__construct($context, $authSession, $jsHelper, $data);
     }
 
@@ -90,6 +125,21 @@ class Information extends \Magento\Config\Block\System\Config\Form\Fieldset
             $html .= '<div class="message message-error">' . $str . '</div>';
         }
 
+        /**
+         * Warning to show for multiple orders with same IP address
+         */
+        if (NotificationOptions::LOCK_WARNING_DISABLE !== $this->_searchHelperConfig->isOrdersWithSameIPNotificationOptionEnabled()
+            && $this->ordersWithSameIPCollection->execute()
+        ) {
+            $str = __(
+                'Klevu has detected many checkout orders originating from the same IP address causing inaccuracies in Klevu sales analytics.<br />
+            Please <a href="%1" target="_blank">read this article</a> for more information on how to resolve this issue.
+            This warning can be disabled via <a href="#row_klevu_search_notification_orders_with_same_ip">Notification Settings</a>',
+                'https://help.klevu.com/support/solutions/articles/5000874087-multiple-orders-received-from-the-same-ip-address'
+            );
+            $html .= '<div class="message message-error">' . $str . '</div>';
+        }
+
         $html .= '<div class="kuInfo">';
         $html .= '<div class="message kuInfo-fRight">
       <ul>
@@ -136,5 +186,3 @@ class Information extends \Magento\Config\Block\System\Config\Form\Fieldset
         $this->_searchHelperConfig->getFeatures();
     }
 }
-
-

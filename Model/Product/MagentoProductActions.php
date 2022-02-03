@@ -362,8 +362,9 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
     public function deleteProducts(array $data)
     {
         $total = count($data);
+        $this->_apiActionDeleterecords
+            ->setStore($this->_storeModelStoreManagerInterface->getStore());
         $response = $this->_apiActionDeleterecords
-            ->setStore($this->_storeModelStoreManagerInterface->getStore())
             ->execute([
                 'sessionId' => $this->_searchModelSession->getKlevuSessionId(),
                 'records' => array_map(function ($v) {
@@ -402,8 +403,9 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
         if (!empty($dataToSend) && is_numeric($dataToSend)) {
             $data = array_slice($data, 0, $dataToSend);
         }
+        $this->_apiActionUpdaterecords
+            ->setStore($this->_storeModelStoreManagerInterface->getStore());
         $response = $this->_apiActionUpdaterecords
-            ->setStore($this->_storeModelStoreManagerInterface->getStore())
             ->execute([
                 'sessionId' => $this->_searchModelSession->getKlevuSessionId(),
                 'records' => $data
@@ -437,8 +439,9 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
         if (!empty($dataToSend) && is_numeric($dataToSend)) {
             $data = array_slice($data, 0, $dataToSend);
         }
+        $this->_apiActionAddrecords
+            ->setStore($this->_storeModelStoreManagerInterface->getStore());
         $response = $this->_apiActionAddrecords
-            ->setStore($this->_storeModelStoreManagerInterface->getStore())
             ->execute([
                 'sessionId' => $this->_searchModelSession->getKlevuSessionId(),
                 'records' => $data

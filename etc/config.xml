@@ -37,6 +37,8 @@
                 <!-- See configuration at klevu_logger/preserve_layout_configuration/min_log_level -->
                 <theme_version>v1</theme_version>
                 <quicksearch_selector><![CDATA[input[type=text][name=q]]]></quicksearch_selector>
+                <orders_percentage>30</orders_percentage>
+                <days_to_calculate_orders>30</days_to_calculate_orders>
             </developer>
             <searchlanding>
                 <landenabled>2</landenabled>
@@ -54,6 +56,7 @@
             <notification>
                 <object_vs_collection>1</object_vs_collection>
                 <lock_file>1</lock_file>
+                <orders_with_same_ip>1</orders_with_same_ip>
             </notification>
         </klevu_search>
         <klevu_logger>

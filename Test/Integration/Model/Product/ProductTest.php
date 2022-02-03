@@ -5,6 +5,7 @@ namespace Klevu\Search\Test\Integration\Model\Product;
 use Klevu\Search\Model\Product\Product as ProductModel;
 use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\Catalog\Model\ResourceModel\Category\Collection as CategoryCollection;
+use Magento\Store\Model\StoreManagerInterface;
 use Magento\TestFramework\Helper\Bootstrap;
 use Magento\TestFramework\ObjectManager;
 use PHPUnit\Framework\TestCase;
@@ -587,6 +588,66 @@ class ProductTest extends TestCase
     }
 
     /**
+     * @magentoAppIsolation enabled
+     * @magentoDbIsolation disabled
+     * @magentoCache all disabled
+     * @magentoConfigFixture default/currency/options/base USD
+     * @magentoConfigFixture default/currency/options/default JPY
+     * @magentoConfigFixture default/currency/options/allow JPY,EUR,GBP
+     * @magentoConfigFixture default_store currency/options/default JPY
+     * @magentoConfigFixture default_store currency/options/allow JPY,EUR,GBP
+     * @magentoConfigFixture klevu_test_store_1_store currency/options/default GBP
+     * @magentoConfigFixture klevu_test_store_1_store currency/options/allow GBP
+     * @magentoConfigFixture klevu_test_store_2_store currency/options/default EUR
+     * @magentoConfigFixture klevu_test_store_2_store currency/options/allow EUR
+     * @magentoDataFixture loadWebsiteFixtures
+     */
+    public function testGetCurrency_DefaultStore()
+    {
+        $this->setupPhp5();
+
+        /** @var ProductModel $productModel */
+        $productModel = $this->objectManager->create(ProductModel::class);
+
+        $expectedResult = 'USD';
+        $actualResult = $productModel->getCurrency();
+
+        $this->assertSame($expectedResult, $actualResult);
+    }
+
+    /**
+     * @magentoAppIsolation enabled
+     * @magentoDbIsolation disabled
+     * @magentoCache all disabled
+     * @magentoConfigFixture default/currency/options/base USD
+     * @magentoConfigFixture default/currency/options/default JPY
+     * @magentoConfigFixture default/currency/options/allow JPY,EUR,GBP
+     * @magentoConfigFixture default_store currency/options/default JPY
+     * @magentoConfigFixture default_store currency/options/allow JPY,EUR,GBP
+     * @magentoConfigFixture klevu_test_store_1_store currency/options/default GBP
+     * @magentoConfigFixture klevu_test_store_1_store currency/options/allow GBP
+     * @magentoConfigFixture klevu_test_store_2_store currency/options/default EUR
+     * @magentoConfigFixture klevu_test_store_2_store currency/options/allow EUR
+     * @magentoDataFixture loadWebsiteFixtures
+     */
+    public function testGetCurrency_NonDefaultStore()
+    {
+        $this->setupPhp5();
+
+        /** @var StoreManagerInterface $storeManager */
+        $storeManager = $this->objectManager->get(StoreManagerInterface::class);
+        $storeManager->setCurrentStore('klevu_test_store_2');
+
+        /** @var ProductModel $productModel */
+        $productModel = $this->objectManager->create(ProductModel::class);
+
+        $expectedResult = 'USD';
+        $actualResult = $productModel->getCurrency();
+
+        $this->assertSame($expectedResult, $actualResult);
+    }
+
+    /**
      * @return void
      * @todo Move to setUp when PHP 5.x is no longer supported
      */
@@ -632,6 +693,24 @@ class ProductTest extends TestCase
     public static function loadProductsForCategoryPathsFixturesRollback()
     {
         require __DIR__ . '/_files/productsForCategoryPathsFixtures_rollback.php';
+    }
+
+    /**
+     * Loads website fixtures scripts because annotations use a relative path
+     *  from integration tests root
+     */
+    public static function loadWebsiteFixtures()
+    {
+        include __DIR__ . '/../../_files/websiteFixtures.php';
+    }
+
+    /**
+     * Rolls back website fixtures scripts because annotations use a relative path
+     *  from integration tests root
+     */
+    public static function loadWebsiteFixturesRollback()
+    {
+        include __DIR__ . '/../../_files/websiteFixtures_rollback.php';
     }
 
     /**
