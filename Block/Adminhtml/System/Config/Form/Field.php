@@ -217,32 +217,6 @@ class Field extends \Magento\Config\Block\System\Config\Form\Field
     }
 
     /**
-     * Check if inheritance checkbox has to be rendered
-     *
-     * @param \Magento\Framework\Data\Form\Element\AbstractElement $element
-     * @return bool
-     */
-    protected function _isInheritCheckboxRequired(\Magento\Framework\Data\Form\Element\AbstractElement $element)
-    {
-        return $element->getCanUseWebsiteValue() || $element->getCanUseDefaultValue();
-    }
-
-    /**
-     * Retrieve label for the inheritance checkbox
-     *
-     * @param \Magento\Framework\Data\Form\Element\AbstractElement $element
-     * @return string
-     */
-    protected function _getInheritCheckboxLabel(\Magento\Framework\Data\Form\Element\AbstractElement $element)
-    {
-        $checkboxLabel = __('Use Default');
-        if ($element->getCanUseWebsiteValue()) {
-            $checkboxLabel = __('Use Website');
-        }
-        return $checkboxLabel;
-    }
-
-    /**
      * Render scope label
      *
      * @param \Magento\Framework\Data\Form\Element\AbstractElement $element
