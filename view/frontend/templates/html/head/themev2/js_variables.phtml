@@ -4,6 +4,7 @@ $currencyCurrencyRates = $block->getCurrentCurrencyRates();
 ?>
 <script type="text/javascript">
     var klevu_lang = '<?php echo $block->escapeJsQuote($block->getStoreLanguage()); ?>';
+    var klevu_baseCurrencyCode = '<?php echo $block->escapeJsQuote($block->getBaseCurrencyCode()); ?>';
     var klevu_currentCurrencyCode = '<?php echo $block->escapeJsQuote($block->getCurrentCurrencyCode()); ?>';
     <?php if ($currencyCurrencyRates): ?>
         var klevu_currentCurrencyRates = {<?php echo /** @noEscape */ $currencyCurrencyRates; ?>};

@@ -1,14 +1,15 @@
+<?php /** @var \Magento\Framework\View\Element\Template $block */ ?>
 <span data-bind="scope: 'personalData'" style="display:none;">
     <!-- ko if: personalData().klevuSessionId -->
     <span id="klevu_sessionId" data-bind="text: personalData().klevuSessionId"></span>
     <!-- /ko -->
-	<!-- ko if: personalData().klevuLoginCustomerGroup -->
+    <!-- ko if: personalData().klevuLoginCustomerGroup -->
     <span id="klevu_loginCustomerGroup" data-bind="text: personalData().klevuLoginCustomerGroup"></span>
     <!-- /ko -->
-	<!-- ko if: personalData().klevuIdCode -->
+    <!-- ko if: personalData().klevuIdCode -->
     <span id="klevu_loginCustomerEmail" data-bind="text: personalData().klevuIdCode"></span>
     <!-- /ko -->
-	<!-- ko if: personalData().klevuShopperIP -->
+    <!-- ko if: personalData().klevuShopperIP -->
     <span id="klevu_shopperIP" data-bind="text: personalData().klevuShopperIP"></span>
     <!-- /ko -->
 </span>

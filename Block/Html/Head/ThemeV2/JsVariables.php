@@ -73,6 +73,20 @@ class JsVariables extends Template
     /**
      * @return string|null
      */
+    public function getBaseCurrencyCode()
+    {
+        $return = null;
+        $store = $this->getCurrentStore();
+        if (method_exists($store, 'getBaseCurrencyCode')) {
+            $return = $store->getBaseCurrencyCode();
+        }
+
+        return $return;
+    }
+
+    /**
+     * @return string|null
+     */
     public function getCurrentCurrencyCode()
     {
         $return = null;

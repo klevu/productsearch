@@ -24,6 +24,7 @@
                 <order_sync_max_batch_size/>
 				<lockfile>172800</lockfile>
 				<category_sync_enabled>1</category_sync_enabled>
+				<rating_sync_enabled>1</rating_sync_enabled>
             </product_sync>
             <attributes>
                 <categoryanchor>0</categoryanchor>
@@ -39,6 +40,7 @@
                 <quicksearch_selector><![CDATA[input[type=text][name=q]]]></quicksearch_selector>
                 <orders_percentage>30</orders_percentage>
                 <days_to_calculate_orders>30</days_to_calculate_orders>
+				<orderip>remote_ip</orderip>
             </developer>
             <searchlanding>
                 <landenabled>2</landenabled>

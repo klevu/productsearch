@@ -26,8 +26,16 @@
                             </item>
                         </item>
                         <item name="after" xsi:type="string">lib</item>
-                        <item name="url" xsi:type="string"><![CDATA[//js.klevu.com/theme/default/v2/quick-search-theme.js]]></item>
+                        <item name="url" xsi:type="string"><![CDATA[https://js.klevu.com/theme/default/v2/quick-search-theme.js]]></item>
                     </item>
+                </argument>
+            </arguments>
+        </referenceBlock>
+
+        <referenceBlock name="klevu_frontendjs.js_modules">
+            <arguments>
+                <argument name="is_enabled_conditions_fqcn" xsi:type="array">
+                    <item name="_klevu_themev2_search" xsi:type="string">Klevu\Search\Service\ThemeV2\IsEnabledCondition</item>
                 </argument>
             </arguments>
         </referenceBlock>
@@ -37,6 +45,30 @@
                    before="klevu_frontendjs.js_includes.core"
                    template="Klevu_Search::html/head/themev2/js_variables.phtml"
                    name="klevu_search.html_head.themev2.js_variables"/>
+            <block class="Klevu\Search\Block\Html\Head\ThemeV2\InlineCurrencyTranslation"
+                   after="klevu_frontendjs.js_modules"
+                   template="Klevu_Search::html/head/themev2/inline_currency_translation.phtml"
+                   name="klevu_search.html_head.themev2.inline_currency_translation">
+                <arguments>
+                    <argument name="output_quick_script" xsi:type="boolean">true</argument>
+                    <argument name="output_landing_script" xsi:type="boolean">false</argument>
+                    <argument name="is_enabled_conditions_fqcn" xsi:type="array">
+                        <item name="_klevu_themev2_search" xsi:type="string">Klevu\Search\Service\ThemeV2\IsEnabledCondition</item>
+                    </argument>
+                </arguments>
+            </block>
+            <block class="Klevu\Search\Block\Html\Head\ThemeV2\AddPriceSuffixToQuery"
+                   after="klevu_frontendjs.js_init"
+                   template="Klevu_Search::html/head/themev2/add_price_suffix_to_query.phtml"
+                   name="klevu_search.html_head.themev2.additional_after.add_price_suffix_to_query">
+                <arguments>
+                    <argument name="output_quick_script" xsi:type="boolean">true</argument>
+                    <argument name="output_landing_script" xsi:type="boolean">false</argument>
+                    <argument name="is_enabled_conditions_fqcn" xsi:type="array">
+                        <item name="_klevu_themev2_add_price_suffix_to_query" xsi:type="string">Klevu\Search\Service\ThemeV2\IsEnabledCondition\AddPriceSuffixToQueryEnabledCondition</item>
+                    </argument>
+                </arguments>
+            </block>
         </referenceBlock>
     </body>
 </page>

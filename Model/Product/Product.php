@@ -1,14 +1,22 @@
 <?php
 
 namespace Klevu\Search\Model\Product;
+
+use Klevu\Logger\Constants as LoggerConstants;
+use Klevu\Search\Helper\Data as DataHelper;
+use Magento\Catalog\Api\Data\ProductTierPriceInterface;
+use Magento\Catalog\Model\Product as MagentoProduct;
 use Magento\Framework\DataObject;
-
-
+use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Exception\NoSuchEntityException;
 
 class Product extends DataObject implements ProductInterface
 {
-
     protected $_storeModelStoreManagerInterface;
+
+    /**
+     * @var DataHelper
+     */
     protected $_searchHelperData;
     protected $_imageHelper;
     protected $_priceHelper;
@@ -18,8 +26,9 @@ class Product extends DataObject implements ProductInterface
 
     public function __construct(
         \Klevu\Search\Model\Context $context,
-        array $data = []
-    ){
+        array                       $data = []
+    )
+    {
         $this->_storeModelStoreManagerInterface = $context->getStoreManagerInterface();
         $this->_searchHelperData = $context->getHelperManager()->getDataHelper();
         $this->_imageHelper = $context->getHelperManager()->getImageHelper();
@@ -52,13 +61,13 @@ class Product extends DataObject implements ProductInterface
         return $this->_storeModelStoreManagerInterface->getStore()->getBaseCurrencyCode();
     }
 
-    public function getBoostingAttribute($key,$attributes,$parent,$item,$product)
+    public function getBoostingAttribute($key, $attributes, $parent, $item, $product)
     {
         foreach ($attributes as $attribute) {
             if ($parent && $parent->getData($attribute)) {
-                $product[$key] = $this->checkBoostingAttributeValue($attribute,$parent);
+                $product[$key] = $this->checkBoostingAttributeValue($attribute, $parent);
             } else {
-                $product[$key] = $this->checkBoostingAttributeValue($attribute,$item);
+                $product[$key] = $this->checkBoostingAttributeValue($attribute, $item);
             }
         }
         return $product[$key];
@@ -73,10 +82,11 @@ class Product extends DataObject implements ProductInterface
      *
      * @return int, string, void, float
      */
-    public function checkBoostingAttributeValue($attribute,$product){
+    public function checkBoostingAttributeValue($attribute, $product)
+    {
         $productAttribute = $product->getResource()->getAttribute($attribute);
-        if($productAttribute) {
-            if(!is_null($attributeFrontend = $productAttribute->getFrontend())) {
+        if ($productAttribute) {
+            if (!is_null($attributeFrontend = $productAttribute->getFrontend())) {
                 $productBoostingAttributeValue = $attributeFrontend->getValue($product);
                 if (!is_numeric($productBoostingAttributeValue)) {
                     $productBoostingAttributeValue = "";
@@ -88,7 +98,7 @@ class Product extends DataObject implements ProductInterface
         return;
     }
 
-    public  function getRating($key,$attributes,$parent,$item,$product)
+    public function getRating($key, $attributes, $parent, $item, $product)
     {
         foreach ($attributes as $attribute) {
             if ($parent && $parent->getData($attribute)) {
@@ -109,18 +119,16 @@ class Product extends DataObject implements ProductInterface
      */
     public function convertToRatingStar($percentage)
     {
-        if (!empty($percentage) && $percentage!=0) {
+        if (!empty($percentage) && $percentage != 0) {
             $start = $percentage * 5;
-            return round($start/100, 2);
+            return round($start / 100, 2);
         } else {
             return;
         }
     }
 
 
-
-
-    public function getSku($key,$attributes,$parent,$item,$product)
+    public function getSku($key, $attributes, $parent, $item, $product)
     {
         foreach ($attributes as $attribute) {
             if ($parent && $parent->getData($attribute)) {
@@ -135,7 +143,7 @@ class Product extends DataObject implements ProductInterface
     }
 
 
-    public function getName($key,$attributes,$parent,$item,&$product)
+    public function getName($key, $attributes, $parent, $item, &$product)
     {
         foreach ($attributes as $attribute) {
             if ($parent && $parent->getData($attribute)) {
@@ -147,34 +155,34 @@ class Product extends DataObject implements ProductInterface
         return $product[$key];
     }
 
-    public function getImage($key,$attributes,$parent,$item,$product,$store)
+    public function getImage($key, $attributes, $parent, $item, $product, $store)
     {
         foreach ($attributes as $attribute) {
             if ($this->_configHelper->isUseConfigImage($store->getId())) {
-                $product[$key] = $this->_imageHelper->getParentProductImage($parent,$item,$attribute);
+                $product[$key] = $this->_imageHelper->getParentProductImage($parent, $item, $attribute);
                 break;
             } else {
-                $product[$key] = $this->_imageHelper->getSimpleProductImage($parent,$item,$attribute);
+                $product[$key] = $this->_imageHelper->getSimpleProductImage($parent, $item, $attribute);
                 break;
             }
         }
 
         if ($product[$key] != "" && strpos($product[$key], "http") !== 0) {
-            if(strpos($product[$key],"/", 0) !== 0 && !empty($product[$key]) && $product[$key]!= "no_selection" ){
-                $product[$key] = "/".$product[$key];
+            if (strpos($product[$key], "/", 0) !== 0 && !empty($product[$key]) && $product[$key] != "no_selection") {
+                $product[$key] = "/" . $product[$key];
             }
             $product[$key] = $this->_imageHelper->getImagePath($product[$key]);
         }
 
-        return  $product[$key];
+        return $product[$key];
     }
 
-    public function getSalePriceData($parent,$item,$product,$store)
+    public function getSalePriceData($parent, $item, $product, $store)
     {
         // Default to 0 if price can't be determined
         $product['salePrice'] = 0;
         $salePrice = $this->_priceHelper->getKlevuSalePrice($parent, $item, $store);
-        if($parent){
+        if ($parent) {
             $childSalePrice = $this->_priceHelper->getKlevuSalePrice(null, $item, $store);
             // also send sale price for sorting and filters for klevu
             $product['salePrice'] = $childSalePrice['salePrice'];
@@ -185,20 +193,20 @@ class Product extends DataObject implements ProductInterface
 
     }
 
-    public function getToPriceData($parent,$item,$product,$store)
+    public function getToPriceData($parent, $item, $product, $store)
     {
         $salePrice = $this->_priceHelper->getKlevuSalePrice($parent, $item, $store);
-        if(isset($salePrice['toPrice'])){
+        if (isset($salePrice['toPrice'])) {
             $product['toPrice'] = $salePrice['toPrice'];
             return $product['toPrice'];
         }
         return;
     }
 
-    public function getStartPriceData($parent,$item,$product,$store)
+    public function getStartPriceData($parent, $item, $product, $store)
     {
         $salePrice = $this->_priceHelper->getKlevuSalePrice($parent, $item, $store);
-        if($parent){
+        if ($parent) {
             $childSalePrice = $this->_priceHelper->getKlevuSalePrice(null, $item, $store);
             // show low price for config products
             $product['startPrice'] = $salePrice['salePrice'];
@@ -209,11 +217,10 @@ class Product extends DataObject implements ProductInterface
     }
 
 
-
-    public function getPriceData($parent,$item,$product,$store)
+    public function getPriceData($parent, $item, $product, $store)
     {
         $product['price'] = 0;
-        if($parent){
+        if ($parent) {
             $childSalePrice = $this->_priceHelper->getKlevuPrice($item, $item, $store);
             $product['price'] = $childSalePrice['price'];
         } else {
@@ -224,41 +231,45 @@ class Product extends DataObject implements ProductInterface
         return $product['price'];
     }
 
-    public  function getDateAdded($key,$attributes,$parent,$item,$product,$store){
+    public function getDateAdded($key, $attributes, $parent, $item, $product, $store)
+    {
         foreach ($attributes as $attribute) {
-            $product[$key] = substr($item->getData($attribute),0,10);
+            $product[$key] = substr($item->getData($attribute), 0, 10);
         }
         return $product[$key];
     }
 
-    public function getProductType($parent,$item){
-        if($parent){
+    public function getProductType($parent, $item)
+    {
+        if ($parent) {
             $product['product_type'] = $parent->getData('type_id');
-        }else{
+        } else {
             $product['product_type'] = $item->getData('type_id');
         }
 
         return $product['product_type'];
     }
 
-    public function getVisibility($key,$attributes,$parent,$item,$product,$store) {
-        if($parent){
+    public function getVisibility($key, $attributes, $parent, $item, $product, $store)
+    {
+        if ($parent) {
             $product['visibility'] = $parent->getData('visibility');
-        }else{
+        } else {
             $product['visibility'] = $item->getData('visibility');
         }
         return $product['visibility'];
     }
 
-    public function isCustomOptionsAvailable($parent,$item){
+    public function isCustomOptionsAvailable($parent, $item)
+    {
         $productType = array("grouped", "configurable", "bundle", "downloadable");
-        if($parent){
+        if ($parent) {
             $product['isCustomOptionsAvailable'] = "yes";
-        }else if(in_array($item->getData('type_id'), $productType)){
+        } else if (in_array($item->getData('type_id'), $productType)) {
             $product['isCustomOptionsAvailable'] = "yes";
-        }else if ($item->getData('has_options')){
+        } else if ($item->getData('has_options')) {
             $product['isCustomOptionsAvailable'] = "yes";
-        }else{
+        } else {
             $product['isCustomOptionsAvailable'] = "no";
         }
 
@@ -266,8 +277,8 @@ class Product extends DataObject implements ProductInterface
     }
 
 
-
-    public function getCategory($parent,$item){
+    public function getCategory($parent, $item)
+    {
         if ($parent) {
             $product['category'] = $this->getLongestPathCategoryName($parent->getCategoryIds());
         } elseif ($item->getCategoryIds()) {
@@ -278,7 +289,8 @@ class Product extends DataObject implements ProductInterface
         return $product['category'];
     }
 
-    public function getListCategory($parent,$item){
+    public function getListCategory($parent, $item)
+    {
         if ($parent) {
             $product['listCategory'] = $this->getCategoryNames($parent->getCategoryIds());
         } elseif ($item->getCategoryIds()) {
@@ -289,7 +301,8 @@ class Product extends DataObject implements ProductInterface
         return $product['listCategory'];
     }
 
-    public function getAllCategoryId($parent,$item){
+    public function getAllCategoryId($parent, $item)
+    {
         if ($parent) {
 
             //category ids parent
@@ -313,12 +326,12 @@ class Product extends DataObject implements ProductInterface
         $category_anchors = $this->getCategoryAnchors();
         $return = array();
         $isCatAnchorSingle = $this->_configHelper->getTreatCategoryAnchorAsSingle($this->_storeModelStoreManagerInterface->getStore()->getId());
-        if($isCatAnchorSingle && is_array($itemCategorys)){
-            foreach ($itemCategorys as $id){
+        if ($isCatAnchorSingle && is_array($itemCategorys)) {
+            foreach ($itemCategorys as $id) {
                 if (isset($category_paths_ids[$id])) {
-                    if(count($category_paths_ids[$id]) > 0) {
-                        foreach($category_paths_ids[$id] as $catIsAnchor){
-                            if(isset($category_anchors[$catIsAnchor])){
+                    if (count($category_paths_ids[$id]) > 0) {
+                        foreach ($category_paths_ids[$id] as $catIsAnchor) {
+                            if (isset($category_anchors[$catIsAnchor])) {
                                 if (isset($category_paths_ids[$catIsAnchor])) {
                                     $return[] = end($category_paths_ids[$catIsAnchor]);
                                 }
@@ -327,13 +340,14 @@ class Product extends DataObject implements ProductInterface
                     }
                 }
             }
-            $return = array_merge($return,$itemCategorys);
+            $return = array_merge($return, $itemCategorys);
             $itemCategorys = array_unique($return);
         }
-        return  implode(";",(is_array($itemCategorys)?$itemCategorys:[]));
+        return implode(";", (is_array($itemCategorys) ? $itemCategorys : []));
     }
 
-    public function getAllCategoryPaths($parent,$item){
+    public function getAllCategoryPaths($parent, $item)
+    {
         if ($parent) {
             $product['categoryPaths'] = $this->getCategoryNamesAndPath($parent->getCategoryIds());
         } elseif ($item->getCategoryIds()) {
@@ -344,7 +358,8 @@ class Product extends DataObject implements ProductInterface
         return $product['categoryPaths'];
     }
 
-    public function getGroupPricesData($item){
+    public function getGroupPricesData($item)
+    {
         if ($item) {
             $product['groupPrices'] = $this->getGroupPrices($item);
         } else {
@@ -353,7 +368,8 @@ class Product extends DataObject implements ProductInterface
         return $product['groupPrices'];
     }
 
-    public function getProductUrlData($parent,$item,$url_rewrite_data,$product,$base_url){
+    public function getProductUrlData($parent, $item, $url_rewrite_data, $product, $base_url)
+    {
 
         if ($parent) {
             if (isset($url_rewrite_data[$product['parent_id']])) {
@@ -371,7 +387,7 @@ class Product extends DataObject implements ProductInterface
                         );
                 }
             } else {
-                $product['url'] = $base_url."catalog/product/view/id/".$product['parent_id'];
+                $product['url'] = $base_url . "catalog/product/view/id/" . $product['parent_id'];
             }
         } else {
             if (isset($url_rewrite_data[$product['product_id']])) {
@@ -389,7 +405,7 @@ class Product extends DataObject implements ProductInterface
                         );
                 }
             } else {
-                $product['url'] = $base_url."catalog/product/view/id/".$product['product_id'];
+                $product['url'] = $base_url . "catalog/product/view/id/" . $product['product_id'];
             }
         }
 
@@ -397,7 +413,8 @@ class Product extends DataObject implements ProductInterface
 
     }
 
-    public function getItemGroupId($parent_id,$product){
+    public function getItemGroupId($parent_id, $product)
+    {
         $product['itemGroupId'] = '';
         if ($parent_id != 0) {
             $product['itemGroupId'] = $parent_id;
@@ -405,7 +422,8 @@ class Product extends DataObject implements ProductInterface
         return $product['itemGroupId'];
     }
 
-    public function getId($product_id,$parent_id){
+    public function getId($product_id, $parent_id)
+    {
         return $this->_searchHelperData->getKlevuProductId($product_id, $parent_id);
     }
 
@@ -430,15 +448,17 @@ class Product extends DataObject implements ProductInterface
             if (isset($category_paths[$id])) {
                 //if (count($category_paths[$id]) > $length) {
                 //$length = count($category_paths[$id]);
-                $name[]= end($category_paths[$id]).";";
+                $name[] = end($category_paths[$id]) . ";";
                 //}
                 //added to support category anchors
-                if($isCatAnchorSingle){
-                    if(count($category_paths[$id]) > 0) {
-                        foreach($category_paths_ids[$id] as $catIsAnchor){
-                            if(isset($category_anchors[$catIsAnchor])){
-                                if (isset($category_paths[$catIsAnchor])) {
-                                    $name[] = end($category_paths[$catIsAnchor]).";";
+                if ($isCatAnchorSingle) {
+                    if (count($category_paths[$id]) > 0) {
+                        if (!empty($category_paths_ids)) {
+                            foreach ($category_paths_ids[$id] as $catIsAnchor) {
+                                if (isset($category_anchors[$catIsAnchor])) {
+                                    if (isset($category_paths[$catIsAnchor])) {
+                                        $name[] = end($category_paths[$catIsAnchor]) . ";";
+                                    }
                                 }
                             }
                         }
@@ -448,8 +468,8 @@ class Product extends DataObject implements ProductInterface
             }
         }
         $name = array_unique($name);
-        $name = implode("",$name);
-        return substr($name, 0, strrpos($name, ";")+1-1);
+        $name = implode("", $name);
+        return substr($name, 0, strrpos($name, ";") + 1 - 1);
     }
 
     /**
@@ -470,15 +490,15 @@ class Product extends DataObject implements ProductInterface
         $result = ["KLEVU_PRODUCT"];
         foreach ($categories as $category) {
             if (isset($category_paths[$category])) {
-                if(count($category_paths[$category]) > 0) {
-                    $cat_path[$category][] = implode(";",$category_paths[$category]);
+                if (count($category_paths[$category]) > 0) {
+                    $cat_path[$category][] = implode(";", $category_paths[$category]);
                     //added to support category anchors
-                    if($isCatAnchorSingle){
-                        foreach($category_paths_ids[$category] as $catIsAnchor){
-                            if(isset($category_anchors[$catIsAnchor])){
+                    if ($isCatAnchorSingle) {
+                        foreach ($category_paths_ids[$category] as $catIsAnchor) {
+                            if (isset($category_anchors[$catIsAnchor])) {
                                 if (isset($category_paths[$catIsAnchor])) {
-                                    if(count($category_paths[$catIsAnchor]) > 0) {
-                                        $cat_path[$catIsAnchor][] = implode(";",$category_paths[$catIsAnchor]);
+                                    if (count($category_paths[$catIsAnchor]) > 0) {
+                                        $cat_path[$catIsAnchor][] = implode(";", $category_paths[$catIsAnchor]);
                                     } else {
                                         $cat_path[$catIsAnchor] = $category_paths[$catIsAnchor];
                                     }
@@ -496,6 +516,7 @@ class Product extends DataObject implements ProductInterface
         }
         return array_unique($result);
     }
+
     /**
      * Return a list of the names of all the categories in the
      * paths of the given categories (including the given categories)
@@ -515,26 +536,26 @@ class Product extends DataObject implements ProductInterface
         $result = [];
         foreach ($categories as $category) {
             if (isset($category_paths[$category])) {
-                if(count($category_paths[$category]) > 0) {
-                    $catName = implode(";",$category_paths[$category]);
-                    $catId = implode("/",$category_ids[$category]);
+                if (count($category_paths[$category]) > 0) {
+                    $catName = implode(";", $category_paths[$category]);
+                    $catId = implode("/", $category_ids[$category]);
                     $cat_path[$category][] = $catName . '::' . $catId;
                     // check if need to treat anchors as standalone
-                    if($isCatAnchorSingle){
-                        foreach($category_ids[$category] as $isCatAnchor){
-                            if(isset($category_anchors[$isCatAnchor])){
+                    if ($isCatAnchorSingle) {
+                        foreach ($category_ids[$category] as $isCatAnchor) {
+                            if (isset($category_anchors[$isCatAnchor])) {
                                 if (isset($category_paths[$isCatAnchor])) {
-                                    if(count($category_paths[$isCatAnchor]) > 0) {
-                                        $catName = implode(";",$category_paths[$isCatAnchor]);
-                                        $catId = implode("/",$category_ids[$isCatAnchor]);
+                                    if (count($category_paths[$isCatAnchor]) > 0) {
+                                        $catName = implode(";", $category_paths[$isCatAnchor]);
+                                        $catId = implode("/", $category_ids[$isCatAnchor]);
                                         $cat_path[$isCatAnchor][] = $catName . '::' . $catId;
                                     } else {
                                         $catName = $category_paths[$isCatAnchor];
                                         $catId = $category_ids[$isCatAnchor];
-                                        if(!is_array($catName) && !is_array($catId)) {
+                                        if (!is_array($catName) && !is_array($catId)) {
                                             $cat_path[$isCatAnchor] = $catName . '::' . $catId;
                                         } else {
-                                            $cat_path[$isCatAnchor] = 	array();
+                                            $cat_path[$isCatAnchor] = array();
                                         }
                                     }
                                     $result = array_merge($result, $cat_path[$isCatAnchor]);
@@ -547,10 +568,10 @@ class Product extends DataObject implements ProductInterface
                 } else {
                     $catName = $category_paths[$category];
                     $catId = $category_ids[$category];
-                    if(!is_array($catName) && !is_array($catId)) {
+                    if (!is_array($catName) && !is_array($catId)) {
                         $cat_path[$category] = $catName . '::' . $catId;
                     } else {
-                        $cat_path[$category] = 	array();
+                        $cat_path[$category] = array();
                     }
                 }
 
@@ -559,7 +580,7 @@ class Product extends DataObject implements ProductInterface
             }
         }
 
-        return implode(";;",array_unique($result));
+        return implode(";;", array_unique($result));
     }
 
     /**
@@ -587,7 +608,7 @@ class Product extends DataObject implements ProductInterface
                 ->addAttributeToSelect('is_anchor')
                 ->addAttributeToSelect('is_active')
                 ->addFieldToFilter('level', ['gt' => 1])
-                ->addFieldToFilter('path', ['like'=> "1/$rootId/%"])
+                ->addFieldToFilter('path', ['like' => "1/$rootId/%"])
                 ->addNameToResult();
 
             $category_anchors = [];
@@ -596,7 +617,7 @@ class Product extends DataObject implements ProductInterface
                     continue;
                 }
 
-                if($category->getIsAnchor()){
+                if ($category->getIsAnchor()) {
                     $category_anchors[$category->getId()] = $category->getId();
                 }
                 $category_paths[$category->getId()] = [];
@@ -611,8 +632,8 @@ class Product extends DataObject implements ProductInterface
                     }
                 }
             }
-            $this->setData('category_anchors',$category_anchors);
-            $this->setData('category_paths_and_ids',$category_paths_and_ids);
+            $this->setData('category_anchors', $category_anchors);
+            $this->setData('category_paths_and_ids', $category_paths_and_ids);
             $this->setData('category_path_ids', $category_ids);
             $this->setData('category_paths', $category_paths);
         }
@@ -685,13 +706,13 @@ class Product extends DataObject implements ProductInterface
         if (!empty($groupPrices) && is_array($groupPrices)) {
             $priceGroupData = [];
             foreach ($groupPrices as $groupPrice) {
-                if ($this->_storeModelStoreManagerInterface->getStore()->getWebsiteId()== $groupPrice['website_id'] || $groupPrice['website_id']==0) {
+                if ($this->_storeModelStoreManagerInterface->getStore()->getWebsiteId() == $groupPrice['website_id'] || $groupPrice['website_id'] == 0) {
                     if ($groupPrice['price_qty'] == 1) {
                         $groupPriceKey = $groupPrice['cust_group'];
                         $groupname = $this->_customerModelGroup->load($groupPrice['cust_group'])->getCustomerGroupCode();
-                        $result['label'] =  $groupname;
-                        $result['values'] =  $groupPrice['website_price'];
-                        $priceGroupData[$groupPriceKey]= $result;
+                        $result['label'] = $groupname;
+                        $result['values'] = $groupPrice['website_price'];
+                        $priceGroupData[$groupPriceKey] = $result;
                     }
                 }
             }
@@ -699,4 +720,82 @@ class Product extends DataObject implements ProductInterface
         }
     }
 
+
+    /**
+     * Get the list of prices based on customer group
+     *
+     * @param MagentoProduct $proData
+     * @param string $currency
+     * @return string
+     * @todo Replace with centralised service for retrieving / formatting price data
+     */
+    public function getOtherPrices($proData, $currency)
+    {
+        $otherPrices = $proData->getData('tier_price');
+        if (null === $otherPrices) {
+            /** @var \Magento\Catalog\Model\ResourceModel\Product $productResource */
+            $productResource = $proData->getResource();
+            try {
+                $attribute = $productResource->getAttribute('tier_price');
+                if ($attribute) {
+                    $attributeBackend = $attribute->getBackend();
+                    $attributeBackend->afterLoad($proData);
+                    $otherPrices = $proData->getData('tier_price');
+                }
+            } catch (LocalizedException $e) {
+                $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_ERR, $e->getMessage());
+
+                return '';
+            }
+        }
+        if (!$otherPrices || !is_array($otherPrices)) {
+            return '';
+        }
+
+        try {
+            $store = $this->_storeModelStoreManagerInterface->getStore();
+            $websiteId = (int)$store->getWebsiteId();
+        } catch (NoSuchEntityException $e) {
+            $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_ERR, $e->getMessage());
+            $websiteId = 0;
+        }
+        if (!$websiteId) {
+            return '';
+        }
+
+        $result = array_filter(array_map(function (array $otherPrice) use ($currency, $websiteId) {
+            $otherPrice = array_merge([
+                'website_id' => 0,
+                'price_qty' => 0,
+                'cust_group' => null,
+                'website_price' => null,
+            ], $otherPrice);
+
+            switch (true) {
+                case (int)$otherPrice['website_id'] !== $websiteId:
+                case (int)$otherPrice['price_qty'] !== 1:
+                case null === $otherPrice['cust_group']:
+                case !is_numeric($otherPrice['website_price']):
+                    $this->_searchHelperData->log(
+                        LoggerConstants::ZEND_LOG_WARN,
+                        'Invalid data received for otherPrice: ' . json_encode($otherPrice)
+                    );
+                    $return = null;
+                    break;
+
+                default:
+                    $return = sprintf(
+                        'salePrice_%s-%s:%s',
+                        $currency,
+                        $otherPrice['cust_group'],
+                        number_format($otherPrice['website_price'], 4)
+                    );
+                    break;
+            }
+
+            return $return;
+        }, $otherPrices));
+
+        return implode(';', $result);
+    }
 }

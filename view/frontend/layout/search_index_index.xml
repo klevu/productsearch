@@ -41,6 +41,18 @@
             </arguments>
         </referenceBlock>
 
+        <referenceBlock name="klevu_search.html_head.themev2.additional_after.add_price_suffix_to_query">
+            <arguments>
+                <argument name="output_landing_script" xsi:type="boolean">true</argument>
+            </arguments>
+        </referenceBlock>
+
+        <referenceBlock name="klevu_search.html_head.themev2.inline_currency_translation">
+            <arguments>
+                <argument name="output_landing_script" xsi:type="boolean">true</argument>
+            </arguments>
+        </referenceBlock>
+
         <referenceBlock name="content">
             <!-- Theme V1 -->
             <block class="Klevu\Search\Block\Search\Index"

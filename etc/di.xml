@@ -112,6 +112,12 @@
 		</arguments>
 	</virtualType>
 
+    <type name="Klevu\FrontendJs\Observer\InvalidateCustomerDataObserver">
+        <arguments>
+            <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
+        </arguments>
+    </type>
+
 	<!-- Preserve Layout -->
 	<virtualType name="Klevu\Search\Service\LogFileNameProvider\PreserveLayout" type="Klevu\Logger\Service\LogFileNameProvider">
 		<arguments>
@@ -232,6 +238,26 @@
             <argument name="isEnabledConditions" xsi:type="array">
                 <item name="_klevu_themev2" xsi:type="object">Klevu\Search\Service\ThemeV2\IsEnabledCondition</item>
             </argument>
+        </arguments>
+    </type>
+
+	<type name="Klevu\Search\Service\ThemeV2\InteractiveOptionsProvider\AddPriceSuffixToQueryOptionsProvider">
+        <arguments>
+            <argument name="isEnabledCondition" xsi:type="object">Klevu\Search\Service\ThemeV2\IsEnabledCondition\AddPriceSuffixToQueryEnabledCondition</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\FrontendJs\Service\InteractiveOptionsGenerator">
+        <arguments>
+            <argument name="interactiveOptionsProviders" xsi:type="array">
+                <item name="_klevu_search_add_price_suffix_to_query" xsi:type="object">Klevu\Search\Service\ThemeV2\InteractiveOptionsProvider\AddPriceSuffixToQueryOptionsProvider</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Service\ThemeV2\IsEnabledCondition\AddPriceSuffixToQueryEnabledCondition">
+        <arguments>
+            <argument name="baseIsEnabledCondition" xsi:type="object">Klevu\Search\Service\ThemeV2\IsEnabledCondition</argument>
         </arguments>
     </type>
 </config>

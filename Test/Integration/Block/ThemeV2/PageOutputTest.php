@@ -46,7 +46,7 @@ class PageOutputTest extends AbstractControllerTestCase
         // Theme V2
         if (method_exists($this, 'assertStringContainsString')) {
             $this->assertStringContainsString(
-                '<script type="text/javascript" src="//js.klevu.com/core/v2/klevu.js"></script>',
+                '<script type="text/javascript" src="https://js.klevu.com/core/v2/klevu.js"></script>',
                 $responseBody,
                 'Library JS include is present in response body'
             );
@@ -62,7 +62,7 @@ class PageOutputTest extends AbstractControllerTestCase
             );
         } else {
             $this->assertContains(
-                '<script type="text/javascript" src="//js.klevu.com/core/v2/klevu.js"></script>',
+                '<script type="text/javascript" src="https://js.klevu.com/core/v2/klevu.js"></script>',
                 $responseBody,
                 'Library JS include is present in response body'
             );
@@ -150,7 +150,7 @@ class PageOutputTest extends AbstractControllerTestCase
         // Theme V2
         if (method_exists($this, 'assertStringNotContainsString')) {
             $this->assertStringNotContainsString(
-                '<script type="text/javascript" src="//js.klevu.com/core/v2/klevu.js"></script>',
+                '<script type="text/javascript" src="https://js.klevu.com/core/v2/klevu.js"></script>',
                 $responseBody,
                 'Library JS include is present in response body'
             );
@@ -166,7 +166,7 @@ class PageOutputTest extends AbstractControllerTestCase
             );
         } else {
             $this->assertNotContains(
-                '<script type="text/javascript" src="//js.klevu.com/core/v2/klevu.js"></script>',
+                '<script type="text/javascript" src="https://js.klevu.com/core/v2/klevu.js"></script>',
                 $responseBody,
                 'Library JS include is present in response body'
             );
@@ -230,7 +230,7 @@ class PageOutputTest extends AbstractControllerTestCase
         // Theme V2
         if (method_exists($this, 'assertStringNotContainsString')) {
             $this->assertStringNotContainsString(
-                '<script type="text/javascript" src="//js.klevu.com/core/v2/klevu.js"></script>',
+                '<script type="text/javascript" src="https://js.klevu.com/core/v2/klevu.js"></script>',
                 $responseBody,
                 'Library JS include is present in response body'
             );
@@ -246,7 +246,7 @@ class PageOutputTest extends AbstractControllerTestCase
             );
         } else {
             $this->assertNotContains(
-                '<script type="text/javascript" src="//js.klevu.com/core/v2/klevu.js"></script>',
+                '<script type="text/javascript" src="https://js.klevu.com/core/v2/klevu.js"></script>',
                 $responseBody,
                 'Library JS include is present in response body'
             );
@@ -311,7 +311,7 @@ class PageOutputTest extends AbstractControllerTestCase
         // Theme V2
         if (method_exists($this, 'assertStringNotContainsString')) {
             $this->assertStringNotContainsString(
-                '<script type="text/javascript" src="//js.klevu.com/core/v2/klevu.js"></script>',
+                '<script type="text/javascript" src="https://js.klevu.com/core/v2/klevu.js"></script>',
                 $responseBody,
                 'Library JS include is present in response body'
             );
@@ -327,7 +327,7 @@ class PageOutputTest extends AbstractControllerTestCase
             );
         } else {
             $this->assertNotContains(
-                '<script type="text/javascript" src="//js.klevu.com/core/v2/klevu.js"></script>',
+                '<script type="text/javascript" src="https://js.klevu.com/core/v2/klevu.js"></script>',
                 $responseBody,
                 'Library JS include is present in response body'
             );

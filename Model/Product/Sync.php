@@ -270,19 +270,19 @@ class Sync extends AbstractModel
             return;
         }
         $firstSync = $this->_searchModelSession->getFirstSync();
+		if($this->_searchHelperConfig->isRatingSyncEnable($store->getId())) {
+			try {
+				$rating_upgrade_flag = $this->_searchHelperConfig->getRatingUpgradeFlag($store);
+				if ($rating_upgrade_flag == 0) {
+					$this->_magentoProductActions->updateProductsRating($store);
+					// update rating flag after all store view sync
+					$this->_searchHelperConfig->saveRatingUpgradeFlag(1,$store);
 
-        try {
-            $rating_upgrade_flag = $this->_searchHelperConfig->getRatingUpgradeFlag($store);
-            if ($rating_upgrade_flag == 0) {
-                $this->_magentoProductActions->updateProductsRating($store);
-				// update rating flag after all store view sync
-				$this->_searchHelperConfig->saveRatingUpgradeFlag(1,$store);
-
-            }
-        } catch (\Exception $e) {
-            $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_WARN, sprintf("Unable to update rating attribute %s", $e->getMessage()));
-        }
-
+				}
+			} catch (\Exception $e) {
+				$this->_searchHelperData->log(LoggerConstants::ZEND_LOG_WARN, sprintf("Unable to update rating attribute %s", $e->getMessage()));
+			}
+		}
         //set current store so will get proper bundle price
         $this->_storeModelStoreManagerInterface->setCurrentStore($store->getId());
         $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_INFO, sprintf("Starting sync for %s (%s).", $store->getWebsite()->getName(), $store->getName()));
