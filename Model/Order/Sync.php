@@ -9,6 +9,7 @@ namespace Klevu\Search\Model\Order;
 use Klevu\Logger\Api\StoreScopeResolverInterface;
 use Klevu\Logger\Constants as LoggerConstants;
 use Klevu\Search\Model\Sync as KlevuSync;
+use Klevu\Search\Model\System\Config\Source\Order\Ip as OrderIP;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\DataObject;
 use Magento\Framework\Exception\FileSystemException;
@@ -456,7 +457,7 @@ class Sync extends AbstractModel
                 "klevu_unit" => $item->getQtyOrdered() ? $item->getQtyOrdered() : ($parent ? $parent->getQtyOrdered() : null),
                 "klevu_salePrice" => $klevu_current_store_currency_salePrice_round,
                 "klevu_currency" => $this->getStoreCurrency($item->getStoreId()),
-                "klevu_shopperIP" => $this->getOrderIP($item->getOrderId()),
+                "klevu_shopperIP" => $this->processOrderIp($item->getOrderId(),$item->getStoreId()),
                 "Klevu_sessionId" => $sess_id,
                 "klevu_orderDate" => date_format(date_create($order_date), "Y-m-d"),
                 "klevu_emailId" => $order_email,
@@ -555,10 +556,19 @@ class Sync extends AbstractModel
      *
      * @param $order_id
      *
+     * @param $store_id
+     *
      * @return string
      */
-    protected function getOrderIP($order_id)
+
+    protected function getOrderIP($order_id,$store_id)
     {
+        $configuredOrderIP = $this->_searchHelperConfig->getConfiguredOrderIP($store_id);
+        if($configuredOrderIP === OrderIP::ORDER_X_FORWARDED_FOR) {
+            $ip_col = OrderIP::ORDER_X_FORWARDED_FOR;
+        } else {
+            $ip_col = OrderIP::ORDER_REMOTE_IP;
+        }
         $order_ips = $this->getData("order_ips");
         if (!is_array($order_ips)) {
             $order_ips = [];
@@ -567,12 +577,43 @@ class Sync extends AbstractModel
             $order_ips[$order_id] = $this->_frameworkModelResource->getConnection()->fetchOne(
                 $this->_frameworkModelResource->getConnection()
                     ->select()
-                    ->from(["order" => $this->_frameworkModelResource->getTableName("sales_order")], "remote_ip")
+                    ->from(["order" => $this->_frameworkModelResource->getTableName("sales_order")], $ip_col)
                     ->where("order.entity_id = ?", $order_id)
             );
             $this->setData("order_ips", $order_ips);
         }
         return $order_ips[$order_id];
+    }
+
+    /**
+     * Return the single customer IP for the multiple ips .
+     *
+     * @param $order_id
+     *
+     * @param $store_id
+     *
+     * @return string
+     */
+    private function processOrderIp($order_id,$store_id)
+    {   
+		$ips = $this->getOrderIP($order_id,$store_id);
+        $configuredOrderIP = $this->_searchHelperConfig->getConfiguredOrderIP($store_id);
+        if (empty($ips)) {
+            $this->log(
+                LoggerConstants::ZEND_LOG_ERR,
+                sprintf("Shopper IP address [%s] value found NULL for Order ItemId [%s] , Store ID [%s]",
+                    $configuredOrderIP, $order_id, $store_id
+                ));
+            return null;
+        }
+
+        if(strpos($ips, ",") !== false){
+            $ips_array = explode(",",$ips);
+            $trim_ip_value = array_map('trim',$ips_array);
+            return array_shift($trim_ip_value);
+        } else {
+            return  $ips;
+        }
     }
 
     /**

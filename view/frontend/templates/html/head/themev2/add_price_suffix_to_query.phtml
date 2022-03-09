@@ -1,0 +1,58 @@
+<?php /** @var Klevu\Search\Block\Html\Head\ThemeV2\AddPriceSuffixToQuery $block */ ?>
+<script type="text/javascript">
+    <?php if ($block->shouldOutputQuickScript()): ?>
+        klevu.settings.chains.initChain.add({
+            name: "addPriceSuffixToQuickQuery",
+            fire: function (data) {
+                if (klevu.getObjectPath(klevu.search, "quick", false)
+                    && klevu.getGlobalSetting("flags.addPriceSuffixToQuery.quick", false)
+                    && typeof klevu_addPriceSuffixToQueryControl === "object"
+                ) {
+                    klevu.search.quick.getScope().chains.request.control.addAfter('initRequest', klevu_addPriceSuffixToQueryControl);
+                    klevu.setObjectPath(data, "flags.addPriceSuffixToQuery.quick", false);
+                }
+            }
+        });
+        document.addEventListener('<?php /** @noEscape */ echo $block->getCustomerDataLoadErrorEventName(); ?>', function () {
+            klevu({ powerUp: { quick: true } });
+        });
+        document.addEventListener('<?php /** @noEscape */ echo $block->getCustomerDataLoadedEventName(); ?>', function () {
+            klevu({
+                powerUp: { quick: true },
+                flags: {
+                    addPriceSuffixToQuery: {
+                        quick: true
+                    }
+                }
+            });
+        });
+    <?php endif; ?>
+
+    <?php if ($block->shouldOutputLandingScript()): ?>
+        klevu.settings.chains.initChain.add({
+            name: "addPriceSuffixToLandingQuery",
+            fire: function (data) {
+                if (klevu.getObjectPath(klevu.search, "landing", false)
+                    && klevu.getGlobalSetting("flags.addPriceSuffixToQuery.landing", false)
+                    && typeof klevu_addPriceSuffixToQueryControl === "object"
+                ) {
+                    klevu.search.landing.getScope().chains.request.control.addAfter('initRequest', klevu_addPriceSuffixToQueryControl);
+                    klevu.setObjectPath(data, "flags.addPriceSuffixToQuery.landing", false);
+                }
+            }
+        });
+
+        document.addEventListener('<?php /** @noEscape */ echo $block->getCustomerDataLoadErrorEventName(); ?>', function () {
+            klevu({ powerUp: { landing: true } });
+        });
+        document.addEventListener('<?php /** @noEscape */ echo $block->getCustomerDataLoadedEventName(); ?>', function () {
+            klevu({ powerUp: { landing: true },
+                flags: {
+                    addPriceSuffixToQuery: {
+                        landing: true
+                    }
+                }
+            });
+        });
+    <?php endif; ?>
+</script>

@@ -140,6 +140,8 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     const XML_PATH_THEME_VERSION = 'klevu_search/developer/theme_version';
     const XML_PATH_QUICKSEARCH_SELECTOR = 'klevu_search/developer/quicksearch_selector';
 	const ADMIN_RESOURCE_CONFIG = 'Klevu_Search::config_search';
+	const XML_PATH_ORDER_IP = 'klevu_search/developer/orderip';
+	const XML_PATH_RATING_SYNC_ENABLED = 'klevu_search/product_sync/rating_sync_enabled';
 
     /**
      * Set the Enable on Frontend flag in System Configuration for the given store.
@@ -1415,5 +1417,33 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
             ScopeInterface::SCOPE_STORE,
             $store
         );
+    }
+
+	/**
+     * @param int|null $storeId
+     * @return int|null
+     */
+    public function getConfiguredOrderIP($storeId = null)
+    {
+        $configValue = $this->_appConfigScopeConfigInterface->getValue(
+            static::XML_PATH_ORDER_IP,
+            ScopeInterface::SCOPE_STORES,
+            $storeId
+        );
+
+        return $configValue ?: null;
+    }
+
+	/**
+     * Check rating sync enabled or not.
+     *
+     * @param int|null $storeId
+     *
+     * @return bool
+     */
+    public function isRatingSyncEnable($store_id = null)
+    {
+        return $this->_appConfigScopeConfigInterface->isSetFlag(static::XML_PATH_RATING_SYNC_ENABLED, ScopeInterface::SCOPE_STORE, $store_id);
+
     }
 }

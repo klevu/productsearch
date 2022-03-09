@@ -145,6 +145,11 @@
                       Schedule set in the Order Sync Frequency field.
                     ]]></comment>
                 </field>
+				<field id="rating_sync_enabled" type="select" sortOrder="61" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Enable Product Rating Sync From Magento</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment><![CDATA[ Enable Magento Rating Sync ]]></comment>
+                </field>
                 <field id="order_sync_frequency" translate="label comment" sortOrder="61" type="select" showInDefault="1">
                     <label>Order Sync Frequency</label>
                     <source_model>Klevu\Search\Model\System\Config\Source\Frequency\OrderSync</source_model>
@@ -307,9 +312,9 @@
                     <validate>required-entry validate-number</validate>
                 </field>
             </group>
-            <group id="price_per_customer_group" translate="label comment" sortOrder="106" showInDefault="1">
+            <group id="price_per_customer_group" translate="label comment" sortOrder="106" showInDefault="1" showInWebsite="1" showInStore="1">
                 <label>Display prices after Customer Group load</label>
-                <field id="enabled" translate="label comment" sortOrder="100" type="select" showInDefault="1">
+                <field id="enabled" translate="label comment" sortOrder="100" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Display prices after Customer Group Load</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     <comment><![CDATA[Recommended if using Customer Group Pricing. This will delay the rendering of prices on the page until the current customer’s group is available, which will ensure the customer group price is displayed rather than the default."]]></comment>
@@ -339,6 +344,12 @@
                     average daily order volumes.
                 ]]></comment>
                     <config_path>klevu_search/product_sync/order_sync_max_batch_size</config_path>
+                </field>
+				
+				<field id="orderip" translate="label comment" sortOrder="303" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>IP Address Field for Order Data</label>
+                    <source_model>Klevu\Search\Model\System\Config\Source\Order\Ip</source_model>
+                    <comment><![CDATA[By default, Klevu considers the remote_ip field of table sales_order for tracking the Shoppers IP in the checkout data but if the website is using x_forwarded_for field of table sales_order, please select x_forwarded_for option.]]></comment>
                 </field>
 
                 <!-- Logging -->

@@ -738,4 +738,59 @@ class ProductTest extends TestCase
 
         return $this->categoryCollection;
     }
+
+    /**
+     * @magentoAppIsolation enabled
+     * @magentoDbIsolation disabled
+     * @magentoCache all disabled
+     * @magentoDataFixture loadCategoriesForCategoryPathsFixtures
+     * @magentoDataFixture loadProductsForCategoryPathsFixtures
+     * @magentoConfigFixture klevu_search/attributes/categoryanchor 1
+     * @magentoConfigFixture default_store klevu_search/attributes/categoryanchor 1
+     * @magentoConfigFixture klevu_test_store_1_store klevu_search/attributes/categoryanchor 1
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     */
+    public function testGetLongestPathCategoryName_WithAnchorEnabled()
+    {
+        $this->setupPhp5();
+        /** @var ProductModel $productModel */
+        $productModel = $this->objectManager->create(ProductModel::class);
+
+        $product = $this->productRepository->get('klevu-category-paths-test-standalone');
+
+        $actualResult = $productModel->getCategory(null, $product);
+        $expectedResults = '[Klevu][Product Test 1] Top Level: Enabled;[Klevu][Product Test 3] Nested Parent: Enabled;[Klevu][Product Test 5] Nested Parent: Enabled;[Klevu][Product Test 3] Nested Child: Enabled;[Klevu][Product Test 4] Nested Child: Enabled';
+
+        $this->assertSame($expectedResults, $actualResult);
+    }
+
+    /**
+     * @magentoAppIsolation enabled
+     * @magentoDbIsolation disabled
+     * @magentoCache all disabled
+     * @magentoDataFixture loadCategoriesForCategoryPathsFixtures
+     * @magentoDataFixture loadProductsForCategoryPathsFixtures
+     * @magentoConfigFixture klevu_search/attributes/categoryanchor 0
+     * @magentoConfigFixture default_store klevu_search/attributes/categoryanchor 0
+     * @magentoConfigFixture klevu_test_store_1_store klevu_search/attributes/categoryanchor 0
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     */
+    public function testGetLongestPathCategoryName_WithAnchorDisabled()
+    {
+        $this->setupPhp5();
+        /** @var ProductModel $productModel */
+        $productModel = $this->objectManager->create(ProductModel::class);
+
+        $product = $this->productRepository->get('klevu-category-paths-test-standalone');
+
+        $actualResult = $productModel->getCategory(null, $product);
+        $expectedResults =
+            '[Klevu][Product Test 1] Top Level: Enabled;'
+            . '[Klevu][Product Test 3] Nested Parent: Enabled;'
+            . '[Klevu][Product Test 5] Nested Parent: Enabled;'
+            . '[Klevu][Product Test 3] Nested Child: Enabled;'
+            . '[Klevu][Product Test 4] Nested Child: Enabled';
+
+        $this->assertSame($expectedResults, $actualResult);
+    }
 }

@@ -9,11 +9,11 @@
 		"magento/module-eav": "@stable",
 		"magento/framework": "@stable",
         "klevu/module-logger": "^1.0.0",
-        "klevu/module-frontend-js": "^1.1.0",
+        "klevu/module-frontend-js": "^1.2.0",
         "klevu/module-metadata": "^1.1.0"
     },
     "type": "magento-module",
-    "version": "2.5.3",
+    "version": "2.5.4",
     "license": [
         "OSL-3.0",
         "AFL-3.0"

@@ -21,13 +21,13 @@ class LoadAttribute extends  AbstractModel implements LoadAttributeInterface
     protected $_searchHelperCompat;
     protected $_klevuSync;
     protected $_stockHelper;
-	protected $_klevuFactory;
+    protected $_klevuFactory;
 
     public function __construct(
         \Klevu\Search\Model\Context $context,
         Klevu_ProductData $productdata,
         Klevu_Product_Attribute_Collection $productAttributeCollection,
-		KlevuFactory $klevuFactory
+        KlevuFactory $klevuFactory
 
     ){
         $this->_storeModelStoreManagerInterface = $context->getStoreManagerInterface();
@@ -39,7 +39,7 @@ class LoadAttribute extends  AbstractModel implements LoadAttributeInterface
         $this->_searchHelperData = $context->getHelperManager()->getDataHelper();
         $this->_klevuSync = $context->getSync();
         $this->_stockHelper = $context->getHelperManager()->getStockHelper();
-		$this->_klevuFactory = $klevuFactory;
+        $this->_klevuFactory = $klevuFactory;
 
     }
 
@@ -71,7 +71,7 @@ class LoadAttribute extends  AbstractModel implements LoadAttributeInterface
         }
         $product_ids = array_unique($product_ids);
         $parent_ids = array_unique($parent_ids);
-        
+
         if ($this->_searchHelperConfig->isCollectionMethodEnabled()) {
             $data = $this->loadProductDataCollection($product_ids);
         }
@@ -172,20 +172,20 @@ class LoadAttribute extends  AbstractModel implements LoadAttributeInterface
                         case "dateAdded":
                             $product[$key] = $this->_productData->getDateAdded($key,$attributes,$parent,$item,$product,$this->_storeModelStoreManagerInterface->getStore());
                             break;
-						case "visibility":
-							//param values will be catalog, catalog-search, search after processing
-							foreach ($attributes as $attribute) {
-								if ($parent) {
-									$product[$key] = $this->getAttributeData($attribute, $parent->getData($attribute));
-									$product[$key] = str_replace(",","-",str_replace(' ','',strtolower($product[$key]['values']->getText())));
-									break;
-								} elseif ($item->getData($attribute)) {
-									$product[$key] = $this->getAttributeData($attribute, $item->getData($attribute));
-									$product[$key] = str_replace(",","-",str_replace(' ','',strtolower($product[$key]['values']->getText())));
-									break;
-								}								
-							}
-							break;
+                        case "visibility":
+                            //param values will be catalog, catalog-search, search after processing
+                            foreach ($attributes as $attribute) {
+                                if ($parent) {
+                                    $product[$key] = $this->getAttributeData($attribute, $parent->getData($attribute));
+                                    $product[$key] = str_replace(",","-",str_replace(' ','',strtolower($product[$key]['values']->getText())));
+                                    break;
+                                } elseif ($item->getData($attribute)) {
+                                    $product[$key] = $this->getAttributeData($attribute, $item->getData($attribute));
+                                    $product[$key] = str_replace(",","-",str_replace(' ','',strtolower($product[$key]['values']->getText())));
+                                    break;
+                                }
+                            }
+                            break;
                         default:
                             foreach ($attributes as $attribute) {
                                 if ($item->getData($attribute)) {
@@ -200,8 +200,10 @@ class LoadAttribute extends  AbstractModel implements LoadAttributeInterface
                 }
 
                 $product['product_type'] = $this->_productData->getProductType($parent,$item);
-				$product['isCustomOptionsAvailable'] = $this->_productData->isCustomOptionsAvailable($parent,$item);
+                $product['isCustomOptionsAvailable'] = $this->_productData->isCustomOptionsAvailable($parent,$item);
                 $product['currency'] = $currency;
+                //$product['otherPrices'] = "salePrice_USD-3:50.000000;salePrice_USD-2:60.000000;salePrice_USD-1:70.000000";
+                $product['otherPrices'] = $this->_productData->getOtherPrices($item, $currency);
                 $product['category'] =  $this->_productData->getCategory($parent,$item);
                 $product['listCategory'] = $this->_productData->getListCategory($parent,$item);
                 $product['categoryIds'] =  $this->_productData->getAllCategoryId($parent,$item);
@@ -257,8 +259,8 @@ class LoadAttribute extends  AbstractModel implements LoadAttributeInterface
                 $r = 0;
                 foreach ($rejectedProducts as $rkey => $rvalue) {
                     $idData = $this->checkIdexitsInDb($this->_storeModelStoreManagerInterface->getStore()->getId(), $rvalue["product_id"], $rvalue["parent_id"]);
-					$ids = $idData->getData();
-					if (count($ids) > 0) {
+                    $ids = $idData->getData();
+                    if (count($ids) > 0) {
                         $rejectedProducts_data[$r]["product_id"] = $rvalue["product_id"];
                         $rejectedProducts_data[$r]["parent_id"] = $rvalue["parent_id"];
                         $r++;
@@ -512,8 +514,8 @@ class LoadAttribute extends  AbstractModel implements LoadAttributeInterface
         $currentStoreID = $this->_storeModelStoreManagerInterface->getStore()->getId();
         if (!empty($value)) {
 //            if (!$attribute_data = $this->getData('attribute_data')) {
-	      //If store ID changes then fetch facets title
-	      if((!$attribute_data = $this->getData('attribute_data')) || ($currentStoreID != $this->getData('attributeStoreID'))) {
+            //If store ID changes then fetch facets title
+            if((!$attribute_data = $this->getData('attribute_data')) || ($currentStoreID != $this->getData('attributeStoreID'))) {
                 $this->setData('attributeStoreID',$this->_storeModelStoreManagerInterface->getStore()->getId());
                 $attribute_data = [];
                 $collection = $this->_productAttributeCollection
@@ -594,13 +596,13 @@ class LoadAttribute extends  AbstractModel implements LoadAttributeInterface
      */
     protected function checkIdexitsInDb($store_id, $product_id, $parent_id)
     {
-		$klevu = $this->_klevuFactory->create();
+        $klevu = $this->_klevuFactory->create();
         $klevuCollection = $klevu->getCollection()
             ->addFieldToFilter($klevu->getKlevuField('type'), $klevu->getKlevuType('product'))
-			->addFieldToFilter($klevu->getKlevuField('product_id'), $product_id)
-			->addFieldToFilter($klevu->getKlevuField('parent_id'), $parent_id)
+            ->addFieldToFilter($klevu->getKlevuField('product_id'), $product_id)
+            ->addFieldToFilter($klevu->getKlevuField('parent_id'), $parent_id)
             ->addFieldToFilter($klevu->getKlevuField('store_id'), $store_id);
-		return $klevuCollection->load();
+        return $klevuCollection->load();
     }
 
     /**

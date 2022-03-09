@@ -1,0 +1,46 @@
+<?php /** @var Klevu\Search\Block\Html\Head\ThemeV2\InlineCurrencyTranslation $block */ ?>
+<script type="text/javascript">
+    <?php if ($block->shouldOutputQuickScript()): ?>
+        klevu.settings.chains.initChain.add({
+            name: "addCurrencyTranslationToQuick",
+            fire: function (data) {
+                if (!klevu.getObjectPath(klevu.search, "quick", false)
+                    || klevu.search.quick.getScope().chains.response.success.indexOf("processQuery") <= 0
+                    || klevu.getGlobalSetting("flags.currencyTranslationAdded.quick", false)
+                ) {
+                    return;
+                }
+
+                klevu.search.quick.getScope().chains.response.success.addAfter("processQuery", {
+                    name: "addCurrencyTranslation",
+                    fire: function (data, scope) {
+                        klevu.search.modules.mageConvertPriceRecordCurrencyData(klevu.getObjectPath(data, "template.query.productList.result"), klevu_currentCurrencyCode, klevu_currentCurrencyRates);
+                    }
+                });
+                klevu.setObjectPath(data, "flags.currencyTranslationAdded.quick", true);
+            }
+        });
+    <?php endif; ?>
+
+    <?php if ($block->shouldOutputLandingScript()): ?>
+        klevu.settings.chains.initChain.add({
+            name: "addCurrencyTranslationToLanding",
+            fire: function (data) {
+                if (!klevu.getObjectPath(klevu.search, "landing", false)
+                    || klevu.search.landing.getScope().chains.response.success.indexOf("processQuery") <= 0
+                    || klevu.getGlobalSetting("flags.currencyTranslationAdded.landing", false)
+                ) {
+                    return;
+                }
+
+                klevu.search.landing.getScope().chains.response.success.addAfter("processQuery", {
+                    name: "addCurrencyTranslation",
+                    fire: function (data, scope) {
+                        klevu.search.modules.mageConvertPriceRecordCurrencyData(klevu.getObjectPath(data, "template.query.productList.result"), klevu_currentCurrencyCode, klevu_currentCurrencyRates);
+                    }
+                });
+                klevu.setObjectPath(data, "flags.currencyTranslationAdded.landing", true);
+            }
+        });
+    <?php endif; ?>
+</script>
