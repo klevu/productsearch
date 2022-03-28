@@ -772,7 +772,6 @@ class Product extends DataObject implements ProductInterface
             ], $otherPrice);
 
             switch (true) {
-                case (int)$otherPrice['website_id'] !== $websiteId:
                 case (int)$otherPrice['price_qty'] !== 1:
                 case null === $otherPrice['cust_group']:
                 case !is_numeric($otherPrice['website_price']):
@@ -788,7 +787,7 @@ class Product extends DataObject implements ProductInterface
                         'salePrice_%s-%s:%s',
                         $currency,
                         $otherPrice['cust_group'],
-                        number_format($otherPrice['website_price'], 4)
+                        $otherPrice['website_price']
                     );
                     break;
             }

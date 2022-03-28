@@ -101,14 +101,40 @@ class Index extends Template
         return $this->_klevuDataHelper->getStoreLanguage();
     }
 
+    /**
+     * @return string
+     */
+    public function getBaseCurrencyCode()
+    {
+        $return = '';
+        try {
+            $store = $this->getStore();
+            $return = (string)$store->getBaseCurrencyCode();
+        } catch (\Exception $e) {
+            $this->_logger->error($e->getMessage(), ['method' => __METHOD__]);
+        }
+
+        return $return;
+    }
+
+    /**
+     * @return string
+     */
     public function getCurrentCurrencyCode()
     {
-        return $this->_storeManager->getStore()->getCurrentCurrencyCode();
+        $return = '';
+        try {
+            $store = $this->getStore();
+            $return = (string)$store->getCurrentCurrencyCode();
+        } catch (\Exception $e) {
+            $this->_logger->error($e->getMessage(), ['method' => __METHOD__]);
+        }
+
+        return $return;
     }
 
     public function getCurrencyData()
     {
-
         return $this->_klevuDataHelper->getCurrencyData($this->getStore());
     }
 

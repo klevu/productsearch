@@ -202,7 +202,7 @@ class LoadAttribute extends  AbstractModel implements LoadAttributeInterface
                 $product['product_type'] = $this->_productData->getProductType($parent,$item);
                 $product['isCustomOptionsAvailable'] = $this->_productData->isCustomOptionsAvailable($parent,$item);
                 $product['currency'] = $currency;
-                //$product['otherPrices'] = "salePrice_USD-3:50.000000;salePrice_USD-2:60.000000;salePrice_USD-1:70.000000";
+                //$product['otherPrices'] = "salePrice_USD-3:5000.000000;salePrice_USD-2:60.000000;salePrice_USD-1:70.000000";
                 $product['otherPrices'] = $this->_productData->getOtherPrices($item, $currency);
                 $product['category'] =  $this->_productData->getCategory($parent,$item);
                 $product['listCategory'] = $this->_productData->getListCategory($parent,$item);
