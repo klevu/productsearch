@@ -73,6 +73,8 @@ class InteractiveOptionsProvider implements InteractiveOptionsProviderInterface
         return [
             'url' => [
                 'protocol' => 'https:',
+                // Note, for frontend generation this will be replaced with the absolute URL
+                // Ref: KS-10792
                 'landing' => (int)$landingUri === Landingoptions::KlEVULAND
                     ? '/search'
                     : '/catalogsearch/result',
@@ -89,4 +91,3 @@ class InteractiveOptionsProvider implements InteractiveOptionsProviderInterface
         ];
     }
 }
-

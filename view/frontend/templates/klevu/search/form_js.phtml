@@ -21,8 +21,8 @@ var allInputs = document.getElementsByTagName( 'input' );
                }
             }
         }
-        
-    })(); 
+
+    })();
     <?php } elseif ($block->isLandingEnabled()== $block::KlEVUTEMPLATE) { ?>
     (function () {
         // Remove Magento event observers from the search box
@@ -35,13 +35,13 @@ var allInputs = document.getElementsByTagName( 'input' );
                 }
             }
         }
-        
+
     })();
 
     <?php } elseif ($block->isLandingEnabled()== $block::KlEVUPRESERVELAYOUT) { ?>
     (function () {
         // Remove Magento event observers from the search box
-        // default magetno layout landing page 
+        // default magetno layout landing page
         for( i = 0, len = allInputs.length; i < len; i++ ){
             if( allInputs[i].type === "text" || allInputs[i].type === "search" ){
                 if( allInputs[i].name === "q" ||  allInputs[i].id === "search" ){
@@ -53,13 +53,13 @@ var allInputs = document.getElementsByTagName( 'input' );
     <?php } ?>
     <?php
     if ($block->isLandingEnabled()== $block::KlEVUPRESERVELAYOUT) {?>
-        var klevu_storeLandingPageUrl = '<?php echo $block->getUrl('catalogsearch/result', ['_secure' => $block->getRequest()->isSecure()]);?>'; 
+        var klevu_storeLandingPageUrl = '<?php echo $block->getUrl('catalogsearch/result', ['_secure' => $block->getRequest()->isSecure()]);?>';
         var klevu_showQuickSearchOnEnter=false;
     <?php                                                                                                         } elseif ($block->isLandingEnabled()== $block::KlEVUTEMPLATE) { ?>
-        var klevu_storeLandingPageUrl = '<?php echo $url;?>'; 
+        var klevu_storeLandingPageUrl = '<?php echo $url;?>';
         var klevu_showQuickSearchOnEnter=false;
     <?php } ?>
-    
+
     // call store js
     var klevu_apiKey = '<?php echo $block->getJsApiKey() ?>',
         searchTextBoxName = 'search',
@@ -69,17 +69,20 @@ var allInputs = document.getElementsByTagName( 'input' );
     (function () { var ws = document.createElement('script'),kl_protocol =("https:"===document.location.protocol?"https://":"http://"); ws.type = 'text/javascript'; ws.async = true; ws.src = kl_protocol+'<?php echo $block->getJsUrl() ?>/klevu-js-v1/js/klevu-webstore.js'; var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ws, s); })();
 </script>
 <?php endif; ?>
-<?php
-    $currency = $block->getCurrencyData();
-    if (!empty($currency)) { ?>
-    <script type="text/javascript">
-        var klevu_currentCurrencyCode = "<?php echo $block->getCurrentCurrencyCode(); ?>";
-        var klevu_currentCurrencyRates = {<?php echo $currency;?>};
-    </script>
-<?php
-    }
-?>
 <script type="text/javascript">
+    if (typeof klevu_baseCurrencyCode === "undefined") {
+        var klevu_baseCurrencyCode = "<?php echo $block->escapeJsQuote($block->getBaseCurrencyCode()); ?>";
+    }
+    if (typeof klevu_currentCurrencyCode === "undefined") {
+        var klevu_currentCurrencyCode = "<?php echo $block->escapeJsQuote($block->getCurrentCurrencyCode()); ?>";
+    }
+    <?php $currency = $block->getCurrencyData(); ?>
+    <?php if (!empty($currency)) : ?>
+        if (typeof klevu_currentCurrencyRates === "undefined") {
+            var klevu_currentCurrencyRates = {<?php /** @noEscape */ echo $currency;?>};
+        }
+    <?php endif; ?>
+    
 	klevu_pubIsInUse = <?php echo ($block->isPubInUse())?"true":"false"; ?> ;
 	if(!(typeof klevu_uc_productCustomizations === "function" && typeof klevu_uc_productCustomizations.nodeType !== "number")) {
 		function klevu_uc_productCustomizations( product ){
@@ -89,7 +92,7 @@ var allInputs = document.getElementsByTagName( 'input' );
 			} else {
 				product.productImage = product.productImage.replace( 'needtochange/', 'pub/');
 			}
-			
+
 			if ('undefined' !== typeof klevuMagentoCustomerGroupFlag && klevuMagentoCustomerGroupFlag == false) {
                 product.productPrice = '0';
                 product.startPrice = '0';

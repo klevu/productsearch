@@ -15,4 +15,18 @@
 			<argument name="productListSortOrdersSource" xsi:type="object">Klevu\Search\Model\Source\ProductListSortOrders</argument>
 		</arguments>
 	</type>
+
+	<type name="Klevu\Search\Service\ThemeV2\InteractiveOptionsProvider\FrontendOptionsProvider">
+		<arguments>
+			<argument name="isEnabledCondition" xsi:type="object">Klevu\Search\Service\ThemeV2\IsEnabledCondition</argument>
+		</arguments>
+	</type>
+
+	<virtualType name="Klevu\FrontendJs\Service\InteractiveOptionsGenerator\Frontend">
+		<arguments>
+			<argument name="interactiveOptionsProviders" xsi:type="array">
+				<item name="_klevu_themev2_frontend" xsi:type="object">Klevu\Search\Service\ThemeV2\InteractiveOptionsProvider\FrontendOptionsProvider</item>
+			</argument>
+		</arguments>
+	</virtualType>
 </config>
