@@ -1141,8 +1141,8 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     {
 		$dataHelper = \Magento\Framework\App\ObjectManager::getInstance()->get('\Klevu\Search\Helper\Data');
 		try{
-			if (strlen($code = $this->_frameworkAppRequestInterface->getParam('store'))) { // store level
-				$code = $this->_frameworkAppRequestInterface->getParam('store');
+            $code = (string)$this->_frameworkAppRequestInterface->getParam('store');
+			if (strlen($code)) { // store level
 				if (!$this->_klevu_features_response) {
 					$store = $this->_frameworkModelStore->load($code);
 					$store_id = $store->getId();
@@ -1151,18 +1151,18 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
 					if (!empty($restapi)) {
 						$this->_klevu_features_response = $this->executeFeatures($restapi, $store);
 					} else {
-						return;
+						return '';
 					}
 				}
 				return $this->_klevu_features_response;
 			}
 		} catch (\Zend\Http\Client\Exception\RuntimeException $re) {
             $dataHelper->log(LoggerConstants::ZEND_LOG_INFO, sprintf("Unable to get Klevu Features list (%s)", $re->getMessage()));
-            return;
         } catch (\Exception $e) {
             $dataHelper->log(LoggerConstants::ZEND_LOG_INFO, sprintf("Uncaught Exception thrown while getting Klevu Features list (%s)", $e->getMessage()));
-            return;
         }
+
+        return '';
     }
 
     /**

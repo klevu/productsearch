@@ -160,7 +160,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function getLanguageFromLocale($locale)
     {
-        if (strlen($locale) == 5 && strpos($locale, "_") === 2) {
+        if (strlen((string)$locale) == 5 && strpos($locale, "_") === 2) {
             return substr($locale, 0, 2);
         }
 

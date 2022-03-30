@@ -121,6 +121,8 @@ if (!window.Klevu.Search) window.Klevu.Search = {};
                     onClose: self.close,
                     options: {}
                 });
+                self.dialog.element.className = 'dialog popup-window';
+                window.scrollTo(0, 0);
             }
         },
 
@@ -173,7 +175,7 @@ function upgradeLink(url)
 
 function openMyPopup(pUrl,width,height)
 {
- 
+
         var url = pUrl;
 
         var dialogWindow = Dialog.info(null, {
@@ -196,7 +198,7 @@ function openMyPopup(pUrl,width,height)
             }
         });
 }
- 
+
 function closePopup()
 {
         Windows.close('browser_window');

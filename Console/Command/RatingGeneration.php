@@ -156,7 +156,7 @@ HELP
                     $output->writeln('');
                 }
                 $resultTime = microtime(true) - $startTime;
-                $output->writeln('<info>Product rating recalculation successfully completed in ' . gmdate('H:i:s', $resultTime) . '</info>');
+                $output->writeln('<info>Product rating recalculation successfully completed in ' . gmdate('H:i:s', round($resultTime)) . '</info>');
                 $output->writeln('');
                 $output->writeln('<comment>To sync the latest rating changes with Klevu, run the klevu:syncdata or klevu:syncstore:storecode command.</comment>');
                 $output->writeln('<comment>You can skip this step if the CRON is already configured</comment>');

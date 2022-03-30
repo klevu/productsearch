@@ -91,7 +91,7 @@ class Response extends \Magento\Framework\DataObject
     {
         if ($response->isSuccess()) {
             $content = $response->getBody();
-            if (strlen($content) > 0) {
+            if (strlen((string)$content) > 0) {
                 try {
                     $xml = simplexml_load_string($response->getBody());
                 } catch (\Exception $e) {

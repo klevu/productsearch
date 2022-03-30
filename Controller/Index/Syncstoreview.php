@@ -145,7 +145,7 @@ class Syncstoreview extends Action
 
             $store_object = $this->_storeInterface->getStore($store_id);
             $hashkey = urlencode($this->_request->getParam('hashkey'));
-            $store_rest_api = hash('sha256', $this->_klevuSyncModel->getHelper()->getConfigHelper()->getRestApiKey((int)$store_id));
+            $store_rest_api = hash('sha256', (string)$this->_klevuSyncModel->getHelper()->getConfigHelper()->getRestApiKey((int)$store_id));
             if ($store_rest_api == $hashkey) {
                 $this->_storeInterface->setCurrentStore($store_id);
                 $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_INFO, sprintf(

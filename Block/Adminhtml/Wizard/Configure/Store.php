@@ -112,7 +112,7 @@ class Store extends \Magento\Backend\Block\Template
     public function getSyncUrlForStore()
     {
         $store_id = $this->_klevuSession->getCurrentKlevuStoreId();
-        $hashkey = hash('sha256',$this->_klevuSession->getCurrentKlevuRestApiKlevu());
+        $hashkey = hash('sha256', (string)$this->_klevuSession->getCurrentKlevuRestApiKlevu());
         return $this->_storeManager->getStore($store_id)->getBaseUrl() . "search/index/syncstore/store/" . $store_id . "/hashkey/" . $hashkey;
     }
 

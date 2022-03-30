@@ -1,7 +1,8 @@
 <?php
-use \Klevu\Search\Model\Api\Request\XMLExtended;
 
 namespace Klevu\Search\Model\Api\Request;
+
+use \Klevu\Search\Model\Api\Request\XMLExtended;
 
 class Xml extends \Klevu\Search\Model\Api\Request
 {
@@ -139,23 +140,23 @@ class Xml extends \Klevu\Search\Model\Api\Request
                 }
             } else {
                 $key = (is_numeric($key)) ? "item" . $key : $key;
-                
+
                 if ($value == "desc" || $value == "shortDesc") {
                     $flag =1;
-                    $parent->addChild($key, $this->stripInvalidXml(htmlspecialchars($value)));
+                    $parent->addChild($key, $this->stripInvalidXml(htmlspecialchars((string)$value)));
                 } else {
                     if ($flag == 1) {
                         $parent = $parent->addChild($key);
-                        $parent->addCData($this->stripInvalidXml(htmlspecialchars($value)));
+                        $parent->addCData($this->stripInvalidXml(htmlspecialchars((string)$value)));
                     } else {
                         $flag = 0;
-                        $parent->addChild($key, $this->stripInvalidXml(htmlspecialchars($value)));
+                        $parent->addChild($key, $this->stripInvalidXml(htmlspecialchars((string)$value)));
                     }
                 }
             }
         }
     }
-    
+
     /**
      * Removes invalid XML
      *
@@ -174,7 +175,7 @@ class Xml extends \Klevu\Search\Model\Api\Request
             return $ret;
         }
 
-        $length = strlen($value);
+        $length = strlen((string)$value);
         for ($i=0; $i < $length; $i++) {
             $current = ord($value[$i]);
             if (($current == 0x9) ||
