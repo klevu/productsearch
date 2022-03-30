@@ -81,7 +81,7 @@ class Scheduler extends AbstractModel implements SchedulerInterface
      */
     private function convertTimestampForMysql($timestamp)
     {
-        return strftime('%Y-%m-%d %H:%M:%S', $timestamp);
+        return date('Y-m-d H:i:s', $timestamp);
     }
 
     /**

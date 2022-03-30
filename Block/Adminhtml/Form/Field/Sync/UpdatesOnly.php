@@ -114,7 +114,7 @@ class UpdatesOnly extends \Magento\Config\Block\System\Config\Form\Field
         } else {
             $store_id = $this->getRequest()->getParam('store');
         }
-        $hashkey = hash('sha256',$this->getRestApi($store_id));
+        $hashkey = hash('sha256', (string)$this->getRestApi($store_id));
         return $this->_storeManager->getStore($store_id)->getBaseUrl() . "search/index/syncstore/store/" . $store_id . "/hashkey/" . $hashkey;
     }
 }

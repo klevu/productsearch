@@ -168,13 +168,13 @@ HELP
             if ($input->hasParameterOption('--regenerate')) {
                 $this->regenerateImage($progress, $collection);
                 $output->writeln('');
-                $output->writeln('<info>Image regeneration successfully completed in ' . gmdate('H:i:s', $this->totalExecutionTime) . '</info>');
+                $output->writeln('<info>Image regeneration successfully completed in ' . gmdate('H:i:s', round($this->totalExecutionTime)) . '</info>');
                 $returnValue = Cli::RETURN_SUCCESS;
 
             } elseif ($input->hasParameterOption('--regenerateall')) {
                 $this->regenerateImage($progress, $collection, true);
                 $output->writeln('');
-                $output->writeln('<info>Image regeneration completed for all the products ' . gmdate('H:i:s', $this->totalExecutionTime) . '</info>');
+                $output->writeln('<info>Image regeneration completed for all the products ' . gmdate('H:i:s', round($this->totalExecutionTime)) . '</info>');
                 $returnValue = Cli::RETURN_SUCCESS;
             } else {
                 $output->writeln('<error>No option provided. Specify --regenerate or --regenerateall option to regenerate the product images</error>');

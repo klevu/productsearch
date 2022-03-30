@@ -58,10 +58,10 @@ class LoadAttribute extends  \Klevu\Search\Model\Category\MagentoCategoryActions
                 );
             $value["id"] = "categoryid_" . $category->getId();
             $value["name"] = $category->getName();
-            $value["desc"] = strip_tags($category->getDescription());
+            $value["desc"] = strip_tags((string)$category->getDescription());
             $value["url"] = $category['url'];
             $value["metaDesc"] = $category->getMetaDescription() . $category->getMetaKeywords();
-            $value["shortDesc"] = substr(strip_tags($category->getDescription()), 0, 200);
+            $value["shortDesc"] = substr(strip_tags((string)$category->getDescription()), 0, 200);
             $value["listCategory"] = "KLEVU_CATEGORY";
             $value["category"] = "Categories";
             $value["salePrice"] = 0;
@@ -72,10 +72,10 @@ class LoadAttribute extends  \Klevu\Search\Model\Category\MagentoCategoryActions
         }
         return $category_data_new;
     }
-	
+
 	public function loadCategoryCollection($storeId,$category_ids)
 	{
-		
+
 		$category_data = $this->_catalogModelCategory->getCollection()
             ->setStoreId($storeId)
             ->addAttributeToSelect("*")->addFieldToFilter('entity_id', [

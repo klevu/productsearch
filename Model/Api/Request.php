@@ -35,7 +35,7 @@ class Request extends \Magento\Framework\DataObject
         \Klevu\Search\Helper\Config $searchHelperConfig,
         \Klevu\Search\Model\Api\Response\Rempty $apiResponseEmpty
     ) {
-    
+
         $this->_modelApiResponse = $modelApiResponse;
         $this->_searchHelperData = $searchHelperData;
         $this->_searchHelperConfig = $searchHelperConfig;
@@ -205,23 +205,23 @@ class Request extends \Magento\Framework\DataObject
     public function __toString()
     {
         $headers = $this->getHeaders();
-        if (!empty($headers)) {
-            array_walk($headers, function (&$value, $key) {
-                $value = ($value !== null && $value !== false) ? sprintf("%s: %s", $key, $value) : null;
-                if (in_array($key, $this->maskFields)) {
-                    $value = sprintf("%s: %s", $key, '***************');
-                }
-            });
+        if (!$headers) {
+            return '';
         }
 
-        if ($headers != null) {
-            return sprintf(
-                "%s %s\n%s\n",
-                $this->getMethod(),
-                $this->getEndpoint(),
-                implode("\n", array_filter($headers))
-            );
-        }
+        array_walk($headers, function (&$value, $key) {
+            $value = ($value !== null && $value !== false) ? sprintf("%s: %s", $key, $value) : null;
+            if (in_array($key, $this->maskFields)) {
+                $value = sprintf("%s: %s", $key, '***************');
+            }
+        });
+
+        return sprintf(
+            "%s %s\n%s\n",
+            $this->getMethod(),
+            $this->getEndpoint(),
+            implode("\n", array_filter($headers))
+        );
     }
 
     /**

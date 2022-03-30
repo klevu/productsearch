@@ -147,7 +147,7 @@ HELP
             $password = $input->getOption('password');
             $confirmpassword = $input->getOption('confirmpassword');
 
-            if ($password !== $confirmpassword || (strlen($password) < 6)) {
+            if ($password !== $confirmpassword || (strlen((string)$password) < 6)) {
                 $output->writeln('<comment>Password and Confirm Password must be same and length must be greater than 6.</comment>');
                 return $returnValue;
             }

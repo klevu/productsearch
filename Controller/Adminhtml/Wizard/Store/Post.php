@@ -80,7 +80,7 @@ class Post extends \Magento\Backend\App\Action
         }
 
         $store_code = $request->getPost("store");
-        if (strlen($store_code) == 0) {
+        if (strlen((string)$store_code) == 0) {
             $this->messageManager->addErrorMessage(__("Must select a store"));
             return $this->_forward("store");
         }

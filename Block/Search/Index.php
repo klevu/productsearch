@@ -170,7 +170,7 @@ class Index extends Template
 
     public function getRestApi($store_id)
     {
-        return hash('sha256',$this->_klevuConfigHelper->getRestApiKey((int)$store_id));
+        return hash('sha256', (string)$this->_klevuConfigHelper->getRestApiKey((int)$store_id));
     }
 
     public function isPubInUse()
