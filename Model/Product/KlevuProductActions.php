@@ -9,6 +9,7 @@
 namespace Klevu\Search\Model\Product;
 
 use Klevu\Logger\Constants as LoggerConstants;
+use Klevu\Search\Model\Api\Response;
 use Klevu\Search\Model\Context as Klevu_Context;
 use Magento\Framework\DataObject;
 
@@ -103,6 +104,11 @@ class KlevuProductActions  extends DataObject implements KlevuProductActionsInte
 
     /**
      * Delete success processing , separated for easier override
+     *
+     * @param array $data
+     * @param Response $response
+     *
+     * @return bool|string
      */
     public function executeDeleteProductsSuccess(array $data, $response)
     {
@@ -128,9 +134,9 @@ class KlevuProductActions  extends DataObject implements KlevuProductActionsInte
                 ($skipped_count > 1) ? "s" : "",
                 implode(", ", $skipped_records["messages"])
             );
-        } else {
-            return true;
         }
+
+        return true;
     }
 
 

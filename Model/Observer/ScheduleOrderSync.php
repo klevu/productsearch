@@ -115,9 +115,7 @@ class ScheduleOrderSync implements ObserverInterface
                 return;
             }
             $this->_modelOrderSync->addOrderToQueue($order);
-            if ($this->_searchHelperConfig->isExternalCronEnabled()) {
-                $this->_modelOrderSync->schedule();
-            }
+            
         } catch (\Exception $e) {
             $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_CRIT, sprintf("OrderQueue:: Exception thrown %s::%s - %s", __CLASS__, __METHOD__, $e->getMessage()));
         }

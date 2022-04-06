@@ -6,23 +6,34 @@
 namespace Klevu\Search\Model\Product;
 
 use Klevu\Logger\Constants as LoggerConstants;
+use Klevu\Search\Api\KlevuSyncRepositoryInterface;
+use Klevu\Search\Api\MagentoProductSyncRepositoryInterface;
 use Klevu\Search\Helper\Config as Klevu_Config;
 use Klevu\Search\Model\Context as Klevu_Context;
 use Klevu\Search\Model\Klevu\HelperManager as Klevu_HelperManager;
+use Klevu\Search\Model\Klevu\Klevu;
 use Klevu\Search\Model\Klevu\KlevuFactory as Klevu_Factory;
 use Klevu\Search\Model\Product\KlevuProductActionsInterface as Klevu_Product_Actions;
 use Klevu\Search\Model\Product\LoadAttributeInterface as Klevu_LoadAttribute;
 use Klevu\Search\Model\Product\ProductParentInterface as Klevu_Product_Parent;
 use Magento\Catalog\Model\Product\Action as Klevu_Catalog_Product_Action;
+use Magento\Catalog\Model\ResourceModel\Product\Collection as ProductCollection;
 use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory as Magento_CollectionFactory;
 use Magento\Eav\Model\Config as Eav_Config;
+use Magento\Eav\Model\Entity;
 use Magento\Eav\Model\Entity\Attribute as Klevu_Entity_Attribute;
 use Magento\Eav\Model\Entity\Type as Klevu_Entity_Type;
-use Magento\Framework\Model\AbstractModel as AbstractModel;
+use Magento\Framework\App\ObjectManager;
+use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Framework\Model\AbstractModel;
 use Magento\ConfigurableProduct\Model\ResourceModel\Attribute\OptionProvider;
+use Magento\Store\Api\Data\StoreInterface;
+use Magento\Store\Model\StoreManagerInterface;
 
 class MagentoProductActions extends AbstractModel implements MagentoProductActionsInterface
 {
+    const PARENT_ID_WHEN_NOT_VISIBLE = '0';
+    const MAX_ITERATIONS = 100000;
 
     protected $_klevuHelperManager;
     protected $_ProductMetadataInterface;
@@ -44,6 +55,22 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
     protected $_klevuProductIndividualInterface;
     protected $_klevuConfig;
     protected $_magentoOptionProvider;
+    /**
+     * @var KlevuSyncRepositoryInterface|null
+     */
+    private $klevuSyncRepository;
+    /**
+     * @var MagentoProductSyncRepositoryInterface|mixed
+     */
+    private $magentoProductRepository;
+    /**
+     * @var array
+     */
+    private $parentProductIds;
+    /**
+     * @var StoreManagerInterface
+     */
+    protected $_storeModelStoreManagerInterface;
 
     public function __construct(
         \Magento\Framework\Model\Context $mcontext,
@@ -64,7 +91,9 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
         \Magento\Framework\Registry $registry,
         \Magento\Framework\Model\ResourceModel\AbstractResource $resource = null,
         \Magento\Framework\Data\Collection\AbstractDb $resourceCollection = null,
-        array $data = []
+        array $data = [],
+        KlevuSyncRepositoryInterface $klevuSyncRepository = null,
+        MagentoProductSyncRepositoryInterface $magentoProductRepository = null
     )
     {
         parent::__construct($mcontext, $registry, $resource, $resourceCollection, $data);
@@ -90,263 +119,211 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
         $this->_klevuProductIndividualInterface = $context->getKlevuProductIndividual();
         $this->_klevuConfig = $klevuConfig;
         $this->_magentoOptionProvider = $magentoOptionProvider;
+        $this->klevuSyncRepository = $klevuSyncRepository ?: ObjectManager::getInstance()->get(KlevuSyncRepositoryInterface::class);
+        $this->magentoProductRepository = $magentoProductRepository ?: ObjectManager::getInstance()->get(MagentoProductSyncRepositoryInterface::class);
     }
 
+    /**
+     * @param StoreInterface $store
+     *
+     * @return array
+     */
     public function updateProductCollection($store = null)
     {
-        $limit = $this->_klevuSyncModel->getSessionVariable("limit");
-        $klevuToUpdate = array();
-        $klevu = $this->_klevuFactory->create();
-        $klevuCollection = $klevu->getCollection()
-            ->addFieldToFilter($klevu->getKlevuField('type'), $klevu->getKlevuType('product'))
-            ->addFieldToFilter($klevu->getKlevuField('store_id'), $store->getId())
-            ->join(
-                ['product' => $this->_frameworkModelResource->getTableName('catalog_product_entity')],
-                "main_table." . $klevu->getKlevuField('product_id') . " = product.entity_id AND product.updated_at > main_table.last_synced_at",
-                ""
-            );
-        if (!empty($limit)) {
-            $klevuCollection->setPageSize($limit);
+        if (!$store) {
+            try {
+                $store = $this->_storeModelStoreManagerInterface->getStore();
+            } catch (NoSuchEntityException $exception) {
+                $this->_searchHelperData->log(
+                    LoggerConstants::ZEND_LOG_CRIT,
+                    $exception->getMessage()
+                );
+                return[];
+            }
         }
-
-        $klevuCollection->load();
-
-        if ($klevuCollection->count() > 0) {
-            foreach ($klevuCollection as $klevuItem) {
-                $parentFieldId = $klevuItem->getData($klevu->getKlevuField('parent_id'));
-                $productFieldId = $klevuItem->getData($klevu->getKlevuField('product_id'));
+        $klevuToUpdate = [];
+        $maxEntityId = $this->klevuSyncRepository->getMaxSyncId($store);
+        if (!$maxEntityId) {
+            return $klevuToUpdate;
+        }
+        $this->klevuSyncRepository->clearKlevuCollection();
+        $lastEntityId = 0;
+        $i = 0;
+        while ($lastEntityId < $maxEntityId) {
+            $productsToSync = $this->klevuSyncRepository->getProductIdsForUpdate($store, [], $lastEntityId);
+            if (!$productsToSync || ++$i >= static::MAX_ITERATIONS) {
+                break;
+            }
+            $lastEntityId = (int)max(array_column($productsToSync, Klevu::FIELD_ENTITY_ID));
+            foreach ($productsToSync as $klevuItem) {
+                $parentFieldId = $klevuItem[Klevu::FIELD_PARENT_ID];
+                $productFieldId = $klevuItem[Klevu::FIELD_PRODUCT_ID];
                 $uniqueGroupKey = $parentFieldId . "-" . $productFieldId;
                 $klevuToUpdate[$uniqueGroupKey]["product_id"] = $productFieldId;
                 $klevuToUpdate[$uniqueGroupKey]["parent_id"] = $parentFieldId;
             }
         }
 
-
         return $klevuToUpdate;
     }
 
+    /**
+     * @param StoreInterface $store
+     *
+     * @return array
+     */
     public function addProductCollection($store = null)
     {
-        $klevu = $this->_klevuFactory->create();
-        $limit = $this->_klevuSyncModel->getSessionVariable("limit");
-        $products_ids_add = array();
-        // Get 'simple','bundle','grouped','Virtual','downloadable' which dont have parent and visibility search,both
-        // Use factory to create a new product collection
-        $productCollection = $this->_magentoCollectionFactory->create()
-            ->addFieldToSelect('id');
-        $productCollection->addStoreFilter($store->getId());
-        $productCollection->addAttributeToFilter('type_id', array('in' => $this->_klevuProductIndividualInterface->getProductIndividualTypeArray()));
-        $productCollection->addAttributeToFilter('status', array('eq' => \Magento\Catalog\Model\Product\Attribute\Source\Status::STATUS_ENABLED));
-        //set visibility filter
-        if ($this->_klevuConfig->useCatalogVisibitySync($store->getId())) {
-            $productCollection->addAttributeToFilter('visibility', array('in' => array(\Magento\Catalog\Model\Product\Visibility::VISIBILITY_BOTH, \Magento\Catalog\Model\Product\Visibility::VISIBILITY_IN_SEARCH, \Magento\Catalog\Model\Product\Visibility::VISIBILITY_IN_CATALOG)));
-        } else {
-            $productCollection->addAttributeToFilter('visibility', array('in' => array(\Magento\Catalog\Model\Product\Visibility::VISIBILITY_BOTH, \Magento\Catalog\Model\Product\Visibility::VISIBILITY_IN_SEARCH)));
-        }
-        //$productCollection->getSelect()->where('e.entity_id NOT IN (select '. $klevu->getKlevuField('product_id') .' from '.$this->_frameworkModelResource->getTableName("klevu_product_sync").' where store_id ='.$store->getId().' and type="'.$klevu->getKlevuType('product').'")');
-        if (!empty($limit)) {
-            //$productCollection->setPageSize($limit);
-        }
-
-        $m_product_ids = array();
-        $childIds = array();
-        foreach ($productCollection->getData() as $key => $value) {
-            $childIds[] = $value['entity_id'];
-        }
-        //$parent_ids_all = $this->_klevuProductParentInterface->getParentIdsByChild($childIds);
-        $parent_ids_all = $this->getParentRelationsByChild($childIds);
-        foreach ($productCollection->getData() as $key => $value) {
-            /*if (!empty($parent_ids_all)) {
-                foreach ($parent_ids_all as $pkey => $pvalue) {
-                    if ($pvalue['product_id'] == $value['entity_id']) {
-                        $m_product_ids[] = $pvalue['entity_id'] . "-" . $value['entity_id'];
-                    }
-                }
-            }*/
-            if (isset($parent_ids_all[$value['entity_id']]) == true) {
-                foreach ($parent_ids_all[$value['entity_id']] as $pkey => $pvalue) {
-                    $m_product_ids[] = $pvalue['entity_id'] . "-" . $value['entity_id'];
-                }
-            }
-            $parent_id = 0;
-            $m_product_ids[] = $parent_id . "-" . $value['entity_id'];
-        }
-
-        // Get Simple product which have parent and visibility not visible individual
-        $productCollection = $this->_magentoCollectionFactory->create()
-            ->addFieldToSelect('id');
-        $productCollection->addStoreFilter($store->getId());
-        $productCollection->addAttributeToFilter('type_id', array('in' => $this->_klevuProductIndividualInterface->getProductChildTypeArray()));
-        $productCollection->addAttributeToFilter('status', array('eq' => \Magento\Catalog\Model\Product\Attribute\Source\Status::STATUS_ENABLED));
-        //set visibility filter
-        $productCollection->addAttributeToFilter('visibility', array('in' => array(\Magento\Catalog\Model\Product\Visibility::VISIBILITY_NOT_VISIBLE)));
-        //$productCollection->getSelect()->where('e.entity_id NOT IN (select '. $klevu->getKlevuField('product_id') .' from '.$this->_frameworkModelResource->getTableName("klevu_product_sync").' where store_id ='.$store->getId().' and type="'.$klevu->getKlevuType('product').'")');
-        if (!empty($limit)) {
-            //$productCollection->setPageSize($limit);
-        }
-
-        $notVisibleChildIDs = array();
-        foreach ($productCollection->getData() as $key => $value) {
-            $notVisibleChildIDs[] = $value['entity_id'];
-        }
-        //$parent_ids = $this->_klevuProductParentInterface->getParentIdsByChild($notVisibleChildIDs);
-        $parent_ids = $this->getParentRelationsByChild($notVisibleChildIDs);
-        foreach ($productCollection->getData() as $key => $value) {
-            /*if (!empty($parent_ids)) {
-                foreach ($parent_ids as $pkey => $pvalue) {
-                    if ($pvalue['product_id'] == $value['entity_id']) {
-                        $m_product_ids[] = $pvalue['entity_id'] . "-" . $value['entity_id'];
-                    }
-                }
-            }*/
-            if (isset($parent_ids[$value['entity_id']]) == true) {
-                foreach ($parent_ids[$value['entity_id']] as $pkey => $pvalue) {
-                    $m_product_ids[] = $pvalue['entity_id'] . "-" . $value['entity_id'];
-                }
+        if (!$store) {
+            try {
+                $store = $this->_storeModelStoreManagerInterface->getStore();
+            } catch (NoSuchEntityException $exception) {
+                $this->_searchHelperData->log(
+                    LoggerConstants::ZEND_LOG_CRIT,
+                    $exception->getMessage()
+                );
+                return[];
             }
         }
-
-
-        $enable_parent_ids = array();
-        // Get parent product,enabled or visibility catalogsearch,search
-        $productCollection = $this->_magentoCollectionFactory->create()
-            ->addFieldToSelect('id');
-        $productCollection->addStoreFilter($store->getId());
-        $productCollection->addAttributeToFilter('type_id', array('in' => $this->_klevuProductParentInterface->getProductParentTypeArray()));
-        if ($this->_klevuConfig->useCatalogVisibitySync($store->getId())) {
-            $productCollection->addAttributeToFilter('visibility', array('in' => array(\Magento\Catalog\Model\Product\Visibility::VISIBILITY_BOTH, \Magento\Catalog\Model\Product\Visibility::VISIBILITY_IN_SEARCH, \Magento\Catalog\Model\Product\Visibility::VISIBILITY_IN_CATALOG)));
-        } else {
-            $productCollection->addAttributeToFilter('visibility', array('in' => array(\Magento\Catalog\Model\Product\Visibility::VISIBILITY_BOTH, \Magento\Catalog\Model\Product\Visibility::VISIBILITY_IN_SEARCH)));
+        $maxEntityId = $this->magentoProductRepository->getMaxProductId($store);
+        if (!$maxEntityId) {
+            return [];
         }
-        // disable not working for flat indexing  so checking for enabled product only
-        $productCollection->addAttributeToFilter('status', array('eq' => \Magento\Catalog\Model\Product\Attribute\Source\Status::STATUS_ENABLED));
-        foreach ($productCollection->getData() as $key => $value) {
-            $enable_parent_ids[$value['entity_id']] = $value['entity_id'];
-        }
+        $this->klevuSyncRepository->clearKlevuCollection();
+        $batchedProductIds = [];
+        $productCollection = $this->magentoProductRepository->getProductIdsCollection($store);
+        $childProductCollection = $this->magentoProductRepository->getChildProductIdsCollection($store);
+        $lastProductEntityId = 0;
+        $lastChildEntityId = 0;
+        $i = 0;
+        while ($lastProductEntityId < $maxEntityId || $lastChildEntityId < $maxEntityId) {
+            $productIds = ($lastProductEntityId < $maxEntityId) ?
+                $this->getMagentoProductIds($productCollection, $store, [], $lastProductEntityId) :
+                [];
+            $childProductIds = ($lastChildEntityId < $maxEntityId) ?
+                $this->getMagentoProductIds($childProductCollection, $store, [], $lastChildEntityId) :
+                [];
 
-        $k_product_ids = array();
-        $klevuCollection = $this->getKlevuProductCollection($store);
-        foreach ($klevuCollection as $k_key => $k_value) {
-            $k_product_ids[] = $k_value['parent_id'] . "-" . $k_value['product_id'];
-        }
-
-        $products_to_add = array_diff($m_product_ids, $k_product_ids);
-
-        foreach ($products_to_add as $key => $value) {
-            $ids = explode('-', $value);
-            if ($ids[0] !== "0") {
-                //if (in_array($ids[0], $enable_parent_ids)) {
-                if (isset($enable_parent_ids[$ids[0]]) == true) {
-                    $products_ids_add[$value]['parent_id'] = $ids[0];
-                    $products_ids_add[$value]['product_id'] = $ids[1];
-                }
-            } else {
-                $products_ids_add[$value]['parent_id'] = $ids[0];
-                $products_ids_add[$value]['product_id'] = $ids[1];
+            if ((!$productIds && !$childProductIds) || ++$i >= static::MAX_ITERATIONS) {
+                break;
             }
+            $lastProductEntityId = $productIds ? (int)max($productIds) : static::MAX_ITERATIONS + 1;
+            $lastChildEntityId = $childProductIds ? (int)max($childProductIds) : static::MAX_ITERATIONS + 1;
+
+            $magentoProductIdsToFilter = array_merge($productIds, $childProductIds);
+            // getParentRelationsByChild method has to remain in this class for backwards compatibility
+            // it is called from within formatMagentoProductIds,
+            $magentoProductIds = array_merge(
+                $this->formatMagentoProductIds($productIds),
+                $this->formatMagentoProductIds($childProductIds, true)
+            );
+            unset($productIds, $childProductIds);
+
+            // check klevu products for this batch of magento products ($magentoProductIdsToFilter)
+            // getKlevuProductCollection method has to remain in this class for backwards compatibility
+            $klevuProductIds = $this->getKlevuProductCollection($store, $magentoProductIdsToFilter);
+            array_walk($klevuProductIds, function (&$v) {
+                unset($v['row_id']);
+            });
+            unset($magentoProductIdsToFilter);
+
+            if ($diff = $this->diffMultiDimensionalArrays($magentoProductIds, $klevuProductIds)) {
+                $batchedProductIds[] = $this->formatProductIdsToAdd($diff, $store);
+            }
+            unset($klevuProductIds, $magentoProductIds);
         }
-        return $products_ids_add;
+
+        return array_merge([], ...array_filter($batchedProductIds));
     }
 
+    /**
+     * @param StoreInterface|null $store
+     *
+     * @return array
+     */
     public function deleteProductCollection($store = null)
     {
-
-        $limit = $this->_klevuSyncModel->getSessionVariable("limit");
-        $products_ids_delete = array();
-        // Get 'simple','bundle','grouped','Virtual','downloadable' which have parent and visibility search,both
-        $productCollection = $this->_magentoCollectionFactory->create()
-            ->addFieldToSelect('id');
-
-        $productCollection->addStoreFilter($store->getId());
-        $productCollection->addAttributeToFilter('type_id', array('in' => $this->_klevuProductIndividualInterface->getProductIndividualTypeArray()));
-        $productCollection->addAttributeToFilter('status', array('eq' => \Magento\Catalog\Model\Product\Attribute\Source\Status::STATUS_ENABLED));
-        //set visibility filter
-        if ($this->_klevuConfig->useCatalogVisibitySync($store->getId())) {
-            $productCollection->addAttributeToFilter('visibility', array('in' => array(\Magento\Catalog\Model\Product\Visibility::VISIBILITY_BOTH, \Magento\Catalog\Model\Product\Visibility::VISIBILITY_IN_SEARCH, \Magento\Catalog\Model\Product\Visibility::VISIBILITY_NOT_VISIBLE, \Magento\Catalog\Model\Product\Visibility::VISIBILITY_IN_CATALOG)));
-        } else {
-            $productCollection->addAttributeToFilter('visibility', array('in' => array(\Magento\Catalog\Model\Product\Visibility::VISIBILITY_BOTH, \Magento\Catalog\Model\Product\Visibility::VISIBILITY_IN_SEARCH, \Magento\Catalog\Model\Product\Visibility::VISIBILITY_NOT_VISIBLE)));
-        }
-        $m_product_ids = array();
-        $delChildIDs = array();
-        foreach ($productCollection->getData() as $key => $value) {
-            $delChildIDs[] = $value['entity_id'];
-        }
-        //$parent_ids = $this->_klevuProductParentInterface->getParentIdsByChild($delChildIDs);
-        $parent_ids = $this->getParentRelationsByChild($delChildIDs);
-        foreach ($productCollection->getData() as $key => $value) {
-            /*if (!empty($parent_ids)) {
-                foreach ($parent_ids as $pkey => $pvalue) {
-                    if ($pvalue['product_id'] == $value['entity_id']) {
-                        $m_product_ids[] = $pvalue['entity_id'] . "-" . $value['entity_id'];
-                    }
-                }
-            }*/
-            if (isset($parent_ids[$value['entity_id']]) == true) {
-                foreach ($parent_ids[$value['entity_id']] as $pkey => $pvalue) {
-                    $m_product_ids[] = $pvalue['entity_id'] . "-" . $value['entity_id'];
-                }
-            }
-            $parent_id = 0;
-            // 1 = not visible individual
-            if ($value['visibility'] !== "1") {
-                $m_product_ids[] = $parent_id . "-" . $value['entity_id'];
+        if (!$store) {
+            try {
+                $store = $this->_storeModelStoreManagerInterface->getStore();
+            } catch (NoSuchEntityException $exception) {
+                $this->_searchHelperData->log(
+                    LoggerConstants::ZEND_LOG_CRIT,
+                    $exception->getMessage()
+                );
+                return[];
             }
         }
-        $enable_parent_ids = array();
-        // Get parent product,disabled or visibility catalog
-        $productCollection = $this->_magentoCollectionFactory->create()
-            ->addFieldToSelect('id');
-        $productCollection->addStoreFilter($store->getId());
-        $productCollection->addAttributeToFilter('type_id', array('in' => $this->_klevuProductParentInterface->getProductParentTypeArray()));
-        if ($this->_klevuConfig->useCatalogVisibitySync($store->getId())) {
-            $productCollection->addAttributeToFilter('visibility', array('in' => array(\Magento\Catalog\Model\Product\Visibility::VISIBILITY_BOTH, \Magento\Catalog\Model\Product\Visibility::VISIBILITY_IN_SEARCH, \Magento\Catalog\Model\Product\Visibility::VISIBILITY_IN_CATALOG)));
-        } else {
-            $productCollection->addAttributeToFilter('visibility', array('in' => array(\Magento\Catalog\Model\Product\Visibility::VISIBILITY_BOTH, \Magento\Catalog\Model\Product\Visibility::VISIBILITY_IN_SEARCH)));
+        $maxEntityId = $this->klevuSyncRepository->getMaxSyncId($store);
+        if (!$maxEntityId) {
+            return [];
         }
-        $productCollection->addAttributeToFilter('status', array('eq' => \Magento\Catalog\Model\Product\Attribute\Source\Status::STATUS_ENABLED));
-
-        foreach ($productCollection->getData() as $key => $value) {
-            //$enable_parent_ids[] = $value['entity_id'];
-            $enable_parent_ids[$value['entity_id']] = $value['entity_id'];
-        }
-
-        $k_product_ids = array();
-        $klevuCollection = $this->getKlevuProductCollection($store);
-        foreach ($klevuCollection as $k_key => $k_value) {
-            $k_product_ids[] = $k_value['parent_id'] . "-" . $k_value['product_id'];
-            if ($k_value['parent_id'] !== "0") {
-                //if (!in_array($k_value['parent_id'], $enable_parent_ids)) {
-                if (isset($enable_parent_ids[$k_value['parent_id']]) == false) {
-                    $products_ids_delete[$k_value['product_id']]['parent_id'] = $k_value['parent_id'];
-                    $products_ids_delete[$k_value['product_id']]['product_id'] = $k_value['product_id'];
-
-                }
+        $batchedProductIds = [];
+        $this->klevuSyncRepository->clearKlevuCollection();
+        $lastEntityId = 0;
+        $i = 0;
+        while ($lastEntityId <  $maxEntityId) {
+            // getKlevuProductCollection method has to remain in this class for backwards compatibility
+            $klevuProductIds = $this->getKlevuProductCollection($store, [], $lastEntityId);
+            if (!$klevuProductIds || ++$i >= static::MAX_ITERATIONS) {
+                break;
             }
+            $lastEntityId = (int)max(array_column($klevuProductIds, Klevu::FIELD_ENTITY_ID));
+            $productIdsToFilter = array_map(static function (array $product) {
+                return $product['product_id'];
+            }, $klevuProductIds);
+            array_walk($klevuProductIds, function (&$v) {
+                unset($v['row_id']);
+            });
+
+            // check magento products for this batch of klevu products ($productIdsToFilter)
+            $magentoProductIdsCollection = $this->magentoProductRepository->getProductIdsCollection(
+                $store,
+                MagentoProductSyncRepositoryInterface::NOT_VISIBLE_INCLUDED
+            );
+            $magentoProductIds = $this->getMagentoProductIds($magentoProductIdsCollection, $store, $productIdsToFilter);
+            // getParentRelationsByChild method has to remain in this class for backwards compatibility
+            // it is called from within formatMagentoProductIds,
+            $magentoProductIds = $this->formatMagentoProductIds($magentoProductIds);
+            unset($productIdsToFilter);
+
+            if ($diff = $this->diffMultiDimensionalArrays($klevuProductIds, $magentoProductIds)) {
+                $batchedProductIds[] = $this->formatProductIdsToDelete($diff, $store);
+            }
+            unset($klevuProductIds, $magentoProductIds);
         }
-        $products_to_delete = array_diff($k_product_ids, $m_product_ids);
-        foreach ($products_to_delete as $key => $value) {
-            $ids = explode('-', $value);
-            /*$products_ids_delete[$ids[1]]['parent_id'] = $ids[0];
-            $products_ids_delete[$ids[1]]['product_id'] = $ids[1];*/
-            $products_ids_delete[$value]['parent_id'] = $ids[0];
-            $products_ids_delete[$value]['product_id'] = $ids[1];
-        }
-        //have to apply unique to remove duplicate deletion
-        $products_ids_delete = array_unique($products_ids_delete, SORT_REGULAR);
-        return $products_ids_delete;
+
+        return  array_merge([], ...array_filter($batchedProductIds));
     }
 
-    public function getKlevuProductCollection($store = null)
+    /**
+     * @param array $array1
+     * @param array $array2
+     *
+     * @return array
+     */
+    private function diffMultiDimensionalArrays(array $array1, array $array2)
     {
-        $limit = $this->_klevuSyncModel->getSessionVariable("limit");
-        $klevu = $this->_klevuFactory->create();
-        $klevuCollection = $klevu->getCollection()
-            ->addFieldToSelect($klevu->getKlevuField('product_id'))
-            ->addFieldToSelect($klevu->getKlevuField('parent_id'))
-            ->addFieldToSelect($klevu->getKlevuField('store_id'))
-            ->addFieldToFilter($klevu->getKlevuField('type'), $klevu->getKlevuType('product'))
-            ->addFieldToFilter($klevu->getKlevuField('store_id'), $store->getId());
-        return $klevuCollection->getData();
+        $jsonDiff = array_diff(
+            array_map('json_encode', $array1),
+            array_map('json_encode', $array2)
+        );
+
+        return array_map('json_decode', $jsonDiff);
+    }
+
+    /**
+     * method retained for backward compatibility
+     *
+     * @param StoreInterface $store
+     * @param array|null $productIds
+     * @param int|null $lastEntityId
+     *
+     * @return array
+     */
+    public function getKlevuProductCollection($store = null, $productIds = [], $lastEntityId = null)
+    {
+        return $this->klevuSyncRepository->getProductIds($store, $productIds, $lastEntityId);
     }
 
     /**
@@ -373,15 +350,15 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
             ]);
         if ($response->isSuccess()) {
             return $this->_klevuProductAction->executeDeleteProductsSuccess($data, $response);
-        } else {
-            $this->_searchModelSession->setKlevuFailedFlag(1);
-            return sprintf(
-                "%d product%s failed (%s)",
-                $total,
-                ($total > 1) ? "s" : "",
-                $response->getMessage()
-            );
         }
+
+        $this->_searchModelSession->setKlevuFailedFlag(1);
+        return sprintf(
+            "%d product%s failed (%s)",
+            $total,
+            ($total > 1) ? "s" : "",
+            $response->getMessage()
+        );
     }
 
     /**
@@ -412,14 +389,14 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
             ]);
         if ($response->isSuccess()) {
             return $this->_klevuProductAction->executeUpdateProductsSuccess($data, $response);
-        } else {
-            return sprintf(
-                "%d product%s failed (%s)",
-                $total,
-                ($total > 1) ? "s" : "",
-                $response->getMessage()
-            );
         }
+
+        return sprintf(
+            "%d product%s failed (%s)",
+            $total,
+            ($total > 1) ? "s" : "",
+            $response->getMessage()
+        );
     }
 
     /**
@@ -448,14 +425,14 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
             ]);
         if ($response->isSuccess()) {
             return $this->_klevuProductAction->executeAddProductsSuccess($data, $response);
-        } else {
-            return sprintf(
-                "%d product%s failed (%s)",
-                $total,
-                ($total > 1) ? "s" : "",
-                $response->getMessage()
-            );
         }
+
+        return sprintf(
+            "%d product%s failed (%s)",
+            $total,
+            ($total > 1) ? "s" : "",
+            $response->getMessage()
+        );
     }
 
     protected function getSyncDataSqlForCEDelete($store)
@@ -767,42 +744,25 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
         );
     }
 
-
     /**
      * Returns parent relations data by child ids
      *
-     * @param $ids
-     * @return mixed
+     * @param array $ids
+     *
+     * @return array
      */
     public function getParentRelationsByChild($ids)
     {
-
-        /** @var \Magento\Framework\DB\Adapter\Pdo\Mysql $connection */
-        $connection = $this->_frameworkModelResource->getConnection();
-
-        /** @var \Magento\Framework\Db\Select $select */
-        $select = $connection
-            ->select()
-            ->from(['l' => $this->_frameworkModelResource->getTableName('catalog_product_super_link')], [])
-            ->join(
-                ['e' => $this->_frameworkModelResource->getTableName('catalog_product_entity')],
-                'e.'. $this->_magentoOptionProvider->getProductEntityLinkField() . ' = l.parent_id',
-                ['e.entity_id']
-            )->where('l.product_id IN(?)', $ids);
-        $select->reset('columns');
-        $select->columns(array('e.entity_id', 'l.product_id', 'l.parent_id'));
-
+        $list = $this->magentoProductRepository->getParentProductRelations($ids);
         $result = [];
-        $list = $this->_frameworkModelResource->getConnection()->fetchAll($select);
-        if (empty($list)) {
-            return $result;
-        }
         foreach ($list as $row) {
-            if (isset($result[$row['product_id']]) == false) {
+            if (!isset($result[$row['product_id']])) {
                 $result[$row['product_id']] = [];
             }
             $result[$row['product_id']][] = $row;
         }
+        unset($list);
+
         return $result;
     }
 
@@ -828,5 +788,138 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
             $where
         );
     }
-}
 
+    /**
+     * @param ProductCollection $productCollection
+     * @param StoreInterface $store
+     * @param array|null $productIds
+     * @param int|null $lastEntityId
+     *
+     * @return array
+     */
+    private function getMagentoProductIds(
+        ProductCollection $productCollection,
+        StoreInterface $store,
+        $productIds = [],
+        $lastEntityId = null
+    ) {
+        return $this->magentoProductRepository->getBatchDataForCollection(
+            $productCollection,
+            $store,
+            $productIds,
+            $lastEntityId
+        );
+    }
+
+    /**
+     * @param array $productIds
+     * @param bool|null $skipChildProducts
+     *
+     * @return array
+     */
+    private function formatMagentoProductIds(
+        $productIds = [],
+        $skipChildProducts = false
+    ) {
+        $magentoProductIds = [];
+        if (!$productIds) {
+            return $magentoProductIds;
+        }
+        // getParentRelationsByChild method has to remain in this class for backwards compatibility
+        $parentIds = $this->getParentRelationsByChild($productIds);
+
+        foreach ($productIds as $entityId) {
+            $entityParentIds = isset($parentIds[$entityId]) ? $parentIds[$entityId] : [];
+            foreach ($entityParentIds as $entityParentId) {
+                $magentoProductIds[] = [
+                    'product_id' => $entityId,
+                    'parent_id' => $entityParentId[Entity::DEFAULT_ENTITY_ID_FIELD]
+                ];
+            }
+            if ($skipChildProducts) {
+                continue;
+            }
+            $magentoProductIds[] = [
+                'product_id' => $entityId,
+                'parent_id' => static::PARENT_ID_WHEN_NOT_VISIBLE
+            ];
+        }
+        unset($parentIds);
+
+        return $magentoProductIds;
+    }
+
+    /**
+     * @param StoreInterface $store
+     *
+     * @return array
+     */
+    private function getParentProductIds(StoreInterface $store)
+    {
+        if (!$this->parentProductIds) {
+            $this->parentProductIds = $this->magentoProductRepository->getParentProductIds($store);
+        }
+
+        return $this->parentProductIds;
+    }
+
+    /**
+     * @param array $productIdsToDelete
+     * @param StoreInterface $store
+     *
+     * @return array
+     */
+    private function formatProductIdsToDelete(array $productIdsToDelete, StoreInterface $store)
+    {
+        $return = [];
+        foreach ($productIdsToDelete as $productIds) {
+            $productIds = (array)$productIds;
+            $parentId = $productIds[Klevu::FIELD_PARENT_ID];
+            $productId = $productIds[Klevu::FIELD_PRODUCT_ID];
+            $return[$parentId . '-' . $productId] = [
+                'parent_id' => $parentId,
+                'product_id' => $productId
+            ];
+            if (
+                !(int)$parentId ||
+                ($parentId && in_array($parentId, $this->getParentProductIds($store), true))
+            ) {
+                continue;
+            }
+            $return[$productId] = [
+                'parent_id' => $parentId,
+                'product_id' => $productId
+            ];
+        }
+
+        return $return;
+    }
+
+    /**
+     * @param array|Object[] $productIdsToAdd
+     * @param StoreInterface $store
+     *
+     * @return array
+     */
+    private function formatProductIdsToAdd(array $productIdsToAdd, StoreInterface $store)
+    {
+        $productsIds = [];
+        foreach ($productIdsToAdd as $productIds) {
+            $productIds = (array)$productIds;
+            $parentId = $productIds[Klevu::FIELD_PARENT_ID];
+            $productId = $productIds[Klevu::FIELD_PRODUCT_ID];
+            if (
+                (int)$parentId &&
+                !in_array($parentId, $this->getParentProductIds($store), true)
+            ) {
+                continue;
+            }
+            $productsIds[$parentId . '-' . $productId] = [
+                'parent_id' => $parentId,
+                'product_id' => $productId
+            ];
+        }
+
+        return $productsIds;
+    }
+}

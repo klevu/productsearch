@@ -8,15 +8,39 @@
 
 namespace Klevu\Search\Model\Product;
 
+use Magento\Store\Api\Data\StoreInterface;
+
 interface MagentoProductActionsInterface
 {
+    /**
+     * @param StoreInterface $store
+     *
+     * @return mixed
+     */
     public function updateProductCollection($store = null);
 
+    /**
+     * @param StoreInterface $store
+     *
+     * @return mixed
+     */
     public function addProductCollection($store = null);
 
+    /**
+     * @param StoreInterface $store
+     *
+     * @return mixed
+     */
     public function deleteProductCollection($store = null);
 
-    public function getKlevuProductCollection($store = null);
+    /**
+     * @param StoreInterface $store
+     * @param array|null $productIds
+     * @param int|null $lastEntityId
+     *
+     * @return mixed
+     */
+    public function getKlevuProductCollection($store = null, $productIds = [], $lastEntityId = null);
 
     /**
      * Delete the given products from Klevu Search. Returns true if the operation was
@@ -142,7 +166,7 @@ interface MagentoProductActionsInterface
     /**
      * Returns the parent relations by child id
      * @param $ids
-     * @return mixed
+     * @return array
      */
     public function getParentRelationsByChild($ids);
 
