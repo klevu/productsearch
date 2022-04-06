@@ -1,45 +1,46 @@
 <?php
+
 namespace Klevu\Search\Helper;
 
-use \Magento\CatalogInventory\Api\StockRegistryInterface;
+use Klevu\Search\Api\Service\Catalog\Product\StockServiceInterface;
+use Magento\Catalog\Api\Data\ProductInterface;
+use Magento\CatalogInventory\Api\StockRegistryInterface;
+use Magento\Framework\App\Helper\AbstractHelper;
+use Magento\Framework\App\ObjectManager;
 
-class Stock extends \Magento\Framework\App\Helper\AbstractHelper
+class Stock extends AbstractHelper
 {
     /**
-     * @var \Magento\CatalogInventory\Api\StockRegistryInterface
+     * @var StockRegistryInterface
      */
     protected $_stockRegistryInterface;
+    /**
+     * @var StockServiceInterface
+     */
+    private $stockService;
 
     public function __construct(
-        StockRegistryInterface $stockRegistryInterface
-    )
-    {
+        StockRegistryInterface $stockRegistryInterface,
+        StockServiceInterface $stockService = null
+    ) {
+        // There is no need for this class to extend AbstractHelper. It is left in place for backwards compatibility.
+        // parent::__construct call is not required.
         $this->_stockRegistryInterface = $stockRegistryInterface;
+        $this->stockService = $stockService ?: ObjectManager::getInstance()->get(StockServiceInterface::class);
     }
 
     /**
      * Get stock data for simple and parent product
+     * @deprecated see \Klevu\Search\Service\Catalog\Product\Stock::getKlevuStockStatus
+     *
+     * @param ProductInterface|null $parentProduct
+     * @param ProductInterface $product
      *
      * @return string
      */
-
-    public function getKlevuStockStatus($parent, $item)
+    public function getKlevuStockStatus($parentProduct, $product)
     {
-        if($parent) {
-            $stockStatusRegistry = $this->_stockRegistryInterface->getStockStatus($parent->getId(), $parent->getStore()->getWebsiteId());
-            $inStock = $stockStatusRegistry->getStockStatus();
-            if($inStock) {
-                //get stock status of child if parent is not set
-                $stockStatusRegistry = $this->_stockRegistryInterface->getStockStatus($item->getId(), $item->getStore()->getWebsiteId());
-                $inStock = $stockStatusRegistry->getStockStatus();
-            }
-        } else {
-            $stockStatusRegistry = $this->_stockRegistryInterface->getStockStatus($item->getId(), $item->getStore()->getWebsiteId());
-            $inStock = $stockStatusRegistry->getStockStatus();
-        }
-
-        $product_stock_status =  ($inStock) ? "yes" : "no";
-        return $product_stock_status;
+        // params are intentionally inverted here, $parentProduct can be null, $product cannot
+        return $this->stockService->getKlevuStockStatus($product, $parentProduct);
     }
-
 }

@@ -4,15 +4,15 @@
  */
 namespace Klevu\Search\Model\Product;
 use Klevu\Logger\Constants as LoggerConstants;
+use Klevu\Search\Api\Service\Catalog\Product\StockServiceInterface;
 use \Klevu\Search\Model\Product\ProductInterface as Klevu_ProductData;
+use Magento\Framework\App\ObjectManager;
 use \Magento\Framework\Model\AbstractModel as AbstractModel;
 use \Magento\Catalog\Model\ResourceModel\Product\Attribute\Collection as Klevu_Product_Attribute_Collection;
 use Klevu\Search\Model\Klevu\KlevuFactory;
 
 class LoadAttribute extends  AbstractModel implements LoadAttributeInterface
 {
-
-
     protected $_storeModelStoreManagerInterface;
     protected $_frameworkModelResource;
     protected $_productData;
@@ -22,13 +22,17 @@ class LoadAttribute extends  AbstractModel implements LoadAttributeInterface
     protected $_klevuSync;
     protected $_stockHelper;
     protected $_klevuFactory;
+    /**
+     * @var StockServiceInterface
+     */
+    private $stockService;
 
     public function __construct(
         \Klevu\Search\Model\Context $context,
         Klevu_ProductData $productdata,
         Klevu_Product_Attribute_Collection $productAttributeCollection,
-        KlevuFactory $klevuFactory
-
+        KlevuFactory $klevuFactory,
+        StockServiceInterface $stockService = null
     ){
         $this->_storeModelStoreManagerInterface = $context->getStoreManagerInterface();
         $this->_frameworkModelResource = $context->getResourceConnection();
@@ -40,7 +44,7 @@ class LoadAttribute extends  AbstractModel implements LoadAttributeInterface
         $this->_klevuSync = $context->getSync();
         $this->_stockHelper = $context->getHelperManager()->getStockHelper();
         $this->_klevuFactory = $klevuFactory;
-
+        $this->stockService = $stockService ?: ObjectManager::getInstance()->get(StockServiceInterface::class);
     }
 
     /**
@@ -71,6 +75,9 @@ class LoadAttribute extends  AbstractModel implements LoadAttributeInterface
         }
         $product_ids = array_unique($product_ids);
         $parent_ids = array_unique($parent_ids);
+
+        $this->stockService->clearCache();
+        $this->stockService->preloadKlevuStockStatus(array_merge($product_ids, $parent_ids));
 
         if ($this->_searchHelperConfig->isCollectionMethodEnabled()) {
             $data = $this->loadProductDataCollection($product_ids);

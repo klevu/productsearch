@@ -1,6 +1,7 @@
 <?php
 
 namespace Klevu\Search\Model\Product;
+
 use Magento\Framework\DataObject;
 
 class ProductIndividual extends DataObject implements ProductIndividualInterface
@@ -10,15 +11,23 @@ class ProductIndividual extends DataObject implements ProductIndividualInterface
 
     public function __construct(
         array $data = []
-    ){
+    ) {
         parent::__construct($data);
     }
-	
-    public function getProductIndividualTypeArray(){
-        return array('simple','bundle','grouped','virtual','downloadable','giftcard');
+
+    /**
+     * @return string[]
+     */
+    public function getProductIndividualTypeArray()
+    {
+        return array('simple', 'bundle', 'grouped', 'virtual', 'downloadable', 'giftcard');
     }
-	
-	public function getProductChildTypeArray(){
-        return array('simple','virtual');
+
+    /**
+     * @return string[]
+     */
+    public function getProductChildTypeArray()
+    {
+        return array('simple', 'virtual');
     }
 }

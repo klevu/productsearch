@@ -3,10 +3,12 @@
 	<preference for="Klevu\Search\Api\SerializerInterface" type="Klevu\Search\Serializer\Json"/>
 	<preference for="Magento\Config\Block\System\Config\Form\Field" type="Klevu\Search\Block\Adminhtml\System\Config\Form\Field"/>
 
-	<!--<preference for="Magento\Framework\Search\Adapter\Mysql\ScoreBuilder" type="Klevu\Search\Adapter\Mysql\ScoreBuilder"/>
-    <preference for="Magento\CatalogSearch\Model\Search\TableMapper" type="Klevu\Search\Model\Search\TableMapper"/>-->
-
 	<preference for="Klevu\Search\Api\Provider\CommonProviderInterface" type="Klevu\Search\Model\Product\Provider\CommonProvider"/>
+	<preference for="Klevu\Search\Api\Service\Catalog\Product\StockServiceInterface" type="Klevu\Search\Service\Catalog\Product\Stock"/>
+
+    <preference for="Klevu\Search\Api\KlevuSyncRepositoryInterface" type="Klevu\Search\Repository\KlevuSyncRepository" />
+    <preference for="Klevu\Search\Api\MagentoProductSyncRepositoryInterface" type="Klevu\Search\Repository\MagentoProductSyncRepository" />
+    <preference for="Klevu\Search\Api\Service\Sync\GetBatchSizeInterface" type="Klevu\Search\Service\Sync\GetBatchSize" />
 
 	<preference for="Klevu\Search\Model\Klevu\Cron\SchedulerInterface" type="Klevu\Search\Model\Klevu\Cron\Scheduler" />
 	<preference for="Klevu\Search\Model\Klevu\Category\CategoryInterface" type="Klevu\Search\Model\Klevu\Category\Category" />
@@ -258,6 +260,20 @@
     <type name="Klevu\Search\Service\ThemeV2\IsEnabledCondition\AddPriceSuffixToQueryEnabledCondition">
         <arguments>
             <argument name="baseIsEnabledCondition" xsi:type="object">Klevu\Search\Service\ThemeV2\IsEnabledCondition</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Repository\KlevuSyncRepository">
+        <arguments>
+            <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Model\Product\MagentoProductActions">
+        <arguments>
+            <argument name="addProductIdsProvider" xsi:type="object">Klevu\Search\Service\Sync\Product\AddProductIdsProvider</argument>
+            <argument name="deleteProductIdsProvider" xsi:type="object">Klevu\Search\Service\Sync\Product\DeleteProductIdsProvider</argument>
+            <argument name="updateProductIdsProvider" xsi:type="object">Klevu\Search\Service\Sync\Product\UpdateProductIdsProvider</argument>
         </arguments>
     </type>
 </config>

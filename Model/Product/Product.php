@@ -772,7 +772,6 @@ class Product extends DataObject implements ProductInterface
             ], $otherPrice);
 
             switch (true) {
-                case (int)$otherPrice['price_qty'] !== 1:
                 case null === $otherPrice['cust_group']:
                 case !is_numeric($otherPrice['website_price']):
                     $this->_searchHelperData->log(
@@ -781,7 +780,10 @@ class Product extends DataObject implements ProductInterface
                     );
                     $return = null;
                     break;
-
+                // Intentional cascade
+                case (int)$otherPrice['price_qty'] !== 1:
+                    $return = null;
+                    break;
                 default:
                     $return = sprintf(
                         'salePrice_%s-%s:%s',

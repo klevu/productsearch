@@ -169,28 +169,37 @@ class Request extends \Magento\Framework\DataObject
             // Can't make a request without a URL
             throw new \Exception("Unable to send a Klevu Search API request: No URL specified.");
         }
+        $logLevel = $this->_searchHelperConfig->getLogLevel();
 
         $raw_request = $this->build();
-        $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_DEBUG, sprintf("API EndPoint: %s", $this->getEndpoint()));
-        $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_DEBUG, sprintf("API request:\n%s", $this->__toString()));
-
+        if ($logLevel === LoggerConstants::ZEND_LOG_DEBUG) {
+            $this->_searchHelperData->log(
+                LoggerConstants::ZEND_LOG_DEBUG,
+                sprintf("API EndPoint: %s", $this->getEndpoint())
+            );
+            $this->_searchHelperData->log(
+                LoggerConstants::ZEND_LOG_DEBUG,
+                sprintf("API request:\n%s", $this->__toString())
+            );
+        }
         try {
             $raw_response = $raw_request->send();
         } catch (\Zend\Http\Client\Exception $e) {
             // Return an empty response
-            $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_ERR, sprintf("HTTP error: %s", $e->getMessage()));
+            $this->_searchHelperData->log(
+                LoggerConstants::ZEND_LOG_ERR,
+                sprintf("HTTP error: %s", $e->getMessage())
+            );
             return $this->_apiResponseEmpty;
         }
         $content = $raw_response->getBody();
-        $logLevel = $this->_searchHelperConfig->getLogLevel();
         if ($logLevel >= LoggerConstants::ZEND_LOG_DEBUG) {
             $content = $this->applyMaskingOnResponse($content);
+            $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_DEBUG, sprintf(
+                "API response:\n%s",
+                $content
+            ));
         }
-        $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_DEBUG, sprintf(
-            "API response:\n%s",
-            $content
-        ));
-
         $response = $this->getResponseModel();
         $response->setRawResponse($raw_response);
 
