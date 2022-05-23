@@ -7,7 +7,6 @@ use Klevu\Search\Helper\Config as ConfigHelper;
 use Klevu\Search\Helper\Data as SearchHelper;
 use Klevu\Search\Model\Api\Request;
 use Klevu\Search\Model\Api\Response;
-use Laminas\Http\Client;
 use Magento\Framework\TestFramework\Unit\Helper\ObjectManager;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -59,15 +58,20 @@ class RequestSendLoggingTest extends TestCase
         $mockRempty = $this->getMockRempty();
         $mockClient = $this->getMockClient();
 
-        $mockRequest = $this->getMockBuilder(Request::class)
+
+        $mockRequestBuilder = $this->getMockBuilder(Request::class)
             ->setConstructorArgs([
                 'modelApiResponse' => $mockKlevuApiResponse,
                 'searchHelperData' => $mockSearchHelper,
                 'searchHelperConfig' => $mockConfigHelper,
                 'apiResponseEmpty' => $mockRempty
-            ])
-            ->onlyMethods(['build', 'getEndpoint', 'getMethod', 'getResponseModel'])
-            ->getMock();
+            ]);
+        if (method_exists($mockRequestBuilder, 'onlyMethods')) {
+            $mockRequestBuilder->onlyMethods(['build', 'getEndpoint', 'getMethod', 'getResponseModel']);
+        } else {
+            $mockRequestBuilder->setMethods(['build', 'getEndpoint', 'getMethod', 'getResponseModel']);
+        }
+        $mockRequest = $mockRequestBuilder->getMock();
         $mockRequest->expects($this->once())->method('build')->willReturn($mockClient);
         $mockRequest->expects($this->any())->method('getEndpoint')->willReturn('some_string');
         $mockRequest->expects($this->any())->method('getMethod')->willReturn('POST');
@@ -116,15 +120,22 @@ class RequestSendLoggingTest extends TestCase
     }
 
     /**
-     * @return Client|MockObject
+     * @return \Laminas\Http\Client|\Zend\Http\Client|MockObject
      */
     private function getMockClient()
     {
-        $mockClientResponse = $this->getMockBuilder(\Laminas\Http\Response::class)
+        $responseFqcn = class_exists('\Laminas\Http\Response')
+            ? \Laminas\Http\Response::class
+            : \Zend\Http\Response::class;
+
+        $mockClientResponse = $this->getMockBuilder($responseFqcn)
             ->disableOriginalConstructor()
             ->getMock();
 
-        $mockClient = $this->getMockBuilder(Client::class)
+        $clientFqcn = class_exists('\Laminas\Http\Client')
+            ? \Laminas\Http\Client::class
+            : \Zend\Http\Client::class;
+        $mockClient = $this->getMockBuilder($clientFqcn)
             ->disableOriginalConstructor()
             ->getMock();
         $mockClient->expects($this->once())

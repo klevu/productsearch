@@ -349,13 +349,32 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             $sanitised_array = [];
             foreach ($value as $item) {
                 if (!is_array($item) && !is_object($item)) {
-                    $sanitised_array[] = preg_replace(self::SANITISE_STRING, " ", $item);
+                    $sanitised_array[] = $this->processCharHtml($item);
                 }
             }
             return $sanitised_array;
         }
-        return preg_replace(self::SANITISE_STRING, " ", $value);
+
+        return $this->processCharHtml($value);
     }
+
+    /**
+     * Replace the characters used to organise the other attribute values from the
+     * passed in string.
+     *
+     * @param string $value
+     * @return string
+     */
+    private function processCharHtml($value)
+    {
+        return str_replace(
+            [';', ',', ':',],
+            ['&semi;', '&comma;', '&colon;'],
+            $value
+        );
+        return $colon_replace;
+    }
+
 
     /**
      * Generate a Klevu product sku with parent product.

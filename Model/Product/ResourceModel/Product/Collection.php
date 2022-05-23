@@ -42,9 +42,9 @@ class Collection
         array $productTypeArray,
         array $visibility
     ) {
-        $productCollection = $this->productCollectionFactory->create();
         $batchSize = $this->getBatchSize->execute($store);
 
+        $productCollection = $this->productCollectionFactory->create();
         $productCollection->addFieldToSelect(Entity::DEFAULT_ENTITY_ID_FIELD);
         $productCollection->addStoreFilter($store->getId());
         if ($productTypeArray) {
@@ -56,6 +56,7 @@ class Collection
         }
         $productCollection->addAttributeToSort(Entity::DEFAULT_ENTITY_ID_FIELD, MagentoCollection::SORT_ORDER_ASC);
         $productCollection->setPageSize($batchSize);
+        $productCollection->setFlag('has_stock_status_filter', true);
 
         return $productCollection;
     }
@@ -71,6 +72,7 @@ class Collection
         $productCollection->addStoreFilter($store->getId());
         $productCollection->addAttributeToSort(Entity::DEFAULT_ENTITY_ID_FIELD, MagentoCollection::SORT_ORDER_DESC);
         $productCollection->setPageSize(1);
+        $productCollection->setFlag('has_stock_status_filter', true);
 
         $firstItem = $productCollection->getFirstItem();
 

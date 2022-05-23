@@ -440,7 +440,7 @@ class Product extends DataObject implements ProductInterface
     {
         $category_paths = $this->getCategoryPaths();
         $category_anchors = $this->getCategoryAnchors();
-        $category_paths_ids = $this->getCategryPathIds();
+        $category_paths_ids = $this->getCategoryPathIds();
         $isCatAnchorSingle = $this->_configHelper->getTreatCategoryAnchorAsSingle($this->_storeModelStoreManagerInterface->getStore()->getId());
         $length = 0;
         $name = array();

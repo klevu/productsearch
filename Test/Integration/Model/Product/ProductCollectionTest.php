@@ -35,8 +35,14 @@ class ProductCollectionTest extends TestCase
 
         $where = $magentoProductCollection->getSelect()->getPart(Select::WHERE);
         $whereString = json_encode($where);
-        $this->assertStringNotContainsString(ProductInterface::TYPE_ID, $whereString);
-        $this->assertStringNotContainsString(ProductInterface::VISIBILITY, $whereString);
+        if (method_exists($this, 'assertStringNotContainsString')) {
+            $this->assertStringNotContainsString(ProductInterface::TYPE_ID, $whereString);
+            $this->assertStringNotContainsString(ProductInterface::VISIBILITY, $whereString);
+        } else {
+            $this->assertNotContains(ProductInterface::TYPE_ID, $whereString);
+            $this->assertNotContains(ProductInterface::VISIBILITY, $whereString);
+        }
+
     }
 
     public function testInitFiltersTypeAndVisibilityWhenProvided()
@@ -55,8 +61,13 @@ class ProductCollectionTest extends TestCase
 
         $where = $magentoProductCollection->getSelect()->getPart(Select::WHERE);
         $whereString = json_encode($where);
-        $this->assertStringContainsString(ProductInterface::TYPE_ID, $whereString);
-        $this->assertStringContainsString(ProductInterface::VISIBILITY, $whereString);
+        if (method_exists($this, 'assertStringContainsString')) {
+            $this->assertStringContainsString(ProductInterface::TYPE_ID, $whereString);
+            $this->assertStringContainsString(ProductInterface::VISIBILITY, $whereString);
+        } else {
+            $this->assertContains(ProductInterface::TYPE_ID, $whereString);
+            $this->assertContains(ProductInterface::VISIBILITY, $whereString);
+        }
     }
 
     public function testGetMaxProductIdReturnsMaxProductIdAsInt()
@@ -64,7 +75,30 @@ class ProductCollectionTest extends TestCase
         $this->setupPhp5();
 
         $productCollection = $this->instantiateProductCollection();
-        $this->assertIsInt($productCollection->getMaxProductId($this->getStore()));
+        if (method_exists($this, 'assertIsInt')) {
+            $this->assertIsInt($productCollection->getMaxProductId($this->getStore()));
+        } else {
+            $this->assertTrue(is_int($productCollection->getMaxProductId($this->getStore())), 'Is Int');
+        }
+    }
+
+    /**
+     * @magentoAppArea frontend
+     * @magentoAppIsolation enabled
+     * @magentoDbIsolation disabled
+     * @magentoCache all disabled
+     * @magentoDataFixture loadProductFixtures
+     */
+    public function testGetMaxProductId_ReturnsConfigurableProductId_IfThatIsHighest()
+    {
+        $this->setupPhp5();
+
+        $expectedMaxProductId = $this->getMaxProductEntityId();
+
+        $productCollection = $this->instantiateProductCollection();
+        $actualMaxProductId = $productCollection->getMaxProductId($this->getStore());
+
+        $this->assertSame($expectedMaxProductId, $actualMaxProductId);
     }
 
     /**
@@ -93,5 +127,38 @@ class ProductCollectionTest extends TestCase
     private function setupPhp5()
     {
         $this->objectManager = Bootstrap::getObjectManager();
+    }
+
+    /**
+     * @return int
+     */
+    private function getMaxProductEntityId()
+    {
+        $resource = $this->objectManager->get(\Magento\Framework\App\ResourceConnection::class);
+        $connection = $resource->getConnection();
+        $tableName = $resource->getTableName('catalog_product_entity');
+
+        $sql = sprintf("SELECT `entity_id` FROM %s ORDER BY `entity_id` DESC", $tableName);
+        $result = $connection->fetchOne($sql);
+
+        return (int)$result;
+    }
+
+    /**
+     * Loads product collection creation scripts because annotations use a relative path
+     *  from integration tests root
+     */
+    public static function loadProductFixtures()
+    {
+        require __DIR__ . '/_files/productFixtures.php';
+    }
+
+    /**
+     * Rolls back order creation scripts because annotations use a relative path
+     *  from integration tests root
+     */
+    public static function loadProductFixturesRollback()
+    {
+        require __DIR__ . '/_files/productFixtures_rollback.php';
     }
 }

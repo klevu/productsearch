@@ -1,58 +1,58 @@
-<?php /** @var \Klevu\Search\Block\Adminhtml\Wizard\Configure\Store $block */ ?>
+<?php /** @var \Klevu\Search\Block\Adminhtml\Wizard\Configure\Userplan $block */ ?>
+<?php $request = $block->getRequest(); ?>
 <?php echo $block->getLayout()->getMessagesBlock()->getGroupedHtml(); ?>
 <div class="kuWizardSteps">
-<ol class="wizard-progress clearfix">
-	<li class="active-step">
-		<span class="step-name"><?php echo __("Register/Login");?></span>
-		<span class="visuallyhidden"><?php echo __("Step");?> </span><span class="step-num">&nbsp;</span>
-	</li>
-	<li class="active-step">
-		<span class="step-name"><?php echo __("Select Plan");?></span>
-		<span class="visuallyhidden"><?php echo __("Step");?> </span><span class="step-num">&nbsp;</span>
-	</li>
-	<li>
-		<span class="step-name"><?php echo __("Configure Store");?></span>
-		<span class="visuallyhidden"><?php echo __("Step");?></span><span class="step-num">&nbsp;</span>
-	</li>
-	<li>
-		<span class="step-name"><?php echo __("Finish & Sync");?></span>
-		<span class="visuallyhidden"><?php echo __("Step");?> </span><span class="step-num">&nbsp;</span>
-	</li>
-</ol>
+    <ol class="wizard-progress clearfix">
+        <li class="active-step">
+            <span class="step-name"><?php echo __("Register/Login");?></span>
+            <span class="visuallyhidden"><?php echo __("Step");?> </span><span class="step-num">&nbsp;</span>
+        </li>
+        <li class="active-step">
+            <span class="step-name"><?php echo __("Select Plan");?></span>
+            <span class="visuallyhidden"><?php echo __("Step");?> </span><span class="step-num">&nbsp;</span>
+        </li>
+        <li>
+            <span class="step-name"><?php echo __("Configure Store");?></span>
+            <span class="visuallyhidden"><?php echo __("Step");?></span><span class="step-num">&nbsp;</span>
+        </li>
+        <li>
+            <span class="step-name"><?php echo __("Finish & Sync");?></span>
+            <span class="visuallyhidden"><?php echo __("Step");?> </span><span class="step-num">&nbsp;</span>
+        </li>
+    </ol>
 </div>
 
-
 <form id="klevu_search_wizard_configure_store_form" action="<?php echo $block->getFormActionUrl() ?>" method="POST">
-    <input type="hidden" name="form_key" value="<?php echo $block->getFormKey() ?>" />
-	 
+    <input type="hidden" name="form_key" value="<?php /** @noEscape  */echo $block->getFormKey() ?>" />
+    <input type="hidden" name="store_id" value="<?php echo $block->escapeHtmlAttr($request->getParam('store_id')); ?>"/>
+
 	<div class="kuSelectPlanHeader">
-	<h2><?php echo __("Start 14-Day risk free trial");?></h2>
-	<h5><?php echo __("No obligation to continue, no credit card required");?></h5>
+        <h2><?php echo __("Start 14-Day risk free trial");?></h2>
+        <h5><?php echo __("No obligation to continue, no credit card required");?></h5>
 	</div>
-        <table cellspacing="0" cellpadding="10" class="form-list kuPlanDetails">
-            <tbody>
-                <tr>
-				    <?php foreach($block->getPlans() as $key => $value) { ?>
-                    <td>
-						<table class="kuPlanColumn" cellspacing="0">
-						<tbody>
-								<tr>
-									<td><input type="radio" name="userPlan" value="<?php echo $value['planName'];?>" id="<?php echo ucfirst($value['planName']);?>"/> <label for="<?php echo ucfirst($value['planName']);?>"><?php echo ucfirst($value['planName']);?></label></td>
-								</tr>
-								<tr>
-									<td><img src="<?php echo $value['planImageUrl']; ?>"/></td>
-								</tr>
-						</tbody>
-						</table>
-                    </td>
-					<?php } ?>
-				</tr>
-            </tbody>
-        </table>
+    <table cellspacing="0" cellpadding="10" class="form-list kuPlanDetails">
+        <tbody>
+            <tr>
+                <?php foreach($block->getPlans() as $key => $value) { ?>
+                <td>
+                    <table class="kuPlanColumn" cellspacing="0">
+                    <tbody>
+                            <tr>
+                                <td><input type="radio" name="userPlan" value="<?php echo $value['planName'];?>" id="<?php echo ucfirst($value['planName']);?>"/> <label for="<?php echo ucfirst($value['planName']);?>"><?php echo ucfirst($value['planName']);?></label></td>
+                            </tr>
+                            <tr>
+                                <td><img src="<?php echo $value['planImageUrl']; ?>"/></td>
+                            </tr>
+                    </tbody>
+                    </table>
+                </td>
+                <?php } ?>
+            </tr>
+        </tbody>
+    </table>
 	<p class="kuComparePlan">Bundle with Category Merchandising & recommendation available.<a href="https://www.klevu.com/pricing/" target="_blank">click here</a> to learn more.</a></p>
     <p class="kuComparePlan"> <a href="https://www.klevu.com/pricing/" target="_blank">Compare Plan</a></p>
     <div class="button-set">
         <button type="submit" class="action-default primary"><span><?php echo __("Next") ?></span></button>
     </div>
-	
 </form>

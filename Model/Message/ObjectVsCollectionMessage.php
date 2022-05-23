@@ -59,11 +59,11 @@ class ObjectVsCollectionMessage implements MessageInterface
     public function getText()
     {
         $url = 'https://help.klevu.com/support/solutions/articles/5000871455-sync-data-using-collection-method';
-        $configURL = $this->urlBuilder->getUrl('adminhtml/system_config/edit/section/klevu_search');
+        $configURL = 'https://help.klevu.com/support/solutions/articles/5000876105-developer-and-notification-setting';
 
         $message = __('Klevu Search is currently using Object method, which may be impacting your data sync performance.');
         $message .= ' ' . __('Please read <a href="%1" target="_blank">Object vs Collection Method</a> for more information.', $url);
-        $message .= ' ' . __('This warning can be disabled via <a href="%1#row_klevu_search_notification_object_vs_collection">Notification Settings</a>.', $configURL);
+        $message .= ' ' . __('This warning can be disabled via <a href="%1" target="_blank">Notification Settings</a>.', $configURL);
         return $message;
 
     }

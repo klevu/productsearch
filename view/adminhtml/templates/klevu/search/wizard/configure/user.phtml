@@ -1,6 +1,6 @@
 <?php /** @var \Klevu\Search\Block\Adminhtml\Wizard\Configure\User $block */ ?>
-    <?php 
-echo $block->getLayout()->getMessagesBlock()->getGroupedHtml(); 
+    <?php
+echo $block->getLayout()->getMessagesBlock()->getGroupedHtml();
 $request = $block->getRequest(); ?>
             <div class="kuWizardSteps">
                 <ol class="wizard-progress clearfix">
@@ -26,7 +26,8 @@ $request = $block->getRequest(); ?>
             <div class="klevu_registeration">
 			    <div class="klevu_login_form" id="klevu_login_form">
 				        <form id="klevu_search_wizard_configure_user_form" action="<?php echo $block->getFormActionUrl() ?>" method="POST">
-            <input type="hidden" name="form_key" value="<?php echo $block->getFormKey() ?>" />
+                    <input type="hidden" name="form_key" value="<?php /** @noEscape */ echo $block->getFormKey() ?>" />
+                    <input type="hidden" name="store_id" value="<?php echo $block->escapeHtmlAttr($request->getParam('store')); ?>" />
                     <fieldset class="fieldset admin__fieldset">
 
                         <legend class="legend">
@@ -62,9 +63,11 @@ $request = $block->getRequest(); ?>
 					<div class="formLinkBlock"><a class="formLink" href="https://box.klevu.com/analytics/km?cmd=forgotPasswordPg" target="_blank">Forgot Password?</a></div>
                 </div>
                 <div class="klevu_signup_form" id="klevu_signup_form" style="display:none;">
-	<form id="klevu_search_wizard_configure_user_form" action="<?php echo $block->getFormActionUrl() ?>" method="POST">
-            <input type="hidden" name="form_key" value="<?php echo $block->getFormKey() ?>" />
-                    <fieldset class="fieldset admin__fieldset">
+                    <form id="klevu_search_wizard_configure_user_form" action="<?php echo $block->getFormActionUrl() ?>" method="POST">
+                        <input type="hidden" name="form_key" value="<?php /** @noEscape */ echo $block->getFormKey() ?>" />
+                        <input type="hidden" name="store_id" value="<?php echo $block->escapeHtmlAttr($request->getParam('store')); ?>" />
+
+                        <fieldset class="fieldset admin__fieldset">
                         <legend class="legend">
                             <span>Register New User</span>
                             <p>
@@ -141,9 +144,9 @@ $request = $block->getRequest(); ?>
 					</form>
 					<div class="formLinkBlock"><?php echo __("Already have an account?");?><a href="#" class="formLink" onClick="hide_registration();">click here</a> <?php echo __("to login.") ?></a></div>
                 </div>
-				
+
             </div>
-        
+
 <script>
 function hide_registration() {
 	var x = document.getElementById('klevu_signup_form');

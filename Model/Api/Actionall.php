@@ -2,6 +2,10 @@
 
 namespace Klevu\Search\Model\Api;
 
+use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Store\Api\Data\StoreInterface;
+
 class Actionall extends \Magento\Framework\DataObject
 {
     /**
@@ -18,7 +22,7 @@ class Actionall extends \Magento\Framework\DataObject
      * @var \Klevu\Search\Helper\Config
      */
     protected $_searchHelperConfig;
-    
+
     /**
      * @var \Klevu\Search\Model\Api
      */
@@ -34,7 +38,6 @@ class Actionall extends \Magento\Framework\DataObject
         \Klevu\Search\Helper\Config $searchHelperConfig,
         \Magento\Store\Model\StoreManagerInterface $storeModelStoreManagerInterface
     ) {
-    
         $this->_apiResponseInvalid = $apiResponseInvalid;
         $this->_searchHelperConfig = $searchHelperConfig;
         $this->_storeModelStoreManagerInterface = $storeModelStoreManagerInterface;
@@ -116,6 +119,7 @@ class Actionall extends \Magento\Framework\DataObject
      * @param array $parameters
      *
      * @return \Klevu\Search\Model\Api\Response
+     * @throws LocalizedException
      */
     public function execute($parameters)
     {
@@ -125,8 +129,36 @@ class Actionall extends \Magento\Framework\DataObject
         }
 
         $request = $this->getRequest();
+        switch (true) {
+            case !isset($parameters['store']):
+                $store = $this->getStore();
+                break;
 
-        $endpoint = $this->buildEndpoint(static::ENDPOINT, $this->_storeModelStoreManagerInterface->getStore(), $this->_searchHelperConfig->getHostname($this->_storeModelStoreManagerInterface->getStore()));
+            case is_numeric($parameters['store']):
+                try {
+                    $store = $this->_storeModelStoreManagerInterface->getStore($parameters['store']);
+                } catch (NoSuchEntityException $e) {
+                    throw new LocalizedException(__('Could not find store with id %1', $parameters['store']));
+                }
+                break;
+
+            case $parameters['store'] instanceof StoreInterface:
+                $store = $parameters['store'];
+                break;
+
+            default:
+                throw new LocalizedException(__(
+                    'Invalid store parameter: %1',
+                    is_object($parameters['store']) ? get_class($parameters['store']) : gettype($parameters['store'])
+                ));
+                break;
+        }
+
+        $endpoint = $this->buildEndpoint(
+            static::ENDPOINT,
+            $store,
+            $this->_searchHelperConfig->getHostname($store)
+        );
         $request
             ->setResponseModel($this->getResponse())
             ->setEndpoint($endpoint)
@@ -161,7 +193,7 @@ class Actionall extends \Magento\Framework\DataObject
     {
         return true;
     }
-    
+
     public function buildEndpoint($endpoint, $store = null, $hostname = null)
     {
         return static::ENDPOINT_PROTOCOL . (($hostname) ? $hostname : $this->_searchHelperConfig->getHostname($store)) . $endpoint;

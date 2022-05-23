@@ -2,30 +2,46 @@
 
 namespace Klevu\Search\Model\Api\Action;
 
-class Startsession extends \Klevu\Search\Model\Api\Actionall
+use Klevu\Search\Helper\Api as ApiHelper;
+use Klevu\Search\Helper\Config as ConfigHelper;
+use Klevu\Search\Model\Api\Actionall as ApiActionall;
+use Klevu\Search\Model\Api\Response;
+use Klevu\Search\Model\Api\Response\Invalid as ApiResponseInvalid;
+use Klevu\Search\Model\Api\Response\Rempty as EmptyResponse;
+use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Store\Api\Data\StoreInterface;
+use Magento\Store\Model\StoreManagerInterface;
+
+class Startsession extends ApiActionall
 {
     /**
-     * @var \Klevu\Search\Model\Api\Response\Invalid
+     * @var ApiResponseInvalid
      */
     protected $_apiResponseInvalid;
 
     /**
-     * @var \Klevu\Search\Helper\Api
+     * @var ApiHelper
      */
     protected $_searchHelperApi;
 
     /**
-     * @var \Klevu\Search\Helper\Config
+     * @var ConfigHelper
      */
     protected $_searchHelperConfig;
 
+    /**
+     * @param ApiResponseInvalid $apiResponseInvalid
+     * @param ApiHelper $searchHelperApi
+     * @param StoreManagerInterface $storeModelStoreManagerInterface
+     * @param ConfigHelper $searchHelperConfig
+     */
     public function __construct(
-        \Klevu\Search\Model\Api\Response\Invalid $apiResponseInvalid,
-        \Klevu\Search\Helper\Api $searchHelperApi,
-        \Magento\Store\Model\StoreManagerInterface $storeModelStoreManagerInterface,
-        \Klevu\Search\Helper\Config $searchHelperConfig
+        ApiResponseInvalid $apiResponseInvalid,
+        ApiHelper $searchHelperApi,
+        StoreManagerInterface $storeModelStoreManagerInterface,
+        ConfigHelper $searchHelperConfig
     ) {
-
         $this->_apiResponseInvalid = $apiResponseInvalid;
         $this->_searchHelperApi = $searchHelperApi;
         $this->_searchHelperConfig = $searchHelperConfig;
@@ -38,6 +54,11 @@ class Startsession extends \Klevu\Search\Model\Api\Actionall
     const DEFAULT_REQUEST_MODEL  = "Klevu\Search\Model\Api\Request\Xml";
     const DEFAULT_RESPONSE_MODEL = "Klevu\Search\Model\Api\Response\Message";
 
+    /**
+     * @param array $parameters
+     * @return Response|EmptyResponse
+     * @throws LocalizedException
+     */
     public function execute($parameters)
     {
         $validation_result = $this->validate($parameters);
@@ -45,22 +66,62 @@ class Startsession extends \Klevu\Search\Model\Api\Actionall
             return $this->_apiResponseInvalid->setErrors($validation_result);
         }
 
+        if (isset($parameters['store'])) {
+            switch (true) {
+                case is_string($parameters['store']):
+                case is_int($parameters['store']):
+                    try {
+                        $store = $this->_storeModelStoreManagerInterface->getStore($parameters['store']);
+                    } catch (NoSuchEntityException $e) {
+                        throw new LocalizedException(__('Could not find store with id %1', $parameters['store']));
+                    }
+                    break;
+
+                case $parameters['store'] instanceof StoreInterface:
+                    $store = $parameters['store'];
+                    break;
+
+                default:
+                    throw new LocalizedException(__(
+                        'Invalid store parameter: %1',
+                        is_object($parameters['store']) ? get_class($parameters['store']) : gettype($parameters['store'])
+                    ));
+                    break;
+            }
+            $this->setDataUsingMethod('store', $store);
+        }
+
         $request = $this->getRequest();
         $request->setData([]);
-        $endpoint = $this->buildEndpoint(static::ENDPOINT, $this->getStore(), $this->_searchHelperConfig->getRestHostname($this->getStore()));
+
+        try {
+            $store = $this->getStore();
+        } catch (NoSuchEntityException $e) {
+            throw new LocalizedException(
+                __('An internal error occurred while retrieving the active store'),
+                $e
+            );
+        }
+
+        $endpoint = $this->buildEndpoint(
+            static::ENDPOINT,
+            $store,
+            $this->_searchHelperConfig->getRestHostname($store)
+        );
         $request
             ->setResponseModel($this->getResponse())
             ->setEndpoint($endpoint)
             ->setMethod(static::METHOD)
             ->setHeader('Authorization', $parameters['api_key']);
-            //->setData($parameters);
 
         return $request->send();
     }
 
     /**
      * Get the store used for this request.
-     * @return \Magento\Framework\Model\Store
+     *
+     * @return StoreInterface
+     * @throws NoSuchEntityException
      */
     public function getStore()
     {
@@ -71,18 +132,31 @@ class Startsession extends \Klevu\Search\Model\Api\Actionall
         return $this->getData('store');
     }
 
+    /**
+     * @param array|mixed $parameters
+     * @return bool|string[]
+     */
     protected function validate($parameters)
     {
-        if (!isset($parameters['api_key']) || empty($parameters['api_key'])) {
-            return ["Missing API key."];
-        } else {
-            return true;
+        $errors = [];
+
+        if (empty($parameters['api_key'])) {
+            $errors[] = (string)__("Missing API key.");
         }
+
+        return $errors ?: true;
     }
 
+    /**
+     * @param string $endpoint
+     * @param StoreInterface|null $store
+     * @param string $hostname
+     * @return string
+     */
     public function buildEndpoint($endpoint, $store = null, $hostname = null)
     {
-
-        return static::ENDPOINT_PROTOCOL . (($hostname) ? $hostname : $this->_searchHelperConfig->getHostname($store)) . $endpoint;
+        return static::ENDPOINT_PROTOCOL
+            . ($hostname ?: $this->_searchHelperConfig->getHostname($store))
+            . $endpoint;
     }
 }
