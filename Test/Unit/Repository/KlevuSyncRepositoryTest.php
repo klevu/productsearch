@@ -24,10 +24,13 @@ class KlevuSyncRepositoryTest extends TestCase
         $this->setupPhp5();
         $maxProductId = mt_rand(1,99999999);
 
-        $mockKlevuSyncItem = $this->getMockBuilder(Klevu::class)
-            ->addMethods(['getId'])
-            ->disableOriginalConstructor()
-            ->getMock();
+        $mockKlevuSyncItemBuilder = $this->getMockBuilder(Klevu::class);
+        if (method_exists($mockKlevuSyncItemBuilder, 'addMethods')) {
+            $mockKlevuSyncItemBuilder->addMethods(['getId']);
+        } else {
+            $mockKlevuSyncItemBuilder->setMethods(['getId']);
+        }
+        $mockKlevuSyncItem = $mockKlevuSyncItemBuilder->disableOriginalConstructor()->getMock();
         $mockKlevuSyncItem->expects($this->once())
             ->method('getId')
             ->willReturn($maxProductId);
@@ -51,7 +54,11 @@ class KlevuSyncRepositoryTest extends TestCase
 
         $result = $repo->getMaxSyncId($mockStore);
 
-        $this->assertIsInt($result);
+        if (method_exists($this, 'assertIsInt')) {
+            $this->assertIsInt($result);
+        } else {
+            $this->assertTrue(is_int($result), 'Is Int');
+        }
         $this->assertSame($maxProductId, $result);
     }
 
@@ -74,7 +81,11 @@ class KlevuSyncRepositoryTest extends TestCase
             'logger' => $mockLogger
         ]);
         $result = $repo->getProductIds($mockStore);
-        $this->assertIsArray($result);
+        if (method_exists($this, 'assertIsArray')) {
+            $this->assertIsArray($result);
+        } else {
+            $this->assertTrue(is_array($result), 'Is Array');
+        }
         $this->assertCount(4, $result);
         $keys = array_keys($result);
         $this->assertArrayHasKey($keys[0], $result);
@@ -114,7 +125,11 @@ class KlevuSyncRepositoryTest extends TestCase
         ]);
         $result = $repo->getProductIds($mockStore, [], 0, true);
 
-        $this->assertIsArray($result);
+        if (method_exists($this, 'assertIsArray')) {
+            $this->assertIsArray($result);
+        } else {
+            $this->assertTrue(is_array($result), 'Is Array');
+        }
         $this->assertCount(4, $result);
         $keys = array_keys($result);
         $this->assertArrayHasKey($keys[0], $result);

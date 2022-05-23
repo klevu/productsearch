@@ -34,7 +34,11 @@ class GetProductIdsTest extends TestCase
         $klevuRepository = $this->instantiateKlevuRepository();
         $productIds = $klevuRepository->getProductIds($store);
 
-        $this->assertIsArray($productIds);
+        if (method_exists($this, 'assertIsArray')) {
+            $this->assertIsArray($productIds);
+        } else {
+            $this->assertTrue(is_array($productIds), 'Is Array');
+        }
         $this->assertCount($count, $productIds);
     }
 

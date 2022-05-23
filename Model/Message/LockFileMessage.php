@@ -76,12 +76,12 @@ class LockFileMessage implements MessageInterface
      */
     public function getText()
     {
-        $url = $this->urlBuilder->getUrl('adminhtml/system_config/edit/section/klevu_search');
+        $url = 'https://help.klevu.com/support/solutions/articles/5000876105-developer-and-notification-setting';
         //@codingStandardsIgnoreStart
         return __(
             'Klevu Search has detected one or more outdated Lock Files, data sync may not be working correctly.
             Please read about <a href="%2" target="_blank">Magento Lock Files</a> for more information.
-            This warning can be disabled via <a href="%1#row_klevu_search_notification_lock_file">Notification Settings</a>',
+            This warning can be disabled via <a href="%1" target="_blank">Notification Settings</a>',
             $url,
             'https://help.klevu.com/support/solutions/articles/5000871506-lock-files-for-data-sync/'
         );

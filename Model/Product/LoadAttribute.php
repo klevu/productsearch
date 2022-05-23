@@ -2,16 +2,20 @@
 /**
  * Class \Klevu\Search\Model\Product\MagentoProductActionsInterface
  */
+
 namespace Klevu\Search\Model\Product;
+
 use Klevu\Logger\Constants as LoggerConstants;
 use Klevu\Search\Api\Service\Catalog\Product\StockServiceInterface;
 use \Klevu\Search\Model\Product\ProductInterface as Klevu_ProductData;
+use Magento\Catalog\Model\ResourceModel\Product\Collection as ProductCollection;
+use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory as ProductCollectionFactory;
 use Magento\Framework\App\ObjectManager;
-use \Magento\Framework\Model\AbstractModel as AbstractModel;
+use \Magento\Framework\Model\AbstractModel;
 use \Magento\Catalog\Model\ResourceModel\Product\Attribute\Collection as Klevu_Product_Attribute_Collection;
 use Klevu\Search\Model\Klevu\KlevuFactory;
 
-class LoadAttribute extends  AbstractModel implements LoadAttributeInterface
+class LoadAttribute extends AbstractModel implements LoadAttributeInterface
 {
     protected $_storeModelStoreManagerInterface;
     protected $_frameworkModelResource;
@@ -26,13 +30,18 @@ class LoadAttribute extends  AbstractModel implements LoadAttributeInterface
      * @var StockServiceInterface
      */
     private $stockService;
+    /**
+     * @var ProductCollectionFactory|mixed
+     */
+    private $productCollectionFactory;
 
     public function __construct(
         \Klevu\Search\Model\Context $context,
         Klevu_ProductData $productdata,
         Klevu_Product_Attribute_Collection $productAttributeCollection,
         KlevuFactory $klevuFactory,
-        StockServiceInterface $stockService = null
+        StockServiceInterface $stockService = null,
+        ProductCollectionFactory $productCollectionFactory = null
     ){
         $this->_storeModelStoreManagerInterface = $context->getStoreManagerInterface();
         $this->_frameworkModelResource = $context->getResourceConnection();
@@ -45,6 +54,7 @@ class LoadAttribute extends  AbstractModel implements LoadAttributeInterface
         $this->_stockHelper = $context->getHelperManager()->getStockHelper();
         $this->_klevuFactory = $klevuFactory;
         $this->stockService = $stockService ?: ObjectManager::getInstance()->get(StockServiceInterface::class);
+        $this->productCollectionFactory = $productCollectionFactory ?: ObjectManager::getInstance()->get(ProductCollectionFactory::class);
     }
 
     /**
@@ -306,28 +316,35 @@ class LoadAttribute extends  AbstractModel implements LoadAttributeInterface
         return $this;
     }
 
-
     /**
      * Load product data uisng magento collection method
-     * @param $product_ids
-     * @return array
      *
+     * @param $product_ids
+     * @param int|null $storeId
+     *
+     * @return ProductCollection
      */
-    public function loadProductDataCollection($product_ids){
+    public function loadProductDataCollection($product_ids, $storeId = null)
+    {
+        $collection = $this->productCollectionFactory->create();
+        try {
+            $store = $this->_storeModelStoreManagerInterface->getStore($storeId);
+        } catch (\Exception $e) {
+            $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_ERR, sprintf("Store not found %d", $storeId));
 
-        $data = \Magento\Framework\App\ObjectManager::getInstance()->create('Magento\Catalog\Model\ResourceModel\Product\Collection')
-            ->addAttributeToSelect($this->getUsedMagentoAttributes())
+            return null;
+        }
+
+        $collection->addAttributeToSelect($this->getUsedMagentoAttributes())
             ->addIdFilter($product_ids)
-            ->setStore($this->_storeModelStoreManagerInterface->getStore())
+            ->setStore($store)
             ->addStoreFilter()
             ->addMinimalPrice()
             ->addFinalPrice();
-        $data->setFlag('has_stock_status_filter', false);
-        $data->load()
-            ->addCategoryIds();
-        return  $data;
-    }
+        $collection->setFlag('has_stock_status_filter', false);
 
+        return $collection->load()->addCategoryIds();
+    }
 
     /**
      * Return the attribute codes for all attributes currently used in

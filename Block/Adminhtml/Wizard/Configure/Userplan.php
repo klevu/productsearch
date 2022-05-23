@@ -5,6 +5,7 @@ namespace Klevu\Search\Block\Adminhtml\Wizard\Configure;
 use Klevu\Search\Helper\Config as Klevu_Config;
 use Klevu\Search\Model\Api\Action\Getplans as Klevu_Plans;
 use Magento\Backend\Block\Template\Context as Template_Context;
+use Magento\Framework\Exception\NoSuchEntityException;
 
 class Userplan extends \Magento\Backend\Block\Template
 {
@@ -41,7 +42,6 @@ class Userplan extends \Magento\Backend\Block\Template
         return $this->getBaseUrl();
     }
 
-
     /**
      * Return plans from klevu server.
      *
@@ -49,14 +49,37 @@ class Userplan extends \Magento\Backend\Block\Template
      */
     public function getPlans()
     {
-        $extension_version = $this->_klevuConfig->getModuleInfo();
-        $response = $this->_klevuPlans->execute(array("store" => "magento", "extension_version" => (string)$extension_version));
-        if ($response->isSuccess()) {
-            $plans = $response->getData();
-            return $plans['plans']['plan'];
-        } else {
-            return;
+        $request = $this->getRequest();
+        $storeId = $request->getParam('store_id');
+        if ('' !== (string)$storeId) {
+            try {
+                $store = $this->_storeManager->getStore($storeId);
+                $this->_klevuPlans->setDataUsingMethod('store', $store);
+            } catch (NoSuchEntityException $e) {
+                $this->_logger->error($e->getMessage());
+            }
         }
+
+        $extension_version = $this->_klevuConfig->getModuleInfo();
+        $response = $this->_klevuPlans->execute([
+            "store" => "magento",
+            "extension_version" => (string)$extension_version,
+        ]);
+
+        if (!$response->isSuccess()) {
+            $this->_logger->error('Error retrieving plans', [
+                'message' => $response->getMessage(),
+                'error' => $response->getDataUsingMethod('error'),
+            ]);
+
+            return [];
+        }
+
+        $plans = $response->getData();
+
+        return isset($plans['plans']['plan'])
+            ? $plans['plans']['plan']
+            : [];
     }
 
 

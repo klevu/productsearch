@@ -1,6 +1,6 @@
 <?php
 
-namespace KlevuAlias\Search\Test\Integration\Model\Klevu;
+namespace Klevu\Search\Test\Integration\Model\Klevu;
 
 use Klevu\Search\Model\Klevu\Klevu as KlevuSync;
 use Klevu\Search\Model\Klevu\ResourceModel\Klevu as KlevuSyncResourceModel;
@@ -94,7 +94,11 @@ class OrmTest extends TestCase
         $syncResourceModel = $this->instantiateSyncResourceModel();
         $batchedData = $syncResourceModel->getBatchDataForCollection($collection, $this->getStore());
 
-        $this->assertIsArray($batchedData);
+        if (method_exists($this, 'assertIsArray')) {
+            $this->assertIsArray($batchedData);
+        } else {
+            $this->assertTrue(is_array($batchedData), 'Is Array');
+        }
         $this->assertCount(2, $batchedData);
         $batched = array_map(function($item) {
             return $item[KlevuSync::FIELD_ENTITY_ID];

@@ -2,6 +2,10 @@
 
 namespace Klevu\Search\Controller\Adminhtml\Wizard\Userplan;
 
+use Magento\Framework\App\ObjectManager;
+use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Store\Model\StoreManagerInterface;
+
 class Post extends \Magento\Backend\App\Action
 {
     /**
@@ -23,7 +27,6 @@ class Post extends \Magento\Backend\App\Action
         \Magento\Backend\App\Action\Context $context,
         \Klevu\Search\Helper\Api $searchHelperApi
     ) {
-    
         $this->_searchHelperApi = $searchHelperApi;
         $this->_searchModelSession = $context->getSession();
 
@@ -40,11 +43,23 @@ class Post extends \Magento\Backend\App\Action
         if ($userPlan=="partnerAccount") {
             $partnerAccount = true;
         }
-                 
+
         if (empty($userPlan)) {
             $this->messageManager->addErrorMessage(__("Not sure, which plan to select? Select Premium to try all features free for 14-days."));
             return $this->_forward("userplan");
         }
+
+        $store = null;
+        if ($request->getPost('store_id')) {
+            try {
+                /** @var StoreManagerInterface $storeManager */
+                $storeManager = ObjectManager::getInstance()->get(StoreManagerInterface::class);
+                $store = $storeManager->getStore($request->getPost('store_id'));
+            } catch (NoSuchEntityException $e) {
+                // Let this default to null
+            }
+        }
+
         $api = $this->_searchHelperApi;
         $result = $api->createUser(
             $this->_searchModelSession->getKlevuNewEmail(),
@@ -53,9 +68,10 @@ class Post extends \Magento\Backend\App\Action
             $partnerAccount,
             $this->_searchModelSession->getKlevuNewUrl(),
             $this->_searchModelSession->getMerchantEmail(),
-            $this->_searchModelSession->getContactNo()
+            $this->_searchModelSession->getContactNo(),
+            $store
         );
-                
+
         if ($result["success"]) {
             $this->_searchModelSession->setConfiguredCustomerId($result["customer_id"]);
             if (isset($result["message"])) {

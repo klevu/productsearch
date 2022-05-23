@@ -67,7 +67,10 @@ class Button extends \Magento\Config\Block\System\Config\Form\Field
         $this->addData([
             'html_id' => $element->getHtmlId(),
             "button_label"    => "Start Wizard",
-            'wizard_url' => $this->getUrl("klevu_search/wizard/user")
+            'wizard_url' => $this->getUrl(
+                "klevu_search/wizard/user",
+                ['store' => $this->getDataUsingMethod('store_id')]
+            ),
         ]);
 
         return $this->_toHtml();
