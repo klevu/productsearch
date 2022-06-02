@@ -8,6 +8,8 @@
 
 namespace Klevu\Search\Model\Product;
 
+use Magento\Catalog\Model\ResourceModel\Product\Collection as ProductCollection;
+
 /**
  * Interface LoadAttributeInterface
  * @package Klevu\Search\Model\Product
@@ -46,11 +48,13 @@ interface LoadAttributeInterface
 
     /**
      * Load product data uisng magento collection method
-     * @param $product_ids
-     * @return array
      *
+     * @param $product_ids
+     * @param int|null $storeId
+     *
+     * @return ProductCollection
      */
-    public function loadProductDataCollection($product_ids);
+    public function loadProductDataCollection($product_ids, $storeId = null);
 
     /**
      * Return the attribute codes for all attributes currently used in

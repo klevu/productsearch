@@ -2,6 +2,8 @@
 
 namespace Klevu\Search\Helper;
 
+use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Model\ScopeInterface;
 
 class Api extends \Magento\Framework\App\Helper\AbstractHelper
@@ -56,6 +58,19 @@ class Api extends \Magento\Framework\App\Helper\AbstractHelper
      */
     protected $_searchModelSession;
 
+    /**
+     * @param \Magento\Backend\Model\Auth\Session $backendModelSession
+     * @param \Magento\Framework\App\Config\ScopeConfigInterface $appConfigScopeConfigInterface
+     * @param \Klevu\Search\Model\Api\Action\Adduser $apiActionAdduser
+     * @param \Klevu\Search\Model\Api\Action\Getuserdetail $apiActionGetuserdetail
+     * @param Data $searchHelperData
+     * @param \Klevu\Search\Model\Api\Action\Addwebstore $apiActionAddwebstore
+     * @param \Klevu\Search\Model\Api\Action\Gettimezone $apiActionGettimezone
+     * @param Config $searchHelperConfig
+     * @param \Klevu\Search\Model\Api\Action\Checkuserdetail $apiActionCheckuserdetail
+     * @param \Magento\Framework\App\ProductMetadataInterface $productMetadataInterface
+     * @param \Klevu\Search\Model\Session $searchModelSession
+     */
     public function __construct(
         \Magento\Backend\Model\Auth\Session $backendModelSession,
         \Magento\Framework\App\Config\ScopeConfigInterface $appConfigScopeConfigInterface,
@@ -92,17 +107,34 @@ class Api extends \Magento\Framework\App\Helper\AbstractHelper
     /**
      * Create a new Klevu user using the API and return the user details.
      *
-     * @param $email
-     * @param $password
-     * @param $url
+     * @param string $email
+     * @param string $password
+     * @param string $userPlan
+     * @param bool $partnerAccount
+     * @param string $url
+     * @param string $merchantEmail
+     * @param string $contactNo
+     * @param StoreInterface|null $store
      *
      * @return array An array containing the following keys:
      *                 success:     boolean value indicating whether the user was created successfully.
      *                 customer_id: the customer ID for the newly created user (on success only).
      *                 message:     a message to be shown to the user.
      */
-    public function createUser($email, $password, $userPlan, $partnerAccount, $url, $merchantEmail, $contactNo)
-    {
+    public function createUser(
+        $email,
+        $password,
+        $userPlan,
+        $partnerAccount,
+        $url,
+        $merchantEmail,
+        $contactNo,
+        $store = null
+    ) {
+        if ($store instanceof StoreInterface) {
+            $this->_apiActionAdduser->setDataUsingMethod('store', $store);
+        }
+
         $user = $this->_backendModelSession;
 		if(!empty($user->getUser())) {
 			$userEmail = $user->getUser()->getEmail();
@@ -140,8 +172,9 @@ class Api extends \Magento\Framework\App\Helper\AbstractHelper
     /**
      * Retrieve the details for the given Klevu user from the API.
      *
-     * @param $email
-     * @param $password
+     * @param string $email
+     * @param string $password
+     * @param StoreInterface|null $store
      *
      * @return array An array containing the following keys:
      *                 success: boolean value indicating whether the operation was successful.
@@ -149,12 +182,15 @@ class Api extends \Magento\Framework\App\Helper\AbstractHelper
      *                 webstores: (on success only) A list of webstores the given user has configured.
      *                 message: (on failure only) Error message to be shown to the user.
      */
-    public function getUser($email, $password)
+    public function getUser($email, $password, $store = null)
     {
+        if ($store instanceof StoreInterface) {
+            $this->_apiActionGetuserdetail->setDataUsingMethod('store', $store);
+        }
 
         $response = $this->_apiActionGetuserdetail->execute([
-            "email"    => $email,
-            "password" => $password
+            'email' => $email,
+            'password' => $password,
         ]);
 
         if ($response->isSuccess()) {
@@ -199,14 +235,19 @@ class Api extends \Magento\Framework\App\Helper\AbstractHelper
     /**
      * Retrieve the information of already Klevu user registered from the API.
      *
-     * @param $email
+     * @param string $email
+     * @param StoreInterface $store
      *
      * @return array An array containing the following keys:
      *                 success: boolean value indicating whether the operation was successful.
      *                 message: (on failure only) Error message to be shown to the user.
      */
-    public function checkUserDetail($email)
+    public function checkUserDetail($email, $store = null)
     {
+        if ($store instanceof StoreInterface) {
+            $this->_apiActionCheckuserdetail->setDataUsingMethod('store', $store);
+        }
+
         $response = $this->_apiActionCheckuserdetail->execute([
             "email"    => $email,
         ]);
@@ -226,9 +267,8 @@ class Api extends \Magento\Framework\App\Helper\AbstractHelper
     /**
      * Create a Klevu Webstore using the API for the given Magento store.
      *
-     * @param                       $customer_id
-     * @param \Magento\Store\Model\Store $store
-     * @param bool                  $test_mode
+     * @param int $customer_id
+     * @param StoreInterface $store
      *
      * @return array An array with the following keys:
      *                 success: boolean value indicating whether the operation was successful.
@@ -255,6 +295,7 @@ class Api extends \Magento\Framework\App\Helper\AbstractHelper
             (int)$store->getId()
         );
 
+        $this->_apiActionAddwebstore->setDataUsingMethod('store', $store);
         $response = $this->_apiActionAddwebstore->execute([
             "customerId" => $customer_id,
             "storeName"  => $name,
@@ -296,6 +337,9 @@ class Api extends \Magento\Framework\App\Helper\AbstractHelper
         }
     }
 
+    /**
+     * @return array|string|null
+     */
     public function getTimezoneOptions()
     {
         $response = $this->_apiActionGettimezone->execute();

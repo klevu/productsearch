@@ -35,7 +35,7 @@
                             </item>
                         </item>
                         <item name="after" xsi:type="string">klevu_themev2_quicksearch</item>
-                        <item name="url" xsi:type="string"><![CDATA[//js.klevu.com/theme/default/v2/landing-page-theme.js]]></item>
+                        <item name="url" xsi:type="string"><![CDATA[https://{{ klevu_search/general/js_url }}/theme/default/v2/landing-page-theme.js]]></item>
                     </item>
                 </argument>
             </arguments>

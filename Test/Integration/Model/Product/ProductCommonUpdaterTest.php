@@ -105,6 +105,7 @@ class ProductCommonUpdaterTest extends TestCase
 
         //forcefully rollbacks here as loadProductFixturesRollback not a part of a @magentoDataFixture
         self::loadProductFixturesRollback();
+        static::loadDataFixturesRollback();
     }
 
 
@@ -159,6 +160,7 @@ class ProductCommonUpdaterTest extends TestCase
 
         //forcefully rollbacks here as loadProductFixturesRollback not a part of a @magentoDataFixture
         self::loadProductFixturesRollback();
+        static::loadDataFixturesRollback();
     }
 
     /**
@@ -214,6 +216,7 @@ class ProductCommonUpdaterTest extends TestCase
 
         //forcefully rollbacks here as loadProductFixturesRollback not a part of a @magentoDataFixture
         self::loadProductFixturesRollback();
+        static::loadDataFixturesRollback();
     }
 
     /**
@@ -267,6 +270,7 @@ class ProductCommonUpdaterTest extends TestCase
 
         //forcefully rollbacks here as loadProductFixturesRollback not a part of a @magentoDataFixture
         self::loadProductFixturesRollback();
+        static::loadDataFixturesRollback();
     }
 
     /**

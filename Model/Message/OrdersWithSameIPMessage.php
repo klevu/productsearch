@@ -70,12 +70,12 @@ class OrdersWithSameIPMessage implements MessageInterface
      */
     public function getText()
     {
-        $url = $this->urlBuilder->getUrl('adminhtml/system_config/edit/section/klevu_search');
+        $url = 'https://help.klevu.com/support/solutions/articles/5000876105-developer-and-notification-setting';
         //@codingStandardsIgnoreStart
         return __(
             'Klevu has detected many checkout orders originating from the same IP address causing inaccuracies in Klevu sales analytics.
             Please <a href="%2" target="_blank">read this article</a> for more information on how to resolve this issue.
-            This warning can be disabled via <a href="%1#row_klevu_search_notification_orders_with_same_ip">Notification Settings</a>',
+            This warning can be disabled via <a href="%1" target="_blank">Notification Settings</a>',
             $url,
             'https://help.klevu.com/support/solutions/articles/5000874087-multiple-orders-received-from-the-same-ip-address'
         );

@@ -109,8 +109,8 @@ class Information extends Fieldset
             $str = __(
                 'Klevu Search has detected one or more outdated Lock Files, data sync may not be working correctly.</br>
             Please read about <a href="%1" target="_blank">Magento Lock Files</a> for more information.
-            This warning can be disabled via <a href="#row_klevu_search_notification_lock_file">Notification Settings</a>',
-                'https://help.klevu.com/support/solutions/articles/5000871506-lock-files-for-data-sync/');
+            This warning can be disabled via <a href="%2" target="_blank">Notification Settings</a>',
+                'https://help.klevu.com/support/solutions/articles/5000871506-lock-files-for-data-sync/','https://help.klevu.com/support/solutions/articles/5000876105-developer-and-notification-setting');
             $html .= '<div class="message message-error">' . $str . '</div>';
         }
 
@@ -120,8 +120,8 @@ class Information extends Fieldset
             $str = __(
                 'Klevu Search is currently using Object method, which may be impacting your data sync performance.</br>
             Please read <a href="%1" target="_blank">Object vs Collection Method</a> for more information.
-            This warning can be disabled via <a href="#row_klevu_search_notification_object_vs_collection">Notification Settings</a>.',
-                'https://help.klevu.com/support/solutions/articles/5000871455-sync-data-using-collection-method');
+            This warning can be disabled via <a href="%2" target="_blank">Notification Settings</a>.',
+                'https://help.klevu.com/support/solutions/articles/5000871455-sync-data-using-collection-method','https://help.klevu.com/support/solutions/articles/5000876105-developer-and-notification-setting');
             $html .= '<div class="message message-error">' . $str . '</div>';
         }
 
@@ -134,8 +134,8 @@ class Information extends Fieldset
             $str = __(
                 'Klevu has detected many checkout orders originating from the same IP address causing inaccuracies in Klevu sales analytics.<br />
             Please <a href="%1" target="_blank">read this article</a> for more information on how to resolve this issue.
-            This warning can be disabled via <a href="#row_klevu_search_notification_orders_with_same_ip">Notification Settings</a>',
-                'https://help.klevu.com/support/solutions/articles/5000874087-multiple-orders-received-from-the-same-ip-address'
+            This warning can be disabled via <a href="%2" target="_blank">Notification Settings</a>',
+                'https://help.klevu.com/support/solutions/articles/5000874087-multiple-orders-received-from-the-same-ip-address','https://help.klevu.com/support/solutions/articles/5000876105-developer-and-notification-setting'
             );
             $html .= '<div class="message message-error">' . $str . '</div>';
         }

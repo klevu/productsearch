@@ -207,8 +207,8 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
             if ((!$productIds && !$childProductIds) || ++$i >= static::MAX_ITERATIONS) {
                 break;
             }
-            $lastProductEntityId = $productIds ? (int)max($productIds) : static::MAX_ITERATIONS + 1;
-            $lastChildEntityId = $childProductIds ? (int)max($childProductIds) : static::MAX_ITERATIONS + 1;
+            $lastProductEntityId = $productIds ? (int)max($productIds) : $maxEntityId + 1;
+            $lastChildEntityId = $childProductIds ? (int)max($childProductIds) : $maxEntityId + 1;
 
             $magentoProductIdsToFilter = array_merge($productIds, $childProductIds);
             // getParentRelationsByChild method has to remain in this class for backwards compatibility

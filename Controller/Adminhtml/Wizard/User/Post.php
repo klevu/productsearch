@@ -2,6 +2,10 @@
 
 namespace Klevu\Search\Controller\Adminhtml\Wizard\User;
 
+use Magento\Framework\App\ObjectManager;
+use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Store\Model\StoreManagerInterface;
+
 class Post extends \Magento\Backend\App\Action
 {
     /**
@@ -13,12 +17,11 @@ class Post extends \Magento\Backend\App\Action
      * @var \Klevu\Search\Model\Session
      */
     protected $_searchModelSession;
-    
+
     public function __construct(
         \Magento\Backend\App\Action\Context $context,
         \Klevu\Search\Helper\Api $searchHelperApi
     ) {
-    
         $this->_searchHelperApi = $searchHelperApi;
         $this->_searchModelSession = $context->getSession();
         parent::__construct($context);
@@ -26,7 +29,6 @@ class Post extends \Magento\Backend\App\Action
 
     public function execute()
     {
-
         $request = $this->getRequest();
 
         if (!$request->isPost() || !$request->isAjax()) {
@@ -37,11 +39,23 @@ class Post extends \Magento\Backend\App\Action
         $session = $this->_searchModelSession;
         $this->_searchModelSession->setHideStep("no");
         if ($request->getPost("klevu_existing_email")) {
+            $store = null;
+            if ($request->getPost('store_id')) {
+                try {
+                    /** @var StoreManagerInterface $storeManager */
+                    $storeManager = ObjectManager::getInstance()->get(StoreManagerInterface::class);
+                    $store = $storeManager->getStore($request->getPost('store_id'));
+                } catch (NoSuchEntityException $e) {
+                    // Let this default to null
+                }
+            }
+
             $result = $api->getUser(
                 $request->getPost("klevu_existing_email"),
-                $request->getPost("klevu_existing_password")
+                $request->getPost("klevu_existing_password"),
+                $store
             );
-            
+
             if ($result["success"]) {
                 $this->_searchModelSession->setHideStep("yes");
                 $this->_searchModelSession->setConfiguredCustomerId($result["customer_id"]);
@@ -67,19 +81,31 @@ class Post extends \Magento\Backend\App\Action
             || empty($merchantEmail) ) {
                 $this->messageManager->addErrorMessage(__("Missing details in the form. Please check."));
                 return $this->_forward("user");
-            } elseif (!preg_match("/^[_\.0-9a-zA-Z-]+@([0-9a-zA-Z][0-9a-zA-Z-]+\.)+[a-zA-Z]{2,6}$/i", $klevu_new_email)) {
+            } elseif (!preg_match("/^[_\.0-9a-zA-Z-+]+@([0-9a-zA-Z][0-9a-zA-Z-]+\.)+[a-zA-Z]{2,6}$/i", $klevu_new_email)) {
                 $this->messageManager->addErrorMessage(__("Please enter valid Primary Email."));
                 return $this->_forward("user");
-            } elseif (!preg_match("/^[_\.0-9a-zA-Z-]+@([0-9a-zA-Z][0-9a-zA-Z-]+\.)+[a-zA-Z]{2,6}$/i", $merchantEmail)) {
+            } elseif (!preg_match("/^[_\.0-9a-zA-Z-+]+@([0-9a-zA-Z][0-9a-zA-Z-]+\.)+[a-zA-Z]{2,6}$/i", $merchantEmail)) {
                 $this->messageManager->addErrorMessage(__("Please enter valid Retailer Email."));
                 return $this->_forward("user");
             } elseif (empty($termsconditions)) {
                 $this->messageManager->addErrorMessage(__("Please accept terms and conditions."));
                 return $this->_forward("user");
             } else {
-                    $result = $api->checkUserDetail(
-                        $request->getPost("klevu_new_email")
-                    );
+                $store = null;
+                if ($request->getPost('store_id')) {
+                    try {
+                        /** @var StoreManagerInterface $storeManager */
+                        $storeManager = ObjectManager::getInstance()->get(StoreManagerInterface::class);
+                        $store = $storeManager->getStore($request->getPost('store_id'));
+                    } catch (NoSuchEntityException $e) {
+                        // Let this default to null
+                    }
+                }
+
+                $result = $api->checkUserDetail(
+                    $request->getPost("klevu_new_email"),
+                    $store
+                );
 
                 if ($result["success"]) {
                     $this->_searchModelSession->setTermsconditions($request->getPost("termsconditions"));

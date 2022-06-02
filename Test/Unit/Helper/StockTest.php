@@ -1,6 +1,6 @@
 <?php
 
-namespace Klevu\Search\test\Unit\Helper;
+namespace Klevu\Search\Test\Unit\Helper;
 
 use Klevu\Search\Api\Service\Catalog\Product\StockServiceInterface;
 use Klevu\Search\Helper\Stock as StockHelper;
@@ -90,7 +90,7 @@ class StockTest extends TestCase
     /**
      * @param StockServiceInterface|MockObject $mockStockServiceInterface
      *
-     * @return object
+     * @return StockHelper|object
      */
     private function getStockHelper($mockStockServiceInterface)
     {

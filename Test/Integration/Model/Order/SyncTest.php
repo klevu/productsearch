@@ -88,6 +88,8 @@ class SyncTest extends TestCase
         $this->assertCount(2, $this->executeCallsPerApiKey);
         $this->assertSame(21, $this->executeCallsPerApiKey['klevu-klevu_test_store_1'], 'Execute calls for klevu_test_store_1');
         $this->assertSame(5, $this->executeCallsPerApiKey['klevu-klevu_test_store_2'], 'Execute calls for klevu_test_store_2');
+
+        static::loadAllFixturesRollback();
     }
 
     /**
@@ -136,6 +138,8 @@ class SyncTest extends TestCase
         $this->assertCount(2, $this->executeCallsPerApiKey);
         $this->assertSame(21, $this->executeCallsPerApiKey['klevu-klevu_test_store_1'], 'Execute calls for klevu_test_store_1');
         $this->assertSame(0, $this->executeCallsPerApiKey['klevu-klevu_test_store_2'], 'Execute calls for klevu_test_store_2');
+
+        static::loadAllFixturesRollback();
     }
 
     /**
@@ -185,6 +189,8 @@ class SyncTest extends TestCase
         $this->assertCount(2, $this->executeCallsPerApiKey);
         $this->assertSame(10, $this->executeCallsPerApiKey['klevu-klevu_test_store_1'], 'Execute calls for klevu_test_store_1');
         $this->assertSame(5, $this->executeCallsPerApiKey['klevu-klevu_test_store_2'], 'Execute calls for klevu_test_store_2');
+
+        static::loadAllFixturesRollback();
     }
 
     /**
@@ -232,6 +238,8 @@ class SyncTest extends TestCase
         $this->assertCount(2, $this->executeCallsPerApiKey);
         $this->assertSame(21, $this->executeCallsPerApiKey['klevu-klevu_test_store_1'], 'Execute calls for klevu_test_store_1');
         $this->assertSame(0, $this->executeCallsPerApiKey['klevu-klevu_test_store_2'], 'Execute calls for klevu_test_store_2');
+
+        static::loadAllFixturesRollback();
     }
 
     /**
@@ -282,6 +290,8 @@ class SyncTest extends TestCase
         $this->assertCount(2, $this->executeCallsPerApiKey);
         $this->assertSame(0, $this->executeCallsPerApiKey['klevu-klevu_test_store_1'], 'Execute calls for klevu_test_store_1');
         $this->assertSame(0, $this->executeCallsPerApiKey['klevu-klevu_test_store_2'], 'Execute calls for klevu_test_store_2');
+
+        static::loadAllFixturesRollback();
     }
 
     /**
@@ -335,6 +345,8 @@ class SyncTest extends TestCase
         $this->assertCount(2, $this->executeCallsPerApiKey);
         $this->assertSame(21, $this->executeCallsPerApiKey['klevu-klevu_test_store_1'], 'Execute calls for klevu_test_store_1');
         $this->assertSame(5, $this->executeCallsPerApiKey['klevu-klevu_test_store_2'], 'Execute calls for klevu_test_store_2');
+
+        static::loadAllFixturesRollback();
     }
 
     /**

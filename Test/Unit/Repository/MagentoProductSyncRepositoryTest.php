@@ -38,7 +38,11 @@ class MagentoProductSyncRepositoryTest extends TestCase
         $mockStore = $this->getMockStore();
         $result = $productRepository->getMaxProductId($mockStore);
 
-        $this->assertIsInt($result);
+        if (method_exists($this, 'assertIsInt')) {
+            $this->assertIsInt($result);
+        } else {
+            $this->assertTrue(is_int($result), 'Is Int');
+        }
         $this->assertSame($maxProductId, $result);
     }
 
@@ -153,7 +157,11 @@ class MagentoProductSyncRepositoryTest extends TestCase
         $mockStore = $this->getMockStore();
         $result = $productRepository->getParentProductIds($mockStore);
 
-        $this->assertIsArray($result);
+        if (method_exists($this, 'assertIsArray')) {
+            $this->assertIsArray($result);
+        } else {
+            $this->assertTrue(is_array($result), 'Is Array');
+        }
 
         $this->assertContains(1, $result);
         $this->assertContains(1223, $result);

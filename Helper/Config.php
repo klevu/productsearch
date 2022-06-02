@@ -7,6 +7,7 @@ use Klevu\Search\Helper\Api as ApiHelper;
 use \Klevu\Search\Model\Product\Sync;
 use \Klevu\Search\Model\Api\Action\Features;
 use \Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\Exception\NoSuchEntityException;
 use \Magento\Framework\UrlInterface;
 use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Model\ScopeInterface;
@@ -327,11 +328,11 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function getHostname($store = null)
     {
-	if ($store == null) {
-            $store = $this->_storeModelStoreManagerInterface->getStore();
-        }
-        $hostname = $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_HOSTNAME, ScopeInterface::SCOPE_STORE, $store->getId());
-        return ($hostname) ? $hostname : ApiHelper::ENDPOINT_DEFAULT_HOSTNAME;
+        return $this->_appConfigScopeConfigInterface->getValue(
+            static::XML_PATH_HOSTNAME,
+            ScopeInterface::SCOPE_STORE,
+            $this->getStoreIdFromStoreArgument($store)
+        ) ?: ApiHelper::ENDPOINT_DEFAULT_HOSTNAME;
     }
 
     /**
@@ -340,11 +341,49 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function getRestHostname($store = null)
     {
-	if ($store == null) {
-            $store = $this->_storeModelStoreManagerInterface->getStore();
+        return $this->_appConfigScopeConfigInterface->getValue(
+            static::XML_PATH_RESTHOSTNAME,
+            ScopeInterface::SCOPE_STORE,
+            $this->getStoreIdFromStoreArgument($store)
+        ) ?: ApiHelper::ENDPOINT_DEFAULT_HOSTNAME;
+    }
+
+    /**
+     * @param $store
+     * @return int|null
+     */
+    private function getStoreIdFromStoreArgument($store)
+    {
+        switch (true) {
+            case $store instanceof StoreInterface:
+                $storeId = (int)$store->getId();
+                break;
+
+            case is_int($store):
+            case ctype_digit($store):
+                $storeId = (int)$store;
+                break;
+
+            case null === $store:
+                try {
+                    $store = $this->_storeModelStoreManagerInterface->getStore();
+                    $storeId = (int)$store->getId();
+                } catch (NoSuchEntityException $e) {
+                    $this->_logger->error($e->getMessage());
+                    $storeId = null;
+                }
+                break;
+
+            default:
+                throw new \InvalidArgumentException(sprintf(
+                    'Invalid store parameter. Expected %s|int|null; received %s',
+                    StoreInterface::class,
+                    is_object($store) ? get_class($store) : gettype($store)
+                ));
+                break;
         }
-        $hostname = $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_RESTHOSTNAME, ScopeInterface::SCOPE_STORE, $store->getId());
-        return ($hostname) ? $hostname : ApiHelper::ENDPOINT_DEFAULT_HOSTNAME;
+
+        return $storeId;
     }
 
     /**
@@ -733,8 +772,11 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function getTiresUrl($store = null)
     {
-        $url = $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_UPGRADE_TIRES_URL, ScopeInterface::SCOPE_STORE, $store);
-        return ($url) ? $url : ApiHelper::ENDPOINT_DEFAULT_HOSTNAME;
+        return $this->_appConfigScopeConfigInterface->getValue(
+            static::XML_PATH_UPGRADE_TIRES_URL,
+            ScopeInterface::SCOPE_STORE,
+            $store
+        ) ?: ApiHelper::ENDPOINT_DEFAULT_HOSTNAME;
     }
 
     /**
@@ -1185,7 +1227,16 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
                     $this->_klevu_enabled_feature_response = unserialize($this->getUpgradeFetaures($store));
                 }
                 $dataHelper = \Magento\Framework\App\ObjectManager::getInstance()->get('\Klevu\Search\Helper\Data');
-                $dataHelper->log(LoggerConstants::ZEND_LOG_INFO, sprintf("failed to fetch feature details (%s)", $features_request->getMessage()));
+                $dataHelper->log(
+                    LoggerConstants::ZEND_LOG_INFO,
+                    sprintf(
+                        "failed to fetch feature details (%s)",
+                        implode(', ', array_filter([
+                            $features_request->getMessage(),
+                            $features_request->getError(),
+                        ]))
+                    )
+                );
             }
         }
         return $this->_klevu_enabled_feature_response;

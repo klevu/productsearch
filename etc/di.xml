@@ -268,12 +268,4 @@
             <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
         </arguments>
     </type>
-
-    <type name="Klevu\Search\Model\Product\MagentoProductActions">
-        <arguments>
-            <argument name="addProductIdsProvider" xsi:type="object">Klevu\Search\Service\Sync\Product\AddProductIdsProvider</argument>
-            <argument name="deleteProductIdsProvider" xsi:type="object">Klevu\Search\Service\Sync\Product\DeleteProductIdsProvider</argument>
-            <argument name="updateProductIdsProvider" xsi:type="object">Klevu\Search\Service\Sync\Product\UpdateProductIdsProvider</argument>
-        </arguments>
-    </type>
 </config>

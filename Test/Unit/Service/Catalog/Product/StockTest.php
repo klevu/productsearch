@@ -34,7 +34,7 @@ class StockTest extends TestCase
         $mockParentProduct = $parentId ? $this->getMockProduct($parentId) : null;
         $mockProduct = $this->getMockProduct($productId);
 
-        $result = $stockService->getKlevuStockStatus($mockParentProduct, $mockProduct);
+        $result = $stockService->getKlevuStockStatus($mockProduct, $mockParentProduct);
 
         $this->assertSame(StockService::KLEVU_IN_STOCK, $result);
     }
@@ -164,7 +164,7 @@ class StockTest extends TestCase
     }
 
     /**
-     * @return object
+     * @return StockService|object
      */
     private function getStockService()
     {

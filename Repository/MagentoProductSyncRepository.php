@@ -188,12 +188,10 @@ class MagentoProductSyncRepository implements MagentoProductSyncRepositoryInterf
      */
     private function includeVisibilityInCatalog($store)
     {
-        $isSetFlag = $this->scopeConfig->isSetFlag(
+        return $this->scopeConfig->isSetFlag(
             static::XML_PATH_PRODUCT_SYNC_CATALOGVISIBILITY,
             ScopeInterface::SCOPE_STORE,
             $store->getId()
         );
-
-        return !$isSetFlag;
     }
 }

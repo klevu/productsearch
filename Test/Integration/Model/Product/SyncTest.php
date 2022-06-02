@@ -84,6 +84,8 @@ class SyncTest extends TestCase
         $productSync->syncData($store);
 
         self::loadKlevuProductSyncFixturesRollback();
+        static::loadWebsiteFixturesRollback();
+
     }
 
     /**
@@ -147,6 +149,7 @@ class SyncTest extends TestCase
 
         self::loadKlevuProductSyncFixturesRollback();
         self::loadProductFixturesRollback();
+        static::loadWebsiteFixturesRollback();
     }
 
     /**
@@ -208,6 +211,7 @@ class SyncTest extends TestCase
         $productSync->syncData($store);
 
         self::loadProductFixturesRollback();
+        static::loadWebsiteFixturesRollback();
     }
 
     /**
