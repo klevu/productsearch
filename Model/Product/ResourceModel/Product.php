@@ -59,11 +59,13 @@ class Product
             $batchSize = $this->getBatchSize->execute($store);
             $select->limit($batchSize);
         }
-        $return = $connection->fetchCol($select);
+        $products = $connection->fetchAll($select);
 
         unset($connection, $select);
 
-        return $return;
+        return array_unique(
+            array_column($products, Entity::DEFAULT_ENTITY_ID_FIELD)
+        );
     }
 
     /**
@@ -86,7 +88,7 @@ class Product
         $select->columns(['e.' . Entity::DEFAULT_ENTITY_ID_FIELD, 'l.product_id', 'l.parent_id']);
         $relations = $connection->fetchAll($select);
 
-        unset ($connection, $select);
+        unset($connection, $select);
 
         return $relations;
     }
