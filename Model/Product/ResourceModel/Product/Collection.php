@@ -76,6 +76,6 @@ class Collection
 
         $firstItem = $productCollection->getFirstItem();
 
-        return $firstItem ? (int)$firstItem->getId() : 0;
+        return $firstItem ? (int)$firstItem->getData(Entity::DEFAULT_ENTITY_ID_FIELD) : 0;
     }
 }
