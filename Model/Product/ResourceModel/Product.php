@@ -7,6 +7,8 @@ use Magento\Catalog\Model\ResourceModel\Product as ProductResourceModel;
 use Magento\Catalog\Model\ResourceModel\Product\Collection as ProductCollection;
 use Magento\ConfigurableProduct\Model\ResourceModel\Attribute\OptionProvider;
 use Magento\Eav\Model\Entity;
+use Magento\Framework\App\ObjectManager;
+use Magento\Framework\App\ResourceConnection;
 use Magento\Store\Api\Data\StoreInterface;
 
 class Product
@@ -23,15 +25,21 @@ class Product
      * @var GetBatchSize
      */
     private $getBatchSize;
+    /**
+     * @var ResourceConnection
+     */
+    private $resourceConnection;
 
     public function __construct(
         ProductResourceModel $productResourceModel,
         OptionProvider $optionProvider,
-        GetBatchSize $getBatchSize
+        GetBatchSize $getBatchSize,
+        ResourceConnection $resourceConnection = null
     ) {
         $this->productResourceModel = $productResourceModel;
         $this->optionProvider = $optionProvider;
         $this->getBatchSize = $getBatchSize;
+        $this->resourceConnection = $resourceConnection ?: ObjectManager::getInstance()->get(ResourceConnection::class);
     }
 
     /**
@@ -77,9 +85,9 @@ class Product
     {
         $connection = $this->productResourceModel->getConnection();
         $select = $connection->select();
-        $select->from(['l' => $connection->getTableName('catalog_product_super_link')], [])
+        $select->from(['l' => $this->resourceConnection->getTableName('catalog_product_super_link')], [])
             ->join(
-                ['e' => $connection->getTableName('catalog_product_entity')],
+                ['e' => $this->resourceConnection->getTableName('catalog_product_entity')],
                 'e.' . $this->optionProvider->getProductEntityLinkField() . ' = l.parent_id',
                 ['e.' . Entity::DEFAULT_ENTITY_ID_FIELD]
             )->where('l.product_id IN(?)', $productIds);
