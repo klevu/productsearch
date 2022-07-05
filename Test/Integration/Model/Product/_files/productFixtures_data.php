@@ -50,7 +50,7 @@ $fixtures = [
     // Configurable
     [
         'type_id' => 'simple',
-        'sku' => 'klevu_synctest_simple_child_1',
+        'sku' => 'klevu_simple_child_1',
         'name' => '[Klevu] Simple Child Product 1',
         'description' => '[Klevu Test Fixtures] Simple product 1 (Enabled; Visibility None)',
         'short_description' => '[Klevu Test Fixtures] Simple product 1',
@@ -76,7 +76,7 @@ $fixtures = [
         'klevu_test_configurable' => $configurableAttributeOptions[1]->getValue(),
     ], [
         'type_id' => 'simple',
-        'sku' => 'klevu_synctest_simple_child_2',
+        'sku' => 'klevu_simple_child_2',
         'name' => '[Klevu] Simple Child Product 2 [OOS]',
         'description' => '[Klevu Test Fixtures] Simple product 2 (Enabled; Visibility None; OOS)',
         'short_description' => '[Klevu Test Fixtures] Simple child product 2',
@@ -102,7 +102,7 @@ $fixtures = [
         'klevu_test_configurable' => $configurableAttributeOptions[2]->getValue(),
     ], [
         'type_id' => 'simple',
-        'sku' => 'klevu_synctest_simple_child_3',
+        'sku' => 'klevu_simple_child_3',
         'name' => '[Klevu] Simple Child Product 3',
         'description' => '[Klevu Test Fixtures] Simple child product 3 (Disabled; Visibility None)',
         'short_description' => '[Klevu Test Fixtures] Simple child product 3',
@@ -128,7 +128,7 @@ $fixtures = [
         'klevu_test_configurable' => $configurableAttributeOptions[3]->getValue(),
     ], [
         'type_id' => 'simple',
-        'sku' => 'klevu_synctest_simple_child_4',
+        'sku' => 'klevu_simple_child_4',
         'name' => '[Klevu] Simple Child Product 4',
         'description' => '[Klevu Test Fixtures] Simple child product 4 (Enabled; Visibility None)',
         'short_description' => '[Klevu Test Fixtures] Simple child product 4',
@@ -154,7 +154,7 @@ $fixtures = [
         'klevu_test_configurable' => $configurableAttributeOptions[4]->getValue(),
     ], [
         'type_id' => 'simple',
-        'sku' => 'klevu_synctest_simple_child_5',
+        'sku' => 'klevu_simple_child_5',
         'name' => '[Klevu] Simple Child Product 5',
         'description' => '[Klevu Test Fixtures] Simple child product 5 (Enabled; Visibility None)',
         'short_description' => '[Klevu Test Fixtures] Simple child product 5',
@@ -179,7 +179,7 @@ $fixtures = [
         'klevu_test_configurable' => $configurableAttributeOptions[5]->getValue(),
     ], [
         'type_id' => 'simple',
-        'sku' => 'klevu_synctest_simple_child_6',
+        'sku' => 'klevu_simple_child_6',
         'name' => '[Klevu] Simple Child Product 6',
         'description' => '[Klevu Test Fixtures] Simple child product 6 (Enabled; Visibility None)',
         'short_description' => '[Klevu Test Fixtures] Simple child product 6',
@@ -205,7 +205,7 @@ $fixtures = [
         'klevu_test_configurable' => $configurableAttributeOptions[6]->getValue(),
     ], [
         'type_id' => 'simple',
-        'sku' => 'klevu_synctest_simple_child_7',
+        'sku' => 'klevu_simple_child_7',
         'name' => '[Klevu] Simple Child Product 7',
         'description' => '[Klevu Test Fixtures] Simple child product 7 (Enabled; Visibility None)',
         'short_description' => '[Klevu Test Fixtures] Simple child product 7',
@@ -231,7 +231,7 @@ $fixtures = [
         'klevu_test_configurable' => $configurableAttributeOptions[7]->getValue(),
     ], [
         'type_id' => 'simple',
-        'sku' => 'klevu_synctest_simple_child_8',
+        'sku' => 'klevu_simple_child_8',
         'name' => '[Klevu] Simple Child Product 8',
         'description' => '[Klevu Test Fixtures] Simple child product 8 (Enabled; Visibility None)',
         'short_description' => '[Klevu Test Fixtures] Simple child product 8',
@@ -296,8 +296,8 @@ $fixtures = [
         ],
         'url_key' => 'klevu-configurable-product-2',
         'child_skus' => [
-            'klevu_synctest_simple_child_2',
-            'klevu_synctest_simple_child_3',
+            'klevu_simple_child_2',
+            'klevu_simple_child_3',
         ],
     ], [
         'type_id' => 'configurable',
@@ -320,7 +320,7 @@ $fixtures = [
         ],
         'url_key' => 'klevu-configurable-product-3',
         'child_skus' => [
-            'klevu_synctest_simple_child_5',
+            'klevu_simple_child_5',
         ],
     ], [
         'type_id' => 'configurable',
@@ -343,7 +343,7 @@ $fixtures = [
         ],
         'url_key' => 'klevu-configurable-product-4',
         'child_skus' => [
-            'klevu_synctest_simple_child_1',
+            'klevu_simple_child_1',
         ],
     ], [
         'type_id' => 'configurable',
@@ -366,8 +366,8 @@ $fixtures = [
         ],
         'url_key' => 'klevu-configurable-product-5',
         'child_skus' => [
-            'klevu_synctest_simple_child_1',
-            'klevu_synctest_simple_child_2',
+            'klevu_simple_child_1',
+            'klevu_simple_child_2',
         ],
     ], [
         'type_id' => 'configurable',
@@ -390,8 +390,8 @@ $fixtures = [
         ],
         'url_key' => 'klevu-configurable-product-6',
         'child_skus' => [
-            'klevu_synctest_simple_child_1',
-            'klevu_synctest_simple_child_3',
+            'klevu_simple_child_1',
+            'klevu_simple_child_3',
         ],
     ], [
         'type_id' => 'configurable',
@@ -414,8 +414,8 @@ $fixtures = [
         ],
         'url_key' => 'klevu-configurable-product-7',
         'child_skus' => [
-            'klevu_synctest_simple_child_1',
-            'klevu_synctest_simple_child_4',
+            'klevu_simple_child_1',
+            'klevu_simple_child_4',
         ],
     ], [
         'type_id' => 'configurable',
@@ -438,8 +438,8 @@ $fixtures = [
         ],
         'url_key' => 'klevu-configurable-product-8',
         'child_skus' => [
-            'klevu_synctest_simple_child_1',
-            'klevu_synctest_simple_child_6',
+            'klevu_simple_child_1',
+            'klevu_simple_child_6',
         ],
     ], [
         'type_id' => 'configurable',
@@ -462,8 +462,8 @@ $fixtures = [
         ],
         'url_key' => 'klevu-configurable-product-9',
         'child_skus' => [
-            'klevu_synctest_simple_child_1',
-            'klevu_synctest_simple_child_7',
+            'klevu_simple_child_1',
+            'klevu_simple_child_7',
         ],
     ], [
         'type_id' => 'configurable',
@@ -486,8 +486,8 @@ $fixtures = [
         ],
         'url_key' => 'klevu-configurable-product-10',
         'child_skus' => [
-            'klevu_synctest_simple_child_1',
-            'klevu_synctest_simple_child_8',
+            'klevu_simple_child_1',
+            'klevu_simple_child_8',
         ],
     ], [
         'type_id' => 'configurable',
@@ -510,8 +510,8 @@ $fixtures = [
         ],
         'url_key' => 'klevu-configurable-product-11',
         'child_skus' => [
-            'klevu_synctest_simple_child_1',
-            'klevu_synctest_simple_child_5',
+            'klevu_simple_child_1',
+            'klevu_simple_child_5',
         ]
     ],
 //    [
@@ -528,7 +528,7 @@ $fixtures = [
 //        'visibility' => Visibility::VISIBILITY_BOTH,
 //        'status' => Status::STATUS_ENABLED,
 //        'associated_skus' => [
-//            'klevu_synctest_simple_child_1'
+//            'klevu_simple_child_1'
 //        ]
 //    ], [
 //        'type_id' => 'bundle',
@@ -555,7 +555,7 @@ $fixtures = [
 //        'visibility' => Visibility::VISIBILITY_BOTH,
 //        'status' => Status::STATUS_ENABLED,
 //        'associated_skus' => [
-//            'klevu_synctest_simple_child_1'
+//            'klevu_simple_child_1'
 //        ]
 //    ]
 ];

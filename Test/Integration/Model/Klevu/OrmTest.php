@@ -4,6 +4,7 @@ namespace Klevu\Search\Test\Integration\Model\Klevu;
 
 use Klevu\Search\Model\Klevu\Klevu as KlevuSync;
 use Klevu\Search\Model\Klevu\ResourceModel\Klevu as KlevuSyncResourceModel;
+use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\DB\Select;
 use Magento\Framework\Exception\AlreadyExistsException;
 use Magento\Store\Api\Data\StoreInterface;
@@ -80,7 +81,11 @@ class OrmTest extends TestCase
            return $table['joinType'] === Select::INNER_JOIN;
         });
 
-        $this->assertSame('catalog_product_entity', $innerJoin[array_keys($innerJoin)[0]]['tableName']);
+        $resourceConnection = ObjectManager::getInstance()->get(ResourceConnection::class);
+        $this->assertSame(
+            $resourceConnection->getTableName('catalog_product_entity'), 
+            $innerJoin[array_keys($innerJoin)[0]]['tableName']
+        );
     }
 
     public function testGetBatchDataForCollectionReturnsArray()
