@@ -7,7 +7,10 @@
                     <resource id="Magento_Backend::stores_settings">
                         <resource id="Magento_Config::config">
                             <!-- this resource id we can use in system.xml for section -->
-                            <resource id="Klevu_Search::config_search" title="Klevu Search" sortOrder="80" />
+                            <resource id="Klevu_Search::klevu" title="Klevu" translate="Klevu" sortOrder="80">
+                                <resource id="Klevu_Search::integration" title="Klevu Integration" translate="title" sortOrder="10" />
+                                <resource id="Klevu_Search::config_search" title="Klevu Search" sortOrder="20" />
+                            </resource>
                         </resource>
                     </resource>
                 </resource>

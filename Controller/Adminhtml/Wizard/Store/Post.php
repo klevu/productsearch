@@ -2,6 +2,10 @@
 
 namespace Klevu\Search\Controller\Adminhtml\Wizard\Store;
 
+use Magento\Framework\Controller\Result\Forward as ResultForward;
+use Magento\Framework\Controller\ResultFactory;
+use Magento\Framework\Controller\ResultInterface;
+
 class Post extends \Magento\Backend\App\Action
 {
     /**
@@ -60,81 +64,17 @@ class Post extends \Magento\Backend\App\Action
         parent::__construct($context);
     }
 
+    /**
+     * Show 404 error page
+     *
+     * @return ResultInterface
+     */
     public function execute()
     {
+        /** @var ResultForward $resultForward */
+        $resultForward = $this->resultFactory->create(ResultFactory::TYPE_FORWARD);
+        $resultForward->forward('noroute');
 
-        $request = $this->getRequest();
-
-        if (!$request->isPost() || !$request->isAjax()) {
-            return $this->_redirect("adminhtml/dashboard");
-        }
-
-        $config = $this->_searchHelperConfig;
-        $api = $this->_searchHelperApi;
-        $session = $this->_searchModelSession;
-        $customer_id = $session->getConfiguredCustomerId();
-
-        if (!$customer_id) {
-            $this->messageManager->addErrorMessage(__("You must configure a user first."));
-            return $this->_redirect("*/*/configure_user");
-        }
-
-        $store_code = $request->getPost("store");
-        if (strlen((string)$store_code) == 0) {
-            $this->messageManager->addErrorMessage(__("Must select a store"));
-            return $this->_forward("store");
-        }
-
-        try {
-            $store = $this->_storeModelStoreManagerInterface->getStore($store_code);
-        } catch (\Magento\Framework\Model\Store\Exception $e) {
-            $this->messageManager->addErrorMessage(__("Selected store does not exist."));
-            return $this->_forward("store");
-        }
-
-        // Setup the live and test Webstores
-            $result = $api->createWebstore($customer_id, $store);
-        if ($result["success"]) {
-            $config->setJsApiKey($result["webstore"]->getJsApiKey(), $store);
-            $config->setRestApiKey($result["webstore"]->getRestApiKey(), $store);
-            $config->setHostname($result["webstore"]->getHostedOn(), $store);
-            $config->setCloudSearchUrl($result['webstore']->getCloudSearchUrl(), $store);
-            $config->setCloudSearchV2Url($result['webstore']->getData('cloud_search_v2_url'), $store);
-            $config->setAnalyticsUrl($result['webstore']->getAnalyticsUrl(), $store);
-            $config->setJsUrl($result['webstore']->getJsUrl(), $store);
-            $config->setRestHostname($result['webstore']->getRestHostname(), $store);
-            $config->setTiresUrl($result['webstore']->getTiresUrl(), $store);
-			$config->saveRatingUpgradeFlag(0,$store);
-			$config->resetConfig();
-            if (isset($result["message"])) {
-                $this->messageManager->addSuccessMessage(__($result["message"]));
-                $this->_searchModelSession->setFirstSync($store_code);
-            }
-        } else {
-            $this->messageManager->addErrorMessage(__($result["message"]));
-            return $this->_forward("store");
-        }
-        $this->messageManager->addSuccessMessage("Store configured successfully. Saved API credentials.");
-
-        $config->setTaxEnabledFlag((int)$request->getPost("tax_enable"), $store);
-        $config->setSecureUrlEnabledFlag((int)$request->getPost("secureurl_setting"), $store);
-        $config->saveUseCollectionMethodFlag((int)$request->getPost("use_collection_method"));
-		$config->resetConfig();
-        $this->_view->loadLayout();
-        $this->_view->getLayout()->initMessages();
-        $this->_view->renderLayout();
-
-        // Clear Product Sync and Order Sync data for the newly configured store
-        $this->_magentoProductActions->clearAllProducts($store);
-        //$this->_modelOrderSync->clearQueue($store);
-
-        $session->setConfiguredStoreCode($store_code);
-
-        $this->messageManager->addSuccessMessage("Store configured successfully. Saved API credentials.");
-
-		if($config->isExternalCronEnabled()) {
-			// Schedule a Product Sync
-			$this->_modelProductSync->schedule();
-		}
+        return $resultForward;
     }
 }

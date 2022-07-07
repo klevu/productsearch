@@ -26,7 +26,7 @@ class AllData extends \Magento\Config\Block\System\Config\Form\Field
         $this->_klevuSync = $klevuSync;
         parent::__construct($context, $data);
     }
-    
+
     protected $_template = 'klevu/search/form/field/sync/alldata.phtml';
 
 	/**
@@ -66,15 +66,15 @@ class AllData extends \Magento\Config\Block\System\Config\Form\Field
             "html_id"         => $element->getHtmlId(),
             "button_label"    => sprintf("Sync All Data %s", $label_suffix),
             "destination_url" => $this->getUrl("klevu_search/sync/all/store/".$this->getStoreId(), $url_params)
-			
+
         ]);
 
         return $this->_toHtml();
     }
-	
+
 	/**
      * Retrieve store param
-     *     
+     *
      * @return int
      */
 	public function getStoreParam()

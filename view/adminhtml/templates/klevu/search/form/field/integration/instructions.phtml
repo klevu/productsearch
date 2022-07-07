@@ -1,0 +1,16 @@
+<?php /** @var Klevu\Search\Block\Adminhtml\Form\Field\Integration\Instructions\Integration $block */ ?>
+<div>
+    <strong>
+        <?= $block->escapeHtml(
+            __('Add a new store in Klevu Merchant Center (KMC), generate API Key & REST AUTH Key, and paste it below.')
+        ) ?>
+    </strong>
+    <br/>
+    <?= /** @noEscape */
+    __(
+        '(If you don\'t have a KMC account, %1 click here %2 to set one up)',
+        '<a href="' . $block->escapeUrl($block->getKlevuMerchantCenterUrl()) . '/merchant/signup" target="_blank">',
+        '</a>'
+    )
+    ?>
+</div>

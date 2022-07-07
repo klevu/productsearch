@@ -1,0 +1,28 @@
+<?php /** @var \Klevu\Search\Block\Adminhtml\Form\Field\Integration\Warnings\LockFile $block */ ?>
+<?php if ($block->lockFileExists()): ?>
+    <?php foreach ($block->getLockFiles() as $file): ?>
+        <div class="message message-error">
+            <?= $block->escapeHtml(
+                __('Magento is not able to execute subprocess command and due to this, data sync has stopped.')
+            ) ?>
+            <br>
+            <?= $block->escapeHtml(
+                __('Klevu has generated Cron Lock file since %1.', $block->getFileTime($file))
+            ) ?>
+            <?= /** @noEscape */
+            __(
+                'To resolve this, Please follow the %1 guide %2 to setup external Klevu Cron which is independent of Magento Cron.',
+                '<a href="' . $block->escapeUrl($block->getCronHelpArticleLink()) . '" target="_blank">',
+                '</a>'
+            )
+            ?>
+            <?= /** @noEscape */
+            __(
+                'Once the external Klevu Cron is setup, please %1 Click here %2 to remove the Cron lock file.',
+                '<a href=' . $block->escapeUrl($block->getLockUrl($file)) . '>',
+                '</a>'
+            )
+            ?>
+        </div>
+    <?php endforeach; ?>
+<?php endif; ?>

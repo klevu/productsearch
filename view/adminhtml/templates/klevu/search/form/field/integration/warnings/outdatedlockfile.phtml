@@ -1,0 +1,23 @@
+<?php /** @var \Klevu\Search\Block\Adminhtml\Form\Field\Integration\Warnings\OutdatedLockFile $block */ ?>
+<?php if ($block->isLockFileOutdated()): ?>
+    <div class="message message-error">
+        <?= $block->escapeHtml(
+            __('Klevu Search has detected one or more outdated Lock Files, data sync may not be working correctly.')
+        ) ?>
+        <br>
+        <?= /** @noEscape */
+        __(
+            'Please read about %1 Magento Lock Files %2 for more information.',
+            '<a href="' . $block->escapeUrl($block->getLockFilesArticleLink()) . '" target="_blank">',
+            '</a>'
+        ) . ' '
+        ?>
+        <?= /** @noEscape */
+        __(
+            'This warning can be disabled via %1 Notification Settings %2.',
+            '<a href="' . $block->escapeUrl($block->getNotificationArticleLink()) . '">',
+            '</a>'
+        )
+        ?>
+    </div>
+<?php endif; ?>

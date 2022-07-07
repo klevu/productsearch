@@ -4,16 +4,21 @@ namespace Klevu\Search\Model\Message;
 
 use Klevu\Search\Helper\Config as KlevuHelperConfig;
 use Klevu\Search\Model\System\Config\Source\NotificationOptions;
+use Klevu\Search\Service\Account\HelpArticleService;
 use Magento\Framework\Notification\MessageInterface;
 use Magento\Framework\UrlInterface;
 
-/**
- * Class ObjectVsCollectionMessage
- * @package Klevu\Search\Model\Message
- */
 class ObjectVsCollectionMessage implements MessageInterface
 {
     const MESSAGE_ID = 'KLEVU_OBJECT_VS_COLLECTION';
+    /**
+     * @var UrlInterface
+     */
+    protected $urlBuilder;
+    /**
+     * @var KlevuHelperConfig
+     */
+    protected $_searchHelperConfig;
 
     /**
      * ObjectMethodUse constructor.
@@ -24,8 +29,7 @@ class ObjectVsCollectionMessage implements MessageInterface
     public function __construct(
         UrlInterface $urlBuilder,
         KlevuHelperConfig $searchHelperConfig
-    )
-    {
+    ) {
         $this->urlBuilder = $urlBuilder;
         $this->_searchHelperConfig = $searchHelperConfig;
     }
@@ -39,39 +43,44 @@ class ObjectVsCollectionMessage implements MessageInterface
     }
 
     /**
-     * @return bool|void
+     * @return bool
      */
     public function isDisplayed()
     {
         //Only to show if option (At the top of every Magento Admin page) selected and not enabled collection method
-        if (NotificationOptions::LOCK_WARNING_EVERY_ADMIN_PAGE === $this->_searchHelperConfig->getObjMethodNotificationOption()
-            && !$this->_searchHelperConfig->isCollectionMethodEnabled()) {
-            return true;
-        }
-        return false;
+        return NotificationOptions::LOCK_WARNING_EVERY_ADMIN_PAGE === $this->_searchHelperConfig->getObjMethodNotificationOption()
+            && !$this->_searchHelperConfig->isCollectionMethodEnabled();
     }
 
     /**
      * Retrieve message text
      *
-     * @return \Magento\Framework\Phrase
+     * @return string
      */
     public function getText()
     {
-        $url = 'https://help.klevu.com/support/solutions/articles/5000871455-sync-data-using-collection-method';
-        $configURL = 'https://help.klevu.com/support/solutions/articles/5000876105-developer-and-notification-setting';
+        $message = __(
+            'Klevu Search is currently using Object method, which may be impacting your data sync performance.'
+        );
+        $message .= ' ' . __(
+            'Please read %1Object vs Collection Method%2 for more information.',
+            '<a href="' . HelpArticleService::HELP_ARTICLE_LINK_OBJECT_VS_COLLECTION . '" target="_blank">',
+            '</a>'
+        );
+        $message .= ' ' . __(
+            'This warning can be disabled via %1Notification Settings%2.',
+            '<a href="' . HelpArticleService::HELP_ARTICLE_LINK_NOTIFICATION . '">',
+            '</a>'
+        );
 
-        $message = __('Klevu Search is currently using Object method, which may be impacting your data sync performance.');
-        $message .= ' ' . __('Please read <a href="%1" target="_blank">Object vs Collection Method</a> for more information.', $url);
-        $message .= ' ' . __('This warning can be disabled via <a href="%1" target="_blank">Notification Settings</a>.', $configURL);
         return $message;
-
     }
 
+    /**
+     * @return int
+     */
     public function getSeverity()
     {
         return MessageInterface::SEVERITY_CRITICAL;
     }
 }
-
-

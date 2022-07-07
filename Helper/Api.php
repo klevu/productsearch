@@ -100,6 +100,7 @@ class Api extends \Magento\Framework\App\Helper\AbstractHelper
 
     const ENDPOINT_PROTOCOL = 'https://';
     const ENDPOINT_DEFAULT_HOSTNAME = 'box.klevu.com';
+    const ENDPOINT_DEFAULT_API_URL = 'api.ksearchnet.com';
     const ENDPOINT_CLOUD_SEARCH_URL = 'eucs.ksearchnet.com';
     const ENDPOINT_CLOUD_SEARCH_V2_URL = 'eucsv2.klevu.com';
 	const ENDPOINT_DEFAULT_ANALYTICS_HOSTNAME = 'stats.klevu.com';

@@ -1,0 +1,21 @@
+<?php /** @var \Klevu\Search\Block\Adminhtml\Form\Field\Integration\Confirmation\Button $block */ ?>
+
+<tr id="row_klevu_integration_authentication_keys_integration_endpoints" class="klevu-integration-endpoints">
+    <td class="label"></td>
+    <td class="value">
+        <div class="actions">
+            <button class="klevu-action-integrate-endpoints" type="button" id="klevu_integration_endpoints_resync" style="display:none;">
+                <span><?= $block->escapeHtml(__('Resync Endpoints From Klevu')) ?></span>
+            </button>
+        </div>
+    </td>
+    <td class=""></td>
+</tr>
+
+<script type="text/x-magento-init">
+    {
+        "*": {
+            "Klevu_Search/js/config/resync-endpoints": <?= /** @noEscape */ $block->getReSyncConfig() ?>
+        }
+    }
+</script>

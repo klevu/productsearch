@@ -23,6 +23,7 @@ interface SerializerInterface
      *
      * @param string $string
      * @return string|int|float|bool|array|null
+     * @throws \InvalidArgumentException
      */
     public function unserialize($string);
 }

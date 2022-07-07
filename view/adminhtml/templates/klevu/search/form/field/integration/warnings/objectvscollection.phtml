@@ -1,0 +1,23 @@
+<?php /** @var \Klevu\Search\Block\Adminhtml\Form\Field\Integration\Warnings\ObjectVsCollection $block */ ?>
+<?php if ($block->isObjectMethodSet()): ?>
+    <div class="message message-error">
+        <?= $block->escapeHtml(
+            __('Klevu Search is currently using Object method, which may be impacting your data sync performance.')
+        ) ?>
+        <br>
+        <?= /** @noEscape */
+        __(
+            'Please read %1 Object vs Collection Method %2 for more information.',
+            '<a href="' . $block->escapeUrl($block->getObjectVsCollectionArticleLink()) . '" target="_blank">',
+            '</a>'
+        ) . ' '
+        ?>
+        <?= /** @noEscape */
+        __(
+            'This warning can be disabled via %1Notification Settings %2.',
+            '<a href="' . $block->escapeUrl($block->getNotificationArticleLink()) . '">',
+            '</a>'
+        )
+        ?>
+    </div>
+<?php endif; ?>

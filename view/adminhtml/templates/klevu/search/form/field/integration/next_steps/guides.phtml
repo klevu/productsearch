@@ -1,0 +1,38 @@
+<?php /** @var \Klevu\Search\Block\Adminhtml\Form\Field\Integration\NextSteps\Guides $block */ ?>
+
+<tr class="klevu-next-step-guides">
+    <td colspan="3">
+        <div><?= $block->escapeHtml(__('You can also set any of the configuration below.')) ?></div>
+        <div><?= $block->escapeHtml(__('Please refer to the following quick start guides for more information.')) ?></div>
+        <ul>
+            <li>
+                <a href="https://help.klevu.com/support/solutions/articles/5000871252-integration-steps-for-magento-2" target="_blank">
+                    <?=$block->escapeHtml(__('Quick Start Guide for Magento')) ?>
+                </a>
+            </li>
+            <li>
+                <a href="https://help.klevu.com/support/solutions/articles/5000871563-do-you-have-any-checklist-available-for-data-sync-" target="_blank">
+                    <?= $block->escapeHtml(__('Configuring Data and Order Syncs')) ?>
+                </a>
+                </li>
+            <li>
+                <a href="https://help.klevu.com/support/solutions/articles/5000871301-integration-steps-for-magento-2" target="_blank">
+                    <?= $block->escapeHtml(__('Smart Category Merchandising Integration Guide')) ?>
+                </a>
+            </li>
+            <li>
+                <a href="https://help.klevu.com/support/solutions/articles/5000871321-integration-steps-for-magento2" target="_blank">
+                    <?= $block->escapeHtml(__('Smart Recommendations Integration Guide')) ?>
+                </a>
+            </li>
+            <li>
+                <?= /** @noEscape */ __(
+                    '%1 Troubleshooting %3 and %2 FAQ %3',
+                    '<a href="https://help.klevu.com/support/solutions/folders/5000308567" target="_blank">',
+                    '<a href="https://help.klevu.com/support/solutions/folders/5000308572" target="_blank">',
+                    '</a>'
+                )?>
+            </li>
+        </ul>
+    </td>
+</tr>

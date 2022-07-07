@@ -1,0 +1,17 @@
+<?php /** @var \Klevu\Search\Block\Adminhtml\Form\Integration $block */ ?>
+
+<tr>
+    <td colspan="3">
+        <div class="message">
+            <div>
+                <?= /** @noEscape */ __('%1 To integrate with your Klevu account %2, please use the %1 Integration %2 section in the left hand menu under "Klevu".',
+                    '<strong>', '</strong>') ?>
+            </div>
+            <div>
+                <?= $block->escapeHtml(
+                    __('If you do not have access to this section, please contact your site administrator to enable permissions on your Magento user account.')
+                ) ?>
+            </div>
+        </div>
+    </td>
+</tr>

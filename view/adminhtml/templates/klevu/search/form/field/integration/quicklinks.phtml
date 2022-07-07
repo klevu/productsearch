@@ -1,0 +1,24 @@
+<?php /** @var \Klevu\Search\Block\Adminhtml\Form\Field\Integration\Instructions\QuickLinks $block */ ?>
+<hr>
+<div class="message klevu-quick-links">
+    <ul>
+        <li>
+            <strong><?= $block->escapeHtml(__('Quick Links:')) ?></strong>
+        </li>
+        <li>
+            <a href="<?= $block->escapeUrl($block->getIntegrationArticleLink()) ?>" target="_blank">
+                <?= $block->escapeHtml(__('Integration Steps')) ?>
+            </a>
+        </li>
+        <li>
+            <a href="<?= $block->escapeUrl($block->getMigratingFromStagingToLiveArticleLink()) ?>" target="_blank">
+                <?= $block->escapeHtml(__('Migrating from Staging to Live')) ?>
+            </a>
+        </li>
+        <li>
+            <a href="<?= $block->escapeUrl($block->getKlevuMerchantCenterLink()) ?>" target="_blank">
+                <?= $block->escapeHtml(__('Klevu Merchant Center')) ?>
+            </a>
+        </li>
+    </ul>
+</div>
