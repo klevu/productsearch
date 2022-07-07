@@ -8,12 +8,13 @@ use Klevu\Search\Model\Klevu\Klevu as KlevuSync;
 use Klevu\Search\Model\Klevu\ResourceModel\Klevu as KlevuSyncResourceModel;
 use Magento\Framework\Exception\AlreadyExistsException;
 use Magento\Store\Api\Data\StoreInterface;
+use Magento\Store\Api\StoreRepositoryInterface;
 use Magento\Store\Model\Store;
 use Magento\TestFramework\ObjectManager;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @magentoDbIsolation enabled
+ * @magentoDbIsolation disabled
  */
 class GetProductIdsTest extends TestCase
 {
@@ -22,6 +23,9 @@ class GetProductIdsTest extends TestCase
      */
     private $objectManager;
 
+    /**
+     * @magentoDataFixture loadWebsiteFixtures
+     */
     public function testGetProductIdsReturnsArray()
     {
         $this->setupPhp5();
@@ -40,9 +44,14 @@ class GetProductIdsTest extends TestCase
             $this->assertTrue(is_array($productIds), 'Is Array');
         }
         $this->assertCount($count, $productIds);
+
+        static::loadWebsiteFixturesRollback();
     }
 
-    public function testGetMxSyncId()
+    /**
+     * @magentoDataFixture loadWebsiteFixtures
+     */
+    public function testGetMaxSyncId()
     {
         $this->setupPhp5();
         for ($i = 0; $i < 10; $i++) {
@@ -57,6 +66,8 @@ class GetProductIdsTest extends TestCase
             (int)$maxSyncId,
             $klevuRepository->getMaxSyncId($store)
         );
+
+        static::loadWebsiteFixturesRollback();
     }
 
     /**
@@ -68,14 +79,17 @@ class GetProductIdsTest extends TestCase
     }
 
     /**
+     * @param string $storeCode
+     *
      * @return StoreInterface
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
      */
-    private function getStore()
+    private function getStore($storeCode = 'klevu_test_store_1')
     {
-        $store = $this->objectManager->create(StoreInterface::class);
-        $store->setId(Store::DISTRO_STORE_ID);
+        /** @var StoreRepositoryInterface $storeRepository */
+        $storeRepository = $this->objectManager->get(StoreRepositoryInterface::class);
 
-        return $store;
+        return $storeRepository->get($storeCode);
     }
 
     /**
@@ -84,11 +98,14 @@ class GetProductIdsTest extends TestCase
      */
     private function createKlevuSyncEntity()
     {
+        $store = $this->getStore();
+        $storeId = $store->getId();
+
         $sync = $this->instantiateSync();
         $sync->setProductId(mt_rand(1, 4999999));
         $sync->setParentId(mt_rand(5000000, 9999999));
         $sync->setType(KlevuSync::OBJECT_TYPE_PRODUCT);
-        $sync->setStoreId(Store::DISTRO_STORE_ID);
+        $sync->setStoreId($storeId);
         $sync->setErrorFlag(0);
 
         $this->instantiateSyncResourceModel()->save($sync);
@@ -119,6 +136,24 @@ class GetProductIdsTest extends TestCase
     private function setupPhp5()
     {
         $this->objectManager = ObjectManager::getInstance();
+    }
+
+    /**
+     * Loads website creation scripts because annotations use a relative path
+     *  from integration tests root
+     */
+    public static function loadWebsiteFixtures()
+    {
+        include __DIR__ . '/../../_files/websiteFixtures.php';
+    }
+
+    /**
+     * Rolls back website creation scripts because annotations use a relative path
+     *  from integration tests root
+     */
+    public static function loadWebsiteFixturesRollback()
+    {
+        include __DIR__ . '/../../_files/websiteFixtures_rollback.php';
     }
 }
 

@@ -2,9 +2,9 @@
 
 namespace Klevu\Search\Controller\Adminhtml\Wizard\User;
 
-use Magento\Framework\App\ObjectManager;
-use Magento\Framework\Exception\NoSuchEntityException;
-use Magento\Store\Model\StoreManagerInterface;
+use Magento\Framework\Controller\Result\Forward as ResultForward;
+use Magento\Framework\Controller\ResultFactory;
+use Magento\Framework\Controller\ResultInterface;
 
 class Post extends \Magento\Backend\App\Action
 {
@@ -27,100 +27,17 @@ class Post extends \Magento\Backend\App\Action
         parent::__construct($context);
     }
 
+    /**
+     * Show 404 error page
+     *
+     * @return ResultInterface
+     */
     public function execute()
     {
-        $request = $this->getRequest();
+        /** @var ResultForward $resultForward */
+        $resultForward = $this->resultFactory->create(ResultFactory::TYPE_FORWARD);
+        $resultForward->forward('noroute');
 
-        if (!$request->isPost() || !$request->isAjax()) {
-            return $this->_redirect('adminhtml/dashboard');
-        }
-
-        $api = $this->_searchHelperApi;
-        $session = $this->_searchModelSession;
-        $this->_searchModelSession->setHideStep("no");
-        if ($request->getPost("klevu_existing_email")) {
-            $store = null;
-            if ($request->getPost('store_id')) {
-                try {
-                    /** @var StoreManagerInterface $storeManager */
-                    $storeManager = ObjectManager::getInstance()->get(StoreManagerInterface::class);
-                    $store = $storeManager->getStore($request->getPost('store_id'));
-                } catch (NoSuchEntityException $e) {
-                    // Let this default to null
-                }
-            }
-
-            $result = $api->getUser(
-                $request->getPost("klevu_existing_email"),
-                $request->getPost("klevu_existing_password"),
-                $store
-            );
-
-            if ($result["success"]) {
-                $this->_searchModelSession->setHideStep("yes");
-                $this->_searchModelSession->setConfiguredCustomerId($result["customer_id"]);
-                if (isset($result["message"])) {
-                    $this->messageManager->addSuccessMessage(__($result["message"]));
-                }
-                return $this->_forward("store");
-            } else {
-                $this->messageManager->addErrorMessage(__($result["message"]));
-                return $this->_forward("user");
-            }
-        } else {
-            $termsconditions = $request->getPost("termsconditions");
-            $klevu_new_email = $request->getPost("klevu_new_email");
-            $klevu_new_password = $request->getPost("klevu_new_password");
-            $userPlan = $request->getPost("userPlan");
-            $partnerAccount = false;
-            $klevu_new_url = $request->getPost("klevu_new_url");
-            $merchantEmail = $request->getPost("merchantEmail");
-            $contactNo = $request->getPost("countyCode")."-".$request->getPost("contactNo");
-            $error = true;
-            if (empty($klevu_new_email) || empty($klevu_new_password) || empty($klevu_new_url)
-            || empty($merchantEmail) ) {
-                $this->messageManager->addErrorMessage(__("Missing details in the form. Please check."));
-                return $this->_forward("user");
-            } elseif (!preg_match("/^[_\.0-9a-zA-Z-+]+@([0-9a-zA-Z][0-9a-zA-Z-]+\.)+[a-zA-Z]{2,6}$/i", $klevu_new_email)) {
-                $this->messageManager->addErrorMessage(__("Please enter valid Primary Email."));
-                return $this->_forward("user");
-            } elseif (!preg_match("/^[_\.0-9a-zA-Z-+]+@([0-9a-zA-Z][0-9a-zA-Z-]+\.)+[a-zA-Z]{2,6}$/i", $merchantEmail)) {
-                $this->messageManager->addErrorMessage(__("Please enter valid Retailer Email."));
-                return $this->_forward("user");
-            } elseif (empty($termsconditions)) {
-                $this->messageManager->addErrorMessage(__("Please accept terms and conditions."));
-                return $this->_forward("user");
-            } else {
-                $store = null;
-                if ($request->getPost('store_id')) {
-                    try {
-                        /** @var StoreManagerInterface $storeManager */
-                        $storeManager = ObjectManager::getInstance()->get(StoreManagerInterface::class);
-                        $store = $storeManager->getStore($request->getPost('store_id'));
-                    } catch (NoSuchEntityException $e) {
-                        // Let this default to null
-                    }
-                }
-
-                $result = $api->checkUserDetail(
-                    $request->getPost("klevu_new_email"),
-                    $store
-                );
-
-                if ($result["success"]) {
-                    $this->_searchModelSession->setTermsconditions($request->getPost("termsconditions"));
-                    $this->_searchModelSession->setKlevuNewEmail($request->getPost("klevu_new_email"));
-                    $this->_searchModelSession->setKlevuNewPassword($request->getPost("klevu_new_password"));
-                    $this->_searchModelSession->setKlevuNewUrl($request->getPost("klevu_new_url"));
-                    $this->_searchModelSession->setMerchantEmail($request->getPost("merchantEmail"));
-                    $contactNo = $request->getPost("countyCode")."-".$request->getPost("contactNo");
-                    $this->_searchModelSession->setContactNo($contactNo);
-                    return $this->_forward("userplan");
-                } else {
-                    $this->messageManager->addErrorMessage(__($result["message"]));
-                    return $this->_forward("user");
-                }
-            }
-        }
+        return $resultForward;
     }
 }

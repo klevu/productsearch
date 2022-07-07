@@ -11,6 +11,7 @@
                 <analytics_url>stats.klevu.com</analytics_url>
                 <js_url>js.klevu.com</js_url>
                 <tiers_url>tiers.klevu.com</tiers_url>
+                <api_url>api.ksearchnet.com</api_url>
             </general>
             <product_sync>
                 <enabled>1</enabled>
@@ -61,6 +62,9 @@
                 <lock_file>1</lock_file>
                 <orders_with_same_ip>1</orders_with_same_ip>
             </notification>
+            <features_api>
+                <last_sync_date>0</last_sync_date>
+            </features_api>
         </klevu_search>
         <klevu_logger>
             <!-- Deprecated -->

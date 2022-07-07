@@ -17,6 +17,7 @@ class Json implements SerializerInterface
      *
      * @param array|bool|float|int|string|null $data
      * @return bool|string
+     * @throws \InvalidArgumentException
      */
     public function serialize($data)
     {
@@ -40,6 +41,7 @@ class Json implements SerializerInterface
      *
      * @param string $string
      * @return array|bool|float|int|mixed|string|null
+     * @throws \InvalidArgumentException
      */
     public function unserialize($string)
     {

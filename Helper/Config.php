@@ -6,6 +6,9 @@ use Klevu\Logger\Constants as LoggerConstants;
 use Klevu\Search\Helper\Api as ApiHelper;
 use \Klevu\Search\Model\Product\Sync;
 use \Klevu\Search\Model\Api\Action\Features;
+use Klevu\Search\Service\Account\GetFeatures;
+use Klevu\Search\Service\Account\KlevuApi\GetAccountDetails;
+use Klevu\Search\Service\Account\UpdateEndpoints;
 use \Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Exception\NoSuchEntityException;
 use \Magento\Framework\UrlInterface;
@@ -83,7 +86,7 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     const XML_PATH_SECUREURL_ENABLED = "klevu_search/secureurl_setting/enabled";
     const XML_PATH_LANDING_ENABLED   = "klevu_search/searchlanding/landenabled";
     const XML_PATH_JS_API_KEY        = "klevu_search/general/js_api_key";
-    const XML_PATH_REST_API_KEY      = "klevu_search/general/rest_api_key";
+    const XML_PATH_REST_API_KEY      = GetFeatures::XML_PATH_REST_API_KEY;
     const XML_PATH_PRODUCT_SYNC_ENABLED   = "klevu_search/product_sync/enabled";
     const XML_PATH_PRODUCT_SYNC_FREQUENCY = "klevu_search/product_sync/frequency";
     const XML_PATH_PRODUCT_SYNC_LAST_RUN = "klevu_search/product_sync/last_run";
@@ -100,18 +103,19 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     const XML_PATH_FORCE_LOG = "klevu_search/developer/force_log";
     const XML_PATH_LOG_LEVEL = "klevu_search/developer/log_level";
     const XML_PATH_STORE_ID = "stores/%s/system/store/id";
-    const XML_PATH_HOSTNAME = "klevu_search/general/hostname";
-    const XML_PATH_RESTHOSTNAME = "klevu_search/general/rest_hostname";
+    const XML_PATH_HOSTNAME = GetAccountDetails::XML_PATH_HOSTNAME;
+    const XML_PATH_API_URL = GetAccountDetails::XML_PATH_API_URL;
+    const XML_PATH_RESTHOSTNAME = UpdateEndpoints::XML_PATH_INDEXING_URL;
     const XML_PATH_CLOUD_SEARCH_URL = "klevu_search/general/cloud_search_url";
-    const XML_PATH_CLOUD_SEARCH_V2_URL = "klevu_search/general/cloud_search_v2_url";
-    const XML_PATH_ANALYTICS_URL = "klevu_search/general/analytics_url";
-    const XML_PATH_JS_URL = "klevu_search/general/js_url";
+    const XML_PATH_CLOUD_SEARCH_V2_URL = UpdateEndpoints::XML_PATH_SEARCH_URL;
+    const XML_PATH_ANALYTICS_URL = UpdateEndpoints::XML_PATH_ANALYTICS_URL;
+    const XML_PATH_JS_URL = UpdateEndpoints::XML_PATH_JS_URL;
     const KLEVU_PRODUCT_FORCE_OLDERVERSION = 2;
     const XML_PATH_SYNC_OPTIONS = "klevu_search/product_sync/sync_options";
     const XML_PATH_UPGRADE_PREMIUM = "klevu_search/general/premium";
     const XML_PATH_RATING = "klevu_search/general/rating_flag";
     const XML_PATH_UPGRADE_FEATURES = "klevu_search/general/upgrade_features";
-    const XML_PATH_UPGRADE_TIRES_URL = "klevu_search/general/tiers_url";
+    const XML_PATH_UPGRADE_TIRES_URL = UpdateEndpoints::XML_PATH_TIRES_URL;
     const XML_PATH_COLLECTION_METHOD = "klevu_search/developer/collection_method";
     const XML_PATH_CONFIG_IMAGE_FLAG = "klevu_search/image_setting/enabled";
     const XML_PATH_TRIGGER_OPTIONS = "klevu_search/developer/trigger_options_info";
@@ -333,6 +337,29 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
             ScopeInterface::SCOPE_STORE,
             $this->getStoreIdFromStoreArgument($store)
         ) ?: ApiHelper::ENDPOINT_DEFAULT_HOSTNAME;
+    }
+
+    /**
+     * @param string $apiUrl
+     * @param int|string|StoreInterface $store
+     * @return $this
+     */
+    public function setApiUrl($apiUrl, $store = null)
+    {
+        return $this->setStoreConfig(static::XML_PATH_API_URL, $apiUrl, $store);
+    }
+
+    /**
+     * @param int|string|StoreInterface $store
+     * @return string
+     */
+    public function getApiUrl($store = null)
+    {
+        return $this->_appConfigScopeConfigInterface->getValue(
+            static::XML_PATH_API_URL,
+            ScopeInterface::SCOPE_STORE,
+            $this->getStoreIdFromStoreArgument($store)
+        ) ?: ApiHelper::ENDPOINT_DEFAULT_API_URL;
     }
 
     /**
@@ -962,6 +989,9 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
     /**
+     * @deprecated
+     * see \Klevu\Search\Service\Account\GetFeatures::execute
+     *
      * get feature update
      *
      * @return bool
@@ -1175,13 +1205,16 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
     /**
+     * @deprecated
+     * see \Klevu\Search\Service\Account\GetFeatures
+     *
      * Get curernt store features based on klevu search account
      *
-     * @return string
+     * @return array|string
      */
     public function getFeatures()
     {
-		$dataHelper = \Magento\Framework\App\ObjectManager::getInstance()->get('\Klevu\Search\Helper\Data');
+		$dataHelper = \Magento\Framework\App\ObjectManager::getInstance()->get(\Klevu\Search\Helper\Data::class);
 		try{
             $code = (string)$this->_frameworkAppRequestInterface->getParam('store');
 			if (strlen($code)) { // store level
@@ -1208,17 +1241,20 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
     /**
+     * @deprecated
+     * see \Klevu\Search\Service\Account\GetFeatures
+     *
      * Get the features from config value if not get any response from api
      *
-     * @param sting $restApi , int $store
+     * @param string $restApi , int $store
      *
-     * @return string
+     * @return array
      */
     public function executeFeatures($restApi, $store)
     {
         if (!$this->_klevu_enabled_feature_response) {
             $param =  ["restApiKey" => $restApi,"store" => $store->getId()];
-            $features_request = \Magento\Framework\App\ObjectManager::getInstance()->get('Klevu\Search\Model\Api\Action\Features')->execute($param);
+            $features_request = \Magento\Framework\App\ObjectManager::getInstance()->get(\Klevu\Search\Model\Api\Action\Features::class)->execute($param);
             if ($features_request->isSuccess()) {
                 $this->_klevu_enabled_feature_response = $features_request->getData();
                 $this->saveUpgradeFetaures(serialize($this->_klevu_enabled_feature_response), $store);
@@ -1226,7 +1262,7 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
                 if (!empty($restApi)) {
                     $this->_klevu_enabled_feature_response = unserialize($this->getUpgradeFetaures($store));
                 }
-                $dataHelper = \Magento\Framework\App\ObjectManager::getInstance()->get('\Klevu\Search\Helper\Data');
+                $dataHelper = \Magento\Framework\App\ObjectManager::getInstance()->get(\Klevu\Search\Helper\Data::class);
                 $dataHelper->log(
                     LoggerConstants::ZEND_LOG_INFO,
                     sprintf(
@@ -1305,6 +1341,13 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
         return $this->_versionReader->getVersionString('Klevu_Categorynavigation');
     }
 
+    /**
+     * @return mixed
+     */
+    public function getModuleInfoRecs()
+    {
+        return $this->_versionReader->getVersionString('Klevu_Recommendations');
+    }
 
     /**
      * Retrieve default per page values

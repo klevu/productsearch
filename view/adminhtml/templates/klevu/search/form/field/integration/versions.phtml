@@ -1,0 +1,26 @@
+<?php /** @var \Klevu\Search\Block\Adminhtml\Form\Field\Integration\Instructions\Versions $block */ ?>
+<div>
+    <img src="<?= $block->escapeHtml($block->getKlevuLogo())?>"
+         class="klevu-logo" width="185px" height="auto"
+         alt="<?= $block->escapeHtml(__('Klevu Logo')) ?> "/>
+</div>
+<div class="klevu-versions">
+    <div>
+        <strong><?= $block->escapeHtml(__('Smart Search:')) ?></strong>
+    </div>
+    <div><?= $block->getSearchVersion() ?></div>
+
+    <?php if (!empty($block->getCatNavVersion())): ?>
+        <div>
+            <strong><?= $block->escapeHtml(__('Smart Category Merchandising:')) ?></strong>
+        </div>
+        <div><?= $block->getCatNavVersion() ?></div>
+    <?php endif; ?>
+
+    <?php if (!empty($block->getRecsVersion())): ?>
+        <div>
+            <strong><?= $block->escapeHtml(__('Smart Recommendations:')) ?></strong>
+        </div>
+        <div><?= $block->getRecsVersion() ?></div>
+    <?php endif; ?>
+</div>

@@ -1,0 +1,154 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_include.xsd">
+    <group id="information" translate="label" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1"
+           extends="klevu_search/information">
+    </group>
+
+    <group id="next_steps" translate="label" sortOrder="10" showInDefault="0" showInWebsite="0" showInStore="1">
+        <label>Next Steps</label>
+        <attribute type="expanded">1</attribute>
+        <frontend_model>Klevu\Search\Block\Adminhtml\Form\Nextsteps</frontend_model>
+
+        <field id="sync" translate="label, comment" type="button" sortOrder="10" showInDefault="0" showInWebsite="0" showInStore="1">
+            <label>Trigger an initial sync</label>
+            <comment>
+                <![CDATA[
+                Use this button to open a new tab where the data synchronisation will begin immediately.
+                Alternatively, you can wait until the next scheduled cron task when your data will be synchronised automatically
+                ]]>
+            </comment>
+            <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Sync\Button</frontend_model>
+        </field>
+        <field id="introduction" type="label" sortOrder="5" showInStore="1">
+            <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Integration\NextSteps\Introduction</frontend_model>
+        </field>
+        <field id="search_enabled" translate="label" sortOrder="10" type="select"
+               showInDefault="1" showInWebsite="1" showInStore="1" extends="klevu_search/general/enabled">
+            <label>Enable Smart Search</label>
+            <config_path>klevu_search/general/enabled</config_path>
+        </field>
+        <field id="landenabled" translate="label" sortOrder="15" type="select"
+               showInDefault="1" showInWebsite="1" showInStore="1" extends="klevu_search/searchlanding/landenabled">
+            <label>Smart Search Ordering &amp; Rendering	</label>
+            <config_path>klevu_search/searchlanding/landenabled</config_path>
+        </field>
+        <field id="guides" type="label" sortOrder="100" showInStore="1">
+            <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Integration\NextSteps\Guides</frontend_model>
+        </field>
+    </group>
+
+    <group id="integration_status" translate="label" sortOrder="20"
+           showInDefault="1" showInWebsite="1" showInStore="0">
+        <label>Klevu Integration Status</label>
+
+        <!-- add text showing all keys, show in default scope, hide in SSM-->
+        <field id="auth_keys" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="0">
+            <frontend_model>Klevu\Search\Block\Adminhtml\Form\AuthKeys</frontend_model>
+            <hide_in_single_store_mode>1</hide_in_single_store_mode>
+        </field>
+    </group>
+
+    <group id="authentication_keys" translate="label" sortOrder="25"
+           showInDefault="0" showInWebsite="0" showInStore="1">
+        <label>Authentication Keys</label>
+
+        <!-- add integration instructions in store scope -->
+        <field id="integration_instructions" sortOrder="10" showInDefault="0" showInWebsite="0" showInStore="1">
+            <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Integration\Instructions</frontend_model>
+            <hide_in_single_store_mode>1</hide_in_single_store_mode>
+        </field>
+
+        <field id="js_api_key" translate="label comment" sortOrder="10" type="text" showInStore="1">
+            <label>API Key</label>
+            <config_path>klevu_search/general/js_api_key</config_path>
+            <comment><![CDATA[API key is used for performing searches in the frontend. Begins with 'klevu-']]></comment>
+            <validate>no-whitespace validate-klevu-js-api</validate>
+        </field>
+        <field id="rest_api_key" translate="label comment" sortOrder="20" showInStore="1">
+            <label>REST AUTH Key</label>
+            <config_path>klevu_search/general/rest_api_key</config_path>
+            <comment><![CDATA[REST AUTH key is used for syncing product information to the backend.]]></comment>
+            <validate>no-whitespace validate-klevu-rest-api</validate>
+        </field>
+        <field id="integration_confirmation" sortOrder="40" showInDefault="0" showInWebsite="0" showInStore="1">
+            <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Integration\Confirmation</frontend_model>
+        </field>
+
+        <field id="integration_messages" sortOrder="70" showInDefault="0" showInWebsite="0" showInStore="1">
+            <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Integration\Messages</frontend_model>
+        </field>
+    </group>
+
+    <group id="endpoints" translate="label" sortOrder="30" showInDefault="0" showInWebsite="0" showInStore="1">
+        <label>Endpoints</label>
+        <attribute type="expanded">0</attribute>
+        <field id="rest_hostname" translate="label comment" sortOrder="10" showInStore="1">
+            <label>Indexing URL</label>
+            <config_path>klevu_search/general/rest_hostname</config_path>
+            <comment>
+                <![CDATA[(Product Synchronization URL) Indexing URL is used for sending product synchronization API requests to Klevu.]]>
+            </comment>
+        </field>
+        <field id="cloud_search_url" translate="label comment" sortOrder="20" showInStore="1">
+            <label>Deprecated: Cloud Search V1 URL</label>
+            <config_path>klevu_search/general/cloud_search_url</config_path>
+            <comment><![CDATA[DEPRECATED: Cloud Search V1 URL is used for sending search API requests to Klevu.]]></comment>
+            <depends>
+                <field id="klevu_search/developer/theme_version">v1</field>
+            </depends>
+        </field>
+        <field id="cloud_search_v2_url" translate="label comment" sortOrder="30" showInStore="1">
+            <label>Search URL</label>
+            <config_path>klevu_search/general/cloud_search_v2_url</config_path>
+            <comment><![CDATA[(Cloud Search V2 URL) Search URL is used for sending search API requests to Klevu.]]></comment>
+        </field>
+        <field id="analytics_url" translate="label comment" sortOrder="40" showInStore="1">
+            <label>Analytics URL</label>
+            <config_path>klevu_search/general/analytics_url</config_path>
+            <comment>
+                <![CDATA[Analytics URL is used for reporting search terms, clicks and checkouts to Klevu.]]>
+            </comment>
+        </field>
+        <field id="js_url" translate="label comment" sortOrder="50" showInStore="1">
+            <label>JS URL</label>
+            <config_path>klevu_search/general/js_url</config_path>
+            <comment>
+                <![CDATA[JS URL is used for powering the JavaScript Klevu based template and quick search on the frontend.]]>
+            </comment>
+        </field>
+        <field id="endpoint_sync_messages" sortOrder="998" showInDefault="0" showInWebsite="0" showInStore="1">
+            <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Integration\Endpoint\Messages</frontend_model>
+        </field>
+        <field id="resync_endpoints" sortOrder="999" showInDefault="0" showInWebsite="0" showInStore="1">
+            <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Integration\Endpoints</frontend_model>
+        </field>
+    </group>
+
+    <group id="advanced" translate="label" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
+        <label>Advanced</label>
+        <attribute type="expanded">0</attribute>
+        <field id="hostname" translate="label comment" sortOrder="10"
+               showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Hostname</label>
+            <config_path>klevu_search/general/hostname</config_path>
+            <comment><![CDATA[Hostname is used for sending store configuration parameters to Klevu.]]></comment>
+            <validate>required-entry no-whitespace validate-no-empty</validate>
+        </field>
+        <field id="api_url" translate="label comment" sortOrder="20"
+               showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>API URL</label>
+            <config_path>klevu_search/general/api_url</config_path>
+            <validate>required-entry no-whitespace validate-no-empty</validate>
+        </field>
+        <field id="tiers_url" translate="label comment" sortOrder="30"
+               showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Tiers URL</label>
+            <config_path>klevu_search/general/tiers_url</config_path>
+            <comment>
+                <![CDATA[Tiers URL is used for retrieving information about the Klevu Plan you are signed up to.]]>
+            </comment>
+            <validate>required-entry no-whitespace validate-no-empty</validate>
+        </field>
+    </group>
+</config>

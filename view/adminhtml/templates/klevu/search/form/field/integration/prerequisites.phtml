@@ -1,0 +1,22 @@
+<?php /** @var \Klevu\Search\Block\Adminhtml\Form\Field\Integration\Instructions\Prerequisites $block */ ?>
+<div class="klevu-prerequisites">
+    <strong><?= $block->escapeHtml(__('Prerequisites')) ?></strong>
+    <ol>
+        <li>
+            <?= /** @noEscape  */
+            __(
+                'Ensure cron is running (%1 Click here %2 for more information on setting up a cron )',
+                '<a target="_blank" href="' . $block->escapeUrl($block->getCronSetupArticleLink()) . '">',
+                '</a>'
+            ) ?>
+        </li>
+        <li>
+           <?= $block->escapeHtml(__('Indices are up to date (System &gt; Index Management)')) ?>
+        </li>
+        <li>
+            <?= $block->escapeHtml(
+                __('Products should be enabled and have the visibility set to catalog and search')
+            ) ?>
+        </li>
+    </ol>
+</div>

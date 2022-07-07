@@ -6,27 +6,40 @@ use Klevu\Search\Helper\Backend as Klevu_HelperBackend;
 use Klevu\Search\Helper\Config as KlevuHelperConfig;
 use Klevu\Search\Helper\Data as KlevuHelperData;
 use Klevu\Search\Model\System\Config\Source\NotificationOptions;
-use Magento\Framework\App\Filesystem\DirectoryList as DirectoryList;
+use Klevu\Search\Service\Account\HelpArticleService;
+use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Filesystem;
 use Magento\Framework\Notification\MessageInterface;
 use Magento\Framework\UrlInterface;
 
-/**
- * Class LockFileMessage
- * @package Klevu\Search\Model\Message
- */
 class LockFileMessage implements MessageInterface
 {
     const MESSAGE_ID = 'KLEVU_LOCK_FILE';
-
     /**
-     * LockFileMessages constructor.
-     *
-     * @param UrlInterface $urlBuilder
-     * @param DirectoryList $directoryList
-     * @param KlevuHelperConfig $searchHelperConfig
-     * @param Filesystem $fileSystem
+     * @var UrlInterface
      */
+    protected $urlBuilder;
+    /**
+     * @var DirectoryList
+     */
+    protected $directoryList;
+    /**
+     * @var KlevuHelperConfig
+     */
+    protected $_searchHelperConfig;
+    /**
+     * @var KlevuHelperData
+     */
+    protected $_searchHelperData;
+    /**
+     * @var Klevu_HelperBackend
+     */
+    protected $_searchHelperBackend;
+    /**
+     * @var Filesystem
+     */
+    protected $fileSystem;
+
     public function __construct(
         UrlInterface $urlBuilder,
         DirectoryList $directoryList,
@@ -34,8 +47,7 @@ class LockFileMessage implements MessageInterface
         KlevuHelperData $searchHelperData,
         Klevu_HelperBackend $searchHelperBackend,
         Filesystem $fileSystem
-    )
-    {
+    ) {
         $this->urlBuilder = $urlBuilder;
         $this->directoryList = $directoryList;
         $this->_searchHelperConfig = $searchHelperConfig;
@@ -53,44 +65,48 @@ class LockFileMessage implements MessageInterface
     }
 
     /**
-     * @return bool|void
+     * @return bool
      */
     public function isDisplayed()
     {
         //Not showing if Disabled or Klevu Config Selected
-        $option = (int)$this->_searchHelperConfig->getLockFileNotificationOption();
+        $option = $this->_searchHelperConfig->getLockFileNotificationOption();
         if ($option !== NotificationOptions::LOCK_WARNING_EVERY_ADMIN_PAGE) {
             return false;
         }
-        $flag = $this->_searchHelperBackend->isOutdatedLockFilesExist();
-        if ($flag) {
-            return true;
-        }
-        return false;
+
+        return $this->_searchHelperBackend->isOutdatedLockFilesExist();
     }
 
     /**
      * Retrieve message text
      *
-     * @return \Magento\Framework\Phrase
+     * @return string
      */
     public function getText()
     {
-        $url = 'https://help.klevu.com/support/solutions/articles/5000876105-developer-and-notification-setting';
-        //@codingStandardsIgnoreStart
-        return __(
-            'Klevu Search has detected one or more outdated Lock Files, data sync may not be working correctly.
-            Please read about <a href="%2" target="_blank">Magento Lock Files</a> for more information.
-            This warning can be disabled via <a href="%1" target="_blank">Notification Settings</a>',
-            $url,
-            'https://help.klevu.com/support/solutions/articles/5000871506-lock-files-for-data-sync/'
+        $return = __(
+            'Klevu Search has detected one or more outdated Lock Files, data sync may not be working correctly.'
         );
-        //@codingStandardsIgnoreEnd
+        $return .= ' ' . __(
+            'Please read about %1Magento Lock Files%2 for more information.',
+            '<a href="' . HelpArticleService::HELP_ARTICLE_LINK_NOTIFICATION . '" target="_blank">',
+            '</a>'
+        );
+        $return .= ' ' . __(
+            'This warning can be disabled via %1Notification Settings%2',
+            '<a href="' . HelpArticleService::HELP_ARTICLE_LINK_LOCK_FILES . '" target="_blank">',
+            '</a>'
+        );
+
+        return $return;
     }
 
+    /**
+     * @return int
+     */
     public function getSeverity()
     {
         return MessageInterface::SEVERITY_CRITICAL;
     }
 }
-

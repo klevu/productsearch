@@ -1,0 +1,68 @@
+<?php /** @var \Klevu\Search\Block\Adminhtml\Form\Field\Integration\Confirmation\Button $block */ ?>
+
+<tr id="row_klevu_integration_authentication_keys_integration_continue" class="klevu-integration-buttons">
+    <td class="label"></td>
+    <td class="value">
+        <div class="actions klevu-action-integrate">
+            <button class="klevu-action-integrate primary" type="button"
+                    id="klevu_integration_authentication_keys_integration_continue" style="display: none;">
+                <span><?= $block->escapeHtml(__('Check API Keys')) ?></span>
+            </button>
+            <button class="klevu-action-cancel" type="button"
+                    id="klevu_integration_authentication_keys_integration_revert" style="display: none;">
+                <span><?= $block->escapeHtml(__('Cancel')) ?></span>
+            </button>
+        </div>
+    </td>
+    <td class=""></td>
+</tr>
+
+<tr id="row_klevu_integration_authentication_keys_company_name" style="display:none;">
+    <td class="label">
+        <label for="klevu_integration_authentication_keys_company_name">
+            <?= $block->escapeHtml(__("Company")) ?>
+        </label>
+    </td>
+    <td class="value">
+        <div class="control-value"></div>
+    </td>
+    <td class=""></td>
+</tr>
+
+<tr id="row_klevu_integration_authentication_keys_company_email" style="display:none;">
+    <td class="label">
+        <label for="klevu_integration_authentication_keys_company_email">
+            <?= $block->escapeHtml(__("Email")) ?>
+        </label>
+    </td>
+    <td class="value">
+        <div class="control-value"></div>
+    </td>
+    <td class=""></td>
+</tr>
+
+<tr id="row_klevu_integration_authentication_keys_integration_confirm" class="klevu-integration-buttons"
+    style="display:none;">
+    <td class="label"></td>
+    <td class="value">
+        <div class="actions">
+            <button class="klevu-action-integrate primary" type="button"
+                    id="klevu_integration_authentication_keys_integration_confirm">
+                <span><?= $block->escapeHtml(__('Confirm and Integrate')) ?></span>
+            </button>
+            <button class="klevu-action-cancel" type="button"
+                    id="klevu_integration_authentication_keys_integration_cancel">
+                <span><?= $block->escapeHtml(__('Cancel')) ?></span>
+            </button>
+        </div>
+    </td>
+    <td class=""></td>
+</tr>
+
+<script type="text/x-magento-init">
+    {
+        "*": {
+            "Klevu_Search/js/config/integrate": <?= /** @noEscape */ $block->getIntegrationConfig() ?>
+        }
+    }
+</script>

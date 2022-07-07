@@ -1,0 +1,28 @@
+<?php /** @var Klevu\Search\Block\Adminhtml\Form\Field\Integration\Instructions\Integration $block */ ?>
+<hr>
+<div class="klevu-how-to-integrate">
+    <div class="title"><?= $block->escapeHtml(__('How to Integrate Klevu?')) ?></div>
+    <ul>
+        <li>
+            <?= $block->escapeHtml(__('Add a new store in your Klevu Merchant Center (KMC) account')) ?>
+            <a href="<?= $block->escapeUrl($block->getIntegrationStepsArticleLink()) ?>" target="_blank">
+                <?= $block->escapeHtml(__('Learn More')) ?>
+            </a>
+            <br/>
+            <?= '(' ?>
+            <span class="klevu-text-secondary"><?= $block->escapeHtml(__('Don\'t have an account?')) ?></span>
+            <a href="<?= $block->escapeUrl($block->getKlevuMerchantCenterUrl()) ?>" target="_blank">
+                <?= $block->escapeHtml(__('Click Here')) ?>
+            </a>
+            <?= ')' ?>
+        </li>
+        <li>
+            <?= $block->escapeHtml(__('Copy the API & REST AUTH Keys from KMC of the newly added store.')) ?>
+        </li>
+        <li>
+            <?= $block->escapeHtml(
+                __('Select the store Scope (top left) where you would like to integrate Klevu, use the keys by following on screen instructions.')
+            ) ?>
+        </li>
+    </ul>
+</div>

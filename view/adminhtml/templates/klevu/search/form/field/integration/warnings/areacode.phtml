@@ -1,0 +1,19 @@
+<?php /** @var \Klevu\Search\Block\Adminhtml\Form\Field\Integration\Warnings\AreaCode $block */ ?>
+<?php if ($block->lockFileExists()): ?>
+    <div class="message message-error">
+        <?= /** @noEscape */
+        __(
+            'Klevu Search has detected an %1 Area code is already set %2 error, data sync may not be working correctly.',
+            '<strong>',
+            '</strong>'
+        ) . ' '
+        ?>
+        <?= /** @noEscape */
+        __(
+            'For more information on what this means and how to resolve it, please follow the steps in %1 this guide %2.',
+            '<a href="' . $block->escapeUrl($block->getAreaCodeArticleLink()) . '" target="_blank">',
+            '</a>'
+        )
+        ?>
+    </div>
+<?php endif; ?>

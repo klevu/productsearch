@@ -1,11 +1,13 @@
 <?php
+
 namespace Klevu\Search\Observer\Backend;
 
 use Klevu\Logger\Constants as LoggerConstants;
-use Magento\Framework\App\RequestInterface as RequestInterface;
+use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Event\Observer as EventObserver;
 use Magento\Framework\Event\ObserverInterface;
-use Magento\Store\Model\StoreManagerInterface as StoreManagerInterface;
+use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Store\Model\StoreManagerInterface;
 use Klevu\Search\Model\Klevu\HelperManager as Klevu_HelperManager;
 
 class SingleStoreViewConfigToShow implements ObserverInterface
@@ -18,44 +20,65 @@ class SingleStoreViewConfigToShow implements ObserverInterface
         Klevu_HelperManager $klevuHelperManager,
         StoreManagerInterface $storeManager,
         RequestInterface $request
-    )
-    {
+    ) {
         $this->_klevuHelperManager = $klevuHelperManager;
         $this->_storeManager = $storeManager;
         $this->_request = $request;
     }
 
+    /**
+     * @param EventObserver $observer
+     *
+     * @return void
+     */
     public function execute(EventObserver $observer)
     {
-		$klevuDataHelper = $this->_klevuHelperManager->getDataHelper();
         try {
-            $isSingleStoreMode = $this->_storeManager->isSingleStoreMode();
-            $klevuConfig = $this->_klevuHelperManager->getConfigHelper();            
-
-            $actionFlag = FALSE;
-            if( $this->_request->getFullActionName() == 'adminhtml_system_config_edit' &&
-                $this->_request->getParam('section') == 'klevu_search' ) {
-                $actionFlag = TRUE;
-            }
-            if(!$isSingleStoreMode || !$klevuConfig->getModuleInfo() || !$actionFlag) {
+            if (!($this->_storeManager->isSingleStoreMode())) {
                 return;
             }
-
-            $jsApiValue = $klevuConfig->getJsApiKey( $this->_storeManager->getStore() );
-            $jsRestValue = $klevuConfig->getRestApiKey( $this->_storeManager->getStore() );
-            $cloudSearchURL = $klevuConfig->getCloudSearchUrl( $this->_storeManager->getStore() );
-            $analyticsURL = $klevuConfig->getAnalyticsUrl( $this->_storeManager->getStore() );
-            $restHostName = $klevuConfig->getRestHostname( $this->_storeManager->getStore() );
-
-            $klevuConfig->setGlobalConfig( $klevuConfig::XML_PATH_JS_API_KEY , $jsApiValue );
-            $klevuConfig->setGlobalConfig( $klevuConfig::XML_PATH_REST_API_KEY , $jsRestValue );
-            $klevuConfig->setGlobalConfig( $klevuConfig::XML_PATH_CLOUD_SEARCH_URL , $cloudSearchURL );
-            $klevuConfig->setGlobalConfig( $klevuConfig::XML_PATH_ANALYTICS_URL , $analyticsURL );
-			$klevuConfig->setGlobalConfig( $klevuConfig::XML_PATH_RESTHOSTNAME , $restHostName );
-
+            if (
+                $this->_request->getFullActionName() !== 'adminhtml_system_config_edit' ||
+                $this->_request->getParam('section') !== 'klevu_search'
+            ) {
+                return;
+            }
+            $klevuConfig = $this->_klevuHelperManager->getConfigHelper();
+            if (!$klevuConfig->getModuleInfo()) {
+                return;
+            }
+            try {
+                $store = $this->_storeManager->getStore();
+            } catch (NoSuchEntityException $e) {
+                return;
+            }
+            $klevuConfig->setGlobalConfig(
+                $klevuConfig::XML_PATH_JS_API_KEY,
+                $klevuConfig->getJsApiKey($store)
+            );
+            $klevuConfig->setGlobalConfig(
+                $klevuConfig::XML_PATH_REST_API_KEY,
+                $klevuConfig->getRestApiKey($store)
+            );
+            $klevuConfig->setGlobalConfig(
+                $klevuConfig::XML_PATH_CLOUD_SEARCH_URL,
+                $klevuConfig->getCloudSearchUrl($store)
+            );
+            $klevuConfig->setGlobalConfig(
+                $klevuConfig::XML_PATH_ANALYTICS_URL,
+                $klevuConfig->getAnalyticsUrl($store)
+            );
+            $klevuConfig->setGlobalConfig(
+                $klevuConfig::XML_PATH_RESTHOSTNAME,
+                $klevuConfig->getRestHostname($store)
+            );
         } catch (\Exception $e) {
-            $klevuDataHelper->log(LoggerConstants::ZEND_LOG_CRIT, sprintf("Exception thrown for single store view %s::%s - %s", __CLASS__, __METHOD__, $e->getMessage()));
-            return;
+            $this->_klevuHelperManager->getDataHelper()->log(
+                LoggerConstants::ZEND_LOG_CRIT,
+                sprintf("Exception thrown for single store view %s::%s - %s",
+                    __CLASS__, __METHOD__, $e->getMessage()
+                )
+            );
         }
     }
 }

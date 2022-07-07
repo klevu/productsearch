@@ -1,0 +1,37 @@
+<?php /** @var \Klevu\Search\Block\Adminhtml\Form\Field\Integration\AuthKeys $block */ ?>
+<?php $jsApiKeys = $block->getJsApiKeysByStore(); ?>
+<div>
+    <?= $block->escapeHtml(__('Status of Klevu Integration for your stores.')) ?>
+</div>
+<table class="klevu-js-api-keys">
+    <thead>
+    <tr>
+        <th style="text-align: left"><?= $block->escapeHtml(__('Website')) ?></th>
+        <th style="text-align: left"><?= $block->escapeHtml(__('Store')) ?></th>
+        <th style="text-align: left"><?= $block->escapeHtml(__('Status (API Key)')) ?></th>
+    </tr>
+    </thead>
+    <tbody>
+    <?php foreach ($jsApiKeys as $websiteName => $store): ?>
+        <?php foreach ($store as $storeName => $apiKey): ?>
+            <tr>
+                <td><?= $block->escapeHtml($websiteName) ?></td>
+                <td><?= $block->escapeHtml($storeName) ?></td>
+                <?php if ($apiKey): ?>
+                    <td>
+                        <?= $block->escapeHtml(__('Integrated (%1)', $apiKey)); ?>
+                    </td>
+                <?php else: ?>
+                    <td class="klevu-store-not-integrated">
+                        <?= $block->escapeHtml(__('Not Integrated')); ?>
+                        <?php $integrateUrl = $block->getIntegrateUrlByWebsiteAndStoreName($websiteName, $storeName); ?>
+                        <?php if ($integrateUrl): ?>
+                            [ <small><a href="<?= $block->escapeUrl($integrateUrl); ?>"><?= $block->escapeHtml(__('Integrate Now')); ?></a></small> ]
+                        <?php endif; ?>
+                    </td>
+                <?php endif; ?>
+            </tr>
+        <?php endforeach; ?>
+    <?php endforeach; ?>
+    </tbody>
+</table>

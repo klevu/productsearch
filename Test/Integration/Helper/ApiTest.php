@@ -3,11 +3,14 @@
 namespace Klevu\Search\Test\Integration\Helper;
 
 use Klevu\Search\Helper\Api as ApiHelper;
+use Klevu\Search\Helper\Config;
 use Klevu\Search\Helper\VersionReader;
 use Klevu\Search\Model\Api\Request;
 use Klevu\Search\Model\Api\Response\Data as ResponseModel;
+use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\DataObject;
 use Magento\Framework\UrlInterface;
+use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\TestFramework\Helper\Bootstrap;
 use Magento\TestFramework\ObjectManager;
@@ -46,6 +49,7 @@ class ApiTest extends TestCase
      * @magentoConfigFixture default/klevu_search/developer/theme_version v1
      * @magentoConfigFixture default_store klevu_search/developer/theme_version v1
      * @magentoConfigFixture klevu_test_store_1_store klevu_search/developer/theme_version v1
+     * @magentoConfigFixture default_store klevu_search/general/hostname box.klevu.com
      * @magentoDataFixture loadWebsiteFixtures
      */
     public function testCreateWebstore_ThemeV1()
@@ -81,8 +85,11 @@ class ApiTest extends TestCase
             . "<message>" . $storeName . " has been successfully configured on Klevu.</message>"
         . "</data>";
 
+        $scopeConfig = $this->objectManager->get(ScopeConfigInterface::class);
+        $hostname = $scopeConfig->getValue(Config::XML_PATH_HOSTNAME, ScopeInterface::SCOPE_STORES, 1);
+
         $apiRequestMock = $this->getApiRequestMock(
-            'https://box.klevu.com/n-search/addWebstore',
+            'https://' . $hostname . '/n-search/addWebstore',
             'POST',
             $requestParameters,
             true,
@@ -138,6 +145,7 @@ class ApiTest extends TestCase
      * @magentoConfigFixture default/klevu_search/developer/theme_version v1
      * @magentoConfigFixture default_store klevu_search/developer/theme_version v2
      * @magentoConfigFixture klevu_test_store_1_store klevu_search/developer/theme_version v2
+     * @magentoConfigFixture default_store klevu_search/general/hostname box.klevu.com
      * @magentoDataFixture loadWebsiteFixtures
      */
     public function testCreateWebstore_ThemeV2()
@@ -173,8 +181,11 @@ class ApiTest extends TestCase
             . "<message>" . $storeName . " has been successfully configured on Klevu.</message>"
             . "</data>";
 
+        $scopeConfig = $this->objectManager->get(ScopeConfigInterface::class);
+        $hostname = $scopeConfig->getValue(Config::XML_PATH_HOSTNAME, ScopeInterface::SCOPE_STORES, 1);
+
         $apiRequestMock = $this->getApiRequestMock(
-            'https://box.klevu.com/n-search/addWebstore',
+            'https://' . $hostname . '/n-search/addWebstore',
             'POST',
             $requestParameters,
             true,

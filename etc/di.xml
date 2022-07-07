@@ -1,7 +1,6 @@
 <?xml version="1.0"?>
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
 	<preference for="Klevu\Search\Api\SerializerInterface" type="Klevu\Search\Serializer\Json"/>
-	<preference for="Magento\Config\Block\System\Config\Form\Field" type="Klevu\Search\Block\Adminhtml\System\Config\Form\Field"/>
 
 	<preference for="Klevu\Search\Api\Provider\CommonProviderInterface" type="Klevu\Search\Model\Product\Provider\CommonProvider"/>
 	<preference for="Klevu\Search\Api\Service\Catalog\Product\StockServiceInterface" type="Klevu\Search\Service\Catalog\Product\Stock"/>
@@ -10,7 +9,20 @@
     <preference for="Klevu\Search\Api\MagentoProductSyncRepositoryInterface" type="Klevu\Search\Repository\MagentoProductSyncRepository" />
     <preference for="Klevu\Search\Api\Service\Sync\GetBatchSizeInterface" type="Klevu\Search\Service\Sync\GetBatchSize" />
 
-	<preference for="Klevu\Search\Model\Klevu\Cron\SchedulerInterface" type="Klevu\Search\Model\Klevu\Cron\Scheduler" />
+	<preference for="Klevu\Search\Api\Service\Account\KlevuApi\GetAccountDetailsInterface" type="Klevu\Search\Service\Account\KlevuApi\GetAccountDetails" />
+	<preference for="Klevu\Search\Api\Service\Account\Model\AccountFeaturesInterface" type="Klevu\Search\Service\Account\Model\AccountFeatures" />
+    <preference for="Klevu\Search\Api\Service\Account\GetAccountDetailsInterface" type="Klevu\Search\Service\Account\GetAccountDetails" />
+    <preference for="Klevu\Search\Api\Service\Account\Model\AccountDetailsInterface" type="Klevu\Search\Service\Account\Model\AccountDetails" />
+    <preference for="Klevu\Search\Api\Service\Account\ConfirmIntegrationInterface" type="Klevu\Search\Service\Account\ConfirmIntegration" />
+    <preference for="Klevu\Search\Api\Service\Account\GetFeaturesInterface" type="Klevu\Search\Service\Account\GetFeatures" />
+    <preference for="Klevu\Search\Api\Service\Account\IntegrationStatusInterface" type="Klevu\Search\Service\Account\IntegrationStatus" />
+    <preference for="Klevu\Search\Api\Service\Account\UpdateEndpointsInterface" type="Klevu\Search\Service\Account\UpdateEndpoints" />
+    <preference for="Klevu\Search\Api\Service\Account\HelpArticleServiceInterface" type="Klevu\Search\Service\Account\HelpArticleService" />
+    <preference for="Klevu\Search\Api\Service\Account\GetKmcUrlServiceInterface" type="Klevu\Search\Service\Account\GetKmcUrlService" />
+    <preference for="Klevu\Search\Api\Service\Account\GetStoresUsingApiKeysInterface" type="Klevu\Search\Service\Account\GetStoresUsingApiKeys" />
+    <preference for="Klevu\Search\Api\Service\WebRestApi\Admin\GetBearerTokenInterface" type="Klevu\Search\Service\WebRestApi\Admin\GetBearerTokenService" />
+
+    <preference for="Klevu\Search\Model\Klevu\Cron\SchedulerInterface" type="Klevu\Search\Model\Klevu\Cron\Scheduler" />
 	<preference for="Klevu\Search\Model\Klevu\Category\CategoryInterface" type="Klevu\Search\Model\Klevu\Category\Category" />
 	<preference for="Klevu\Search\Model\Api\Magento\Request\ProductInterface" type="Klevu\Search\Model\Api\Magento\Request\Product" />
 	<preference for="Klevu\Search\Model\Product\MagentoProductActionsInterface" type="Klevu\Search\Model\Product\MagentoProductActions"/>
@@ -115,6 +127,20 @@
 	</virtualType>
 
     <type name="Klevu\FrontendJs\Observer\InvalidateCustomerDataObserver">
+        <arguments>
+            <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Service\Account\GetFeatures">
+        <arguments>
+            <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
+            <argument name="serializer" xsi:type="object">Klevu\Search\Serializer\Json</argument>
+            <argument name="restApiKeyValidator" xsi:type="object">Klevu\Search\Validator\RestApiKeyValidator</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Observer\Backend\RestApiKeyChanged">
         <arguments>
             <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
         </arguments>
@@ -266,6 +292,73 @@
     <type name="Klevu\Search\Repository\KlevuSyncRepository">
         <arguments>
             <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Model\Product\MagentoProductActions">
+        <arguments>
+            <argument name="addProductIdsProvider" xsi:type="object">Klevu\Search\Service\Sync\Product\AddProductIdsProvider</argument>
+            <argument name="deleteProductIdsProvider" xsi:type="object">Klevu\Search\Service\Sync\Product\DeleteProductIdsProvider</argument>
+            <argument name="updateProductIdsProvider" xsi:type="object">Klevu\Search\Service\Sync\Product\UpdateProductIdsProvider</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Service\Account\GetAccountDetails">
+        <arguments>
+            <argument name="jsApiKeyValidator" xsi:type="object">Klevu\Search\Validator\JsApiKeyValidator</argument>
+            <argument name="restApiKeyValidator" xsi:type="object">Klevu\Search\Validator\RestApiKeyValidator</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Service\Account\IntegrationStatus">
+        <arguments>
+            <argument name="jsApiKeyValidator" xsi:type="object">Klevu\Search\Validator\JsApiKeyValidator</argument>
+            <argument name="restApiKeyValidator" xsi:type="object">Klevu\Search\Validator\RestApiKeyValidator</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Service\Account\ConfirmIntegration">
+        <arguments>
+            <argument name="jsApiKeyValidator" xsi:type="object">Klevu\Search\Validator\JsApiKeyValidator</argument>
+            <argument name="restApiKeyValidator" xsi:type="object">Klevu\Search\Validator\RestApiKeyValidator</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Service\Account\GetStoresUsingApiKeys">
+        <arguments>
+            <argument name="jsApiKeyValidator" xsi:type="object">Klevu\Search\Validator\JsApiKeyValidator</argument>
+            <argument name="restApiKeyValidator" xsi:type="object">Klevu\Search\Validator\RestApiKeyValidator</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Controller\Adminhtml\Integration\Confirm">
+        <arguments>
+            <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Controller\Adminhtml\Integration\Endpoints">
+        <arguments>
+            <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Controller\Adminhtml\Integration\Index">
+        <arguments>
+            <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Service\Account\GetKmcUrlService">
+        <arguments>
+            <argument name="configSource" xsi:type="object">Magento\Config\App\Config\Source\ModularConfigSource</argument>
+            <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Block\Adminhtml\Form\Field\Integration\Warnings\LockFile">
+        <arguments>
+            <argument name="fileSystemIo" xsi:type="object">Magento\Framework\Filesystem\Io\File</argument>
         </arguments>
     </type>
 </config>
