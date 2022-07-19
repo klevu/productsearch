@@ -8,6 +8,7 @@ namespace Klevu\Search\Model\Order;
 
 use Klevu\Logger\Api\StoreScopeResolverInterface;
 use Klevu\Logger\Constants as LoggerConstants;
+use Klevu\Search\Api\Service\Sync\GetOrderSelectMaxLimitInterface;
 use Klevu\Search\Model\Sync as KlevuSync;
 use Klevu\Search\Model\System\Config\Source\Order\Ip as OrderIP;
 use Magento\Framework\App\Filesystem\DirectoryList;
@@ -16,6 +17,7 @@ use Magento\Framework\Exception\FileSystemException;
 use Magento\Framework\App\ObjectManager;
 use Magento\Framework\DB\Select;
 use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Model\AbstractModel;
 use Magento\GroupedProduct\Model\Product\Type\Grouped as GroupedProduct;
 use Klevu\Search\Helper\Price as Klevu_Helper_Price;
@@ -29,6 +31,9 @@ class Sync extends AbstractModel
 {
     const LOCK_FILE = 'klevu_running_order_sync.lock';
     const LOCK_FILE_TTL = 3600;
+    const SYNC_QUEUE_ITEM_WAITING = 0;
+    const SYNC_QUEUE_ITEM_SUCCESS = 1;
+    const SYNC_QUEUE_ITEM_FAILED = 2;
 
     /**
      * @var \Magento\Framework\App\ResourceConnection
@@ -58,7 +63,6 @@ class Sync extends AbstractModel
      * @var \Magento\Framework\Stdlib\DateTime\DateTime
      */
     protected $_frameworkModelDate;
-
     /**
      * @var GroupedProduct
      */
@@ -86,6 +90,10 @@ class Sync extends AbstractModel
      * @var string[]
      */
     private $storeCodesToRun = [];
+    /**
+     * @var GetOrderSelectMaxLimitInterface
+     */
+    private $getOrderSelectMaxLimit;
 
     public function __construct(
         \Magento\Framework\App\ResourceConnection $frameworkModelResource,
@@ -106,7 +114,8 @@ class Sync extends AbstractModel
         Klevu_Helper_Price $klevuPriceHelper = null,
         array $data = [],
         StoreScopeResolverInterface $storeScopeResolver = null,
-        DirectoryList $directoryList = null
+        DirectoryList $directoryList = null,
+        GetOrderSelectMaxLimitInterface $getOrderSelectMaxLimit = null
     ) {
         parent::__construct($context, $registry, $resource, $resourceCollection, $data);
         $this->_klevuSyncModel = $klevuSyncModel;
@@ -124,6 +133,7 @@ class Sync extends AbstractModel
         $this->storeScopeResolver = $storeScopeResolver
             ?: ObjectManager::getInstance()->get(StoreScopeResolverInterface::class);
         $this->directoryList = $directoryList ?: ObjectManager::getInstance()->get(DirectoryList::class);
+        $this->getOrderSelectMaxLimit = $getOrderSelectMaxLimit ?: ObjectManager::getInstance()->get(GetOrderSelectMaxLimitInterface::class);
     }
 
     /**
@@ -264,7 +274,7 @@ class Sync extends AbstractModel
     }
 
     /**
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws NoSuchEntityException
      * @throws \Zend_Db_Statement_Exception
      */
     public function run()
@@ -312,10 +322,11 @@ class Sync extends AbstractModel
                 $errors = 0;
 
                 $select = $this->getSyncQueueSelect((int)$store->getId());
+                $maxSelectLimit = $this->getOrderSelectMaxLimit->execute($store);
                 do {
-                    $selectLimit = ($maxBatchSize && $maxBatchSize < 1000)
+                    $selectLimit = ($maxBatchSize && $maxBatchSize < $maxSelectLimit)
                         ? $maxBatchSize
-                        : 1000;
+                        : $maxSelectLimit;
                     $select->limit($selectLimit, $errors);
 
                     $stmt = $connection->query($select);
@@ -333,7 +344,7 @@ class Sync extends AbstractModel
 
                     $this->processItemsToSync($itemsToSend, $store, $items_synced, $errors);
                     $items_processed += count($itemsToSend);
-                } while ($items_processed < $maxBatchSize);
+                } while (0 === $maxBatchSize || $items_processed < $maxBatchSize);
 
                 $this->log(LoggerConstants::ZEND_LOG_INFO, sprintf("Order Sync finished for Store Name:(%s), Website:(%s) and %d Items synced.", $store->getName(), $store->getWebsite()->getName(), $items_synced));
             }
@@ -372,7 +383,7 @@ class Sync extends AbstractModel
             $item->load($value['order_item_id']);
             if (!$item->getId()) {
                 $this->log(LoggerConstants::ZEND_LOG_ERR, sprintf("Order Item %d does not exist: Removed from sync!", $value['order_item_id']));
-                $this->removeItemFromQueue($value['order_item_id']);
+                $this->setItemFailedInQueue($value['order_item_id']);
                 $errors++;
 
                 continue;
@@ -398,6 +409,7 @@ class Sync extends AbstractModel
                 $items_synced++;
             } else {
                 $this->log(LoggerConstants::ZEND_LOG_WARN, sprintf('Skipped Order Item %d: %s', $value['order_item_id'], $result));
+                $this->setItemFailedInQueue($value['order_item_id']);
             }
         }
     }
@@ -446,7 +458,13 @@ class Sync extends AbstractModel
 
             // multiple currency store processing
             $store = $this->_storeModelStoreManagerInterface->getStore($item->getStoreId());
-            $klevu_salePrice = $item->getBasePriceInclTax() ? $item->getBasePriceInclTax() : ($parent ? $parent->getBasePriceInclTax() : null);
+
+            $parentPrice = $parent ? $parent->getBasePriceInclTax() : null;
+            $klevu_salePrice = $item->getBasePriceInclTax() ?: $parentPrice;
+
+            $parentQuantity = $parent ? $parent->getQtyOrdered() : null;
+            $quantity = $item->getQtyOrdered() ?: $parentQuantity;
+
             $klevu_current_store_currency_salePrice = $this->_priceHelper->convertPrice($klevu_salePrice,$store);
             $klevu_current_store_currency_salePrice_round =  $this->_priceHelper->roundPrice($klevu_current_store_currency_salePrice);
 
@@ -454,7 +472,7 @@ class Sync extends AbstractModel
                 "klevu_apiKey" => $this->getApiKey($item->getStoreId()),
                 "klevu_type" => "checkout",
                 "klevu_productId" => $klevu_productId,
-                "klevu_unit" => $item->getQtyOrdered() ? $item->getQtyOrdered() : ($parent ? $parent->getQtyOrdered() : null),
+                "klevu_unit" => $quantity,
                 "klevu_salePrice" => $klevu_current_store_currency_salePrice_round,
                 "klevu_currency" => $this->getStoreCurrency($item->getStoreId()),
                 "klevu_shopperIP" => $this->processOrderIp($item->getOrderId(),$item->getStoreId()),
@@ -481,9 +499,8 @@ class Sync extends AbstractModel
             $response = $this->_apiActionProducttracking->execute($eventData->getData('parameters'));
             if ($response->isSuccess()) {
                 return true;
-            } else {
-                return $response->getMessage();
             }
+            return $response->getMessage();
         } catch (\Exception $e) {
             $this->log(LoggerConstants::ZEND_LOG_CRIT, sprintf("Order Sync:: Exception thrown in %s::%s - %s", __CLASS__, __METHOD__, $e->getMessage()));
             // Catch the exception that was thrown, log it, then throw a new exception to be caught the Magento cron.
@@ -662,7 +679,7 @@ class Sync extends AbstractModel
             $select->where('order_item.store_id = ?', $storeId);
         }
 
-        $select->where('send = ?', 0);
+        $select->where('send = ?', static::SYNC_QUEUE_ITEM_WAITING);
         $select->order('main_table.order_item_id ASC');
 
         return $select;
@@ -701,7 +718,24 @@ class Sync extends AbstractModel
         $where = sprintf("(order_item_id = %s)", $order_item_id);
         return $this->_frameworkModelResource->getConnection()->update(
                 $this->_frameworkModelResource->getTableName("klevu_order_sync"),
-                ["send" => 1],
+                ["send" => static::SYNC_QUEUE_ITEM_SUCCESS],
+                $where
+            ) === 1;
+    }
+
+    /**
+     * @param $order_item_id
+     *
+     * @return bool
+     * @todo Move setItemFailedInQueue to ResourceModel
+     */
+    private function setItemFailedInQueue($order_item_id)
+    {
+        $where = sprintf("(order_item_id = %s)", $order_item_id);
+
+        return $this->_frameworkModelResource->getConnection()->update(
+                $this->_frameworkModelResource->getTableName("klevu_order_sync"),
+                ["send" => self::SYNC_QUEUE_ITEM_FAILED],
                 $where
             ) === 1;
     }

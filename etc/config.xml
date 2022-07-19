@@ -28,6 +28,9 @@
 				<rating_sync_enabled>1</rating_sync_enabled>
                 <batch_size>100</batch_size>
             </product_sync>
+            <order_sync>
+                <max_sync_select_limit />
+            </order_sync>
             <attributes>
                 <categoryanchor>0</categoryanchor>
             </attributes>
