@@ -8,6 +8,7 @@
     <preference for="Klevu\Search\Api\KlevuSyncRepositoryInterface" type="Klevu\Search\Repository\KlevuSyncRepository" />
     <preference for="Klevu\Search\Api\MagentoProductSyncRepositoryInterface" type="Klevu\Search\Repository\MagentoProductSyncRepository" />
     <preference for="Klevu\Search\Api\Service\Sync\GetBatchSizeInterface" type="Klevu\Search\Service\Sync\GetBatchSize" />
+    <preference for="Klevu\Search\Api\Service\Sync\GetOrderSelectMaxLimitInterface" type="Klevu\Search\Service\Sync\GetOrderSelectMaxLimit" />
 
 	<preference for="Klevu\Search\Api\Service\Account\KlevuApi\GetAccountDetailsInterface" type="Klevu\Search\Service\Account\KlevuApi\GetAccountDetails" />
 	<preference for="Klevu\Search\Api\Service\Account\Model\AccountFeaturesInterface" type="Klevu\Search\Service\Account\Model\AccountFeatures" />

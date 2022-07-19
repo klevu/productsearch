@@ -2,6 +2,7 @@
 
 namespace Klevu\Search\Test\Integration\Model\Order;
 
+use Klevu\Search\Api\Service\Sync\GetOrderSelectMaxLimitInterface;
 use Klevu\Search\Model\Api\Action\Producttracking;
 use Klevu\Search\Model\Api\Response;
 use Klevu\Search\Model\Order\Sync;
@@ -64,11 +65,6 @@ class SyncTest extends TestCase
     public function testRunTriggersApiRequest_SyncEnabledAllStores()
     {
         $this->setupPhp5();
-        // Support for Magento 2.1.x. See https://github.com/magento/magento2/issues/2907#issuecomment-169476734
-        $currentScope = version_compare($this->productMetadata->getVersion(), '2.2.0', '>=')
-            ? Area::AREA_CRONTAB
-            : 'cron';
-        $this->scopeConfig->setCurrentScope($currentScope);
 
         /** @var ScopeConfigInterface $scopeConfig */
         $scopeConfig = $this->objectManager->get(ScopeConfigInterface::class);
@@ -118,11 +114,6 @@ class SyncTest extends TestCase
     public function testRunTriggersApiRequest_SyncEnabledSingleStore()
     {
         $this->setupPhp5();
-        // Support for Magento 2.1.x. See https://github.com/magento/magento2/issues/2907#issuecomment-169476734
-        $currentScope = version_compare($this->productMetadata->getVersion(), '2.2.0', '>=')
-            ? Area::AREA_CRONTAB
-            : 'cron';
-        $this->scopeConfig->setCurrentScope($currentScope);
 
         $this->executeCallsPerApiKey = [
             'klevu-klevu_test_store_1' => 0,
@@ -169,11 +160,6 @@ class SyncTest extends TestCase
     public function testRunTriggersApiRequest_MaxBatchSizeApplied()
     {
         $this->setupPhp5();
-        // Support for Magento 2.1.x. See https://github.com/magento/magento2/issues/2907#issuecomment-169476734
-        $currentScope = version_compare($this->productMetadata->getVersion(), '2.2.0', '>=')
-            ? Area::AREA_CRONTAB
-            : 'cron';
-        $this->scopeConfig->setCurrentScope($currentScope);
 
         $this->executeCallsPerApiKey = [
             'klevu-klevu_test_store_1' => 0,
@@ -217,11 +203,6 @@ class SyncTest extends TestCase
     public function testRunTriggersApiRequest_ExplicitStores()
     {
         $this->setupPhp5();
-        // Support for Magento 2.1.x. See https://github.com/magento/magento2/issues/2907#issuecomment-169476734
-        $currentScope = version_compare($this->productMetadata->getVersion(), '2.2.0', '>=')
-            ? Area::AREA_CRONTAB
-            : 'cron';
-        $this->scopeConfig->setCurrentScope($currentScope);
 
         $this->executeCallsPerApiKey = [
             'klevu-klevu_test_store_1' => 0,
@@ -266,11 +247,6 @@ class SyncTest extends TestCase
     public function testRunExitsIfLockFilePresent()
     {
         $this->setupPhp5();
-        // Support for Magento 2.1.x. See https://github.com/magento/magento2/issues/2907#issuecomment-169476734
-        $currentScope = version_compare($this->productMetadata->getVersion(), '2.2.0', '>=')
-            ? Area::AREA_CRONTAB
-            : 'cron';
-        $this->scopeConfig->setCurrentScope($currentScope);
 
         $sourceFilePath = $this->installDir . '/var/klevu_running_order_sync.lock';
         $this->createSourceFile($sourceFilePath, time());
@@ -321,11 +297,6 @@ class SyncTest extends TestCase
     public function testRunClearsLockFileIfExpired()
     {
         $this->setupPhp5();
-        // Support for Magento 2.1.x. See https://github.com/magento/magento2/issues/2907#issuecomment-169476734
-        $currentScope = version_compare($this->productMetadata->getVersion(), '2.2.0', '>=')
-            ? Area::AREA_CRONTAB
-            : 'cron';
-        $this->scopeConfig->setCurrentScope($currentScope);
 
         $sourceFilePath = $this->installDir . '/var/klevu_running_order_sync.lock';
         $this->createSourceFile($sourceFilePath, time() - (60 * 60 * 2));
@@ -350,6 +321,33 @@ class SyncTest extends TestCase
     }
 
     /**
+     * @magentoAppIsolation enabled
+     * @magentoDbIsolation disabled
+     * @magentoCache all disabled
+     * @magentoDataFixture loadAllFixtures
+     * @magentoConfigFixture default_store klevu_search/product_sync/order_sync_enabled 1
+     * @magentoConfigFixture klevu_test_store_1_store klevu_search/general/js_api_key klevu-klevu_test_store_1
+     */
+    public function testWhileLoopIteratesCorrectNumberOfTimes()
+    {
+        $this->setupPhp5();
+
+        $mockGetOrderSelectMaxLimit = $this->getMockBuilder(GetOrderSelectMaxLimitInterface::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+        $mockGetOrderSelectMaxLimit->expects($this->once())->method('execute')->willReturn(5);
+
+        $mockProductTrackingAction = $this->getProducttrackingActionMock(true);
+        $mockProductTrackingAction->expects($this->exactly(21))->method('execute');
+
+        $orderSyncModel = $this->objectManager->create(Sync::class, [
+            'apiActionProducttracking' => $mockProductTrackingAction,
+            'getOrderSelectMaxLimit' => $mockGetOrderSelectMaxLimit
+        ]);
+        $orderSyncModel->run();
+    }
+
+    /**
      * @return void
      * @todo Move to setUp when PHP 5.x is no longer supported
      */
@@ -361,6 +359,12 @@ class SyncTest extends TestCase
         $this->productMetadata = $this->objectManager->get(ProductMetadataInterface::class);
 
         $this->deleteSourceFile($this->installDir . '/var/klevu_running_order_sync.lock');
+
+        // Support for Magento 2.1.x. See https://github.com/magento/magento2/issues/2907#issuecomment-169476734
+        $currentScope = version_compare($this->productMetadata->getVersion(), '2.2.0', '>=')
+            ? Area::AREA_CRONTAB
+            : 'cron';
+        $this->scopeConfig->setCurrentScope($currentScope);
     }
 
     /**

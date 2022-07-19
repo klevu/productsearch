@@ -25,7 +25,6 @@ class Producttracking extends \Klevu\Search\Model\Api\Actionall
         \Magento\Store\Model\StoreManagerInterface $storeModelStoreManagerInterface,
         \Klevu\Search\Helper\Config $searchHelperConfig
     ) {
-    
         $this->_apiResponseInvalid = $apiResponseInvalid;
         $this->_searchHelperApi = $searchHelperApi;
         $this->_searchHelperConfig = $searchHelperConfig;
@@ -38,6 +37,11 @@ class Producttracking extends \Klevu\Search\Model\Api\Actionall
     const DEFAULT_REQUEST_MODEL = "Klevu\Search\Model\Api\Request\Post";
     const DEFAULT_RESPONSE_MODEL = "Klevu\Search\Model\Api\Response\Data";
 
+    /**
+     * @param $parameters
+     *
+     * @return array|bool
+     */
     protected function validate($parameters)
     {
         $errors = [];
@@ -58,7 +62,9 @@ class Producttracking extends \Klevu\Search\Model\Api\Actionall
             $errors["klevu_unit"] = "Missing unit.";
         }
 
-        if (!isset($parameters["klevu_salePrice"]) || empty($parameters["klevu_salePrice"])) {
+        if (!isset($parameters["klevu_salePrice"]) ||
+            (!is_numeric($parameters["klevu_salePrice"]) && empty($parameters["klevu_salePrice"]))
+        ) {
             $errors["klevu_salePrice"] = "Missing sale price.";
         }
 
