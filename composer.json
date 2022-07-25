@@ -13,7 +13,7 @@
         "klevu/module-metadata": "^1.1.0"
     },
     "type": "magento-module",
-    "version": "2.7.1",
+    "version": "2.7.2",
     "license": [
         "OSL-3.0",
         "AFL-3.0"
