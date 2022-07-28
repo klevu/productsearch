@@ -262,7 +262,9 @@ class GetFeatures implements GetFeaturesInterface
                 if (!isset($keyMap[$featureKey])) {
                     continue;
                 }
-
+                if (!isset($feature['value']) || is_array($feature['value'])) {
+                    continue;
+                }
                 switch ((string)$feature['value']) {
                     case 'enabled':
                     case 'yes':

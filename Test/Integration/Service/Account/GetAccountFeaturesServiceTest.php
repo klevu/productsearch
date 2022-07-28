@@ -9,6 +9,7 @@ use Klevu\Search\Api\Service\Account\GetFeaturesInterface;
 use Klevu\Search\Model\Api\Action\Features as FeaturesApi;
 use Klevu\Search\Model\Api\Response;
 use Klevu\Search\Service\Account\GetFeatures;
+use Klevu\Search\Service\Account\Model\AccountFeatures;
 use Magento\Framework\App\Config\ReinitableConfigInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\RequestInterface;
@@ -62,7 +63,7 @@ class GetAccountFeaturesServiceTest extends TestCase
         'upgrade_url' => 'https://box.klevu.com/analytics/km',
         'upgrade_message' => 'UPGRADE MESSAGE',
         'preserve_layout_message' => 'PRESERVE LAYOUT MESSAGE',
-        'enabled' => 'enabledaddtocartfront,boosting,enabledcmsfront,enabledcategorynavigation,allowgroupprices',
+        'enabled' => 'enabledaddtocartfront,boosting,enabledcmsfront,allowgroupprices',
         'disabled' => 'enabledpopulartermfront,preserves_layout',
         'user_plan_for_store' => 'Enterprise',
         'response' => 'success'
@@ -161,21 +162,57 @@ class GetAccountFeaturesServiceTest extends TestCase
 
     /**
      * @magentoDataFixture loadWebsiteFixtures
+     * @magentoConfigFixture klevu_test_store_1_store klevu_search/general/rest_api_key klevu-rest_api_key
      */
     public function testGetAccountFeaturesReturnsFeaturesModelWithDataOnSuccess()
     {
         $this->setupPhp5();
+        $restApiKey = 'klevu-rest_api_key';
         $store = $this->getStore();
 
         $mockResponse = $this->getMockBuilder(Response::class)->disableOriginalConstructor()->getMock();
         $mockResponse->expects($this->once())->method('isSuccess')->willReturn(true);
-        $mockResponse->expects($this->atLeastOnce())->method('getData')->willReturn($this->mockApiReturnDataArray);
-        $this->mockFeaturesApi->expects($this->atLeastOnce())->method('execute')->willReturn($mockResponse);
+        $mockResponse->method('getData')->willReturn($this->mockApiReturnDataArray);
+        $parameters = [
+            'restApiKey' => $restApiKey,
+            'store' => $store->getId(),
+        ];
+
+        /* XML format of data returned from API for $mockFeatureValuesReturnDataArray
+          <data>
+            <feature><key>s.enablecategorynavigation</key><value></value></feature>
+            <feature><key>allow.personalizedrecommendations</key><value>yes</value></feature>
+          </data>
+         */
+        $mockFeatureValuesReturnDataArray = [
+            'feature' => [
+                ['key' => 's.enablecategorynavigation', 'value' => [0]], // this is the correct format of the converted xml for empty value node
+                ['key' => 'allow.personalizedrecommendations', 'value' => 'yes'],
+            ],
+        ];
+        $mockGetFeatureValuesResponse = $this->getMockBuilder(Response::class)->disableOriginalConstructor()->getMock();
+        $mockGetFeatureValuesResponse->method('getData')->with('feature')->willReturn($mockFeatureValuesReturnDataArray['feature']);
+        $getFeatureValuesParams = $parameters + [
+            'endpoint' => GetFeatures::API_ENDPOINT_GET_FEATURE_VALUES,
+            'features' => GetFeatures::FEATURE_CATEGORY_NAVIGATION . ',' . GetFeatures::FEATURE_RECOMMENDATIONS
+        ];
+
+        $this->mockFeaturesApi
+            ->method('execute')
+            ->willReturnCallBack(function($params) use ($parameters, $getFeatureValuesParams, $mockResponse, $mockGetFeatureValuesResponse) {
+                if ($params === $parameters) {
+                    return $mockResponse;
+                }
+                if ($params === $getFeatureValuesParams) {
+                    return $mockGetFeatureValuesResponse;
+                }
+            });
+
         $this->mockReinitableConfig->expects($this->once())->method('reinit');
 
-        $this->mockScopeConfig->method('getValue')->willReturnCallback(function ($field) {
+        $this->mockScopeConfig->method('getValue')->willReturnCallback(function ($field) use ($restApiKey) {
             if ($field === GetFeatures::XML_PATH_REST_API_KEY) {
-                return 'someValidRestApiKey';
+                return $restApiKey;
             }
             if ($field === GetFeatures::XML_PATH_UPGRADE_FEATURES) {
                 return null;
@@ -195,6 +232,14 @@ class GetAccountFeaturesServiceTest extends TestCase
         $this->assertFalse(
             $accountFeatures->isFeatureAvailable('preserves_layout'),
             'Feature is available preserves_layout'
+        );
+        $this->assertTrue(
+            $accountFeatures->isFeatureAvailable(AccountFeatures::PM_FEATUREFLAG_RECOMMENDATIONS, true),
+            sprintf('Recs is available %s', AccountFeatures::PM_FEATUREFLAG_RECOMMENDATIONS)
+        );
+        $this->assertFalse(
+            $accountFeatures->isFeatureAvailable(AccountFeatures::PM_FEATUREFLAG_CATEGORY_NAVIGATION, true),
+            sprintf('Cat Nav is not available %s', AccountFeatures::PM_FEATUREFLAG_CATEGORY_NAVIGATION)
         );
         $this->assertSame('PRESERVE LAYOUT MESSAGE', $accountFeatures->getPreserveLayoutMessage());
 
