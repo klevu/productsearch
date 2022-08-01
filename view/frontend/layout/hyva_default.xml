@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <head>
+        <script src="Klevu_Search::js/klevu/ieUrlPolyfill.js" ie_condition="IE 11"/>
+    </head>
+    <body>
+        <referenceBlock name="before.body.end">
+            <block class="Magento\Framework\View\Element\Template"
+                   name="personal_data"
+                   before="-"
+                   template="Klevu_Search::hyva/personal.phtml">
+            </block>
+        </referenceBlock>
+        <referenceBlock name="header-content">
+            <block name="header-search" template="Klevu_Search::hyva/html/header/search-form.phtml"/>
+        </referenceBlock>
+    </body>
+</page>

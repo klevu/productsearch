@@ -29,4 +29,12 @@
 			</argument>
 		</arguments>
 	</virtualType>
+
+	<type name="Magento\Search\ViewModel\ConfigProvider">
+		<plugin name="Klevu_Search::SearchConfigProviderDisableSuggestionsIfKlevuEnabled" type="Klevu\Search\Plugin\Search\ViewModel\ConfigProviderPlugin"/>
+	</type>
+
+	<type name="Magento\Search\Helper\Data">
+		<plugin name="Klevu_Search::SearchHelperGetResultUrlIfKlevuEnabled" type="Klevu\Search\Plugin\Search\Helper\DataPlugin"/>
+	</type>
 </config>

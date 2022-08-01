@@ -1,12 +1,11 @@
 <?php /** @var \Klevu\Search\Block\Catalog\Product\Tracking $block */ ?>
 <?php if ($block->isExtensionConfigured()) : ?>
     <script type="text/javascript">
-require(['jquery'], function(){
         var referrer, search_term, klevu_search_product_tracking;
         referrer = document.referrer;
-        var getQueryString = function ( field, url ) {
+        var getQueryString = function (field, url) {
             var href = url ? url : window.location.href;
-            var reg = new RegExp( '[?&]' + field + '=([^&#]*)', 'i' );
+            var reg = new RegExp('[?&]' + field + '=([^&#]*)', 'i');
             var string = reg.exec(href);
             if (!string) {
                 return null;
@@ -14,26 +13,29 @@ require(['jquery'], function(){
 
             return decodeURIComponent(string[1].replace(/\+/g, " "));
         };
-        search_term = getQueryString('q',referrer);
+        search_term = getQueryString('q', referrer);
 
         if (referrer.indexOf('catalogsearch/result') > -1 && search_term) {
-            klevu_search_product_tracking = <?php echo $block->getJsonTrackingData() ?>;
+            klevu_search_product_tracking = <?= $block->getJsonTrackingData() ?>;
             klevu_search_product_tracking.klevu_term = search_term;
-            var param = jQuery.param(klevu_search_product_tracking);
-            <?php $isSecure = $block->getRequest()->isSecure();
-        $protocol = ($isSecure) ? 'https://' : 'http://'; ?>
-            jQuery.ajax({
-                url:'<?php echo $protocol.$block->getAnalyticsUrl() ?>/analytics/productTracking',
-                type: 'GET',
-                data: param,
-                dataType: 'json',
-                statusCode: {
-                    200: function(data) {
-                    }
-                },
+
+            let searchParams = new URLSearchParams();
+
+            for (let key in klevu_search_product_tracking) {
+                if (!klevu_search_product_tracking.hasOwnProperty(key)) {
+                    continue;
+                }
+                searchParams.append(key, klevu_search_product_tracking[key])
+            }
+
+            const url = '<?= $block->escapeUrl($block->getAnalyticsUrl()) ?>'+ searchParams.toString();
+
+            fetch(url, {
+                method: 'GET',
                 crossDomain: true
+            }).then(response => {
             });
+
         }
-});
-</script>
+    </script>
 <?php endif; ?>

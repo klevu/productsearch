@@ -24,9 +24,46 @@
                                     <item name="eq" xsi:type="const">Klevu\Search\Model\Source\ThemeVersion::V2</item>
                                 </item>
                             </item>
+                            <item name="quick_search_lazy_load_disabled" xsi:type="array">
+                                <item name="path" xsi:type="const">Klevu\Search\Helper\Config::XML_PATH_LAZYLOAD_QUICK_SEARCH</item>
+                                <item name="conditions" xsi:type="array">
+                                    <item name="eq" xsi:type="string">0</item>
+                                </item>
+                            </item>
                         </item>
                         <item name="after" xsi:type="string">lib</item>
                         <item name="url" xsi:type="string"><![CDATA[https://{{ klevu_search/general/js_url }}/theme/default/v2/quick-search-theme.js]]></item>
+                    </item>
+
+                    <item name="klevu_themev2_quicksearch_lazyload" xsi:type="array">
+                        <item name="if_config" xsi:type="array">
+                            <item name="frontend_enabled" xsi:type="array">
+                                <item name="path" xsi:type="const">Klevu\Search\Helper\Config::XML_PATH_EXTENSION_ENABLED</item>
+                                <item name="conditions" xsi:type="array">
+                                    <item name="eq" xsi:type="string">1</item>
+                                </item>
+                            </item>
+                            <item name="has_api_key" xsi:type="array">
+                                <item name="path" xsi:type="const">Klevu\Search\Helper\Config::XML_PATH_JS_API_KEY</item>
+                                <item name="conditions" xsi:type="array">
+                                    <item name="neq" xsi:type="null"/>
+                                </item>
+                            </item>
+                            <item name="themev2" xsi:type="array">
+                                <item name="path" xsi:type="const">Klevu\Search\Helper\Config::XML_PATH_THEME_VERSION</item>
+                                <item name="conditions" xsi:type="array">
+                                    <item name="eq" xsi:type="const">Klevu\Search\Model\Source\ThemeVersion::V2</item>
+                                </item>
+                            </item>
+                            <item name="quick_search_lazy_load_enabled" xsi:type="array">
+                                <item name="path" xsi:type="const">Klevu\Search\Helper\Config::XML_PATH_LAZYLOAD_QUICK_SEARCH</item>
+                                <item name="conditions" xsi:type="array">
+                                    <item name="eq" xsi:type="string">1</item>
+                                </item>
+                            </item>
+                        </item>
+                        <item name="after" xsi:type="string">lib</item>
+                        <item name="url" xsi:type="string"><![CDATA[https://{{ klevu_search/general/js_url }}/theme/default/v2/quick-search-theme.lazyload.js]]></item>
                     </item>
                 </argument>
             </arguments>
