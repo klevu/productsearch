@@ -21,6 +21,7 @@
     <preference for="Klevu\Search\Api\Service\Account\HelpArticleServiceInterface" type="Klevu\Search\Service\Account\HelpArticleService" />
     <preference for="Klevu\Search\Api\Service\Account\GetKmcUrlServiceInterface" type="Klevu\Search\Service\Account\GetKmcUrlService" />
     <preference for="Klevu\Search\Api\Service\Account\GetStoresUsingApiKeysInterface" type="Klevu\Search\Service\Account\GetStoresUsingApiKeys" />
+    <preference for="Klevu\Search\Api\Service\Catalog\Product\GetStockStatusByIdInterface" type="Klevu\Search\Service\Catalog\Product\GetStockStatusById" />
     <preference for="Klevu\Search\Api\Service\WebRestApi\Admin\GetBearerTokenInterface" type="Klevu\Search\Service\WebRestApi\Admin\GetBearerTokenService" />
 
     <preference for="Klevu\Search\Model\Klevu\Cron\SchedulerInterface" type="Klevu\Search\Model\Klevu\Cron\Scheduler" />
@@ -36,6 +37,7 @@
 	<preference for="Klevu\Search\Model\Product\ProductParentInterface" type="Klevu\Search\Model\Product\ProductParent"/>
 	<preference for="Klevu\Search\Model\Product\ProductIndividualInterface" type="Klevu\Search\Model\Product\ProductIndividual"/>
 	<preference for="Klevu\Search\Model\Product\ProductCommonUpdaterInterface" type="Klevu\Search\Model\Product\ProductCommonUpdater"/>
+
 	<type name="Magento\Catalog\Block\Product\ProductList\Toolbar">
 		<plugin name="klevu_search_toolbar" type="Klevu\Search\Plugin\Catalog\Block\Toolbar" sortOrder="101"/>
 	</type>

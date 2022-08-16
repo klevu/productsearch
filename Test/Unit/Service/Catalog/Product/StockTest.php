@@ -2,6 +2,7 @@
 
 namespace Klevu\Search\test\Unit\Service\Catalog\Product;
 
+use Klevu\Search\Api\Service\Catalog\Product\GetStockStatusByIdInterface;
 use Klevu\Search\Service\Catalog\Product\Stock as StockService;
 use Magento\Catalog\Model\Product;
 use Magento\CatalogInventory\Api\Data\StockItemCollectionInterface;
@@ -11,7 +12,6 @@ use Magento\CatalogInventory\Api\StockItemCriteriaInterface;
 use Magento\CatalogInventory\Api\StockItemCriteriaInterfaceFactory;
 use Magento\CatalogInventory\Api\StockItemRepositoryInterface;
 use Magento\CatalogInventory\Api\StockRegistryInterface;
-use Magento\Framework\TestFramework\Unit\Helper\ObjectManager;
 use Magento\Store\Api\Data\StoreInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -19,9 +19,9 @@ use PHPUnit\Framework\TestCase;
 class StockTest extends TestCase
 {
     /**
-     * @var ObjectManager
+     * @var GetStockStatusByIdInterface|MockObject
      */
-    private $objectManager;
+    private $mockGetStockStatusById;
 
     /**
      * @dataProvider InStockProductIdsDataProvider
@@ -87,34 +87,14 @@ class StockTest extends TestCase
         $this->assertFalse($result);
     }
 
-    /**
-     * @return array[]
-     */
-    public function InStockProductIdsDataProvider()
-    {
-        return [
-            ['10', '20'],
-            [null, '20']
-        ];
-    }
-
-    /**
-     * @return array[]
-     */
-    public function OutOfStockProductIdsDataProvider()
-    {
-        return [
-            ['10', '30'],
-            ['30', '20']
-        ];
-    }
-
     public function testStockStatusIsLoadedFromCacheIfAvailable()
     {
         $this->setupPhp5();
 
-        $mockProduct1 = $this->getMockProduct('10');
-        $mockProduct2 = $this->getMockProduct('30');
+        $productId1 = '10';
+        $productId2 = '30';
+        $mockProduct1 = $this->getMockProduct($productId1);
+        $mockProduct2 = $this->getMockProduct($productId2);
 
         $mockStockRegistry = $this->getMockBuilder(StockRegistryInterface::class)
             ->disableOriginalConstructor()
@@ -125,11 +105,16 @@ class StockTest extends TestCase
         $mockStockItemCriteriaInterfaceFactory = $this->getMockStockItemCriteriaInterfaceFactory();
         $mockStockItemRepository = $this->getMockStockItemRepository();
 
-        $stockService = $this->objectManager->getObject(StockService::class, [
-            'stockRegistryInterface' => $mockStockRegistry,
-            'stockItemCriteriaInterfaceFactory' => $mockStockItemCriteriaInterfaceFactory,
-            'stockItemRepository' => $mockStockItemRepository
-        ]);
+        $this->mockGetStockStatusById->expects($this->once())
+            ->method('execute')
+            ->with([$productId1, $productId2])->willReturn([$productId1 => true, $productId2 => false]);
+
+        $stockService = new StockService (
+            $mockStockRegistry,
+            $mockStockItemCriteriaInterfaceFactory,
+            $mockStockItemRepository,
+            $this->mockGetStockStatusById
+        );
 
         $stockService->preloadKlevuStockStatus([$mockProduct1->getId(), $mockProduct2->getId()]);
 
@@ -141,8 +126,10 @@ class StockTest extends TestCase
     {
         $this->setupPhp5();
 
-        $mockProduct1 = $this->getMockProduct('10');
-        $mockProduct2 = $this->getMockProduct('30');
+        $productId1 = '10';
+        $productId2 = '30';
+        $mockProduct1 = $this->getMockProduct($productId1);
+        $mockProduct2 = $this->getMockProduct($productId2);
 
         $mockStockRegistry = $this->getMockStockRegistry();
         // i.e. data is not loaded from cache, stockRegistry->getStockStatus is called
@@ -150,17 +137,44 @@ class StockTest extends TestCase
         $mockStockItemCriteriaInterfaceFactory = $this->getMockStockItemCriteriaInterfaceFactory();
         $mockStockItemRepository = $this->getMockStockItemRepository();
 
-        $stockService = $this->objectManager->getObject(StockService::class, [
-            'stockRegistryInterface' => $mockStockRegistry,
-            'stockItemCriteriaInterfaceFactory' => $mockStockItemCriteriaInterfaceFactory,
-            'stockItemRepository' => $mockStockItemRepository
-        ]);
+        $this->mockGetStockStatusById->expects($this->once())
+            ->method('execute')
+            ->with([$productId1, $productId2])->willReturn([$productId1 => true, $productId2 => false]);
+
+        $stockService = new StockService (
+            $mockStockRegistry,
+            $mockStockItemCriteriaInterfaceFactory,
+            $mockStockItemRepository,
+            $this->mockGetStockStatusById
+        );
 
         $stockService->preloadKlevuStockStatus([$mockProduct1->getId(), $mockProduct2->getId()]);
         $stockService->clearCache();
 
         $this->assertTrue($stockService->isInStock($mockProduct1));
         $this->assertFalse($stockService->isInStock($mockProduct2));
+    }
+
+    /**
+     * @return array[]
+     */
+    public function InStockProductIdsDataProvider()
+    {
+        return [
+            ['10', '20'],
+            [null, '20'],
+        ];
+    }
+
+    /**
+     * @return array[]
+     */
+    public function OutOfStockProductIdsDataProvider()
+    {
+        return [
+            ['10', '30'],
+            ['30', '20'],
+        ];
     }
 
     /**
@@ -172,11 +186,12 @@ class StockTest extends TestCase
         $mockStockItemCriteriaInterface = $this->getMockStockItemCriteriaInterfaceFactory();
         $mockStockItemRepository = $this->getMockStockItemRepository();
 
-        return $this->objectManager->getObject(StockService::class, [
-            'stockRegistryInterface' => $mockStockRegistry,
-            'stockItemCriteriaInterface' => $mockStockItemCriteriaInterface,
-            'stockItemRepository' => $mockStockItemRepository
-        ]);
+        return new StockService(
+            $mockStockRegistry,
+            $mockStockItemCriteriaInterface,
+            $mockStockItemRepository,
+            $this->mockGetStockStatusById
+        );
     }
 
     /**
@@ -190,8 +205,7 @@ class StockTest extends TestCase
         $mockStockItemCollection = $this->getMockBuilder(StockItemCollectionInterface::class)
             ->disableOriginalConstructor()
             ->getMock();
-        $mockStockItemCollection->expects($this->any())
-            ->method('getItems')
+        $mockStockItemCollection->method('getItems')
             ->willReturn([
                 $mockStockItem1,
                 $mockStockItem2
@@ -200,9 +214,7 @@ class StockTest extends TestCase
         $mockStockItemRepository = $this->getMockBuilder(StockItemRepositoryInterface::class)
             ->disableOriginalConstructor()
             ->getMock();
-        $mockStockItemRepository->expects($this->any())
-            ->method('getList')
-            ->willReturn($mockStockItemCollection);
+        $mockStockItemRepository->method('getList')->willReturn($mockStockItemCollection);
 
         return $mockStockItemRepository;
     }
@@ -218,12 +230,8 @@ class StockTest extends TestCase
         $mockStockItem = $this->getMockBuilder(StockItemInterface::class)
             ->disableOriginalConstructor()
             ->getMock();
-        $mockStockItem->expects($this->any())
-            ->method('getProductId')
-            ->willReturn($productId);
-        $mockStockItem->expects($this->any())
-            ->method('getIsInStock')
-            ->willReturn($stockStatus);
+        $mockStockItem->method('getProductId')->willReturn($productId);
+        $mockStockItem->method('getIsInStock')->willReturn($stockStatus);
 
         return $mockStockItem;
     }
@@ -236,15 +244,12 @@ class StockTest extends TestCase
         $mockStockItemCriteria = $this->getMockBuilder(StockItemCriteriaInterface::class)
             ->disableOriginalConstructor()
             ->getMock();
-        $mockStockItemCriteria->expects($this->any())
-            ->method('setProductsFilter');
+        $mockStockItemCriteria->method('setProductsFilter');
 
         $mockStockItemCriteriaFactory = $this->getMockBuilder(StockItemCriteriaInterfaceFactory::class)
             ->disableOriginalConstructor()
             ->getMock();
-        $mockStockItemCriteriaFactory->expects($this->any())
-            ->method('create')
-            ->willReturn($mockStockItemCriteria);
+        $mockStockItemCriteriaFactory->method('create')->willReturn($mockStockItemCriteria);
 
         return $mockStockItemCriteriaFactory;
     }
@@ -257,15 +262,13 @@ class StockTest extends TestCase
         $mockStockInterfaceInStock = $this->getMockBuilder(StockStatusInterface::class)
             ->disableOriginalConstructor()
             ->getMock();
-        $mockStockInterfaceInStock->expects($this->any())
-            ->method('getStockStatus')
+        $mockStockInterfaceInStock->method('getStockStatus')
             ->willReturn(StockStatusInterface::STATUS_IN_STOCK);
 
         $mockStockInterfaceOutOfStock = $this->getMockBuilder(StockStatusInterface::class)
             ->disableOriginalConstructor()
             ->getMock();
-        $mockStockInterfaceOutOfStock->expects($this->any())
-            ->method('getStockStatus')
+        $mockStockInterfaceOutOfStock->method('getStockStatus')
             ->willReturn(StockStatusInterface::STATUS_OUT_OF_STOCK);
 
         $mockStockRegistry = $this->getMockBuilder(StockRegistryInterface::class)
@@ -290,19 +293,13 @@ class StockTest extends TestCase
         $mockStore = $this->getMockBuilder(StoreInterface::class)
             ->disableOriginalConstructor()
             ->getMock();
-        $mockStore->expects($this->any())
-            ->method('getWebsiteId')
-            ->willReturn('1');
+        $mockStore->method('getWebsiteId')->willReturn('1');
 
         $mockProduct = $this->getMockBuilder(Product::class)
             ->disableOriginalConstructor()
             ->getMock();
-        $mockProduct->expects($this->any())
-            ->method('getId')
-            ->willReturn($productId);
-        $mockProduct->expects($this->any())
-            ->method('getStore')
-            ->willReturn($mockStore);
+        $mockProduct->method('getId')->willReturn($productId);
+        $mockProduct->method('getStore')->willReturn($mockStore);
 
         return $mockProduct;
     }
@@ -313,6 +310,8 @@ class StockTest extends TestCase
      */
     private function setupPhp5()
     {
-        $this->objectManager = new ObjectManager($this);
+        $this->mockGetStockStatusById = $this->getMockBuilder(GetStockStatusByIdInterface::class)
+            ->disableOriginalConstructor()
+            ->getMock();
     }
 }

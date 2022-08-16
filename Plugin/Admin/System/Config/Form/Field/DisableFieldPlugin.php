@@ -101,7 +101,7 @@ class DisableFieldPlugin
         }
 
         $accountFeatures = $this->getFeatures->execute();
-        if (!$accountFeatures->isFeatureAvailable($featureToCheck, true)) {
+        if ($accountFeatures && !$accountFeatures->isFeatureAvailable($featureToCheck, true)) {
             $element->setData('disabled', true);
             $element->setData('value', 0);
             $element->setData('can_use_default_value', false);

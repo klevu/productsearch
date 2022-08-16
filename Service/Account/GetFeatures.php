@@ -109,25 +109,41 @@ class GetFeatures implements GetFeaturesInterface
     /**
      * @param $store
      *
-     * @return AccountFeaturesInterface
+     * @return AccountFeaturesInterface|null
      */
     public function execute($store = null)
     {
         $accountFeatures = $this->accountFeaturesFactory->create();
+
+        if (null !== $store && !is_scalar($store) && !($store instanceof StoreInterface)) {
+            $this->logger->error(
+                sprintf(
+                    'Store argument must be null, scalar, or instance of %s; %s passed',
+                    StoreInterface::class,
+                    is_object($store) ? get_class($store) : gettype($store)
+                ),
+                ['method' => __METHOD__]
+            );
+
+            return null;
+        }
+
         if (empty($store)) {
             $store = $this->request->getParam('store');
             if (!$store) {
-                $this->logger->error(sprintf('Store not set in %s', __METHOD__));
-                return $accountFeatures;
+                 return null;
             }
+        }
+        try {
+            $store = $this->getStore($store);
+        } catch (Exception $exception) {
+            return null;
         }
 
         try {
-            $store = $this->getStore($store);
             $restApi = $this->getRestApi($store);
         } catch (Exception $exception) {
             $this->logger->error($exception->getMessage());
-
             return $accountFeatures;
         }
         if ($this->isApiDataSyncRequired($store)) {

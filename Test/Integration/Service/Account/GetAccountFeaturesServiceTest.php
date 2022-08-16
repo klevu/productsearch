@@ -59,7 +59,7 @@ class GetAccountFeaturesServiceTest extends TestCase
     /**
      * @var string[]
      */
-    private $mockApiReturnDataArray = [
+    private $mockApiReturnDataArray_FeaturesAndUpgradeLink = [
         'upgrade_url' => 'https://box.klevu.com/analytics/km',
         'upgrade_message' => 'UPGRADE MESSAGE',
         'preserve_layout_message' => 'PRESERVE LAYOUT MESSAGE',
@@ -67,6 +67,23 @@ class GetAccountFeaturesServiceTest extends TestCase
         'disabled' => 'enabledpopulartermfront,preserves_layout',
         'user_plan_for_store' => 'Enterprise',
         'response' => 'success'
+    ];
+    /**
+     * @var string[][]
+     */
+    private $mockApiReturnDataArray_FeatureValues = [
+        [
+            'key' => 's.enablecategorynavigation',
+            'value' => 'yes',
+        ],
+        [
+            'key' => 'allow.personalizedrecommendations',
+            'value' => 'yes',
+        ],
+        [
+            'key' => 's.preservedlayout',
+            'value' => 'yes',
+        ],
     ];
     /**
      * @var ReinitableConfigInterface|MockObject
@@ -105,13 +122,12 @@ class GetAccountFeaturesServiceTest extends TestCase
 
         $this->mockFeaturesApi->expects($this->never())->method('execute');
         $this->mockScopeConfig->method('getValue')->willReturn('someValidRestApiKey');
-        $this->mockLogger->expects($this->once())->method('error');
         $this->mockReinitableConfig->expects($this->never())->method('reinit');
 
         $accountFeaturesService = $this->instantiateGetFeatures();
         $accountFeatures = $accountFeaturesService->execute($store);
 
-        $this->assertIsEmptyFeaturesModel($accountFeatures);
+        $this->assertNull($accountFeatures);
 
         static::loadWebsiteFixturesRollback();
     }
@@ -123,13 +139,48 @@ class GetAccountFeaturesServiceTest extends TestCase
     {
         $this->setupPhp5();
         $store = $this->getStore();
-        $this->mockRequest->expects($this->once())->method('getParam')->willReturn($store->getId());
+        $this->mockRequest->expects($this->once())
+            ->method('getParam')
+            ->willReturn($store->getId());
 
-        $mockResponse = $this->getMockBuilder(Response::class)->disableOriginalConstructor()->getMock();
-        $mockResponse->expects($this->once())->method('isSuccess')->willReturn(true);
-        $mockResponse->expects($this->atLeastOnce())->method('getData')->willReturn($this->mockApiReturnDataArray);
-        $this->mockFeaturesApi->expects($this->atLeastOnce())->method('execute')->willReturn($mockResponse);
-        $this->mockReinitableConfig->expects($this->once())->method('reinit');
+        $mockResponseFeaturesAndUpgradeLink = $this->getMockBuilder(Response::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+        $mockResponseFeaturesAndUpgradeLink->expects($this->atLeastOnce())
+            ->method('isSuccess')
+            ->willReturn(true);
+        $mockResponseFeaturesAndUpgradeLink->expects($this->atLeastOnce())
+            ->method('getData')
+            ->willReturn($this->mockApiReturnDataArray_FeaturesAndUpgradeLink);
+
+        $mockResponseFeatureValues = $this->getMockBuilder(Response::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+        $mockResponseFeatureValues
+            ->method('isSuccess')
+            ->willReturn(true);
+        $mockResponseFeatureValues->expects($this->atLeastOnce())
+            ->method('getData')
+            ->willReturn($this->mockApiReturnDataArray_FeatureValues);
+
+        $this->mockFeaturesApi->expects($this->atLeastOnce())
+            ->method('execute')
+            ->willReturnCallback(function (array $parameters) use ($mockResponseFeaturesAndUpgradeLink, $mockResponseFeatureValues) {
+                $endpoint = isset($parameters['endpoint']) ? $parameters['endpoint'] : '';
+                switch ($endpoint) {
+                    case '/uti/getFeatureValues':
+                        return $mockResponseFeatureValues;
+                        break;
+
+                    case '/uti/getFeaturesAndUpgradeLink':
+                    default:
+                        return $mockResponseFeaturesAndUpgradeLink;
+                        break;
+                }
+            });
+        $this->mockReinitableConfig
+            ->expects($this->once())
+            ->method('reinit');
 
         $this->mockScopeConfig->method('getValue')->willReturnCallback(function ($field) {
             if ($field === GetFeatures::XML_PATH_REST_API_KEY) {
@@ -137,7 +188,7 @@ class GetAccountFeaturesServiceTest extends TestCase
             }
             if ($field === GetFeatures::XML_PATH_UPGRADE_FEATURES) {
                 $serializer = ObjectManager::getInstance()->get(SerializerInterface::class);
-                return $serializer->serialize($this->mockApiReturnDataArray);
+                return $serializer->serialize($this->mockApiReturnDataArray_FeaturesAndUpgradeLink);
             }
 
             return null;
@@ -172,7 +223,7 @@ class GetAccountFeaturesServiceTest extends TestCase
 
         $mockResponse = $this->getMockBuilder(Response::class)->disableOriginalConstructor()->getMock();
         $mockResponse->expects($this->once())->method('isSuccess')->willReturn(true);
-        $mockResponse->method('getData')->willReturn($this->mockApiReturnDataArray);
+        $mockResponse->method('getData')->willReturn($this->mockApiReturnDataArray_FeaturesAndUpgradeLink);
         $parameters = [
             'restApiKey' => $restApiKey,
             'store' => $store->getId(),
@@ -296,7 +347,7 @@ class GetAccountFeaturesServiceTest extends TestCase
             }
             if ($field === GetFeatures::XML_PATH_UPGRADE_FEATURES) {
                 $serializer = ObjectManager::getInstance()->get(SerializerInterface::class);
-                return $serializer->serialize($this->mockApiReturnDataArray);
+                return $serializer->serialize($this->mockApiReturnDataArray_FeaturesAndUpgradeLink);
             }
 
             return null;
@@ -341,7 +392,7 @@ class GetAccountFeaturesServiceTest extends TestCase
             }
             if ($field === GetFeatures::XML_PATH_UPGRADE_FEATURES) {
                 $serializer = ObjectManager::getInstance()->get(SerializerInterface::class);
-                return $serializer->serialize($this->mockApiReturnDataArray);
+                return $serializer->serialize($this->mockApiReturnDataArray_FeaturesAndUpgradeLink);
             }
 
             return null;
@@ -384,7 +435,7 @@ class GetAccountFeaturesServiceTest extends TestCase
             }
             if ($field === GetFeatures::XML_PATH_UPGRADE_FEATURES) {
                 $serializer = ObjectManager::getInstance()->get(SerializerInterface::class);
-                return $serializer->serialize($this->mockApiReturnDataArray);
+                return $serializer->serialize($this->mockApiReturnDataArray_FeaturesAndUpgradeLink);
             }
             if ($field === GetFeatures::XML_PATH_FEATURES_LAST_SYNC_DATE) {
                 return time() - (60 * 60 * (GetFeatures::API_DATA_SYNC_REQUIRED_EVERY_HOURS - 1));
@@ -419,11 +470,41 @@ class GetAccountFeaturesServiceTest extends TestCase
         $this->setupPhp5();
         $store = $this->getStore();
 
-        $mockResponse = $this->getMockBuilder(Response::class)->disableOriginalConstructor()->getMock();
-        $mockResponse->expects($this->atLeastOnce())->method('isSuccess')->willReturn(true);
-        $mockResponse->expects($this->atLeastOnce())->method('getData')->willReturn($this->mockApiReturnDataArray);
+        $mockResponseFeaturesAndUpgradeLink = $this->getMockBuilder(Response::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+        $mockResponseFeaturesAndUpgradeLink->expects($this->atLeastOnce())
+        ->method('isSuccess')
+            ->willReturn(true);
+        $mockResponseFeaturesAndUpgradeLink->expects($this->atLeastOnce())
+        ->method('getData')
+            ->willReturn($this->mockApiReturnDataArray_FeaturesAndUpgradeLink);
 
-        $this->mockFeaturesApi->expects($this->atLeastOnce())->method('execute')->willReturn($mockResponse);
+        $mockResponseFeatureValues = $this->getMockBuilder(Response::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+        $mockResponseFeatureValues->method('isSuccess')
+            ->willReturn(true);
+        $mockResponseFeatureValues->expects($this->atLeastOnce())
+        ->method('getData')
+            ->willReturn($this->mockApiReturnDataArray_FeatureValues);
+
+        $this->mockFeaturesApi->expects($this->atLeastOnce())
+            ->method('execute')
+            ->willReturnCallback(function (array $parameters) use ($mockResponseFeaturesAndUpgradeLink, $mockResponseFeatureValues) {
+                $endpoint = isset($parameters['endpoint']) ? $parameters['endpoint'] : '';
+                switch ($endpoint) {
+                    case '/uti/getFeatureValues':
+                        return $mockResponseFeatureValues;
+                        break;
+
+                    case '/uti/getFeaturesAndUpgradeLink':
+                    default:
+                        return $mockResponseFeaturesAndUpgradeLink;
+                        break;
+                }
+            });
+
         $this->mockReinitableConfig->expects($this->once())->method('reinit');
 
         $this->mockScopeConfig->method('getValue')->willReturnCallback(function ($field) {
@@ -432,7 +513,7 @@ class GetAccountFeaturesServiceTest extends TestCase
             }
             if ($field === GetFeatures::XML_PATH_UPGRADE_FEATURES) {
                 $serializer = ObjectManager::getInstance()->get(SerializerInterface::class);
-                return $serializer->serialize($this->mockApiReturnDataArray);
+                return $serializer->serialize($this->mockApiReturnDataArray_FeaturesAndUpgradeLink);
             }
             if ($field === GetFeatures::XML_PATH_FEATURES_LAST_SYNC_DATE) {
                 return time() - (60 * 60 * (GetFeatures::API_DATA_SYNC_REQUIRED_EVERY_HOURS + 1));
