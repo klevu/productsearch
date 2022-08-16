@@ -13,10 +13,11 @@ interface StockServiceInterface
 
     /**
      * @param array $productIds
+     * @param string|int|null $websiteId
      *
      * @return void
      */
-    public function preloadKlevuStockStatus(array $productIds);
+    public function preloadKlevuStockStatus(array $productIds, $websiteId = null);
 
     /**
      * Get stock data for simple and parent product

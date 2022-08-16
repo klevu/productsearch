@@ -5,7 +5,8 @@ use Magento\Framework\Registry;
 use Magento\TestFramework\Helper\Bootstrap;
 
 $skusToDelete = [
-    'klevu_simple_1'
+    'klevu_simple_1',
+    'klevu_simple_2',
 ];
 
 $objectManager = Bootstrap::getObjectManager();

@@ -34,7 +34,7 @@ class Landingoptions
             ['value' => static::KlEVULAND, 'label' => __('Klevu JS Theme (Recommended)')],
         ];
 
-        if ($accountFeatures->isFeatureAvailable(AccountFeatures::PM_FEATUREFLAG_PRESERVES_LAYOUT)) {
+        if ($accountFeatures && $accountFeatures->isFeatureAvailable(AccountFeatures::PM_FEATUREFLAG_PRESERVES_LAYOUT)) {
             $options[] = ['value' => static::YES, 'label' => __('Preserve your Magento layout')];
         }
 

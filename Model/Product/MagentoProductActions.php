@@ -279,12 +279,20 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
             // check magento products for this batch of klevu products ($productIdsToFilter)
             $magentoProductIdsCollection = $this->magentoProductRepository->getProductIdsCollection(
                 $store,
-                MagentoProductSyncRepositoryInterface::NOT_VISIBLE_INCLUDED
+                MagentoProductSyncRepositoryInterface::NOT_VISIBLE_EXCLUDED
             );
-            $magentoProductIds = $this->getMagentoProductIds($magentoProductIdsCollection, $store, $productIdsToFilter);
+            $magentoVisibleProductIds = $this->getMagentoProductIds($magentoProductIdsCollection, $store, $productIdsToFilter);
             // getParentRelationsByChild method has to remain in this class for backwards compatibility
             // it is called from within formatMagentoProductIds,
-            $magentoProductIds = $this->formatMagentoProductIds($magentoProductIds);
+            $magentoVisibleProductIds = $this->formatMagentoProductIds($magentoVisibleProductIds);
+
+            $magentoChildProductIdsCollection = $this->magentoProductRepository->getChildProductIdsCollection($store);
+            $magentoChildProductIds = $this->getMagentoProductIds($magentoChildProductIdsCollection, $store, $productIdsToFilter);
+            $magentoChildProductIds = $this->formatMagentoProductIds($magentoChildProductIds, true);
+
+            // merge invisible child products and visible products, i.e. remove invisible orphaned simple products 
+            $magentoProductIds = array_merge($magentoVisibleProductIds, $magentoChildProductIds);
+
             unset($productIdsToFilter);
 
             if ($diff = $this->diffMultiDimensionalArrays($klevuProductIds, $magentoProductIds)) {

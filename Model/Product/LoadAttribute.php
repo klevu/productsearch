@@ -11,6 +11,7 @@ use \Klevu\Search\Model\Product\ProductInterface as Klevu_ProductData;
 use Magento\Catalog\Model\ResourceModel\Product\Collection as ProductCollection;
 use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory as ProductCollectionFactory;
 use Magento\Framework\App\ObjectManager;
+use Magento\Framework\Exception\NoSuchEntityException;
 use \Magento\Framework\Model\AbstractModel;
 use \Magento\Catalog\Model\ResourceModel\Product\Attribute\Collection as Klevu_Product_Attribute_Collection;
 use Klevu\Search\Model\Klevu\KlevuFactory;
@@ -85,9 +86,19 @@ class LoadAttribute extends AbstractModel implements LoadAttributeInterface
         }
         $product_ids = array_unique($product_ids);
         $parent_ids = array_unique($parent_ids);
+        try {
+            $store = $this->_storeModelStoreManagerInterface->getStore();
+            $website = $store->getWebsite();
+        } catch (NoSuchEntityException $exception) {
+            $this->_searchHelperData->log(
+                LoggerConstants::ZEND_LOG_ERR,
+                sprintf('Website Could not be loaded: %s', $exception->getMessage())
+            );
+            return $this;
+        }
 
         $this->stockService->clearCache();
-        $this->stockService->preloadKlevuStockStatus(array_merge($product_ids, $parent_ids));
+        $this->stockService->preloadKlevuStockStatus(array_merge($product_ids, $parent_ids), $website->getId());
 
         if ($this->_searchHelperConfig->isCollectionMethodEnabled()) {
             $data = $this->loadProductDataCollection($product_ids);
@@ -96,9 +107,9 @@ class LoadAttribute extends AbstractModel implements LoadAttributeInterface
         // Get url product from database
         $url_rewrite_data = $this->getUrlRewriteData($product_ids);
         $attribute_map = $this->getAttributeMap();
-        $base_url = $this->_productData->getBaseUrl($this->_storeModelStoreManagerInterface->getStore());
+        $base_url = $this->_productData->getBaseUrl($store);
         $currency = $this->_productData->getCurrency();
-        $this->_storeModelStoreManagerInterface->getStore()->setCurrentCurrencyCode($currency);
+        $store->setCurrentCurrencyCode($currency);
         $rejectedProducts = array();
         $rc = 0;
         $rp = 0;
@@ -227,7 +238,7 @@ class LoadAttribute extends AbstractModel implements LoadAttributeInterface
                 $product['categoryPaths'] = $this->_productData->getAllCategoryPaths($parent,$item);
                 $product['groupPrices'] = $this->_productData->getGroupPricesData($item);
                 $product['url'] = $this->_productData->getProductUrlData($parent,$item,$url_rewrite_data,$product,$base_url);
-                $product['inStock'] = $this->_stockHelper->getKlevuStockStatus($parent,$item);
+                $product['inStock'] = $this->_stockHelper->getKlevuStockStatus($parent,$item, $website->getId());
                 $product['itemGroupId'] = $this->_productData->getItemGroupId($product['parent_id'],$product)?$this->_productData->getItemGroupId($product['parent_id'],$product):0;
                 $product['id'] = $this->_productData->getId($product['product_id'],$product['parent_id']);
                 $this->processProductAfter($product,$parent,$item);
