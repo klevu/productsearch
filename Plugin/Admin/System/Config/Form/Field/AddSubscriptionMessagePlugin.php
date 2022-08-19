@@ -52,7 +52,7 @@ class AddSubscriptionMessagePlugin
             return [$element];
         }
         $this->initAccountFeatures();
-        if (!$this->accountFeatures->isFeatureAvailable($featureToCheck, true)) {
+        if ($this->accountFeatures && !$this->accountFeatures->isFeatureAvailable($featureToCheck, true)) {
             $element->setComment($this->getSubscriptionComment());
         }
 
@@ -88,6 +88,9 @@ class AddSubscriptionMessagePlugin
      */
     private function getSubscriptionComment()
     {
+        if (!$this->accountFeatures) {
+            return '';
+        }
         return "<div class='klevu-upgrade-block-simple'>" .
             $this->accountFeatures->getPreserveLayoutMessage() .
             "</div>";

@@ -390,7 +390,7 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
                 break;
 
             case is_int($store):
-            case ctype_digit($store):
+            case is_string($store) && ctype_digit($store):
                 $storeId = (int)$store;
                 break;
 

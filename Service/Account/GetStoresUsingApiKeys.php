@@ -46,7 +46,7 @@ class GetStoresUsingApiKeys implements GetStoresUsingApiKeysInterface
      * @param string $restApiKey
      * @param string $jsApiKey
      *
-     * @return array
+     * @return string[][]
      * @throws InvalidApiKeyException
      * @throws \Zend_Validate_Exception
      */

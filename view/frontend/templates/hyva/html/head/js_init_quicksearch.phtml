@@ -1,0 +1,16 @@
+<?php /** @var Klevu\FrontendJs\Block\Template $block */ ?>
+let searchContentElement = document.getElementById("search-content");
+if (searchContentElement) {
+    let klevuSearchResults_wrapper = document.createElement("div");
+    klevuSearchResults_wrapper.id = "klevuSearchResults_wrapper";
+    klevuSearchResults_wrapper.className = "klevuSearchResults_wrapper";
+
+    let klevuSearchResults = document.createElement("div");
+    klevuSearchResults.id = "klevuSearchResults";
+    klevuSearchResults.className = "klevuSearchResults";
+
+    klevuSearchResults_wrapper.appendChild(klevuSearchResults);
+    searchContentElement.appendChild(klevuSearchResults_wrapper);
+
+    options.search.searchBoxTarget = klevuSearchResults;
+}

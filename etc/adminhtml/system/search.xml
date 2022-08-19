@@ -34,8 +34,11 @@
 
     <group id="general" translate="label" type="text" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="1">
         <label>General Settings</label>
+        <field id="enabled_info" translate="label comment" sortOrder="121" type="label" showInDefault="1" showInWebsite="1">
+            <comment><![CDATA[Switch to Store View scope to manage.]]></comment>
+        </field>
         <field id="enabled" translate="label" type="select" sortOrder="121"
-               showInDefault="1" showInWebsite="1" showInStore="1">
+               showInDefault="0" showInWebsite="0" showInStore="1">
             <label>Enable on Frontend</label>
             <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
             <comment>
@@ -52,8 +55,11 @@
 
     <group id="searchlanding" translate="label" sortOrder="103" showInDefault="1" showInWebsite="1" showInStore="1">
         <label>Search Result Page Settings</label>
+        <field id="landenabled_info" translate="label comment" sortOrder="100" type="label" showInDefault="1" showInWebsite="1">
+            <comment><![CDATA[Switch to Store View scope to manage.]]></comment>
+        </field>
         <field id="landenabled" translate="label" sortOrder="100" type="select"
-               showInDefault="1" showInWebsite="1" showInStore="1">
+               showInDefault="0" showInWebsite="0" showInStore="1">
             <label>Ordering &amp; Rendering</label>
             <comment>
                 <![CDATA[
