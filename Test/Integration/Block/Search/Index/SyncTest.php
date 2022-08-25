@@ -35,23 +35,23 @@ class SyncTest extends AbstractControllerTestCase
 
         if (method_exists($this, 'assertStringContainsString')) {
             $this->assertStringContainsString('Manually Data Sync', $responseBody);
-            $this->assertStringContainsString('function callAjaxRecurrsively()', $responseBody);
             $this->assertStringContainsString('Hash key found invalid for requested store.', $responseBody);
         } else {
             $this->assertContains('Manually Data Sync', $responseBody);
-            $this->assertContains('function callAjaxRecurrsively()', $responseBody);
             $this->assertContains('Hash key found invalid for requested store.', $responseBody);
         }
 
         if (method_exists($this, 'assertDoesNotMatchRegularExpression')) {
-            $this->assertDoesNotMatchRegularExpression("#require\(\['jquery'\], function\(\) {\s*callAjaxRecurrsively\(\);\s*}\);#m", $responseBody);
+            $this->assertDoesNotMatchRegularExpression("#\s*callAjaxRecurrsively\(\);\s*#m", $responseBody);
         } else {
-            $this->assertNotRegExp("#require\(\['jquery'\], function\(\) {\s*callAjaxRecurrsively\(\);\s*}\);#m", $responseBody);
+            $this->assertNotRegExp("#\s*callAjaxRecurrsively\(\);\s*#m", $responseBody);
         }
 
         if (method_exists($this, 'assertStringNotContainsString')) {
+            $this->assertStringNotContainsString('function callAjaxRecurrsively()', $responseBody);
             $this->assertStringNotContainsString('klevu.interactive', $responseBody);
         } else {
+            $this->assertNotContains('function callAjaxRecurrsively()', $responseBody);
             $this->assertNotContains('klevu.interactive', $responseBody);
         }
     }
@@ -84,10 +84,10 @@ class SyncTest extends AbstractControllerTestCase
             $this->assertContains('function callAjaxRecurrsively()', $responseBody);
         }
 
-        if (method_exists($this, 'assertDoesNotMatchRegularExpression')) {
-            $this->assertMatchesRegularExpression("#require\(\['jquery'\], function\(\) {\s*callAjaxRecurrsively\(\);\s*}\);#m", $responseBody);
+        if (method_exists($this, 'assertMatchesRegularExpression')) {
+            $this->assertMatchesRegularExpression("#\s*callAjaxRecurrsively\(\);\s*#m", $responseBody);
         } else {
-            $this->assertRegExp("#require\(\['jquery'\], function\(\) {\s*callAjaxRecurrsively\(\);\s*}\);#m", $responseBody);
+            $this->assertRegExp("#\s*callAjaxRecurrsively\(\);\s*#m", $responseBody);
         }
 
         if (method_exists($this, 'assertStringNotContainsString')) {
@@ -121,23 +121,23 @@ class SyncTest extends AbstractControllerTestCase
 
         if (method_exists($this, 'assertStringContainsString')) {
             $this->assertStringContainsString('Manually Data Sync', $responseBody);
-            $this->assertStringContainsString('function callAjaxRecurrsively()', $responseBody);
             $this->assertStringContainsString('Hash key found invalid for requested store.', $responseBody);
         } else {
             $this->assertContains('Manually Data Sync', $responseBody);
-            $this->assertContains('function callAjaxRecurrsively()', $responseBody);
             $this->assertContains('Hash key found invalid for requested store.', $responseBody);
         }
 
         if (method_exists($this, 'assertDoesNotMatchRegularExpression')) {
-            $this->assertDoesNotMatchRegularExpression("#require\(\['jquery'\], function\(\) {\s*callAjaxRecurrsively\(\);\s*}\);#m", $responseBody);
+            $this->assertDoesNotMatchRegularExpression("#\s*callAjaxRecurrsively\(\);\s*#m", $responseBody);
         } else {
-            $this->assertNotRegExp("#require\(\['jquery'\], function\(\) {\s*callAjaxRecurrsively\(\);\s*}\);#m", $responseBody);
+            $this->assertNotRegExp("#\s*callAjaxRecurrsively\(\);\s*#m", $responseBody);
         }
 
         if (method_exists($this, 'assertStringNotContainsString')) {
+            $this->assertStringNotContainsString('function callAjaxRecurrsively()', $responseBody);
             $this->assertStringNotContainsString('klevu.interactive', $responseBody);
         } else {
+            $this->assertNotContains('function callAjaxRecurrsively()', $responseBody);
             $this->assertNotContains('klevu.interactive', $responseBody);
         }
     }
@@ -164,23 +164,23 @@ class SyncTest extends AbstractControllerTestCase
 
         if (method_exists($this, 'assertStringContainsString')) {
             $this->assertStringContainsString('Manually Data Sync', $responseBody);
-            $this->assertStringContainsString('function callAjaxRecurrsively()', $responseBody);
             $this->assertStringContainsString('Hash key found invalid for requested store.', $responseBody);
         } else {
             $this->assertContains('Manually Data Sync', $responseBody);
-            $this->assertContains('function callAjaxRecurrsively()', $responseBody);
             $this->assertContains('Hash key found invalid for requested store.', $responseBody);
         }
 
         if (method_exists($this, 'assertDoesNotMatchRegularExpression')) {
-            $this->assertDoesNotMatchRegularExpression("#require\(\['jquery'\], function\(\) {\s*callAjaxRecurrsively\(\);\s*}\);#m", $responseBody);
+            $this->assertDoesNotMatchRegularExpression("#callAjaxRecurrsively\(\);#m", $responseBody);
         } else {
-            $this->assertNotRegExp("#require\(\['jquery'\], function\(\) {\s*callAjaxRecurrsively\(\);\s*}\);#m", $responseBody);
+            $this->assertNotRegExp("#callAjaxRecurrsively\(\);#m", $responseBody);
         }
 
         if (method_exists($this, 'assertStringNotContainsString')) {
+            $this->assertStringNotContainsString('function callAjaxRecurrsively()', $responseBody);
             $this->assertStringNotContainsString('klevu.interactive', $responseBody);
         } else {
+            $this->assertNotContains('function callAjaxRecurrsively()', $responseBody);
             $this->assertNotContains('klevu.interactive', $responseBody);
         }
     }
@@ -211,12 +211,6 @@ class SyncTest extends AbstractControllerTestCase
         } else {
             $this->assertContains('Manually Data Sync', $responseBody);
             $this->assertContains('function callAjaxRecurrsively()', $responseBody);
-        }
-
-        if (method_exists($this, 'assertDoesNotMatchRegularExpression')) {
-            $this->assertMatchesRegularExpression("#require\(\['jquery'\], function\(\) {\s*callAjaxRecurrsively\(\);\s*}\);#m", $responseBody);
-        } else {
-            $this->assertRegExp("#require\(\['jquery'\], function\(\) {\s*callAjaxRecurrsively\(\);\s*}\);#m", $responseBody);
         }
 
         if (method_exists($this, 'assertStringNotContainsString')) {
@@ -250,23 +244,23 @@ class SyncTest extends AbstractControllerTestCase
 
         if (method_exists($this, 'assertStringContainsString')) {
             $this->assertStringContainsString('Manually Data Sync', $responseBody);
-            $this->assertStringContainsString('function callAjaxRecurrsively()', $responseBody);
             $this->assertStringContainsString('Hash key found invalid for requested store.', $responseBody);
         } else {
             $this->assertContains('Manually Data Sync', $responseBody);
-            $this->assertContains('function callAjaxRecurrsively()', $responseBody);
             $this->assertContains('Hash key found invalid for requested store.', $responseBody);
         }
 
         if (method_exists($this, 'assertDoesNotMatchRegularExpression')) {
-            $this->assertDoesNotMatchRegularExpression("#require\(\['jquery'\], function\(\) {\s*callAjaxRecurrsively\(\);\s*}\);#m", $responseBody);
+            $this->assertDoesNotMatchRegularExpression("#\s*callAjaxRecurrsively\(\);\s*#m", $responseBody);
         } else {
-            $this->assertNotRegExp("#require\(\['jquery'\], function\(\) {\s*callAjaxRecurrsively\(\);\s*}\);#m", $responseBody);
+            $this->assertNotRegExp("#\s*callAjaxRecurrsively\(\);\s*#m", $responseBody);
         }
 
         if (method_exists($this, 'assertStringNotContainsString')) {
+            $this->assertStringNotContainsString('function callAjaxRecurrsively()', $responseBody);
             $this->assertStringNotContainsString('klevu.interactive', $responseBody);
         } else {
+            $this->assertNotContains('function callAjaxRecurrsively()', $responseBody);
             $this->assertNotContains('klevu.interactive', $responseBody);
         }
     }

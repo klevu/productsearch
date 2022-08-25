@@ -42,10 +42,13 @@
                 <preserve_layout_log_level>7</preserve_layout_log_level>
                 <!-- See configuration at klevu_logger/preserve_layout_configuration/min_log_level -->
                 <theme_version>v1</theme_version>
-                <quicksearch_selector><![CDATA[input[type=text][name=q]]]></quicksearch_selector>
+                <quicksearch_selector><![CDATA[input[type=text][name=q],input[type=search][name=q]]]></quicksearch_selector>
                 <orders_percentage>30</orders_percentage>
                 <days_to_calculate_orders>30</days_to_calculate_orders>
-				<orderip>remote_ip</orderip>
+                <orderip>remote_ip</orderip>
+                <lazyload_js_quick_search>0</lazyload_js_quick_search>
+                <lazyload_js_search_landing>0</lazyload_js_search_landing>
+                <content_min_height_srlp/>
             </developer>
             <searchlanding>
                 <landenabled>2</landenabled>

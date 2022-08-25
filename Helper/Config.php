@@ -147,6 +147,9 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
 	const ADMIN_RESOURCE_CONFIG = 'Klevu_Search::config_search';
 	const XML_PATH_ORDER_IP = 'klevu_search/developer/orderip';
 	const XML_PATH_RATING_SYNC_ENABLED = 'klevu_search/product_sync/rating_sync_enabled';
+    const XML_PATH_LAZYLOAD_QUICK_SEARCH = 'klevu_search/developer/lazyload_js_quick_search';
+    const XML_PATH_LAZYLOAD_SEARCH_LANDING = 'klevu_search/developer/lazyload_js_search_landing';
+    const XML_PATH_SRLP_CONTENT_MIN_HEIGHT = 'klevu_search/developer/content_min_height_srlp';
 
     /**
      * Set the Enable on Frontend flag in System Configuration for the given store.
@@ -1304,7 +1307,7 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     /**
      * Return Current Configured Catalog search engine.
      *
-     * @return bool
+     * @return string
      */
     public function getCurrentEngine()
     {
