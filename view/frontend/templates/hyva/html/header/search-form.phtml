@@ -1,0 +1,142 @@
+<?php
+// Klevu override of default Hyvä template to include check for Magento\Search\ViewModel\ConfigProvider::isSuggestionsAllowed
+
+/**
+ * Hyvä Themes - https://hyva.io
+ * Copyright © Hyvä Themes 2020-present. All rights reserved.
+ * This product is licensed per Magento install
+ * See https://hyva.io/license
+ */
+
+declare(strict_types=1);
+
+use Hyva\Theme\Model\ViewModelRegistry;
+use Magento\Framework\Escaper;
+use Magento\Framework\View\Element\Template;
+use Magento\Search\Helper\Data as SearchHelper;
+// Start Klevu customisation of default Hyvä template
+use Magento\Search\ViewModel\ConfigProvider;
+// End Klevu customisation of default Hyvä template
+
+// phpcs:disable Magento2.Templates.ThisInTemplate.FoundHelper
+
+/** @var Escaper $escaper */
+/** @var Template $block */
+/** @var SearchHelper $helper */
+/** @var ViewModelRegistry $viewModels */
+
+// Start Klevu customisation of default Hyvä template
+/** @var ConfigProvider $configProvider */
+$configProvider = $viewModels->require(ConfigProvider::class);
+// End Klevu customisation of default Hyvä template
+
+$helper = $this->helper(SearchHelper::class);
+?>
+<script>
+    'use strict';
+
+    function initMiniSearch() {
+        return {
+            minSearchLength: <?= (int) $helper->getMinQueryLength() ?>,
+            suggestions: [],
+            suggest() {
+                const search = this.$refs.searchInput;
+                if (search.value.length >= this.minSearchLength) {
+                    search.setCustomValidity('');
+                    search.reportValidity();
+                    // Start Klevu customisation of default Hyvä template
+                    <?php if($configProvider->isSuggestionsAllowed()): ?>
+                        this.fetchSuggestions(search.value);
+                    <?php else: ?>
+                        this.suggestions = [];
+                    <?php endif; ?>
+                    // End Klevu customisation of default Hyvä template
+                } else {
+                    this.suggestions = [];
+                }
+            },
+            fetchSuggestions(term) {
+                fetch(
+                    window.BASE_URL + 'search/ajax/suggest?' + new URLSearchParams({q: term}),
+                    {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    }
+                )
+                .then(response => response.json())
+                .then(result => this.suggestions = result);
+            },
+            search(term) {
+                const search = this.$refs.searchInput;
+                term = term || search.value;
+                if (term.length < this.minSearchLength) {
+                    search.setCustomValidity('<?= $escaper->escapeJs(
+                        __('Minimum Search query length is %1', $helper->getMinQueryLength())
+                    ) ?>');
+                    search.reportValidity();
+                } else {
+                    search.setCustomValidity('');
+                    search.value = term;
+                    this.$refs.form.submit();
+                }
+            },
+            focusElement(element) {
+                if (element && element.nodeName === "DIV") {
+                    element.focus();
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        }
+    }
+</script>
+<div class="container py-2 mx-auto text-black" x-data="initMiniSearch()">
+     <form class="form minisearch" id="search_mini_form" x-ref="form" @submit.prevent="search()"
+          action="<?= $escaper->escapeUrl($helper->getResultUrl()) ?>" method="get">
+        <label class="hidden" for="search" data-role="minisearch-label">
+            <span><?= $escaper->escapeHtml(__('Search')) ?></span>
+        </label>
+        <input id="search"
+               x-ref="searchInput"
+               type="search"
+               autocomplete="off"
+               name="<?= $escaper->escapeHtmlAttr($helper->getQueryParamName()) ?>"
+               value="<?= /** @noEscape */ $helper->getEscapedQueryText() ?>"
+               placeholder="<?= $escaper->escapeHtmlAttr(__('Search entire store here...')) ?>"
+               maxlength="<?= $escaper->escapeHtmlAttr($helper->getMaxQueryLength()) ?>"
+               class="w-full p-2 text-lg leading-normal transition appearance-none text-grey-800
+                focus:outline-none focus:border-transparent lg:text-xl"
+               @focus.once="suggest"
+               @input.debounce.300="suggest"
+               @keydown.arrow-down.prevent="focusElement($el.querySelector('[tabindex]'))"
+        />
+         <template x-if="suggestions.length > 0">
+             <div class="w-full leading-normal transition appearance-none text-grey-800 flex flex-col mt-1">
+                 <template x-for="suggestion in suggestions">
+                     <div class="flex justify-between p-2 bg-container-lighter even:bg-container mb-1 cursor-pointer
+                                 border border-container hover:bg-container-darker"
+                          tabindex="0"
+                          @click="search(suggestion.title)"
+                          @keydown.enter="search(suggestion.title)"
+                          @keydown.arrow-up.prevent="
+                              focusElement($event.target.previousElementSibling) || $refs.searchInput.focus()
+                          "
+                          @keydown.arrow-down.prevent="focusElement($event.target.nextElementSibling)"
+                     >
+                         <span x-text="suggestion.title"></span>
+                         <span x-text="suggestion.num_results"></span>
+                     </div>
+                 </template>
+             </div>
+         </template>
+        <button type="submit"
+                title="<?= $escaper->escapeHtml(__('Search')) ?>"
+                class="action search sr-only"
+                aria-label="Search"
+        >
+            <?= $escaper->escapeHtml(__('Search')) ?>
+        </button>
+    </form>
+</div>

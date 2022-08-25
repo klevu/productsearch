@@ -136,13 +136,15 @@ class Tracking extends TemplateBase
     }
 
     /**
-     * Check klevu analytics URL
+     * get klevu analytics URL
      *
      * @return string
      */
     public function getAnalyticsUrl()
     {
-        return $this->_klevuConfig->getAnalyticsUrl();
+        $protocol = $this->getRequest()->isSecure() ? 'https://' : 'http://';
+
+        return $protocol . $this->_klevuConfig->getAnalyticsUrl() . '/analytics/productTracking?';
     }
 }
 

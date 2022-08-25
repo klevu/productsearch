@@ -15,7 +15,10 @@
         <referenceContainer name="footer-container"  remove="true"/>
 
         <referenceBlock name="content">
-            <block class="Klevu\Search\Block\Search\Index\Sync" template="Klevu_Search::klevu/search/ajaxsync.phtml" name="search_index_syncstore"/>
+            <block class="Klevu\Search\Block\Search\Index\Sync"
+                   template="Klevu_Search::klevu/search/ajaxsync.phtml"
+                   name="search_index_syncstore"
+                   cacheable="false" />
         </referenceBlock>
 
         <referenceBlock name="klevu_search.html_head.themev2.js_variables" remove="true"/>

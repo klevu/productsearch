@@ -5,67 +5,96 @@ $key = $block->getRestApiParam();
 $rest_from_db = $block->getRestApi($store_id);
 $indexersMessage = $block->isShowIndexerMessage();
 ?>
-<?php if ($indexersMessage): ?>
-    <div class="message warning" id="kl_indexers_message">
-        <span><?php echo __('Magento Indexers are found invalid for the Magento Store. Please rebuild <strong> Magento Indexers </strong> and Click on <strong> Sync Updates Only for This Store</strong> again..') ?>&nbsp;</span>
+<?php if ($key !== $rest_from_db): ?>
+    <div class="message warning" id="kl_invalid_hash_key">
+        <span>
+            <?= __('Hash key found invalid for requested store.') ?>
+        </span>
     </div>
-<?php endif; ?>
-<div class="message warning" id="kl_close_warning_before" style="display:block">
-    <span><?php echo __('Please don\'t close this tab when the data is being synchronized.') ?></span></div>
-<div class="message success" id="kl_close_warning_after" style="display:none">
-    <span><?php echo __('Data Synchronization has been finished. You can close this tab now.') ?>&nbsp;<a
-            title="<?php echo __('By clicking on link, it will close tab'); ?>" href="#"
-            onclick="window.close();return false;"><?php echo __('Click to close tab'); ?></a></span></div>
-<div id="info_message"><span id="loader" style="display:none"><?php echo __('Please wait...'); ?></span></div>
+<?php else: ?>
+    <?php if ($indexersMessage): ?>
+        <div class="message warning" id="kl_indexers_message">
+            <span>
+                <?= __('Magento Indexers are found invalid for the Magento Store.') ?>
+                <?= __(
+                    'Please rebuild %1 Magento Indexers %2 and Click on %1 Sync Updates Only for This Store %2 again..',
+                    '<strong>',
+                    '</strong>'
+                ) ?>
+            </span>
+        </div>
+    <?php endif; ?>
+    <div class="message warning" id="kl_close_warning_before" style="display:block">
+        <span>
+            <?= __('Please don\'t close this tab when the data is being synchronized.') ?>
+        </span>
+    </div>
+    <div class="message success" id="kl_close_warning_after" style="display:none">
+        <span>
+            <?= __('Data Synchronization has been finished. You can close this tab now.') ?>&nbsp;
+            <a title="<?= __('By clicking on link, it will close tab') ?>"
+               href="#"
+               onclick="window.close(); return false;">
+                <?= __('Click to close tab') ?>
+            </a>
+        </span>
+    </div>
+    <div id="info_message">
+        <span id="loader" style="display:none">
+            <?= __('Please wait...') ?>
+        </span>
+    </div>
 
-<script type="text/javascript">
-<?php if($key == $rest_from_db) { ?>
-require(['jquery'], function() {
-        callAjaxRecurrsively();
-});
-<?php } else { ?>
-    var hashMsg = "<?php echo __('Hash key found invalid for requested store.');?>";
-    document.getElementById("info_message").innerHTML = hashMsg + "</br>";
-<?php } ?>
+    <script type="text/javascript">
+        function callAjaxRecurrsively() {
+            document.getElementById("loader").style.display = "block";
 
-    function callAjaxRecurrsively() {
-        jQuery.ajax({
-            url:'<?php echo $block->getBaseUrl(); ?>/search/index/syncstoreview/store/'+<?php echo $store_id; ?>+'/hashkey/'+'<?php echo $key; ?>',
-            type: 'GET',
-            dataType: 'json',
-            beforeSend: function () {
-                // Show image container
-                document.getElementById("loader").style.display = "block";
-            },
-            success: function (data) {
+            const url = '<?= $block->escapeUrl(
+                sprintf('%s/search/index/syncstoreview/store/%s/hashkey/', $block->getBaseUrl(), $store_id)
+            ) . $key ?>';
+
+            fetch(url, {
+                method: 'GET',
+                crossDomain: true
+            }).then((response) => response.json()).then((data) => {
+                let htmlToDisplay;
                 if (data.numberOfRecord_add == null &&
                     data.numberOfRecord_update == null &&
-                    data.numberOfRecord_delete == null) {
-                    document.getElementById("loader").style.display = "none";
-                    var str = '</br><div class="message warning"><span>Something went wrong with the sync. Please see Klevu_Search.log file for further information.';
-                    var msgToShow = '';
+                    data.numberOfRecord_delete == null
+                ) {
+                    htmlToDisplay = '<br />';
+                    htmlToDisplay += '<div class="message warning">';
+                    htmlToDisplay += '<span>';
+                    htmlToDisplay += '<?= __('Something went wrong with the sync. Please see Klevu_Search.log file for further information.') ?>';
                     if (data.msg != null) {
-                        msgToShow += str + '</br>' + data.msg + '</span></div>';
-                    } else {
-                        msgToShow += str + '</span></div>';
+                        htmlToDisplay += '<br />' + data.msg;
                     }
-                    document.getElementById("info_message").innerHTML += msgToShow;
-                } else if (data.numberOfRecord_add != 0 || data.numberOfRecord_update != 0 || data.numberOfRecord_delete != 0) {
-                    document.getElementById("loader").style.display = "none";
-                    var str = "<?php echo __('Next batch sent to klevu');?>";
-                    document.getElementById("info_message").innerHTML += str + "</br>";
+                    htmlToDisplay += '</span>';
+                    htmlToDisplay += '</div>';
+                    htmlToDisplay += "<br />"
+
+                    document.getElementById("info_message").innerHTML += htmlToDisplay;
+                } else if (parseInt(data.numberOfRecord_add) !== 0 ||
+                    parseInt(data.numberOfRecord_update) !== 0 ||
+                    parseInt(data.numberOfRecord_delete) !== 0
+                ) {
+                    htmlToDisplay = "<?= __('Next batch sent to Klevu') ?>";
+                    htmlToDisplay += "<br />"
+
+                    document.getElementById("info_message").innerHTML += htmlToDisplay;
                     callAjaxRecurrsively();
                 } else {
-                    var str = "<?php echo __('No records found to sync');?>";
-                    document.getElementById("info_message").innerHTML += str + "</br>";
+                    htmlToDisplay = "<?= __('No records found to sync') ?>";
+                    htmlToDisplay += "<br />"
+
+                    document.getElementById("info_message").innerHTML += htmlToDisplay;
                     document.getElementById("kl_close_warning_before").style.display = "none";
                     document.getElementById("kl_close_warning_after").style.display = "block";
                 }
-            },
-            crossDomain: true
-        });
-    }
+                document.getElementById("loader").style.display = "none";
+            });
+        }
 
-</script>
-
-
+        callAjaxRecurrsively();
+    </script>
+<?php endif; ?>

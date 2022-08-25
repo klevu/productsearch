@@ -1,0 +1,25 @@
+<?php /** @var \Magento\Framework\View\Element\Template $block */ ?>
+<div style="display:none;"
+     x-data="initKlevuCustomerTracking()"
+     @private-content-loaded.window="getCustomerSectionData($event.detail.data)">
+    <span id="klevu_sessionId" x-html="klevuSessionId"></span>
+    <span id="klevu_loginCustomerGroup" x-html="klevuLoginCustomerGroup"></span>
+    <span id="klevu_loginCustomerEmail" x-html="klevuIdCode"></span>
+    <span id="klevu_shopperIP" x-html="klevuShopperIP"></span>
+</div>
+<script>
+    function initKlevuCustomerTracking() {
+        return {
+            klevuSessionId : '',
+            klevuLoginCustomerGroup : '',
+            klevuIdCode : '',
+            klevuShopperIP : '',
+            getCustomerSectionData(data) {
+                document.getElementById('klevu_sessionId').innerHTML = ("undefined" !== typeof data['personal-data'].klevuSessionId) ? data['personal-data'].klevuSessionId : '';
+                document.getElementById('klevu_loginCustomerGroup').innerHTML = ("undefined" !== typeof data['personal-data'].klevuLoginCustomerGroup) ? data['personal-data'].klevuLoginCustomerGroup : '';
+                document.getElementById('klevu_loginCustomerEmail').innerHTML = ("undefined" !== typeof data['personal-data'].klevuIdCode) ? data['personal-data'].klevuIdCode : '';
+                document.getElementById('klevu_shopperIP').innerHTML = ("undefined" !== typeof data['personal-data'].klevuShopperIP) ? data['personal-data'].klevuShopperIP : '';
+            }
+        }
+    }
+</script>

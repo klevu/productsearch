@@ -506,13 +506,56 @@
         </field>
         <field id="quicksearch_selector" translate="label comment" sortOrder="510"
                showInDefault="1" showInWebsite="1" showInStore="1">
-            <label>Quicksearch Input Selector</label>
+            <label>Quick Search Input Selector</label>
             <comment>
                 <![CDATA[
-                    CSS / JavaScript selector used to identity the frontend search input element to which Klevu's quicksearch context will be added.<br />
-                    Default: <code>input[type=text][name=q]</code>
+                    CSS / JavaScript selector used to identity the frontend search input element to which Klevu's quick search context will be added.<br />
+                    Default: <code>input[type=text][name=q],input[type=search][name=q]</code>
                 ]]>
             </comment>
+            <depends>
+                <field id="theme_version">v2</field>
+            </depends>
+        </field>
+        <field id="lazyload_js_quick_search" translate="label comment" type="select" sortOrder="511" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Lazy-load Quick Search JavaScript</label>
+            <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+            <comment>
+                <![CDATA[
+                    Lazy-loads JavaScript for Quick Search to prevent render blocking scripts on page load.
+                    Please do not modify this unless you have read and understood the following guide:
+                    <a href="https://help.klevu.com/support/solutions/articles/5000877463-lazy-load-jsv2-theme-scripts" target="_blank">Lazy-Load JSv2 Theme Scripts</a>.
+                ]]>
+            </comment>
+            <depends>
+                <field id="theme_version">v2</field>
+            </depends>
+        </field>
+        <field id="lazyload_js_search_landing" translate="label comment" type="select" sortOrder="512" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Lazy-load Search Results Landing Page JavaScript</label>
+            <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+            <comment>
+                <![CDATA[
+                    Lazy-loads JavaScript for the Search Results Landing Page to prevent render blocking scripts on page load.
+                    Please do not modify this unless you have read and understood the following guide:
+                    <a href="https://help.klevu.com/support/solutions/articles/5000877463-lazy-load-jsv2-theme-scripts" target="_blank">Lazy-Load JSv2 Theme Scripts</a>.
+                ]]>
+            </comment>
+            <depends>
+                <field id="theme_version">v2</field>
+            </depends>
+        </field>
+        <field id="content_min_height_srlp" translate="label comment" type="text" sortOrder="521" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Minimum Height for Search Results Landing Page Content</label>
+            <comment>
+                <![CDATA[
+                    Sets a minimum height for the product list content on the Search Results Landing Page, which
+                    can help reduce cumulative layout shift. For more information and recommended settings,
+                    please read the following guide:
+                    <a href="https://help.klevu.com/support/solutions/articles/5000877616-minimum-height-for-product-results-content" target="_blank">Minimum Height for Product Results Content</a>
+                ]]>
+            </comment>
+            <validate>integer</validate>
             <depends>
                 <field id="theme_version">v2</field>
             </depends>
