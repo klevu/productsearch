@@ -4,12 +4,17 @@ namespace Klevu\Search\Helper;
 
 use Klevu\Logger\Constants as LoggerConstants;
 use Klevu\Search\Helper\Api as ApiHelper;
+use Klevu\Search\Helper\Data as SearchHelper;
 use \Klevu\Search\Model\Product\Sync;
 use \Klevu\Search\Model\Api\Action\Features;
+use Klevu\Search\Model\System\Config\Source\Yesnoforced;
 use Klevu\Search\Service\Account\GetFeatures;
 use Klevu\Search\Service\Account\KlevuApi\GetAccountDetails;
 use Klevu\Search\Service\Account\UpdateEndpoints;
 use \Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\App\ObjectManager;
+use Magento\Framework\App\State as AppState;
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use \Magento\Framework\UrlInterface;
 use Magento\Store\Api\Data\StoreInterface;
@@ -57,6 +62,10 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
      * @var \Klevu\Search\Helper\VersionReader
      */
     protected $_versionReader;
+    /**
+     * @var AppState
+     */
+    private $appState;
 
     public function __construct(
         \Magento\Framework\App\Config\ScopeConfigInterface $appConfigScopeConfigInterface,
@@ -66,10 +75,9 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
         \Magento\Store\Model\Store $frameworkModelStore,
         \Magento\Framework\App\Config\Value $modelConfigData,
         \Magento\Framework\App\ResourceConnection $frameworkModelResource,
-        \Klevu\Search\Helper\VersionReader $versionReader
-
+        \Klevu\Search\Helper\VersionReader $versionReader,
+        AppState $appState = null
     ) {
-
         $this->_appConfigScopeConfigInterface = $appConfigScopeConfigInterface;
         $this->_magentoFrameworkUrlInterface = $magentoFrameworkUrlInterface;
         $this->_storeModelStoreManagerInterface = $storeModelStoreManagerInterface;
@@ -78,6 +86,7 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
         $this->_modelConfigData = $modelConfigData;
         $this->_frameworkModelResource = $frameworkModelResource;
 		$this->_versionReader = $versionReader;
+        $this->appState = $appState ?: ObjectManager::getInstance()->get(AppState::class);
     }
 
     const XML_PATH_EXTENSION_ENABLED = "klevu_search/general/enabled";
@@ -561,7 +570,11 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function getProductSyncEnabledFlag($store_id = 0)
     {
-        return intval($this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_PRODUCT_SYNC_ENABLED, ScopeInterface::SCOPE_STORE, $store_id));
+        return (int)$this->_appConfigScopeConfigInterface->getValue(
+            static::XML_PATH_PRODUCT_SYNC_ENABLED,
+            ScopeInterface::SCOPE_STORE,
+            $store_id
+        );
     }
 
     /**
@@ -574,10 +587,15 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     public function isProductSyncEnabled($store_id = 0)
     {
         $flag = $this->getProductSyncEnabledFlag($store_id);
-        return in_array($flag, [
-            \Klevu\Search\Model\System\Config\Source\Yesnoforced::YES,
-            static::KLEVU_PRODUCT_FORCE_OLDERVERSION
-        ]);
+
+        return in_array(
+            $flag,
+            [
+                Yesnoforced::YES,
+                static::KLEVU_PRODUCT_FORCE_OLDERVERSION
+            ],
+            true
+        );
     }
 
     /**
@@ -711,7 +729,7 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     {
         $flag = $this->getOrderSyncEnabledFlag($store);
         return in_array($flag, [
-            \Klevu\Search\Model\System\Config\Source\Yesnoforced::YES,
+            Yesnoforced::YES,
             static::KLEVU_PRODUCT_FORCE_OLDERVERSION
         ]);
     }
@@ -774,14 +792,29 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
     /**
-     * Return the minimum log level configured. Default to LoggerConstants::ZEND_LOG_WARN.
+     * Return the minimum log level configured. Default to LoggerConstants::ZEND_LOG_INFO.
+     *
+     * @param StoreInterface|string|int|null $scope
      *
      * @return int
      */
-    public function getLogLevel()
+    public function getLogLevel($scope = null)
     {
-        $log_level = $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_LOG_LEVEL, ScopeInterface::SCOPE_STORE);
-        return ($log_level !== null) ? (int)$log_level : LoggerConstants::ZEND_LOG_INFO;
+        try {
+            if (null === $scope && 'adminhtml' === $this->appState->getAreaCode()) {
+                $scope = $this->_frameworkAppRequestInterface->getParam('store');
+            }
+        } catch (LocalizedException $e) {
+            // Intentionally left empty
+            // appAreaCode is not set, continue with null $scope
+        }
+        $log_level = $this->_appConfigScopeConfigInterface->getValue(
+            static::XML_PATH_LOG_LEVEL,
+            ScopeInterface::SCOPE_STORE,
+            $scope
+        );
+
+        return is_numeric($log_level) ? (int)$log_level : LoggerConstants::ZEND_LOG_INFO;
     }
 
     /**

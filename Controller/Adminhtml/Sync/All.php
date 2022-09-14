@@ -8,6 +8,7 @@ use Klevu\Search\Helper\Data;
 use Klevu\Search\Model\Product\MagentoProductActionsInterface as MagentoProductActions;
 use Magento\Backend\App\Action;
 use Magento\Backend\App\Action\Context;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\View\Result\PageFactory;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Backend\Model\Session;
@@ -70,17 +71,15 @@ class All extends \Magento\Backend\App\Action
     }
     public function execute()
     {
-        $store = $this->getRequest()->getParam("store");
-        if ($store !== null) {
-            try {
-                $store = $this->_storeModelStoreManagerInterface->getStore($store);
-            } catch (\Magento\Framework\Model\Store\Exception $e) {
-                $this->_backendModelSession->addErrorMessage(__("Selected store could not be found!"));
-                $this->_redirect($this->_redirect->getRefererUrl());
-            }
+        $storeId = $this->getRequest()->getParam("store");
+        try {
+            $store = $this->_storeModelStoreManagerInterface->getStore($storeId);
+        } catch (NoSuchEntityException $e) {
+            $this->_backendModelSession->addErrorMessage(__("Selected store could not be found!"));
+            $this->_redirect($this->_redirect->getRefererUrl());
         }
 
-        if ($this->_searchHelperConfig->isProductSyncEnabled()) {
+        if ($this->_searchHelperConfig->isProductSyncEnabled((int)$store->getId())) {
             if ($this->_searchHelperConfig->getSyncOptionsFlag() == "2") {
                 if ($store) {
 					if($this->_searchHelperConfig->isExternalCronEnabled()) {

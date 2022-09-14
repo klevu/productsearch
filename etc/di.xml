@@ -21,6 +21,7 @@
     <preference for="Klevu\Search\Api\Service\Account\HelpArticleServiceInterface" type="Klevu\Search\Service\Account\HelpArticleService" />
     <preference for="Klevu\Search\Api\Service\Account\GetKmcUrlServiceInterface" type="Klevu\Search\Service\Account\GetKmcUrlService" />
     <preference for="Klevu\Search\Api\Service\Account\GetStoresUsingApiKeysInterface" type="Klevu\Search\Service\Account\GetStoresUsingApiKeys" />
+    <preference for="Klevu\Search\Api\Service\Account\AccountFeaturesMaskInterface" type="Klevu\Search\Service\Account\AccountFeaturesMask"/>
     <preference for="Klevu\Search\Api\Service\Catalog\Product\GetStockStatusByIdInterface" type="Klevu\Search\Service\Catalog\Product\GetStockStatusById" />
     <preference for="Klevu\Search\Api\Service\WebRestApi\Admin\GetBearerTokenInterface" type="Klevu\Search\Service\WebRestApi\Admin\GetBearerTokenService" />
 
@@ -362,6 +363,26 @@
     <type name="Klevu\Search\Block\Adminhtml\Form\Field\Integration\Warnings\LockFile">
         <arguments>
             <argument name="fileSystemIo" xsi:type="object">Magento\Framework\Filesystem\Io\File</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Service\Account\AccountFeaturesMask">
+        <arguments>
+            <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
+            <argument name="v1Tov2FlagMap" xsi:type="array">
+                <item name="preserve_layout" xsi:type="array">
+                    <item name="v1Flag" xsi:type="const">Klevu\Search\Service\Account\Model\AccountFeatures::PM_FEATUREFLAG_PRESERVES_LAYOUT</item>
+                    <item name="v2Flag" xsi:type="const">Klevu\Search\Service\Account\GetFeatures::FEATURE_PRESERVE_LAYOUT</item>
+                </item>
+                <item name="category_navigation" xsi:type="array">
+                    <item name="v1Flag" xsi:type="const">Klevu\Search\Service\Account\Model\AccountFeatures::PM_FEATUREFLAG_CATEGORY_NAVIGATION</item>
+                    <item name="v2Flag" xsi:type="const">Klevu\Search\Service\Account\GetFeatures::FEATURE_CATEGORY_NAVIGATION</item>
+                </item>
+                <item name="recommendations" xsi:type="array">
+                    <item name="v1Flag" xsi:type="const">Klevu\Search\Service\Account\Model\AccountFeatures::PM_FEATUREFLAG_RECOMMENDATIONS</item>
+                    <item name="v2Flag" xsi:type="const">Klevu\Search\Service\Account\GetFeatures::FEATURE_RECOMMENDATIONS</item>
+                </item>
+            </argument>
         </arguments>
     </type>
 </config>

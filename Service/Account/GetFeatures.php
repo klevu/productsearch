@@ -5,16 +5,17 @@ namespace Klevu\Search\Service\Account;
 use Exception;
 use InvalidArgumentException;
 use Klevu\Search\Api\SerializerInterface;
+use Klevu\Search\Api\Service\Account\AccountFeaturesMaskInterface;
 use Klevu\Search\Api\Service\Account\Model\AccountFeaturesInterface;
 use Klevu\Search\Api\Service\Account\Model\AccountFeaturesInterfaceFactory as AccountFeaturesFactory;
 use Klevu\Search\Api\Service\Account\GetFeaturesInterface;
 use Klevu\Search\Exception\InvalidApiKeyException;
 use Klevu\Search\Model\Api\Action\Features as FeaturesApi;
 use Klevu\Search\Serializer\Json;
-use Klevu\Search\Service\Account\Model\AccountFeatures;
 use Magento\Framework\App\Config\ReinitableConfigInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Config\Storage\WriterInterface as ScopeConfigWriterInterface;
+use Magento\Framework\App\ObjectManager;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Validator\ValidatorInterface;
@@ -31,6 +32,7 @@ class GetFeatures implements GetFeaturesInterface
     const API_DATA_SYNC_REQUIRED_EVERY_HOURS = 4;
     const FEATURE_CATEGORY_NAVIGATION = 's.enablecategorynavigation';
     const FEATURE_RECOMMENDATIONS = 'allow.personalizedrecommendations';
+    const FEATURE_PRESERVE_LAYOUT = 's.preservedlayout';
     const API_ENDPOINT_GET_FEATURE_VALUES = '/uti/getFeatureValues';
 
     /**
@@ -82,6 +84,11 @@ class GetFeatures implements GetFeaturesInterface
      */
     private $reinitableConfig;
 
+    /**
+     * @var AccountFeaturesMaskInterface
+     */
+    private $accountFeaturesMask;
+
     public function __construct(
         FeaturesApi $featuresApi,
         StoreManagerInterface $storeManager,
@@ -92,7 +99,8 @@ class GetFeatures implements GetFeaturesInterface
         SerializerInterface $serializer,
         ValidatorInterface $restApiKeyValidator,
         RequestInterface $request,
-        ReinitableConfigInterface $reinitableConfig
+        ReinitableConfigInterface $reinitableConfig,
+        AccountFeaturesMaskInterface $accountFeaturesMask = null
     ) {
         $this->featuresApi = $featuresApi;
         $this->storeManager = $storeManager;
@@ -104,12 +112,15 @@ class GetFeatures implements GetFeaturesInterface
         $this->restApiKeyValidator = $restApiKeyValidator;
         $this->request = $request;
         $this->reinitableConfig = $reinitableConfig;
+        $this->accountFeaturesMask = $accountFeaturesMask
+            ?: ObjectManager::getInstance()->get(AccountFeaturesMaskInterface::class);
     }
 
     /**
      * @param $store
      *
      * @return AccountFeaturesInterface|null
+     * @throws InvalidApiKeyException
      */
     public function execute($store = null)
     {
@@ -131,7 +142,7 @@ class GetFeatures implements GetFeaturesInterface
         if (empty($store)) {
             $store = $this->request->getParam('store');
             if (!$store) {
-                 return null;
+                return null;
             }
         }
         try {
@@ -231,19 +242,41 @@ class GetFeatures implements GetFeaturesInterface
     private function syncAccountFeaturesApi($restApi, StoreInterface $store)
     {
         try {
-            $params = [
+            $v1Response = $this->featuresApi->execute([
                 "restApiKey" => $restApi,
-                "store" => $store->getId()
-            ];
-            $response = $this->featuresApi->execute($params);
-            if ($response->isSuccess()) {
-                $responseData = $response->getData();
-                $accountFeaturesDataToSave = $this->getFeatureValuesFromRestApi($params, $responseData);
+                "store" => $store->getId(),
+            ]);
+            if ($v1Response->isSuccess()) {
+                $v2Response = $this->featuresApi->execute([
+                    "restApiKey" => $restApi,
+                    "store" => $store->getId(),
+                    'endpoint' => self::API_ENDPOINT_GET_FEATURE_VALUES,
+                    'features' => implode(',', [
+                        self::FEATURE_CATEGORY_NAVIGATION,
+                        self::FEATURE_RECOMMENDATIONS,
+                        self::FEATURE_PRESERVE_LAYOUT,
+                    ]),
+                ]);
+                // Note, we don't check $v2Response->isSuccess() as the v2 response does not contain a
+                //  <response>success</response> line, as referenced in \Klevu\Search\Model\Api\Response\Data::parseRawResponse
+
+                $v1ResponseData = $v1Response->getData();
+                $v2ResponseData = $v2Response->getData('feature');
+                $accountFeaturesDataToSave = $v1ResponseData;
+                $accountFeaturesDataToSave['enabled'] = implode(
+                    ',',
+                    $this->accountFeaturesMask->getEnabledFeatures($v1ResponseData, $v2ResponseData)
+                );
+                $accountFeaturesDataToSave['disabled'] = implode(
+                    ',',
+                    $this->accountFeaturesMask->getDisabledFeatures($v1ResponseData, $v2ResponseData)
+                );
+
                 $this->saveAccountFeatures($store, $accountFeaturesDataToSave);
                 $this->setLastSyncDate($store);
                 $this->reinitableConfig->reinit();
             } else {
-                $this->logger->error(sprintf("Failed to fetch feature details (%s)", $response->getMessage()));
+                $this->logger->error(sprintf("Failed to fetch feature details (%s)", $v1Response->getMessage()));
             }
         } catch (Exception $exception) {
             $this->logger->error(sprintf(
@@ -253,57 +286,6 @@ class GetFeatures implements GetFeaturesInterface
             $this->setLastSyncDate($store, 0);
             $this->reinitableConfig->reinit();
         }
-    }
-
-    /**
-     * @param array $params
-     * @param array $accountFeaturesData
-     *
-     * @return array
-     */
-    private function getFeatureValuesFromRestApi(array $params, array $accountFeaturesData)
-    {
-        try {
-            $params['endpoint'] = self::API_ENDPOINT_GET_FEATURE_VALUES;
-            $params['features'] = self::FEATURE_CATEGORY_NAVIGATION . ',' . self::FEATURE_RECOMMENDATIONS;
-
-            $response = $this->featuresApi->execute($params);
-            $keyMap = [
-                self::FEATURE_CATEGORY_NAVIGATION => AccountFeatures::PM_FEATUREFLAG_CATEGORY_NAVIGATION,
-                self::FEATURE_RECOMMENDATIONS => AccountFeatures::PM_FEATUREFLAG_RECOMMENDATIONS,
-            ];
-
-            foreach ($response->getData('feature') as $feature) {
-                $featureKey = (string)$feature['key'];
-                if (!isset($keyMap[$featureKey])) {
-                    continue;
-                }
-                if (!isset($feature['value']) || is_array($feature['value'])) {
-                    continue;
-                }
-                switch ((string)$feature['value']) {
-                    case 'enabled':
-                    case 'yes':
-                        $accountFeaturesData['enabled'] .= ',' . $keyMap[$featureKey];
-                        break;
-
-                    case 'disabled':
-                    case 'no':
-                        $accountFeaturesData['disabled'] .= ',' . $keyMap[$featureKey];
-                        break;
-
-                    default:
-                        break;
-                }
-            }
-        } catch (Exception $exception) {
-            $this->logger->error(sprintf(
-                "Klevu Features API call failed: \Klevu\Search\Model\Api\Action\Features::execute - (%s)",
-                $exception->getMessage()
-            ));
-        }
-
-        return $accountFeaturesData;
     }
 
     /**

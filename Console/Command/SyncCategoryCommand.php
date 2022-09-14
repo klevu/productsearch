@@ -212,7 +212,7 @@ HELP
                         if (file_exists($storeLockFile)) {
                             unlink($storeLockFile);
                         }
-                        return;
+                        continue;
                     }
 
                     $output->writeln('');

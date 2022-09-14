@@ -3,15 +3,12 @@
         xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
 
     <type name="Magento\Config\Block\System\Config\Form\Field">
+        <plugin name="Klevu_Search::AdminFormFieldRenderPlugin"
+                type="Klevu\Search\Plugin\Admin\System\Config\Form\Field\RenderPlugin"
+                sortOrder="10"/>
         <plugin name="Klevu_Search::AdminFormFieldHideLabels"
                 type="Klevu\Search\Plugin\Admin\System\Config\Form\Field\HideLabelForSingleStoreModePlugin"
-                sortOrder="10"/>
-        <plugin name="Klevu_Search::AdminFormFieldAddSubscriptionMessageToComment"
-                type="Klevu\Search\Plugin\Admin\System\Config\Form\Field\AddSubscriptionMessagePlugin"
                 sortOrder="20"/>
-        <plugin name="Klevu_Search::AdminFormFieldDisableFieldsIfNotEnabled"
-                type="Klevu\Search\Plugin\Admin\System\Config\Form\Field\DisableFieldPlugin"
-                sortOrder="30"/>
     </type>
     <type name="Magento\Config\Model\Config">
         <plugin name="Klevu_Search::UpdateApiEndpointsOnApiKeyChange"
@@ -41,20 +38,79 @@
         </arguments>
     </type>
 
-    <type name="Klevu\Search\Plugin\Admin\System\Config\Form\Field\DisableFieldPlugin">
+    <type name="Klevu\Search\Service\Admin\System\Config\Form\Field\RenderAction\UpdateConfigValueIfFeatureUnavailable">
         <arguments>
-            <argument name="fieldsToDisable" xsi:type="array">
-                <item name="klevu_search_attributes_boosting" xsi:type="const">Klevu\Search\Service\Account\Model\AccountFeatures::PM_FEATUREFLAG_BOOSTING</item>
-                <item name="klevu_search_searchlanding_landenabled" xsi:type="const">Klevu\Search\Service\Account\Model\AccountFeatures::PM_FEATUREFLAG_PRESERVES_LAYOUT</item>
-                <item name="klevu_integration_next_steps_landenabled" xsi:type="const">Klevu\Search\Service\Account\Model\AccountFeatures::PM_FEATUREFLAG_PRESERVES_LAYOUT</item>
+            <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
+            <argument name="fieldUpdateConfig" xsi:type="array">
+                <item name="klevu_search_attributes_boosting" xsi:type="array">
+                    <item name="element_id" xsi:type="string">klevu_search_attributes_boosting</item>
+                    <item name="feature" xsi:type="const">Klevu\Search\Service\Account\Model\AccountFeatures::PM_FEATUREFLAG_BOOSTING</item>
+                    <item name="value" xsi:type="string"></item>
+                </item>
+                <item name="klevu_search_searchlanding_landenabled" xsi:type="array">
+                    <item name="element_id" xsi:type="string">klevu_search_searchlanding_landenabled</item>
+                    <item name="feature" xsi:type="const">Klevu\Search\Service\Account\Model\AccountFeatures::PM_FEATUREFLAG_PRESERVES_LAYOUT</item>
+                    <item name="value" xsi:type="const">Klevu\Search\Model\System\Config\Source\Landingoptions::NO</item>
+                    <item name="allowed_values" xsi:type="array">
+                        <item name="klevu_theme" xsi:type="const">Klevu\Search\Model\System\Config\Source\Landingoptions::KlEVULAND</item>
+                    </item>
+                </item>
+                <item name="klevu_integration_next_steps_landenabled" xsi:type="array">
+                    <item name="element_id" xsi:type="string">klevu_integration_next_steps_landenabled</item>
+                    <item name="feature" xsi:type="const">Klevu\Search\Service\Account\Model\AccountFeatures::PM_FEATUREFLAG_PRESERVES_LAYOUT</item>
+                    <item name="value" xsi:type="const">Klevu\Search\Model\System\Config\Source\Landingoptions::NO</item>
+                    <item name="allowed_values" xsi:type="array">
+                        <item name="klevu_theme" xsi:type="const">Klevu\Search\Model\System\Config\Source\Landingoptions::KlEVULAND</item>
+                    </item>
+                </item>
+                <item name="klevu_search_developer_preserve_layout_log_enabled" xsi:type="array">
+                    <item name="element_id" xsi:type="string">klevu_search_developer_preserve_layout_log_enabled</item>
+                    <item name="feature" xsi:type="const">Klevu\Search\Service\Account\Model\AccountFeatures::PM_FEATUREFLAG_PRESERVES_LAYOUT</item>
+                    <item name="value" xsi:type="string">0</item>
+                </item>
             </argument>
         </arguments>
     </type>
 
-    <type name="Klevu\Search\Plugin\Admin\System\Config\Form\Field\AddSubscriptionMessagePlugin">
+    <type name="Klevu\Search\Service\Admin\System\Config\Form\Field\RenderAction\DisableFieldIfFeatureUnavailable">
         <arguments>
-            <argument name="fieldsToShowMessageFor" xsi:type="array">
-                <item name="klevu_search_searchlanding_landenabled" xsi:type="const">Klevu\Search\Service\Account\Model\AccountFeatures::PM_FEATUREFLAG_PRESERVES_LAYOUT</item>
+            <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
+            <argument name="fieldToFeatureMap" xsi:type="array">
+                <item name="klevu_search_attributes_boosting" xsi:type="const">Klevu\Search\Service\Account\Model\AccountFeatures::PM_FEATUREFLAG_BOOSTING</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Service\Admin\System\Config\Form\Field\RenderAction\RemovePreserveLayoutFromComment">
+        <arguments>
+            <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
+            <argument name="fieldIds" xsi:type="array">
+                <item name="klevu_search_searchlanding_landenabled" xsi:type="string">klevu_search_searchlanding_landenabled</item>
+                <item name="klevu_integration_next_steps_landenabled" xsi:type="string">klevu_integration_next_steps_landenabled</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Service\Admin\System\Config\Form\Field\RenderAction\RemoveFieldIfFeatureUnavailable">
+        <arguments>
+            <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
+            <argument name="fieldToFeatureMap" xsi:type="array">
+                <item name="klevu_search_searchlanding_klevu_search_relevance" xsi:type="const">Klevu\Search\Service\Account\Model\AccountFeatures::PM_FEATUREFLAG_PRESERVES_LAYOUT</item>
+                <item name="klevu_search_searchlanding_relevance_label" xsi:type="const">Klevu\Search\Service\Account\Model\AccountFeatures::PM_FEATUREFLAG_PRESERVES_LAYOUT</item>
+                <item name="klevu_search_developer_preserve_layout_log_enabled" xsi:type="const">Klevu\Search\Service\Account\Model\AccountFeatures::PM_FEATUREFLAG_PRESERVES_LAYOUT</item>
+                <item name="klevu_search_developer_preserve_layout_download_log_button" xsi:type="const">Klevu\Search\Service\Account\Model\AccountFeatures::PM_FEATUREFLAG_PRESERVES_LAYOUT</item>
+                <item name="klevu_search_developer_preserve_layout_clear_log_button" xsi:type="const">Klevu\Search\Service\Account\Model\AccountFeatures::PM_FEATUREFLAG_PRESERVES_LAYOUT</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Plugin\Admin\System\Config\Form\Field\RenderPlugin">
+        <arguments>
+            <argument name="renderActions" xsi:type="array">
+                <item name="_klevu_10_updateConfig" xsi:type="object">Klevu\Search\Service\Admin\System\Config\Form\Field\RenderAction\UpdateConfigValueIfFeatureUnavailable</item>
+                <item name="_klevu_20_disableField" xsi:type="object">Klevu\Search\Service\Admin\System\Config\Form\Field\RenderAction\DisableFieldIfFeatureUnavailable</item>
+                <item name="_klevu_30_removePLComment" xsi:type="object">Klevu\Search\Service\Admin\System\Config\Form\Field\RenderAction\RemovePreserveLayoutFromComment</item>
+                <item name="_klevu_40_removeField" xsi:type="object">Klevu\Search\Service\Admin\System\Config\Form\Field\RenderAction\RemoveFieldIfFeatureUnavailable</item>
             </argument>
         </arguments>
     </type>

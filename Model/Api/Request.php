@@ -2,12 +2,14 @@
 
 namespace Klevu\Search\Model\Api;
 
+use Exception;
 use Klevu\Logger\Constants as LoggerConstants;
+use Magento\Framework\App\ObjectManager;
 
 class Request extends \Magento\Framework\DataObject
 {
     /**
-     * @var \Klevu\Search\Model\Api\Response
+     * @var Response
      */
     protected $_modelApiResponse;
 
@@ -30,7 +32,7 @@ class Request extends \Magento\Framework\DataObject
      */
     private $maskFields = array('restApiKey', 'email', 'password', 'Authorization');
     public function __construct(
-        \Klevu\Search\Model\Api\Response $modelApiResponse,
+        Response $modelApiResponse,
         \Klevu\Search\Helper\Data $searchHelperData,
         \Klevu\Search\Helper\Config $searchHelperConfig,
         \Klevu\Search\Model\Api\Response\Rempty $apiResponseEmpty
@@ -137,11 +139,11 @@ class Request extends \Magento\Framework\DataObject
     /**
      * Set the response model to use for this API request.
      *
-     * @param \Klevu\Search\Model\Api\Response $response_model
+     * @param Response $response_model
      *
      * @return $this
      */
-    public function setResponseModel(\Klevu\Search\Model\Api\Response $response_model)
+    public function setResponseModel(Response $response_model)
     {
         $this->response_model = $response_model;
 
@@ -151,7 +153,7 @@ class Request extends \Magento\Framework\DataObject
     /**
      * Return the response model used for this API request.
      *
-     * @return \Klevu\Search\Model\Api\Response
+     * @return Response
      */
     public function getResponseModel()
     {
@@ -161,13 +163,14 @@ class Request extends \Magento\Framework\DataObject
     /**
      * Perform the API request and return the received response.
      *
-     * @return \Klevu\Search\Model\Api\Response
+     * @return Response
+     * @throws Exception
      */
     public function send()
     {
         if (!$this->getEndpoint()) {
             // Can't make a request without a URL
-            throw new \Exception("Unable to send a Klevu Search API request: No URL specified.");
+            throw new Exception("Unable to send a Klevu Search API request: No URL specified.");
         }
         $logLevel = $this->_searchHelperConfig->getLogLevel();
 
@@ -240,7 +243,7 @@ class Request extends \Magento\Framework\DataObject
      */
     protected function build()
     {
-        $client = new \Zend\Http\Client();
+        $client = ObjectManager::getInstance()->get('Zend\Http\Client');
         if (!empty($this->getHeaders())) {
             $client
                 ->setUri($this->getEndpoint())
@@ -283,7 +286,7 @@ class Request extends \Magento\Framework\DataObject
                 default:
                     break;
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_ERR, sprintf("Exception while masking: %s", $e->getMessage()));
             return $originalString;
         }

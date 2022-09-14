@@ -65,7 +65,7 @@
                 <![CDATA[
                     <strong>Native:</strong> Klevu will be disabled, and will not power the rendering or result ordering of your search results page.<br />
                     <strong>Klevu JS Theme:</strong> Use Klevu's JavaScript Theme to render and order the results of your search results page. Recommended for best results.<br />
-                    <strong>Preserve your Magento layout:</strong> Klevu will control the ordering of results, but Magento will render your search results page.
+                    <span class="preserve-layout-comment"><strong>Preserve your Magento layout:</strong> Klevu will control the ordering of results, but Magento will render your search results page.</span>
                 ]]>
             </comment>
             <source_model>Klevu\Search\Model\System\Config\Source\Landingoptions</source_model>
@@ -97,7 +97,7 @@
             <comment><![CDATA[When option "Klevu Powered - Preserve Theme Layout" is selected.]]></comment>
         </field>
         <field id="relevance_label" translate="label comment" type="text"
-               sortOrder="140" showInDefault="1" showInStore="1">
+               sortOrder="140" showInDefault="0" showInWebsite="0" showInStore="1">
             <label>Sort Relevance Label</label>
             <validate>required-entry</validate>
             <depends>
@@ -288,7 +288,7 @@
     <group id="attributes" translate="label" sortOrder="104" showInDefault="1" showInWebsite="1" showInStore="1">
         <label>Product Attribute Settings</label>
         <field id="info_attribute" translate="label comment" sortOrder="100" type="label"
-               showInDefault="1" showInWebsite="1">
+               showInDefault="1" showInWebsite="1" showInStore="0">
             <comment><![CDATA[Switch to Store View scope to manage.]]></comment>
         </field>
         <field id="categoryanchor" translate="label comment" sortOrder="1000" type="select"
@@ -386,8 +386,11 @@
     <group id="price_per_customer_group" translate="label comment" sortOrder="106"
            showInDefault="1" showInWebsite="1" showInStore="1">
         <label>Display prices after Customer Group load</label>
+        <field id="enabled_info" translate="label comment" sortOrder="121" type="label" showInDefault="1" showInWebsite="1">
+            <comment><![CDATA[Switch to Store View scope to manage.]]></comment>
+        </field>
         <field id="enabled" translate="label comment" sortOrder="100" type="select"
-               showInDefault="1" showInWebsite="1" showInStore="1">
+               showInDefault="0" showInWebsite="0" showInStore="1">
             <label>Display prices after Customer Group Load</label>
             <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
             <comment>
@@ -462,7 +465,7 @@
             <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Logclear</frontend_model>
         </field>
         <field id="preserve_layout_log_enabled" translate="label" sortOrder="403" type="select"
-               showInDefault="1" showInWebsite="1" showInStore="1">
+               showInDefault="0" showInWebsite="0" showInStore="1">
             <label>Enable Preserve Layout Log</label>
             <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
             <comment>
@@ -476,11 +479,11 @@
             </comment>
         </field>
         <field id="preserve_layout_download_log_button" translate="label comment" type="button" sortOrder="404"
-               showInDefault="1" showInWebsite="0" showInStore="1">
+               showInDefault="0" showInWebsite="0" showInStore="1">
             <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Logdownload\PreserveLayout</frontend_model>
         </field>
         <field id="preserve_layout_clear_log_button" translate="label comment" type="button" sortOrder="405"
-               showInDefault="1" showInWebsite="0" showInStore="1">
+               showInDefault="0" showInWebsite="0" showInStore="1">
             <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Logclear\PreserveLayout</frontend_model>
         </field>
 
