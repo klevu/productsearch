@@ -17,6 +17,14 @@ class Landingoptions
      */
     private $getFeatures;
 
+    /**
+     * @var array[]
+     */
+    private $options;
+
+    /**
+     * @param GetFeaturesInterface|null $getFeatures
+     */
     public function __construct(GetFeaturesInterface $getFeatures = null)
     {
         $this->getFeatures = $getFeatures ?: ObjectManager::getInstance()->get(GetFeaturesInterface::class);
@@ -27,17 +35,21 @@ class Landingoptions
      */
     public function toOptionArray()
     {
-        $accountFeatures = $this->getFeatures->execute();
+        if (null === $this->options) {
+            $accountFeatures = $this->getFeatures->execute();
 
-        $options = [
-            ['value' => static::NO, 'label' => __('Native')],
-            ['value' => static::KlEVULAND, 'label' => __('Klevu JS Theme (Recommended)')],
-        ];
+            $this->options = [
+                ['value' => static::NO, 'label' => __('Native')],
+            ];
 
-        if ($accountFeatures && $accountFeatures->isFeatureAvailable(AccountFeatures::PM_FEATUREFLAG_PRESERVES_LAYOUT)) {
-            $options[] = ['value' => static::YES, 'label' => __('Preserve your Magento layout')];
+            if ($accountFeatures && $accountFeatures->isFeatureAvailable(AccountFeatures::PM_FEATUREFLAG_PRESERVES_LAYOUT)) {
+                $this->options[] = ['value' => static::KlEVULAND, 'label' => __('Klevu JS Theme (Recommended)')];
+                $this->options[] = ['value' => static::YES, 'label' => __('Preserve your Magento layout')];
+            } else {
+                $this->options[] = ['value' => static::KlEVULAND, 'label' => __('Klevu JS Theme')];
+            }
         }
 
-        return $options;
+        return $this->options;
     }
 }

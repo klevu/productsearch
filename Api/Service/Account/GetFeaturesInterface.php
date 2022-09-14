@@ -9,7 +9,7 @@ interface GetFeaturesInterface
     /**
      * @param $store
      *
-     * @return AccountFeaturesInterface
+     * @return AccountFeaturesInterface|null
      */
     public function execute($store = null);
 }

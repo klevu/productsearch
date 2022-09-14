@@ -2,39 +2,62 @@
 
 namespace Klevu\Search\Model\Api\Action;
 
+use Klevu\Search\Helper\Api as ApiHelper;
+use Klevu\Search\Helper\Config as ConfigHelper;
+use Klevu\Search\Helper\Data as SearchHelper;
+use Klevu\Search\Model\Api\Actionall;
+use Klevu\Search\Model\Api\Request\Post as ApiPostRequest;
 use Klevu\Search\Model\Api\Response as KlevuApiResponse;
+use Klevu\Search\Model\Api\Response\Data as ApiResponseData;
+use Klevu\Search\Model\Api\Response\Invalid as InvalidApiResponse;
 use Magento\Framework\Exception\LocalizedException;
+use Magento\Store\Model\Store;
+use Magento\Store\Model\StoreManagerInterface;
 
-class Features extends \Klevu\Search\Model\Api\Actionall
+class Features extends Actionall
 {
+    const ENDPOINT = "/uti/getFeaturesAndUpgradeLink";
+    const METHOD = "POST";
+    const DEFAULT_REQUEST_MODEL = ApiPostRequest::class;
+    const DEFAULT_RESPONSE_MODEL = ApiResponseData::class;
+
     /**
-     * @var \Klevu\Search\Model\Api\Response\Invalid
+     * @var InvalidApiResponse
      */
     protected $_apiResponseInvalid;
     /**
-     * @var \Magento\Store\Model\Store
+     * @var Store
      */
     protected $_frameworkModelStore;
     /**
-     * @var \Klevu\Search\Helper\Api
+     * @var ApiHelper
      */
     protected $_searchHelperApi;
     /**
-     * @var \Klevu\Search\Helper\Config
+     * @var ConfigHelper
      */
     protected $_searchHelperConfig;
+
     /**
-     * @var \Klevu\Search\Helper\Data
+     * @var SearchHelper
      */
     protected $_searchHelperData;
 
+    /**
+     * @param InvalidApiResponse $apiResponseInvalid
+     * @param ApiHelper $searchHelperApi
+     * @param ConfigHelper $searchHelperConfig
+     * @param StoreManagerInterface $storeModelStoreManagerInterface
+     * @param SearchHelper $searchHelperData
+     * @param Store $frameworkModelStore
+     */
     public function __construct(
-        \Klevu\Search\Model\Api\Response\Invalid $apiResponseInvalid,
-        \Klevu\Search\Helper\Api $searchHelperApi,
-        \Klevu\Search\Helper\Config $searchHelperConfig,
-        \Magento\Store\Model\StoreManagerInterface $storeModelStoreManagerInterface,
-        \Klevu\Search\Helper\Data $searchHelperData,
-        \Magento\Store\Model\Store $frameworkModelStore
+        InvalidApiResponse $apiResponseInvalid,
+        ApiHelper $searchHelperApi,
+        ConfigHelper $searchHelperConfig,
+        StoreManagerInterface $storeModelStoreManagerInterface,
+        SearchHelper $searchHelperData,
+        Store $frameworkModelStore
     ) {
         $this->_apiResponseInvalid = $apiResponseInvalid;
         $this->_searchHelperApi = $searchHelperApi;
@@ -43,11 +66,6 @@ class Features extends \Klevu\Search\Model\Api\Actionall
         $this->_searchHelperData = $searchHelperData;
         $this->_frameworkModelStore = $frameworkModelStore;
     }
-
-    const ENDPOINT = "/uti/getFeaturesAndUpgradeLink";
-    const METHOD = "POST";
-    const DEFAULT_REQUEST_MODEL = "Klevu\Search\Model\Api\Request\Post";
-    const DEFAULT_RESPONSE_MODEL = "Klevu\Search\Model\Api\Response\Data";
 
     /**
      * @param $parameters
@@ -79,13 +97,15 @@ class Features extends \Klevu\Search\Model\Api\Actionall
         if ($validation_result !== true) {
             return $this->_apiResponseInvalid->setErrors($validation_result);
         }
-        $request = $this->getRequest();
-        $store = $this->_frameworkModelStore->load($parameters['store']);
+        $storeParam = isset($parameters['store']) ? $parameters['store'] : null;
+        $store = $this->_frameworkModelStore->load($storeParam);
+
         $endpoint = $this->buildEndpoint(
             isset($parameters['endpoint']) ? $parameters['endpoint'] : static::ENDPOINT,
             $store,
             $this->_searchHelperConfig->getTiresUrl($store)
         );
+        $request = $this->getRequest();
         $request->setResponseModel($this->getResponse())
             ->setEndpoint($endpoint)
             ->setMethod(static::METHOD)
@@ -111,6 +131,5 @@ class Features extends \Klevu\Search\Model\Api\Actionall
             . rtrim(preg_replace('#^https?://#', '', $hostname), '/')
             . '/'
             . ltrim($endpoint, '/');
-
     }
 }

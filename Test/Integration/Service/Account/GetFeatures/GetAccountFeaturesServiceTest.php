@@ -1,11 +1,11 @@
 <?php
 
-namespace Klevu\Search\Test\Integration\Service\Account;
+namespace Klevu\Search\Test\Integration\Service\Account\GetFeatures;
 
 use Klevu\Search\Api\SerializerInterface;
+use Klevu\Search\Api\Service\Account\GetFeaturesInterface;
 use Klevu\Search\Api\Service\Account\Model\AccountFeaturesInterface;
 use Klevu\Search\Api\Service\Account\Model\AccountFeaturesInterfaceFactory as AccountFeaturesFactory;
-use Klevu\Search\Api\Service\Account\GetFeaturesInterface;
 use Klevu\Search\Model\Api\Action\Features as FeaturesApi;
 use Klevu\Search\Model\Api\Response;
 use Klevu\Search\Service\Account\GetFeatures;
@@ -202,7 +202,7 @@ class GetAccountFeaturesServiceTest extends TestCase
             $accountFeatures->isFeatureAvailable('enabledaddtocartfront'),
             'Feature is available enabledaddtocartfront'
         );
-        $this->assertFalse(
+        $this->assertTrue(
             $accountFeatures->isFeatureAvailable('preserves_layout'),
             'Feature is available preserves_layout'
         );
@@ -239,13 +239,14 @@ class GetAccountFeaturesServiceTest extends TestCase
             'feature' => [
                 ['key' => 's.enablecategorynavigation', 'value' => [0]], // this is the correct format of the converted xml for empty value node
                 ['key' => 'allow.personalizedrecommendations', 'value' => 'yes'],
+                ['key' => 's.preservedlayout', 'value' => 'no'],
             ],
         ];
         $mockGetFeatureValuesResponse = $this->getMockBuilder(Response::class)->disableOriginalConstructor()->getMock();
         $mockGetFeatureValuesResponse->method('getData')->with('feature')->willReturn($mockFeatureValuesReturnDataArray['feature']);
         $getFeatureValuesParams = $parameters + [
             'endpoint' => GetFeatures::API_ENDPOINT_GET_FEATURE_VALUES,
-            'features' => GetFeatures::FEATURE_CATEGORY_NAVIGATION . ',' . GetFeatures::FEATURE_RECOMMENDATIONS
+            'features' => GetFeatures::FEATURE_CATEGORY_NAVIGATION . ',' . GetFeatures::FEATURE_RECOMMENDATIONS . ',' . GetFeatures::FEATURE_PRESERVE_LAYOUT,
         ];
 
         $this->mockFeaturesApi
@@ -531,7 +532,7 @@ class GetAccountFeaturesServiceTest extends TestCase
             $accountFeatures->isFeatureAvailable('enabledaddtocartfront'),
             'Feature is available enabledaddtocartfront'
         );
-        $this->assertFalse(
+        $this->assertTrue(
             $accountFeatures->isFeatureAvailable('preserves_layout'),
             'Feature is available preserves_layout'
         );
@@ -663,7 +664,7 @@ class GetAccountFeaturesServiceTest extends TestCase
      */
     public static function loadWebsiteFixtures()
     {
-        include __DIR__ . '/../../_files/websiteFixtures.php';
+        include __DIR__ . '/../../../_files/websiteFixtures.php';
     }
 
     /**
@@ -672,6 +673,6 @@ class GetAccountFeaturesServiceTest extends TestCase
      */
     public static function loadWebsiteFixturesRollback()
     {
-        include __DIR__ . '/../../_files/websiteFixtures_rollback.php';
+        include __DIR__ . '/../../../_files/websiteFixtures_rollback.php';
     }
 }

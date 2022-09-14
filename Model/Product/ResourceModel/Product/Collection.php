@@ -9,6 +9,7 @@ use Magento\Catalog\Model\ResourceModel\Product\Collection as ProductCollection;
 use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory as ProductCollectionFactory;
 use Magento\Eav\Model\Entity;
 use Magento\Framework\Data\Collection as MagentoCollection;
+use Magento\Framework\DB\Select as DbSelect;
 use Magento\Store\Api\Data\StoreInterface;
 
 class Collection
@@ -54,6 +55,7 @@ class Collection
         if ($visibility) {
             $productCollection->addAttributeToFilter(ProductInterface::VISIBILITY, ['in' => $visibility]);
         }
+        $productCollection->getSelect()->reset(DbSelect::ORDER);
         $productCollection->addAttributeToSort(Entity::DEFAULT_ENTITY_ID_FIELD, MagentoCollection::SORT_ORDER_ASC);
         $productCollection->setPageSize($batchSize);
         $productCollection->setFlag('has_stock_status_filter', true);
@@ -70,12 +72,18 @@ class Collection
     {
         $productCollection = $this->productCollectionFactory->create();
         $productCollection->addStoreFilter($store->getId());
-        $productCollection->addAttributeToSort(Entity::DEFAULT_ENTITY_ID_FIELD, MagentoCollection::SORT_ORDER_DESC);
-        $productCollection->setPageSize(1);
         $productCollection->setFlag('has_stock_status_filter', true);
 
-        $firstItem = $productCollection->getFirstItem();
+        $select = $productCollection->getSelect();
+        $select->reset(DbSelect::COLUMNS);
+        $select->columns(Entity::DEFAULT_ENTITY_ID_FIELD);
+        $select->reset(DbSelect::ORDER);
+        $select->order(Entity::DEFAULT_ENTITY_ID_FIELD . ' ' . MagentoCollection::SORT_ORDER_DESC);
+        $select->limit(1);
 
-        return $firstItem ? (int)$firstItem->getData(Entity::DEFAULT_ENTITY_ID_FIELD) : 0;
+        $connection = $productCollection->getConnection();
+        $maxProductId = $connection->fetchOne($select);
+
+        return $maxProductId ? (int)$maxProductId : 0;
     }
 }
