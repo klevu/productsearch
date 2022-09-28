@@ -43,6 +43,7 @@ class AccountFeaturesMask implements AccountFeaturesMaskInterface
     private $featuresCache = [];
 
     /**
+     * @param LoggerInterface $logger
      * @param array[] $v1Tov2FlagMap
      */
     public function __construct(
@@ -86,7 +87,6 @@ class AccountFeaturesMask implements AccountFeaturesMaskInterface
             // If we don't have mapping for the v2 flag use the v1 data, with "disabled" working as a veto
             return $isEnabledV1 && !$isDisabledV1;
         }
-
 
         // This is a mapped field, regardless of whether it is present in the v2 flags received
         // Here, we always use the v2 value, ignoring v1 above
@@ -210,6 +210,7 @@ class AccountFeaturesMask implements AccountFeaturesMaskInterface
         if (!is_string($featureString) || !trim($featureString)) {
             throw new \InvalidArgumentException(sprintf(
                 'featuresString must be non-empty string; %s received',
+                //phpcs:ignore Magento2.Functions.DiscouragedFunction.Discouraged
                 is_object($featureString) ? get_class($featureString) : gettype($featureString)
             ));
         }
@@ -221,7 +222,9 @@ class AccountFeaturesMask implements AccountFeaturesMaskInterface
      */
     private function getEnabledV1FeatureFlagsAsArray(array $featuresV1)
     {
-        $enabledV1FeaturesString = isset($featuresV1['enabled']) ? $featuresV1['enabled'] : '';
+        $enabledV1FeaturesString = isset($featuresV1['enabled']) && !is_array($featuresV1['enabled'])
+            ? $featuresV1['enabled'] :
+            '';
 
         return array_filter(
             array_map(
@@ -237,7 +240,9 @@ class AccountFeaturesMask implements AccountFeaturesMaskInterface
      */
     private function getDisabledV1FeatureFlagsAsArray(array $featuresV1)
     {
-        $disabledV1FeaturesString = isset($featuresV1['disabled']) ? $featuresV1['disabled'] : '';
+        $disabledV1FeaturesString = isset($featuresV1['disabled']) && !is_array($featuresV1['disabled'])
+            ? $featuresV1['disabled']
+            : '';
 
         return array_filter(
             array_map(
