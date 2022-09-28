@@ -1644,6 +1644,68 @@ class AccountFeaturesMaskTest extends TestCase
         ]);
     }
 
+    public function testResponseWithEmptyDisabled_IsHandledCorrectly()
+    {
+        $this->setupPhp5();
+
+        $this->setupPhp5();
+
+        /** @var AccountFeaturesMask $accountFeaturesMask */
+        $accountFeaturesMask = $this->objectManager->getObject(AccountFeaturesMask::class);
+
+        $v1Fixture = [
+            'enabled' => 'enabledaddtocartfront,allowgroupprices,boosting,enabledcategorynavigation,enabledcmsfront,enabledpopulartermfront',
+            'disabled' => [], // This is the correct format. Magento converts empty xml field into an empty array not a string
+        ];
+        $v2Fixture = [
+            [
+                'key' => 's.enablecategorynavigation',
+                'value' => 'yes',
+            ], [
+                'key' => 'allow.personalizedrecommendations',
+                'value' => 'yes',
+            ], [
+                'key' => 's.preservedlayout',
+                'value' => 'yes',
+            ],
+        ];
+
+        $this->assertTrue(
+            $accountFeaturesMask->isFeatureEnabled('enabledaddtocartfront', $v1Fixture, $v2Fixture)
+        );
+    }
+
+    public function testResponseWithEmptyEnabled_IsHandledCorrectly()
+    {
+        $this->setupPhp5();
+
+        $this->setupPhp5();
+
+        /** @var AccountFeaturesMask $accountFeaturesMask */
+        $accountFeaturesMask = $this->objectManager->getObject(AccountFeaturesMask::class);
+
+        $v1Fixture = [
+            'enabled' => [], // This is the correct format. Magento converts empty xml field into an empty array not a string
+            'disabled' => 'enabledaddtocartfront,allowgroupprices,boosting,enabledcategorynavigation,enabledcmsfront,enabledpopulartermfront'
+        ];
+        $v2Fixture = [
+            [
+                'key' => 's.enablecategorynavigation',
+                'value' => 'yes',
+            ], [
+                'key' => 'allow.personalizedrecommendations',
+                'value' => 'yes',
+            ], [
+                'key' => 's.preservedlayout',
+                'value' => 'yes',
+            ],
+        ];
+
+        $this->assertFalse(
+            $accountFeaturesMask->isFeatureEnabled('enabledaddtocartfront', $v1Fixture, $v2Fixture)
+        );
+    }
+
     /**
      * @return void
      * @todo Move to setUp when PHP 5.x is no longer supported

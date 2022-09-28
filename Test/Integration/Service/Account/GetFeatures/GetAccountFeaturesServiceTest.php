@@ -542,6 +542,157 @@ class GetAccountFeaturesServiceTest extends TestCase
     }
 
     /**
+     * @magentoDataFixture loadWebsiteFixtures
+     * @magentoConfigFixture klevu_test_store_1_store klevu_search/general/rest_api_key klevu-rest_api_key
+     */
+    public function testHandlesNoDisabledFeaturesCorrectly()
+    {
+        $mockApiReturnDataArray_FeaturesAndUpgradeLink = [
+            'upgrade_url' => 'https://box.klevu.com/analytics/km',
+            'upgrade_message' => 'UPGRADE MESSAGE',
+            'preserve_layout_message' => 'PRESERVE LAYOUT MESSAGE',
+            'enabled' => 'enabledaddtocartfront,boosting,enabledcmsfront,allowgroupprices',
+            'disabled' => [0], // this is the correct format of the converted xml for empty value node
+            'user_plan_for_store' => 'Enterprise',
+            'response' => 'success'
+        ];
+
+        $this->setupPhp5();
+        $restApiKey = 'klevu-rest_api_key';
+        $store = $this->getStore();
+
+        $mockResponse = $this->getMockBuilder(Response::class)->disableOriginalConstructor()->getMock();
+        $mockResponse->expects($this->once())->method('isSuccess')->willReturn(true);
+        $mockResponse->method('getData')->willReturn($mockApiReturnDataArray_FeaturesAndUpgradeLink);
+
+        $mockGetFeatureValuesResponse = $this->getMockBuilder(Response::class)->disableOriginalConstructor()->getMock();
+        $mockGetFeatureValuesResponse->method('getData')->with('feature')->willReturn($this->mockApiReturnDataArray_FeatureValues);
+
+        $parameters = [
+            'restApiKey' => $restApiKey,
+            'store' => $store->getId(),
+        ];
+        $getFeatureValuesParams = $parameters + [
+                'endpoint' => GetFeatures::API_ENDPOINT_GET_FEATURE_VALUES,
+                'features' => GetFeatures::FEATURE_CATEGORY_NAVIGATION . ',' . GetFeatures::FEATURE_RECOMMENDATIONS . ',' . GetFeatures::FEATURE_PRESERVE_LAYOUT,
+            ];
+
+        $this->mockFeaturesApi
+            ->method('execute')
+            ->willReturnCallBack(function ($params) use (
+                $parameters,
+                $getFeatureValuesParams,
+                $mockResponse,
+                $mockGetFeatureValuesResponse
+            ) {
+                if ($params === $parameters) {
+                    return $mockResponse;
+                }
+                if ($params === $getFeatureValuesParams) {
+                    return $mockGetFeatureValuesResponse;
+                }
+            });
+
+        $this->mockReinitableConfig->expects($this->once())->method('reinit');
+
+        $this->mockScopeConfig->method('getValue')->willReturnCallback(function ($field) use ($restApiKey) {
+            if ($field === GetFeatures::XML_PATH_REST_API_KEY) {
+                return $restApiKey;
+            }
+            if ($field === GetFeatures::XML_PATH_UPGRADE_FEATURES) {
+                return null;
+            }
+
+            return null;
+        });
+        $accountFeaturesService = $this->instantiateGetFeatures();
+        $accountFeatures = $accountFeaturesService->execute($store->getId());
+
+        $this->assertInstanceOf(AccountFeaturesInterface::class, $accountFeatures);
+        $this->assertSame('https://box.klevu.com/analytics/km', $accountFeatures->getUpgradeUrl());
+        $this->assertTrue(
+            $accountFeatures->isFeatureAvailable('enabledaddtocartfront'),
+            'Feature is available enabledaddtocartfront'
+        );
+    }
+
+    /**
+     * @magentoDataFixture loadWebsiteFixtures
+     * @magentoConfigFixture klevu_test_store_1_store klevu_search/general/rest_api_key klevu-rest_api_key
+     */
+    public function testHandlesNoEnabledFeaturesCorrectly()
+    {
+        $mockApiReturnDataArray_FeaturesAndUpgradeLink = [
+            'upgrade_url' => 'https://box.klevu.com/analytics/km',
+            'upgrade_message' => 'UPGRADE MESSAGE',
+            'preserve_layout_message' => 'PRESERVE LAYOUT MESSAGE',
+            'enabled' => [0], // this is the correct format of the converted xml for empty value node
+            'disabled' => 'enabledaddtocartfront,boosting,enabledcmsfront,allowgroupprices',
+            'user_plan_for_store' => 'Enterprise',
+            'response' => 'success'
+        ];
+
+        $this->setupPhp5();
+        $restApiKey = 'klevu-rest_api_key';
+        $store = $this->getStore();
+
+        $mockResponse = $this->getMockBuilder(Response::class)->disableOriginalConstructor()->getMock();
+        $mockResponse->expects($this->once())->method('isSuccess')->willReturn(true);
+        $mockResponse->method('getData')->willReturn($mockApiReturnDataArray_FeaturesAndUpgradeLink);
+
+        $mockGetFeatureValuesResponse = $this->getMockBuilder(Response::class)->disableOriginalConstructor()->getMock();
+        $mockGetFeatureValuesResponse->method('getData')->with('feature')->willReturn($this->mockApiReturnDataArray_FeatureValues);
+
+        $parameters = [
+            'restApiKey' => $restApiKey,
+            'store' => $store->getId(),
+        ];
+        $getFeatureValuesParams = $parameters + [
+                'endpoint' => GetFeatures::API_ENDPOINT_GET_FEATURE_VALUES,
+                'features' => GetFeatures::FEATURE_CATEGORY_NAVIGATION . ',' . GetFeatures::FEATURE_RECOMMENDATIONS . ',' . GetFeatures::FEATURE_PRESERVE_LAYOUT,
+            ];
+
+        $this->mockFeaturesApi
+            ->method('execute')
+            ->willReturnCallBack(function ($params) use (
+                $parameters,
+                $getFeatureValuesParams,
+                $mockResponse,
+                $mockGetFeatureValuesResponse
+            ) {
+                if ($params === $parameters) {
+                    return $mockResponse;
+                }
+                if ($params === $getFeatureValuesParams) {
+                    return $mockGetFeatureValuesResponse;
+                }
+            });
+
+        $this->mockReinitableConfig->expects($this->once())->method('reinit');
+
+        $this->mockScopeConfig->method('getValue')->willReturnCallback(function ($field) use ($restApiKey) {
+            if ($field === GetFeatures::XML_PATH_REST_API_KEY) {
+                return $restApiKey;
+            }
+            if ($field === GetFeatures::XML_PATH_UPGRADE_FEATURES) {
+                return null;
+            }
+
+            return null;
+        });
+        $accountFeaturesService = $this->instantiateGetFeatures();
+        $accountFeatures = $accountFeaturesService->execute($store->getId());
+
+        $this->assertInstanceOf(AccountFeaturesInterface::class, $accountFeatures);
+        $this->assertSame('https://box.klevu.com/analytics/km', $accountFeatures->getUpgradeUrl());
+        $this->assertFalse(
+            $accountFeatures->isFeatureAvailable('enabledaddtocartfront'),
+            'Feature is available enabledaddtocartfront'
+        );
+    }
+
+
+    /**
      * @return array
      */
     public function invalidRestApiKeysDataProvider()
