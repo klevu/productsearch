@@ -9,6 +9,8 @@ namespace Klevu\Search\Model\Order;
 use Klevu\Logger\Api\StoreScopeResolverInterface;
 use Klevu\Logger\Constants as LoggerConstants;
 use Klevu\Search\Api\Service\Sync\GetOrderSelectMaxLimitInterface;
+use Klevu\Search\Api\Provider\Customer\CustomerIdProviderInterface;
+use Klevu\Search\Api\Provider\Customer\SessionIdProviderInterface;
 use Klevu\Search\Model\Sync as KlevuSync;
 use Klevu\Search\Model\System\Config\Source\Order\Ip as OrderIP;
 use Magento\Framework\App\Filesystem\DirectoryList;
@@ -16,7 +18,6 @@ use Magento\Framework\DataObject;
 use Magento\Framework\Exception\FileSystemException;
 use Magento\Framework\App\ObjectManager;
 use Magento\Framework\DB\Select;
-use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Model\AbstractModel;
 use Magento\GroupedProduct\Model\Product\Type\Grouped as GroupedProduct;
@@ -91,6 +92,14 @@ class Sync extends AbstractModel
      */
     private $storeCodesToRun = [];
     /**
+     * @var SessionIdProviderInterface
+     */
+    private $sessionIdProvider;
+    /**
+     * @var CustomerIdProviderInterface
+     */
+    private $customerIdProvider;
+    /**
      * @var GetOrderSelectMaxLimitInterface
      */
     private $getOrderSelectMaxLimit;
@@ -115,6 +124,8 @@ class Sync extends AbstractModel
         array $data = [],
         StoreScopeResolverInterface $storeScopeResolver = null,
         DirectoryList $directoryList = null,
+        SessionIdProviderInterface $sessionIdProvider = null,
+        CustomerIdProviderInterface $customerIdProvider = null,
         GetOrderSelectMaxLimitInterface $getOrderSelectMaxLimit = null
     ) {
         parent::__construct($context, $registry, $resource, $resourceCollection, $data);
@@ -133,6 +144,8 @@ class Sync extends AbstractModel
         $this->storeScopeResolver = $storeScopeResolver
             ?: ObjectManager::getInstance()->get(StoreScopeResolverInterface::class);
         $this->directoryList = $directoryList ?: ObjectManager::getInstance()->get(DirectoryList::class);
+        $this->sessionIdProvider = $sessionIdProvider ?: ObjectManager::getInstance()->get(SessionIdProviderInterface::class);
+        $this->customerIdProvider = $customerIdProvider ?: ObjectManager::getInstance()->get(CustomerIdProviderInterface::class);
         $this->getOrderSelectMaxLimit = $getOrderSelectMaxLimit ?: ObjectManager::getInstance()->get(GetOrderSelectMaxLimitInterface::class);
     }
 
@@ -188,12 +201,15 @@ class Sync extends AbstractModel
         $items = [];
         $order_date = date_create("now")->format("Y-m-d H:i");
         $checkout_date = round(microtime(true) * 1000);
-        $session_id = md5(session_id());
+        $session_id = $this->sessionIdProvider->execute();
         $ip_address = $this->_searchHelperData->getIp();
         if ($order->getCustomerId()) {
-            $order_email = "enc-" . md5($order->getCustomerEmail()); //logged in customer
+            //logged in customer
+            $order_email = $this->customerIdProvider->execute($order->getCustomerEmail());
         } else {
-            $order_email = "enc-" . md5($order->getBillingAddress()->getEmail()); //not logged in customer
+            //not logged in customer
+            $billingAddress = $order->getBillingAddress();
+            $order_email = $this->customerIdProvider->execute($billingAddress ? $billingAddress->getEmail() : '');
         }
         foreach ($order->getAllVisibleItems() as $item) {
             // For configurable products add children items only, for all other products add parents
@@ -612,7 +628,7 @@ class Sync extends AbstractModel
      * @return string
      */
     private function processOrderIp($order_id,$store_id)
-    {   
+    {
 		$ips = $this->getOrderIP($order_id,$store_id);
         $configuredOrderIP = $this->_searchHelperConfig->getConfiguredOrderIP($store_id);
         if (empty($ips)) {

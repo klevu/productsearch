@@ -1,0 +1,46 @@
+{
+    "klevu_notification": {
+        "column": {
+            "id": true,
+            "date": true,
+            "type": true,
+            "message": true
+        },
+        "constraint": {
+            "PRIMARY": true
+        }
+    },
+    "klevu_product_sync": {
+        "column": {
+            "row_id": true,
+            "product_id": true,
+            "parent_id": true,
+            "store_id": true,
+            "last_synced_at": true,
+            "type": true,
+            "error_flag": true
+        },
+        "index": {
+            "KLEVU_PRODUCT_SYNC_PARENT_ID_PRODUCT_ID": true,
+            "KLEVU_PRODUCT_SYNC_STORE_ID": true
+        },
+        "constraint": {
+            "PRIMARY": true,
+            "KLEVU_PRODUCT_SYNC_PRODUCT_ID_PARENT_ID_STORE_ID_TYPE": true
+        }
+    },
+    "klevu_order_sync": {
+        "column": {
+            "order_item_id": true,
+            "klevu_session_id": true,
+            "ip_address": true,
+            "date": true,
+            "idcode": true,
+            "checkoutdate": true,
+            "send": true
+        },
+        "constraint": {
+            "PRIMARY": true
+        }
+    }
+}

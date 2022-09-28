@@ -6,7 +6,7 @@ use Klevu\Logger\Constants as LoggerConstants;
 use Klevu\Search\Helper\Api as ApiHelper;
 use Klevu\Search\Helper\Data as SearchHelper;
 use \Klevu\Search\Model\Product\Sync;
-use \Klevu\Search\Model\Api\Action\Features;
+use Klevu\Search\Model\Api\Action\Features as ApiGetFeatures;
 use Klevu\Search\Model\System\Config\Source\Yesnoforced;
 use Klevu\Search\Service\Account\GetFeatures;
 use Klevu\Search\Service\Account\KlevuApi\GetAccountDetails;
@@ -16,15 +16,15 @@ use Magento\Framework\App\ObjectManager;
 use Magento\Framework\App\State as AppState;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
-use \Magento\Framework\UrlInterface;
+use Magento\Framework\Serialize\SerializerInterface;
+use Magento\Framework\UrlInterface;
 use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Model\ScopeInterface;
-use \Magento\Store\Model\StoreManagerInterface;
-use \Magento\Framework\Model\Store;
+use Magento\Store\Model\StoreManagerInterface;
+use Magento\Framework\Model\Store;
 
 class Config extends \Magento\Framework\App\Helper\AbstractHelper
 {
-
     /**
      * @var \Magento\Framework\App\RequestInterface
      */
@@ -57,7 +57,6 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
 
     protected $_klevu_enabled_feature_response;
 
-
      /**
      * @var \Klevu\Search\Helper\VersionReader
      */
@@ -66,6 +65,10 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
      * @var AppState
      */
     private $appState;
+    /**
+     * @var SerializerInterface|null
+     */
+    private $serializer;
 
     public function __construct(
         \Magento\Framework\App\Config\ScopeConfigInterface $appConfigScopeConfigInterface,
@@ -76,7 +79,8 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
         \Magento\Framework\App\Config\Value $modelConfigData,
         \Magento\Framework\App\ResourceConnection $frameworkModelResource,
         \Klevu\Search\Helper\VersionReader $versionReader,
-        AppState $appState = null
+        AppState $appState = null,
+        SerializerInterface $serializer = null
     ) {
         $this->_appConfigScopeConfigInterface = $appConfigScopeConfigInterface;
         $this->_magentoFrameworkUrlInterface = $magentoFrameworkUrlInterface;
@@ -86,7 +90,9 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
         $this->_modelConfigData = $modelConfigData;
         $this->_frameworkModelResource = $frameworkModelResource;
 		$this->_versionReader = $versionReader;
-        $this->appState = $appState ?: ObjectManager::getInstance()->get(AppState::class);
+        $objectManager = ObjectManager::getInstance();
+        $this->appState = $appState ?: $objectManager->get(AppState::class);
+        $this->serializer = $serializer ?: $objectManager->get(SerializerInterface::class);
     }
 
     const XML_PATH_EXTENSION_ENABLED = "klevu_search/general/enabled";
@@ -653,48 +659,72 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
         return true;
     }
 
+    /**
+     * @param $map
+     * @param $store
+     *
+     * @return $this
+     */
     public function setAdditionalAttributesMap($map, $store = null)
     {
         unset($map["__empty"]);
-        $this->setStoreConfig(static::XML_PATH_ATTRIBUTES_ADDITIONAL, serialize($map), $store);
+        $this->setStoreConfig(
+            static::XML_PATH_ATTRIBUTES_ADDITIONAL,
+            $this->serializer->serialize($map),
+            $store
+        );
+
         return $this;
     }
 
     /**
      * Return the map of additional Klevu attributes to Magento attributes.
      *
-     * @param int|\Magento\Framework\Model\Store $store
+     * @param int|StoreInterface|null $store
      *
      * @return array
      */
     public function getAdditionalAttributesMap($store = null)
     {
-        $map = unserialize($this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_ATTRIBUTES_ADDITIONAL, $store));
+        $map = $this->serializer->unserialize(
+            $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_ATTRIBUTES_ADDITIONAL, $store)
+        );
 
         return (is_array($map)) ? $map : [];
     }
 
     /**
      * Set the automatically mapped attributes
+     *
      * @param array $map
-     * @param int|\Magento\Framework\Model\Store $store
+     * @param int|StoreInterface|null $store
+     *
      * @return $this
      */
     public function setAutomaticAttributesMap($map, $store = null)
     {
         unset($map["__empty"]);
-        $this->setStoreConfig(static::XML_PATH_ATTRIBUTES_AUTOMATIC, serialize($map), $store);
+        $this->setStoreConfig(
+            static::XML_PATH_ATTRIBUTES_AUTOMATIC,
+            $this->serializer->serialize($map),
+            $store
+        );
+
         return $this;
     }
 
     /**
      * Returns the automatically mapped attributes
-     * @param int|\Magento\Framework\Model\Store $store
+     *
+     * @param int|StoreInterface|null $store
+     *
      * @return array
      */
     public function getAutomaticAttributesMap($store = null)
     {
-        $map = unserialize($this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_ATTRIBUTES_AUTOMATIC, $store));
+        $map = $this->serializer->unserialize(
+            $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_ATTRIBUTES_AUTOMATIC, $store)
+        );
 
         return (is_array($map)) ? $map : [];
     }
@@ -1069,8 +1099,17 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
                 }
             }
         } catch (\Exception $e) {
-            $dataHelper = \Magento\Framework\App\ObjectManager::getInstance()->get('\Klevu\Search\Helper\Data');
-            $dataHelper->log(LoggerConstants::ZEND_LOG_CRIT, sprintf("Error occured while getting features based on account %s::%s - %s", __CLASS__, __METHOD__, $e->getMessage()));
+            // OM can not be removed due to circular dependency
+            $searchHelper = ObjectManager::getInstance()->get(SearchHelper::class);
+            $searchHelper->log(
+                LoggerConstants::ZEND_LOG_CRIT,
+                sprintf(
+                    "Error occured while getting features based on account %s::%s - %s",
+                    __CLASS__,
+                    __METHOD__,
+                    $e->getMessage()
+                )
+            );
         }
         return;
     }
@@ -1096,12 +1135,17 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
     /**
      * Return the upgrade features defined in store configuration.
      *
-     * @param \Magento\Framework\Model\Store|int|null $store
-     * @return array
+     * @param StoreInterface|int|null $store
+     *
+     * @return string
      */
     public function getUpgradeFetaures($store = null)
     {
-        return $this->_appConfigScopeConfigInterface->getValue(static::XML_PATH_UPGRADE_FEATURES, ScopeInterface::SCOPE_STORE, $store);
+        return $this->_appConfigScopeConfigInterface->getValue(
+            static::XML_PATH_UPGRADE_FEATURES,
+            ScopeInterface::SCOPE_STORE,
+            $store
+        );
     }
 
     /**
@@ -1250,27 +1294,34 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function getFeatures()
     {
-		$dataHelper = \Magento\Framework\App\ObjectManager::getInstance()->get(\Klevu\Search\Helper\Data::class);
-		try{
+        // OM can not be removed due to circular dependency
+        $searchHelper = ObjectManager::getInstance()->get(SearchHelper::class);
+        try {
             $code = (string)$this->_frameworkAppRequestInterface->getParam('store');
-			if (strlen($code)) { // store level
-				if (!$this->_klevu_features_response) {
-					$store = $this->_frameworkModelStore->load($code);
-					$store_id = $store->getId();
-					$restapi = $this->getRestApiKey($store_id);
-					$param =  ["restApiKey" => $restapi];
-					if (!empty($restapi)) {
-						$this->_klevu_features_response = $this->executeFeatures($restapi, $store);
-					} else {
-						return '';
-					}
-				}
-				return $this->_klevu_features_response;
-			}
-		} catch (\Zend\Http\Client\Exception\RuntimeException $re) {
-            $dataHelper->log(LoggerConstants::ZEND_LOG_INFO, sprintf("Unable to get Klevu Features list (%s)", $re->getMessage()));
+            if (strlen($code)) { // store level
+                if (!$this->_klevu_features_response) {
+                    $store = $this->_frameworkModelStore->load($code);
+                    $store_id = $store->getId();
+                    $restapi = $this->getRestApiKey($store_id);
+                    if (!empty($restapi)) {
+                        $this->_klevu_features_response = $this->executeFeatures($restapi, $store);
+                    } else {
+                        return '';
+                    }
+                }
+
+                return $this->_klevu_features_response;
+            }
+        } catch (\Zend\Http\Client\Exception\RuntimeException $re) {
+            $searchHelper->log(
+                LoggerConstants::ZEND_LOG_INFO,
+                sprintf("Unable to get Klevu Features list (%s)", $re->getMessage())
+            );
         } catch (\Exception $e) {
-            $dataHelper->log(LoggerConstants::ZEND_LOG_INFO, sprintf("Uncaught Exception thrown while getting Klevu Features list (%s)", $e->getMessage()));
+            $searchHelper->log(
+                LoggerConstants::ZEND_LOG_INFO,
+                sprintf("Uncaught Exception thrown while getting Klevu Features list (%s)", $e->getMessage())
+            );
         }
 
         return '';
@@ -1282,35 +1333,45 @@ class Config extends \Magento\Framework\App\Helper\AbstractHelper
      *
      * Get the features from config value if not get any response from api
      *
-     * @param string $restApi , int $store
+     * @param string $restApi ,
+     * @param StoreInterface $store
      *
      * @return array
      */
     public function executeFeatures($restApi, $store)
     {
         if (!$this->_klevu_enabled_feature_response) {
-            $param =  ["restApiKey" => $restApi,"store" => $store->getId()];
-            $features_request = \Magento\Framework\App\ObjectManager::getInstance()->get(\Klevu\Search\Model\Api\Action\Features::class)->execute($param);
-            if ($features_request->isSuccess()) {
-                $this->_klevu_enabled_feature_response = $features_request->getData();
-                $this->saveUpgradeFetaures(serialize($this->_klevu_enabled_feature_response), $store);
+            $param = ["restApiKey" => $restApi, "store" => $store->getId()];
+            // OM can not be removed due to circular dependency
+            $apiGetFeatures = ObjectManager::getInstance()->get(ApiGetFeatures::class);
+            $featuresRequest = $apiGetFeatures->execute($param);
+            if ($featuresRequest->isSuccess()) {
+                $this->_klevu_enabled_feature_response = $featuresRequest->getData();
+                $this->saveUpgradeFetaures(
+                    $this->serializer->serialize($this->_klevu_enabled_feature_response),
+                    $store
+                );
             } else {
                 if (!empty($restApi)) {
-                    $this->_klevu_enabled_feature_response = unserialize($this->getUpgradeFetaures($store));
+                    $this->_klevu_enabled_feature_response = $this->serializer->unserialize(
+                        $this->getUpgradeFetaures($store)
+                    );
                 }
-                $dataHelper = \Magento\Framework\App\ObjectManager::getInstance()->get(\Klevu\Search\Helper\Data::class);
-                $dataHelper->log(
+                // OM can not be removed due to circular dependency
+                $searchHelper = ObjectManager::getInstance()->get(SearchHelper::class);
+                $searchHelper->log(
                     LoggerConstants::ZEND_LOG_INFO,
                     sprintf(
                         "failed to fetch feature details (%s)",
                         implode(', ', array_filter([
-                            $features_request->getMessage(),
-                            $features_request->getError(),
+                            $featuresRequest->getMessage(),
+                            $featuresRequest->getError(),
                         ]))
                     )
                 );
             }
         }
+
         return $this->_klevu_enabled_feature_response;
     }
 

@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+-->
+<schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd">
+    <table name="klevu_notification" resource="default" engine="innodb" comment="Klevu Notifications">
+        <column xsi:type="int" name="id" unsigned="true" nullable="false" identity="true"
+                comment="Notification ID" />
+        <column xsi:type="timestamp" name="date" nullable="false" default="CURRENT_TIMESTAMP" comment="Updated At" />
+        <column xsi:type="varchar" name="type" nullable="false" length="32" />
+        <column xsi:type="text" name="message" nullable="false" />
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="id" />
+        </constraint>
+    </table>
+
+    <table name="klevu_product_sync" resource="default" engine="innodb" comment="Klevu Product Sync">
+        <column xsi:type="int" name="row_id" nullable="false" identity="true"
+                comment="Product Sync ID" />
+        <column xsi:type="int" name="product_id" unsigned="true" nullable="false" identity="false"
+                comment="Product ID" />
+        <column xsi:type="int" name="parent_id" unsigned="true" nullable="false" identity="false"
+                default="0" comment="Parent ID" />
+        <column xsi:type="smallint" name="store_id" unsigned="true" nullable="false" identity="false"
+                comment="Config Scope ID" />
+        <column xsi:type="timestamp" name="last_synced_at" nullable="false" default="CURRENT_TIMESTAMP"
+                comment="Last Synced At" />
+        <column xsi:type="varchar" name="type" nullable="false" length="255" default="products" />
+        <column xsi:type="int" name="error_flag" unsigned="false" nullable="false" identity="false" default="0"
+                comment="Config Scope ID" />
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="row_id" />
+        </constraint>
+        <constraint xsi:type="unique" referenceId="KLEVU_PRODUCT_SYNC_PRODUCT_ID_PARENT_ID_STORE_ID_TYPE">
+            <column name="product_id" />
+            <column name="parent_id" />
+            <column name="store_id" />
+            <column name="type" />
+        </constraint>
+        <index referenceId="KLEVU_PRODUCT_SYNC_PARENT_ID_PRODUCT_ID" indexType="btree">
+            <column name="parent_id" />
+            <column name="product_id" />
+        </index>
+        <index referenceId="KLEVU_PRODUCT_SYNC_STORE_ID" indexType="btree">
+            <column name="store_id"/>
+        </index>
+    </table>
+
+    <table name="klevu_order_sync" resource="default" engine="innodb" comment="Klevu Order Sync">
+        <column xsi:type="int" name="order_item_id" unsigned="true" nullable="false" identity="false"
+                comment="Order Sync ID" />
+        <column xsi:type="varchar" name="klevu_session_id" nullable="false" length="255" comment="Klevu Session ID" />
+        <column xsi:type="varchar" name="ip_address" nullable="false" length="255" comment="IP Address" />
+        <column xsi:type="datetime" name="date" nullable="false" comment="Date" />
+        <column xsi:type="varchar" name="idcode" nullable="false" length="255" comment="ID Code" />
+        <column xsi:type="varchar" name="checkoutdate" nullable="false" length="255" comment="Checkout Date" />
+        <column xsi:type="boolean" name="send" nullable="false" default="0" comment="Config Scope ID" />
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="order_item_id" />
+        </constraint>
+    </table>
+</schema>

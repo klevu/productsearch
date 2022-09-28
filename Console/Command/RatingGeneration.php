@@ -3,13 +3,13 @@
 namespace Klevu\Search\Console\Command;
 
 use Exception;
-use Klevu\Search\Model\Product\MagentoProductActionsInterface\Proxy as MagentoProductActionsInterface;
-use Magento\Framework\App\Filesystem\DirectoryList as DirectoryList;
+use Klevu\Search\Model\Product\MagentoProductActionsInterface;
+use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\App\State as AppState;
 use Magento\Framework\Console\Cli;
 use Magento\Framework\Exception\LocalizedException;
-use Magento\Store\Model\StoreManagerInterface as StoreManagerInterface;
-use Psr\Log\LoggerInterface as LoggerInterface;
+use Magento\Store\Model\StoreManagerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\DescriptorHelper;
 use Symfony\Component\Console\Input\InputInterface;

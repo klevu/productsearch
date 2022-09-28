@@ -120,8 +120,8 @@ class OrmTest extends TestCase
     private function createKlevuSyncEntity()
     {
         $sync = $this->instantiateSync();
-        $sync->setProductId(mt_rand(1, 4999999));
-        $sync->setParentId(mt_rand(5000000, 9999999));
+        $sync->setProductId(random_int(1, 4999999));
+        $sync->setParentId(random_int(5000000, 9999999));
         $sync->setType(KlevuSync::OBJECT_TYPE_PRODUCT);
         $sync->setStoreId(Store::DISTRO_STORE_ID);
         $sync->setErrorFlag(0);

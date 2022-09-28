@@ -3,6 +3,7 @@
 namespace Klevu\Search\Model\Order;
 
 use Klevu\Search\Helper\Config as ConfigHelper;
+use Magento\Framework\DB\Select;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Model\AbstractModel;
 use Magento\Sales\Model\ResourceModel\Order\CollectionFactory as OrderCollectionFactory;
@@ -50,20 +51,18 @@ class OrdersWithSameIPCollection extends AbstractModel
      * @param RequestInterface $request
      */
     public function __construct(
-        ConfigHelper           $configHelper,
+        ConfigHelper $configHelper,
         OrderCollectionFactory $orderCollectionFactory,
-        StoreManagerInterface  $storeManager,
-        LoggerInterface        $logger,
-        RequestInterface       $request
-    )
-    {
+        StoreManagerInterface $storeManager,
+        LoggerInterface $logger,
+        RequestInterface $request
+    ) {
         $this->configHelper = $configHelper;
         $this->orderCollectionFactory = $orderCollectionFactory;
         $this->storeManager = $storeManager;
         $this->logger = $logger;
         $this->request = $request;
     }
-
 
     /**
      * Get store parameter from RequestInterface or fallback to getStore()
@@ -141,6 +140,7 @@ class OrdersWithSameIPCollection extends AbstractModel
      * @param string $orderFrom
      * @param string $orderTo
      * @param int $storeId
+     *
      * @return array
      */
     private function getGroupedOrdersData(
@@ -152,7 +152,7 @@ class OrdersWithSameIPCollection extends AbstractModel
         try {
             $orders = $this->orderCollectionFactory->create();
             $select = $orders->getSelect();
-            $select->reset(\Zend_Db_Select::COLUMNS);
+            $select->reset(Select::COLUMNS);
             $select->columns(['remote_ip', 'order_count' => new \Zend_Db_Expr('COUNT(entity_id)')]);
             $select->where('created_at >= ?', $orderFrom);
             $select->where('created_at < ?', $orderTo);

@@ -24,7 +24,7 @@ class MagentoProductSyncRepositoryTest extends TestCase
     public function testGetMaxProductIdReturnsInt()
     {
         $this->setupPhp5();
-        $maxProductId = mt_rand(1,99999999);
+        $maxProductId = random_int(1,99999999);
 
         $constructorClasses = $this->instantiateConstructorClasses();
         $constructorClasses['mockProductCollection']

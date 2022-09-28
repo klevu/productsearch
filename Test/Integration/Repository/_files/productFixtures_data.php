@@ -44,7 +44,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu_synctest_simple_en-y_v-both_s-yes_' . md5(rand()),
+        'url_key' => 'klevu_synctest_simple_en-y_v-both_s-yes_' . crc32(rand()),
     ],
     [
         'type_id' => 'simple',
@@ -69,7 +69,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 0,
         ],
-        'url_key' => 'klevu_synctest_simple_en-y_v-both_s-no_' . md5(rand()),
+        'url_key' => 'klevu_synctest_simple_en-y_v-both_s-no_' . crc32(rand()),
     ],
     [
         'type_id' => 'simple',
@@ -94,7 +94,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu_synctest_simple_en-y_v-search_s-yes_' . md5(rand()),
+        'url_key' => 'klevu_synctest_simple_en-y_v-search_s-yes_' . crc32(rand()),
     ],
     [
         'type_id' => 'simple',
@@ -119,7 +119,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 0,
         ],
-        'url_key' => 'klevu_synctest_simple_en-y_v-search_s-no_' . md5(rand()),
+        'url_key' => 'klevu_synctest_simple_en-y_v-search_s-no_' . crc32(rand()),
     ],
     [
         'type_id' => 'simple',
@@ -144,7 +144,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu_synctest_simple_en-y_v-catalog_s-yes_' . md5(rand()),
+        'url_key' => 'klevu_synctest_simple_en-y_v-catalog_s-yes_' . crc32(rand()),
     ],[
         'type_id' => 'simple',
         'sku' => 'klevu_synctest_simple_en-y_v-catalog_s-no',
@@ -168,7 +168,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 0,
         ],
-        'url_key' => 'klevu_synctest_simple_en-y_v-catalog_s-no_' . md5(rand()),
+        'url_key' => 'klevu_synctest_simple_en-y_v-catalog_s-no_' . crc32(rand()),
     ],
     [
         'type_id' => 'simple',
@@ -193,7 +193,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu_synctest_simple_en-y_v-none_s-yes_' . md5(rand()),
+        'url_key' => 'klevu_synctest_simple_en-y_v-none_s-yes_' . crc32(rand()),
     ],
     [
         'type_id' => 'simple',
@@ -218,7 +218,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 0,
         ],
-        'url_key' => 'klevu_synctest_simple_en-y_v-none_s-no_' . md5(rand()),
+        'url_key' => 'klevu_synctest_simple_en-y_v-none_s-no_' . crc32(rand()),
     ],
     [
         'type_id' => 'simple',
@@ -243,7 +243,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu_synctest_simple_en-n_v-both_s-yes_' . md5(rand()),
+        'url_key' => 'klevu_synctest_simple_en-n_v-both_s-yes_' . crc32(rand()),
     ],
     [
         'type_id' => 'simple',
@@ -268,7 +268,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 0,
         ],
-        'url_key' => 'klevu_synctest_simple_en-n_v-both_s-no_' . md5(rand()),
+        'url_key' => 'klevu_synctest_simple_en-n_v-both_s-no_' . crc32(rand()),
     ],
     [
         'type_id' => 'simple',
@@ -293,7 +293,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu_synctest_simple_en-n_v-search_s-yes_' . md5(rand()),
+        'url_key' => 'klevu_synctest_simple_en-n_v-search_s-yes_' . crc32(rand()),
     ],
     [
         'type_id' => 'simple',
@@ -318,7 +318,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 0,
         ],
-        'url_key' => 'klevu_synctest_simple_en-n_v-search_s-no_' . md5(rand()),
+        'url_key' => 'klevu_synctest_simple_en-n_v-search_s-no_' . crc32(rand()),
     ],
     [
         'type_id' => 'simple',
@@ -343,7 +343,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu_synctest_simple_en-n_v-catalog_s-yes_' . md5(rand()),
+        'url_key' => 'klevu_synctest_simple_en-n_v-catalog_s-yes_' . crc32(rand()),
     ],
     [
         'type_id' => 'simple',
@@ -368,7 +368,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 0,
         ],
-        'url_key' => 'klevu_synctest_simple_en-n_v-catalog_s-no_' . md5(rand()),
+        'url_key' => 'klevu_synctest_simple_en-n_v-catalog_s-no_' . crc32(rand()),
     ],
     [
         'type_id' => 'simple',
@@ -393,7 +393,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu_synctest_simple_en-n_v-none_s-yes_' . md5(rand()),
+        'url_key' => 'klevu_synctest_simple_en-n_v-none_s-yes_' . crc32(rand()),
     ],
     [
         'type_id' => 'simple',
@@ -418,7 +418,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 0,
         ],
-        'url_key' => 'klevu_synctest_simple_en-n_v-none_s-no_' . md5(rand()),
+        'url_key' => 'klevu_synctest_simple_en-n_v-none_s-no_' . crc32(rand()),
     ],
     // Configurable
     [
@@ -440,7 +440,7 @@ $fixtures = [
             'use_config_manage_stock'   => 1,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu_synctest_configurable_en-y_v-both_s-yes_chd-yes' . md5(rand()),
+        'url_key' => 'klevu_synctest_configurable_en-y_v-both_s-yes_chd-yes' . crc32(rand()),
         'child_skus' => [
             'klevu_synctest_simple_en-y_v-both_s-yes',
         ],
@@ -464,7 +464,7 @@ $fixtures = [
             'use_config_manage_stock'   => 1,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu-configurable-product_en-y_v-search_s-yes_chd-yes' . md5(rand()),
+        'url_key' => 'klevu-configurable-product_en-y_v-search_s-yes_chd-yes' . crc32(rand()),
         'child_skus' => [
             'klevu_synctest_simple_en-y_v-both_s-yes',
         ],
@@ -488,7 +488,7 @@ $fixtures = [
             'use_config_manage_stock'   => 1,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu-configurable-product_en-y_v-catalog_s-yes_chd-yes' . md5(rand()),
+        'url_key' => 'klevu-configurable-product_en-y_v-catalog_s-yes_chd-yes' . crc32(rand()),
         'child_skus' => [
             'klevu_synctest_simple_en-y_v-both_s-yes',
         ],
@@ -512,7 +512,7 @@ $fixtures = [
             'use_config_manage_stock'   => 1,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu-configurable-product_en-y_v-none_s-yes_chd-yes' . md5(rand()),
+        'url_key' => 'klevu-configurable-product_en-y_v-none_s-yes_chd-yes' . crc32(rand()),
         'child_skus' => [
             'klevu_synctest_simple_en-y_v-both_s-yes',
         ],
@@ -536,7 +536,7 @@ $fixtures = [
             'use_config_manage_stock'   => 1,
             'is_in_stock'               => 0,
         ],
-        'url_key' => 'klevu_synctest_configurable_en-y_v-both_s-no_chd-yes' . md5(rand()),
+        'url_key' => 'klevu_synctest_configurable_en-y_v-both_s-no_chd-yes' . crc32(rand()),
         'child_skus' => [
             'klevu_synctest_simple_en-y_v-both_s-yes',
         ],
@@ -560,7 +560,7 @@ $fixtures = [
             'use_config_manage_stock'   => 1,
             'is_in_stock'               => 0,
         ],
-        'url_key' => 'klevu-configurable-product_en-y_v-search_s-no_chd-yes' . md5(rand()),
+        'url_key' => 'klevu-configurable-product_en-y_v-search_s-no_chd-yes' . crc32(rand()),
         'child_skus' => [
             'klevu_synctest_simple_en-y_v-both_s-yes',
         ],
@@ -584,7 +584,7 @@ $fixtures = [
             'use_config_manage_stock'   => 1,
             'is_in_stock'               => 0,
         ],
-        'url_key' => 'klevu-configurable-product_en-y_v-catalog_s-no_chd-yes' . md5(rand()),
+        'url_key' => 'klevu-configurable-product_en-y_v-catalog_s-no_chd-yes' . crc32(rand()),
         'child_skus' => [
             'klevu_synctest_simple_en-y_v-both_s-yes',
         ],
@@ -608,7 +608,7 @@ $fixtures = [
             'use_config_manage_stock'   => 1,
             'is_in_stock'               => 0,
         ],
-        'url_key' => 'klevu-configurable-product_en-y_v-none_s-no_chd-yes' . md5(rand()),
+        'url_key' => 'klevu-configurable-product_en-y_v-none_s-no_chd-yes' . crc32(rand()),
         'child_skus' => [
             'klevu_synctest_simple_en-y_v-both_s-yes',
         ],
@@ -632,7 +632,7 @@ $fixtures = [
             'use_config_manage_stock'   => 1,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu-configurable-product_en-n_v-both_s-yes_chd-yes' . md5(rand()),
+        'url_key' => 'klevu-configurable-product_en-n_v-both_s-yes_chd-yes' . crc32(rand()),
         'child_skus' => [
             'klevu_synctest_simple_en-y_v-both_s-yes',
         ],
@@ -656,7 +656,7 @@ $fixtures = [
             'use_config_manage_stock'   => 1,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu-configurable-product_en-n_v-both_s-yes_chd-yes' . md5(rand()),
+        'url_key' => 'klevu-configurable-product_en-n_v-both_s-yes_chd-yes' . crc32(rand()),
         'child_skus' => [
             'klevu_synctest_simple_en-y_v-both_s-yes',
         ],
@@ -680,7 +680,7 @@ $fixtures = [
             'use_config_manage_stock'   => 1,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu-configurable-product_en-n_v-catalog_s-yes_chd-yes' . md5(rand()),
+        'url_key' => 'klevu-configurable-product_en-n_v-catalog_s-yes_chd-yes' . crc32(rand()),
         'child_skus' => [
             'klevu_synctest_simple_en-y_v-both_s-yes',
         ],
@@ -704,7 +704,7 @@ $fixtures = [
             'use_config_manage_stock'   => 1,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu-configurable-product_en-n_v-none_s-yes_chd-yes' . md5(rand()),
+        'url_key' => 'klevu-configurable-product_en-n_v-none_s-yes_chd-yes' . crc32(rand()),
         'child_skus' => [
             'klevu_synctest_simple_en-y_v-both_s-yes',
         ],
@@ -720,7 +720,7 @@ $fixtures = [
             $defaultStoreView->getWebsiteId(),
         ],
         'tax_class_id' => 2,
-        'url_key' => 'klevu-synctest-grouped-en-y-v-both' . md5(rand()),
+        'url_key' => 'klevu-synctest-grouped-en-y-v-both' . crc32(rand()),
         'visibility' => Visibility::VISIBILITY_BOTH,
         'status' => Status::STATUS_ENABLED,
         'associated_skus' => [
@@ -737,7 +737,7 @@ $fixtures = [
             $defaultStoreView->getWebsiteId(),
         ],
         'tax_class_id' => 2,
-        'url_key' => 'klevu-synctest-grouped-en-y-v-catalog' . md5(rand()),
+        'url_key' => 'klevu-synctest-grouped-en-y-v-catalog' . crc32(rand()),
         'visibility' => Visibility::VISIBILITY_IN_CATALOG,
         'status' => Status::STATUS_ENABLED,
         'associated_skus' => [
@@ -754,7 +754,7 @@ $fixtures = [
             $defaultStoreView->getWebsiteId(),
         ],
         'tax_class_id' => 2,
-        'url_key' => 'klevu-synctest-grouped-en-y-v-search' . md5(rand()),
+        'url_key' => 'klevu-synctest-grouped-en-y-v-search' . crc32(rand()),
         'visibility' => Visibility::VISIBILITY_IN_SEARCH,
         'status' => Status::STATUS_ENABLED,
         'associated_skus' => [
@@ -771,7 +771,7 @@ $fixtures = [
             $defaultStoreView->getWebsiteId(),
         ],
         'tax_class_id' => 2,
-        'url_key' => 'klevu-synctest-grouped-en-y-v-none' . md5(rand()),
+        'url_key' => 'klevu-synctest-grouped-en-y-v-none' . crc32(rand()),
         'visibility' => Visibility::VISIBILITY_NOT_VISIBLE,
         'status' => Status::STATUS_ENABLED,
         'associated_skus' => [
@@ -788,7 +788,7 @@ $fixtures = [
             $defaultStoreView->getWebsiteId(),
         ],
         'tax_class_id' => 2,
-        'url_key' => 'klevu-synctest-grouped-en-n-v-both' . md5(rand()),
+        'url_key' => 'klevu-synctest-grouped-en-n-v-both' . crc32(rand()),
         'visibility' => Visibility::VISIBILITY_BOTH,
         'status' => Status::STATUS_DISABLED,
         'associated_skus' => [
@@ -805,7 +805,7 @@ $fixtures = [
             $defaultStoreView->getWebsiteId(),
         ],
         'tax_class_id' => 2,
-        'url_key' => 'klevu-synctest-grouped-en-n-v-catalog' . md5(rand()),
+        'url_key' => 'klevu-synctest-grouped-en-n-v-catalog' . crc32(rand()),
         'visibility' => Visibility::VISIBILITY_IN_CATALOG,
         'status' => Status::STATUS_DISABLED,
         'associated_skus' => [
@@ -822,7 +822,7 @@ $fixtures = [
             $defaultStoreView->getWebsiteId(),
         ],
         'tax_class_id' => 2,
-        'url_key' => 'klevu-synctest-grouped-en-n-v-search' . md5(rand()),
+        'url_key' => 'klevu-synctest-grouped-en-n-v-search' . crc32(rand()),
         'visibility' => Visibility::VISIBILITY_IN_SEARCH,
         'status' => Status::STATUS_DISABLED,
         'associated_skus' => [
@@ -839,7 +839,7 @@ $fixtures = [
             $defaultStoreView->getWebsiteId(),
         ],
         'tax_class_id' => 2,
-        'url_key' => 'klevu-synctest-grouped-en-n-v-none' . md5(rand()),
+        'url_key' => 'klevu-synctest-grouped-en-n-v-none' . crc32(rand()),
         'visibility' => Visibility::VISIBILITY_NOT_VISIBLE,
         'status' => Status::STATUS_DISABLED,
         'associated_skus' => [
@@ -867,7 +867,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu_synctest_bundle_en-y_v-both-s-yes' . md5(rand()),
+        'url_key' => 'klevu_synctest_bundle_en-y_v-both-s-yes' . crc32(rand()),
         'visibility' => Visibility::VISIBILITY_BOTH,
         'status' => Status::STATUS_ENABLED,
         'associated_skus' => [
@@ -894,7 +894,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu_synctest_bundle_en-y_v-search-s-yes' . md5(rand()),
+        'url_key' => 'klevu_synctest_bundle_en-y_v-search-s-yes' . crc32(rand()),
         'visibility' => Visibility::VISIBILITY_IN_SEARCH,
         'status' => Status::STATUS_ENABLED,
         'associated_skus' => [
@@ -921,7 +921,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu_synctest_bundle_en-y_v-catalog-s-yes' . md5(rand()),
+        'url_key' => 'klevu_synctest_bundle_en-y_v-catalog-s-yes' . crc32(rand()),
         'visibility' => Visibility::VISIBILITY_IN_CATALOG,
         'status' => Status::STATUS_ENABLED,
         'associated_skus' => [
@@ -948,7 +948,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu_synctest_bundle_en-y_v-none-s-yes' . md5(rand()),
+        'url_key' => 'klevu_synctest_bundle_en-y_v-none-s-yes' . crc32(rand()),
         'visibility' => Visibility::VISIBILITY_NOT_VISIBLE,
         'status' => Status::STATUS_ENABLED,
         'associated_skus' => [
@@ -975,7 +975,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu_synctest_bundle_en-n_v-both-s-yes' . md5(rand()),
+        'url_key' => 'klevu_synctest_bundle_en-n_v-both-s-yes' . crc32(rand()),
         'visibility' => Visibility::VISIBILITY_BOTH,
         'status' => Status::STATUS_DISABLED,
         'associated_skus' => [
@@ -1002,7 +1002,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu_synctest_bundle_en-n_v-catalog-s-yes' . md5(rand()),
+        'url_key' => 'klevu_synctest_bundle_en-n_v-catalog-s-yes' . crc32(rand()),
         'visibility' => Visibility::VISIBILITY_IN_SEARCH,
         'status' => Status::STATUS_DISABLED,
         'associated_skus' => [
@@ -1029,7 +1029,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu_synctest_bundle_en-n_v-catalog-s-yes' . md5(rand()),
+        'url_key' => 'klevu_synctest_bundle_en-n_v-catalog-s-yes' . crc32(rand()),
         'visibility' => Visibility::VISIBILITY_IN_CATALOG,
         'status' => Status::STATUS_DISABLED,
         'associated_skus' => [
@@ -1056,7 +1056,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu_synctest_bundle_en-n_v-none-s-yes' . md5(rand()),
+        'url_key' => 'klevu_synctest_bundle_en-n_v-none-s-yes' . crc32(rand()),
         'visibility' => Visibility::VISIBILITY_NOT_VISIBLE,
         'status' => Status::STATUS_DISABLED,
         'associated_skus' => [
@@ -1083,7 +1083,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 0,
         ],
-        'url_key' => 'klevu_synctest_bundle_en-y_v-both-s-no' . md5(rand()),
+        'url_key' => 'klevu_synctest_bundle_en-y_v-both-s-no' . crc32(rand()),
         'visibility' => Visibility::VISIBILITY_BOTH,
         'status' => Status::STATUS_ENABLED,
         'associated_skus' => [
@@ -1110,7 +1110,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 0,
         ],
-        'url_key' => 'klevu_synctest_bundle_en-y_v-catalog-s-no' . md5(rand()),
+        'url_key' => 'klevu_synctest_bundle_en-y_v-catalog-s-no' . crc32(rand()),
         'visibility' => Visibility::VISIBILITY_IN_SEARCH,
         'status' => Status::STATUS_ENABLED,
         'associated_skus' => [
@@ -1137,7 +1137,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 0,
         ],
-        'url_key' => 'klevu_synctest_bundle_en-y_v-catalog-s-no' . md5(rand()),
+        'url_key' => 'klevu_synctest_bundle_en-y_v-catalog-s-no' . crc32(rand()),
         'visibility' => Visibility::VISIBILITY_IN_CATALOG,
         'status' => Status::STATUS_ENABLED,
         'associated_skus' => [
@@ -1164,7 +1164,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 0,
         ],
-        'url_key' => 'klevu_synctest_bundle_en-y_v-none-s-no' . md5(rand()),
+        'url_key' => 'klevu_synctest_bundle_en-y_v-none-s-no' . crc32(rand()),
         'visibility' => Visibility::VISIBILITY_NOT_VISIBLE,
         'status' => Status::STATUS_ENABLED,
         'associated_skus' => [
@@ -1194,7 +1194,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu_synctest_virtual_en-y_v-both_s-yes_' . md5(rand()),
+        'url_key' => 'klevu_synctest_virtual_en-y_v-both_s-yes_' . crc32(rand()),
     ],
     [
         'type_id' => 'virtual',
@@ -1219,7 +1219,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 0,
         ],
-        'url_key' => 'klevu_synctest_virtual_en-y_v-both_s-no_' . md5(rand()),
+        'url_key' => 'klevu_synctest_virtual_en-y_v-both_s-no_' . crc32(rand()),
     ],
     [
         'type_id' => 'virtual',
@@ -1244,7 +1244,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu_synctest_virtual_en-y_v-search_s-yes_' . md5(rand()),
+        'url_key' => 'klevu_synctest_virtual_en-y_v-search_s-yes_' . crc32(rand()),
     ],
     [
         'type_id' => 'virtual',
@@ -1269,7 +1269,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 0,
         ],
-        'url_key' => 'klevu_synctest_virtual_en-y_v-search_s-no_' . md5(rand()),
+        'url_key' => 'klevu_synctest_virtual_en-y_v-search_s-no_' . crc32(rand()),
     ],
     [
         'type_id' => 'virtual',
@@ -1294,7 +1294,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu_synctest_virtual_en-y_v-catalog_s-yes_' . md5(rand()),
+        'url_key' => 'klevu_synctest_virtual_en-y_v-catalog_s-yes_' . crc32(rand()),
     ],[
         'type_id' => 'virtual',
         'sku' => 'klevu_synctest_virtual_en-y_v-catalog_s-no',
@@ -1318,7 +1318,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 0,
         ],
-        'url_key' => 'klevu_synctest_virtual_en-y_v-catalog_s-no_' . md5(rand()),
+        'url_key' => 'klevu_synctest_virtual_en-y_v-catalog_s-no_' . crc32(rand()),
     ],
     [
         'type_id' => 'virtual',
@@ -1343,7 +1343,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu_synctest_virtual_en-y_v-none_s-yes_' . md5(rand()),
+        'url_key' => 'klevu_synctest_virtual_en-y_v-none_s-yes_' . crc32(rand()),
     ],
     [
         'type_id' => 'virtual',
@@ -1368,7 +1368,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 0,
         ],
-        'url_key' => 'klevu_synctest_virtual_en-y_v-none_s-no_' . md5(rand()),
+        'url_key' => 'klevu_synctest_virtual_en-y_v-none_s-no_' . crc32(rand()),
     ],
     [
         'type_id' => 'virtual',
@@ -1393,7 +1393,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu_synctest_virtual_en-n_v-both_s-yes_' . md5(rand()),
+        'url_key' => 'klevu_synctest_virtual_en-n_v-both_s-yes_' . crc32(rand()),
     ],
     [
         'type_id' => 'virtual',
@@ -1418,7 +1418,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 0,
         ],
-        'url_key' => 'klevu_synctest_virtual_en-n_v-both_s-no_' . md5(rand()),
+        'url_key' => 'klevu_synctest_virtual_en-n_v-both_s-no_' . crc32(rand()),
     ],
     [
         'type_id' => 'virtual',
@@ -1443,7 +1443,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu_synctest_virtual_en-n_v-search_s-yes_' . md5(rand()),
+        'url_key' => 'klevu_synctest_virtual_en-n_v-search_s-yes_' . crc32(rand()),
     ],
     [
         'type_id' => 'virtual',
@@ -1468,7 +1468,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 0,
         ],
-        'url_key' => 'klevu_synctest_virtual_en-n_v-search_s-no_' . md5(rand()),
+        'url_key' => 'klevu_synctest_virtual_en-n_v-search_s-no_' . crc32(rand()),
     ],
     [
         'type_id' => 'virtual',
@@ -1493,7 +1493,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu_synctest_virtual_en-n_v-catalog_s-yes_' . md5(rand()),
+        'url_key' => 'klevu_synctest_virtual_en-n_v-catalog_s-yes_' . crc32(rand()),
     ],
     [
         'type_id' => 'virtual',
@@ -1518,7 +1518,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 0,
         ],
-        'url_key' => 'klevu_synctest_virtual_en-n_v-catalog_s-no_' . md5(rand()),
+        'url_key' => 'klevu_synctest_virtual_en-n_v-catalog_s-no_' . crc32(rand()),
     ],
     [
         'type_id' => 'virtual',
@@ -1543,7 +1543,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu_synctest_virtual_en-n_v-none_s-yes_' . md5(rand()),
+        'url_key' => 'klevu_synctest_virtual_en-n_v-none_s-yes_' . crc32(rand()),
     ],
     [
         'type_id' => 'virtual',
@@ -1568,7 +1568,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 0,
         ],
-        'url_key' => 'klevu_synctest_virtual_en-n_v-none_s-no_' . md5(rand()),
+        'url_key' => 'klevu_synctest_virtual_en-n_v-none_s-no_' . crc32(rand()),
     ],
     // Downloadable
     [
@@ -1593,7 +1593,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu_synctest_downloadable_en-y_v-both_s-yes_' . md5(rand()),
+        'url_key' => 'klevu_synctest_downloadable_en-y_v-both_s-yes_' . crc32(rand()),
     ],
     [
         'type_id' => 'downloadable',
@@ -1618,7 +1618,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 0,
         ],
-        'url_key' => 'klevu_synctest_downloadable_en-y_v-both_s-no_' . md5(rand()),
+        'url_key' => 'klevu_synctest_downloadable_en-y_v-both_s-no_' . crc32(rand()),
     ],
     [
         'type_id' => 'downloadable',
@@ -1643,7 +1643,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu_synctest_downloadable_en-y_v-search_s-yes_' . md5(rand()),
+        'url_key' => 'klevu_synctest_downloadable_en-y_v-search_s-yes_' . crc32(rand()),
     ],
     [
         'type_id' => 'downloadable',
@@ -1668,7 +1668,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 0,
         ],
-        'url_key' => 'klevu_synctest_downloadable_en-y_v-search_s-no_' . md5(rand()),
+        'url_key' => 'klevu_synctest_downloadable_en-y_v-search_s-no_' . crc32(rand()),
     ],
     [
         'type_id' => 'downloadable',
@@ -1693,7 +1693,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu_synctest_downloadable_en-y_v-catalog_s-yes_' . md5(rand()),
+        'url_key' => 'klevu_synctest_downloadable_en-y_v-catalog_s-yes_' . crc32(rand()),
     ],
     [
         'type_id' => 'downloadable',
@@ -1718,7 +1718,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 0,
         ],
-        'url_key' => 'klevu_synctest_downloadable_en-y_v-catalog_s-no_' . md5(rand()),
+        'url_key' => 'klevu_synctest_downloadable_en-y_v-catalog_s-no_' . crc32(rand()),
     ],
     [
         'type_id' => 'downloadable',
@@ -1743,7 +1743,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu_synctest_downloadable_en-y_v-none_s-yes_' . md5(rand()),
+        'url_key' => 'klevu_synctest_downloadable_en-y_v-none_s-yes_' . crc32(rand()),
     ],
     [
         'type_id' => 'downloadable',
@@ -1768,7 +1768,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 0,
         ],
-        'url_key' => 'klevu_synctest_downloadable_en-y_v-none_s-no_' . md5(rand()),
+        'url_key' => 'klevu_synctest_downloadable_en-y_v-none_s-no_' . crc32(rand()),
     ],
     [
         'type_id' => 'downloadable',
@@ -1793,7 +1793,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu_synctest_downloadable_en-n_v-both_s-yes_' . md5(rand()),
+        'url_key' => 'klevu_synctest_downloadable_en-n_v-both_s-yes_' . crc32(rand()),
     ],
     [
         'type_id' => 'downloadable',
@@ -1818,7 +1818,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 0,
         ],
-        'url_key' => 'klevu_synctest_downloadable_en-n_v-both_s-no_' . md5(rand()),
+        'url_key' => 'klevu_synctest_downloadable_en-n_v-both_s-no_' . crc32(rand()),
     ],
     [
         'type_id' => 'downloadable',
@@ -1843,7 +1843,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu_synctest_downloadable_en-n_v-search_s-yes_' . md5(rand()),
+        'url_key' => 'klevu_synctest_downloadable_en-n_v-search_s-yes_' . crc32(rand()),
     ],
     [
         'type_id' => 'downloadable',
@@ -1868,7 +1868,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 0,
         ],
-        'url_key' => 'klevu_synctest_downloadable_en-n_v-search_s-no_' . md5(rand()),
+        'url_key' => 'klevu_synctest_downloadable_en-n_v-search_s-no_' . crc32(rand()),
     ],
     [
         'type_id' => 'downloadable',
@@ -1893,7 +1893,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu_synctest_downloadable_en-n_v-catalog_s-yes_' . md5(rand()),
+        'url_key' => 'klevu_synctest_downloadable_en-n_v-catalog_s-yes_' . crc32(rand()),
     ],
     [
         'type_id' => 'downloadable',
@@ -1918,7 +1918,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 0,
         ],
-        'url_key' => 'klevu_synctest_downloadable_en-n_v-catalog_s-no_' . md5(rand()),
+        'url_key' => 'klevu_synctest_downloadable_en-n_v-catalog_s-no_' . crc32(rand()),
     ],
     [
         'type_id' => 'downloadable',
@@ -1943,7 +1943,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu_synctest_downloadable_en-n_v-none_s-yes_' . md5(rand()),
+        'url_key' => 'klevu_synctest_downloadable_en-n_v-none_s-yes_' . crc32(rand()),
     ],
     [
         'type_id' => 'downloadable',
@@ -1968,7 +1968,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 0,
         ],
-        'url_key' => 'klevu_synctest_downloadable_en-n_v-none_s-no_' . md5(rand()),
+        'url_key' => 'klevu_synctest_downloadable_en-n_v-none_s-no_' . crc32(rand()),
     ],
     // Giftcard
     [
@@ -1993,7 +1993,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu_synctest_giftcard_en-y_v-both_s-yes_' . md5(rand()),
+        'url_key' => 'klevu_synctest_giftcard_en-y_v-both_s-yes_' . crc32(rand()),
     ],
     [
         'type_id' => 'giftcard',
@@ -2018,7 +2018,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 0,
         ],
-        'url_key' => 'klevu_synctest_giftcard_en-y_v-both_s-no_' . md5(rand()),
+        'url_key' => 'klevu_synctest_giftcard_en-y_v-both_s-no_' . crc32(rand()),
     ],
     [
         'type_id' => 'giftcard',
@@ -2043,7 +2043,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu_synctest_giftcard_en-y_v-search_s-yes_' . md5(rand()),
+        'url_key' => 'klevu_synctest_giftcard_en-y_v-search_s-yes_' . crc32(rand()),
     ],
     [
         'type_id' => 'giftcard',
@@ -2068,7 +2068,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 0,
         ],
-        'url_key' => 'klevu_synctest_giftcard_en-y_v-search_s-no_' . md5(rand()),
+        'url_key' => 'klevu_synctest_giftcard_en-y_v-search_s-no_' . crc32(rand()),
     ],
     [
         'type_id' => 'giftcard',
@@ -2093,7 +2093,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu_synctest_giftcard_en-y_v-catalog_s-yes_' . md5(rand()),
+        'url_key' => 'klevu_synctest_giftcard_en-y_v-catalog_s-yes_' . crc32(rand()),
     ],
     [
         'type_id' => 'giftcard',
@@ -2118,7 +2118,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 0,
         ],
-        'url_key' => 'klevu_synctest_giftcard_en-y_v-catalog_s-no_' . md5(rand()),
+        'url_key' => 'klevu_synctest_giftcard_en-y_v-catalog_s-no_' . crc32(rand()),
     ],
     [
         'type_id' => 'giftcard',
@@ -2143,7 +2143,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu_synctest_giftcard_en-y_v-none_s-yes_' . md5(rand()),
+        'url_key' => 'klevu_synctest_giftcard_en-y_v-none_s-yes_' . crc32(rand()),
     ],
     [
         'type_id' => 'giftcard',
@@ -2168,7 +2168,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 0,
         ],
-        'url_key' => 'klevu_synctest_giftcard_en-y_v-none_s-no_' . md5(rand()),
+        'url_key' => 'klevu_synctest_giftcard_en-y_v-none_s-no_' . crc32(rand()),
     ],
     [
         'type_id' => 'giftcard',
@@ -2193,7 +2193,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu_synctest_giftcard_en-n_v-both_s-yes_' . md5(rand()),
+        'url_key' => 'klevu_synctest_giftcard_en-n_v-both_s-yes_' . crc32(rand()),
     ],
     [
         'type_id' => 'giftcard',
@@ -2218,7 +2218,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 0,
         ],
-        'url_key' => 'klevu_synctest_giftcard_en-n_v-both_s-no_' . md5(rand()),
+        'url_key' => 'klevu_synctest_giftcard_en-n_v-both_s-no_' . crc32(rand()),
     ],
     [
         'type_id' => 'giftcard',
@@ -2243,7 +2243,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu_synctest_giftcard_en-n_v-search_s-yes_' . md5(rand()),
+        'url_key' => 'klevu_synctest_giftcard_en-n_v-search_s-yes_' . crc32(rand()),
     ],
     [
         'type_id' => 'giftcard',
@@ -2268,7 +2268,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 0,
         ],
-        'url_key' => 'klevu_synctest_giftcard_en-n_v-search_s-no_' . md5(rand()),
+        'url_key' => 'klevu_synctest_giftcard_en-n_v-search_s-no_' . crc32(rand()),
     ],
     [
         'type_id' => 'giftcard',
@@ -2293,7 +2293,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu_synctest_giftcard_en-n_v-catalog_s-yes_' . md5(rand()),
+        'url_key' => 'klevu_synctest_giftcard_en-n_v-catalog_s-yes_' . crc32(rand()),
     ],
     [
         'type_id' => 'giftcard',
@@ -2318,7 +2318,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 0,
         ],
-        'url_key' => 'klevu_synctest_giftcard_en-n_v-catalog_s-no_' . md5(rand()),
+        'url_key' => 'klevu_synctest_giftcard_en-n_v-catalog_s-no_' . crc32(rand()),
     ],
     [
         'type_id' => 'giftcard',
@@ -2343,7 +2343,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu_synctest_giftcard_en-n_v-none_s-yes_' . md5(rand()),
+        'url_key' => 'klevu_synctest_giftcard_en-n_v-none_s-yes_' . crc32(rand()),
     ],
     [
         'type_id' => 'giftcard',
@@ -2368,6 +2368,6 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 0,
         ],
-        'url_key' => 'klevu_synctest_giftcard_en-n_v-none_s-no_' . md5(rand()),
+        'url_key' => 'klevu_synctest_giftcard_en-n_v-none_s-no_' . crc32(rand()),
     ]
 ];
