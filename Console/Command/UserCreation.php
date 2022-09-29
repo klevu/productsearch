@@ -2,7 +2,7 @@
 
 namespace Klevu\Search\Console\Command;
 
-use Klevu\Search\Helper\Api\Proxy as Api;
+use Klevu\Search\Helper\Api;
 use Klevu\Search\Helper\Config;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\App\State as AppState;
@@ -56,6 +56,15 @@ class UserCreation extends Command
      */
     protected $descriptorHelper;
 
+    /**
+     * @param AppState $appState
+     * @param StoreManagerInterface $storeInterface
+     * @param DirectoryList $directoryList
+     * @param LoggerInterface $logger
+     * @param Api $api
+     * @param Config $config
+     * @param DescriptorHelper $descriptorHelper
+     */
     public function __construct(
         AppState $appState,
         StoreManagerInterface $storeInterface,
@@ -128,4 +137,3 @@ HELP
         return [];
     }
 }
-

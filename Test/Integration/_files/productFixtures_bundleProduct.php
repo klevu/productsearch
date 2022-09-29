@@ -74,7 +74,7 @@ $simpleProduct->addData([
         'is_qty_decimal'            => 0,
         'is_in_stock'               => 1,
     ],
-    'url_key' => 'klevu-bundle-product-test-simple-'. md5(rand()),
+    'url_key' => 'klevu-bundle-product-test-simple-'. crc32(rand()),
 ]);
 $simpleProduct = $productRepository->save($simpleProduct);
 
@@ -104,7 +104,7 @@ $bundleProduct->addData([
         'is_qty_decimal'            => 0,
         'is_in_stock'               => 1,
     ],
-    'url_key' => 'klevu-bundle-product-test-'. md5(rand()),
+    'url_key' => 'klevu-bundle-product-test-'. crc32(rand()),
 ]);
 $bundleProduct->setPriceView(1)
     ->setSkuType(1)

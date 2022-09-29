@@ -551,7 +551,7 @@ $fixtures = [
 //            'is_qty_decimal'            => 0,
 //            'is_in_stock'               => 1,
 //        ],
-//        'url_key' => 'klevu-bundle-product-test-' . md5(rand()),
+//        'url_key' => 'klevu-bundle-product-test-' . crc32(rand()),
 //        'visibility' => Visibility::VISIBILITY_BOTH,
 //        'status' => Status::STATUS_ENABLED,
 //        'associated_skus' => [

@@ -47,7 +47,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu_simple_1_' . md5(rand()),
+        'url_key' => 'klevu_simple_1_' . crc32(random_int(0, 9999999)),
     ],
     [
         'sku' => 'klevu_simple_2',
@@ -73,7 +73,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 0,
         ],
-        'url_key' => 'klevu_simple_2_' . md5(rand()),
+        'url_key' => 'klevu_simple_2_' . crc32(random_int(0, 9999999)),
     ]
 ];
 

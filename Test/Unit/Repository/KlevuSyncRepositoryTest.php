@@ -22,7 +22,7 @@ class KlevuSyncRepositoryTest extends TestCase
     public function testGetMaxSyncIdReturnsInt()
     {
         $this->setupPhp5();
-        $maxProductId = mt_rand(1,99999999);
+        $maxProductId = random_int(1,99999999);
 
         $mockKlevuSyncItemBuilder = $this->getMockBuilder(Klevu::class);
         if (method_exists($mockKlevuSyncItemBuilder, 'addMethods')) {

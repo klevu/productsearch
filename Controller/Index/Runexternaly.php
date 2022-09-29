@@ -4,9 +4,13 @@ namespace Klevu\Search\Controller\Index;
 
 class Runexternaly extends \Magento\Framework\App\Action\Action
 {
-
+    /**
+     * @var \Magento\Indexer\Model\IndexerFactory
+     */
     protected $_indexerFactory;
-
+    /**
+     * @var \Magento\Indexer\Model\Indexer\CollectionFactory
+     */
     protected $_indexerCollectionFactory;
 
     public function __construct(
@@ -24,7 +28,6 @@ class Runexternaly extends \Magento\Framework\App\Action\Action
         \Magento\Indexer\Model\IndexerFactory $indexerFactory,
         \Magento\Indexer\Model\Indexer\CollectionFactory $indexerCollectionFactory
     ) {
-
         parent::__construct($context);
         $this->_cacheTypeList = $cacheTypeList;
         $this->_cacheState = $cacheState;
@@ -51,23 +54,23 @@ class Runexternaly extends \Magento\Framework\App\Action\Action
         $line = 100;
 
         // send last few lines of klevu log files
-        //$dir = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Framework\App\Filesystem\DirectoryList');
         $logdir = $this->_directoryList->getPath('log');
-        $path = $logdir."/Klevu_Search.log";
+        $path = $logdir . "/Klevu_Search.log";
         if ($this->getRequest()->getParam('lines')) {
             $line = $this->getRequest()->getParam('lines');
-        } else if ($this->getRequest()->getParam('sync')) {
-		      if($this->getRequest()->getParam('sync') == 1) {
-		      		$this->_modelProductSync->run();
-					$this->getResponse()->setBody("Data has been sent to klevu server");
-					return;
-			  }
-		} else {
+        } elseif ($this->getRequest()->getParam('sync')) {
+            if ($this->getRequest()->getParam('sync') == 1) {
+                $this->_modelProductSync->run();
+                $this->getResponse()->setBody("Data has been sent to klevu server");
+
+                return;
+            }
+        } else {
             $line = 100;
         }
         $content = "";
-        $content.= $this->getLastlines($path, $line, true);
-        $content.= "</br>";
+        $content .= $this->getLastlines($path, $line, true);
+        $content .= "</br>";
         // Get the all indexing status
         $indexer = $this->_indexerFactory->create();
         $indexerCollection = $this->_indexerCollectionFactory->create();
@@ -75,10 +78,14 @@ class Runexternaly extends \Magento\Framework\App\Action\Action
         $ids = $indexerCollection->getAllIds();
         foreach ($ids as $id) {
             $idx = $indexer->load($id);
-            $content.= "</br>".$idx->getTitle().":".$idx->getStatus();
+            $content .= "</br>" . $idx->getTitle() . ":" . $idx->getStatus();
         }
 
-        $response = $this->_apiActionDebuginfo->debugKlevu(['apiKey'=>$restAPI,'klevuLog'=>$content,'type'=>'index']);
+        $response = $this->_apiActionDebuginfo->debugKlevu([
+            'apiKey' => $restAPI,
+            'klevuLog' => $content,
+            'type' => 'index'
+        ]);
 
         $this->_view->loadLayout();
         $this->_view->getLayout()->initMessages();
@@ -88,7 +95,7 @@ class Runexternaly extends \Magento\Framework\App\Action\Action
     public function getLastlines($filepath, $lines, $adaptive = true)
     {
         // Open file
-        $f = @fopen($filepath, "rb");
+        $f = fopen($filepath, "rb");
 
         if ($f === false) {
             return false;
@@ -111,25 +118,26 @@ class Runexternaly extends \Magento\Framework\App\Action\Action
         $chunk = '';
         // While we would like more
         while (ftell($f) > 0 && $lines >= 0) {
-        // Figure out how far back we should jump
+            // Figure out how far back we should jump
             $seek = min(ftell($f), $buffer);
-        // Do the jump (backwards, relative to where we are)
+            // Do the jump (backwards, relative to where we are)
             fseek($f, -$seek, SEEK_CUR);
-        // Read a chunk and prepend it to our output
+            // Read a chunk and prepend it to our output
             $output = ($chunk = fread($f, $seek)) . $output;
-        // Jump back to where we started reading
+            // Jump back to where we started reading
             fseek($f, -mb_strlen((string)$chunk, '8bit'), SEEK_CUR);
-        // Decrease our line counter
+            // Decrease our line counter
             $lines -= substr_count($chunk, "\n");
         }
         // While we have too many lines
         // (Because of buffer size we might have read too many)
         while ($lines++ < 0) {
-        // Find first newline and remove all text before that
+            // Find first newline and remove all text before that
             $output = substr($output, strpos($output, "\n") + 1);
         }
         // Close file and return
         fclose($f);
+
         return trim($output);
     }
 }

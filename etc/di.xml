@@ -25,6 +25,8 @@
     <preference for="Klevu\Search\Api\Service\Catalog\Product\GetStockStatusByIdInterface" type="Klevu\Search\Service\Catalog\Product\GetStockStatusById" />
     <preference for="Klevu\Search\Api\Service\WebRestApi\Admin\GetBearerTokenInterface" type="Klevu\Search\Service\WebRestApi\Admin\GetBearerTokenService" />
 
+    <preference for="Klevu\Search\Api\Provider\Customer\CustomerIdProviderInterface" type="Klevu\Search\Provider\Customer\CustomerIdProvider" />
+    <preference for="Klevu\Search\Api\Provider\Customer\SessionIdProviderInterface" type="Klevu\Search\Provider\Customer\SessionIdProvider" />
     <preference for="Klevu\Search\Model\Klevu\Cron\SchedulerInterface" type="Klevu\Search\Model\Klevu\Cron\Scheduler" />
 	<preference for="Klevu\Search\Model\Klevu\Category\CategoryInterface" type="Klevu\Search\Model\Klevu\Category\Category" />
 	<preference for="Klevu\Search\Model\Api\Magento\Request\ProductInterface" type="Klevu\Search\Model\Api\Magento\Request\Product" />
@@ -253,7 +255,8 @@
         <arguments>
             <argument name="interactiveOptionsProviders" xsi:type="array">
                 <item name="_klevu_themev2" xsi:type="object">Klevu\Search\Service\ThemeV2\InteractiveOptionsProvider</item>
-            </argument>
+				<item name="_klevu_search_add_price_suffix_to_query" xsi:type="object">Klevu\Search\Service\ThemeV2\InteractiveOptionsProvider\AddPriceSuffixToQueryOptionsProvider</item>
+			</argument>
         </arguments>
     </type>
 
@@ -383,6 +386,90 @@
                     <item name="v2Flag" xsi:type="const">Klevu\Search\Service\Account\GetFeatures::FEATURE_RECOMMENDATIONS</item>
                 </item>
             </argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Model\Config\Backend\Serialized">
+        <arguments>
+            <argument name="serializer" xsi:type="object">Magento\Framework\Serialize\Serializer\Serialize</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Console\Command\UserCreation">
+        <arguments>
+            <argument name="fileSystemDriver" xsi:type="object">Magento\Framework\Filesystem\Driver\File</argument>
+			<argument name="api" xsi:type="object">Klevu\Search\Helper\Api\Proxy</argument>
+		</arguments>
+    </type>
+
+    <type name="Klevu\Search\Console\Command\ImageGeneration">
+        <arguments>
+            <argument name="klevuContext" xsi:type="object">Klevu\Search\Model\Context\Proxy</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Console\Command\RatingGeneration">
+        <arguments>
+            <argument name="magentoProductActionsInterface" xsi:type="object">Klevu\Search\Model\Product\MagentoProductActionsInterface\Proxy</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Service\Account\GetAccountDetails">
+        <arguments>
+            <argument name="jsApiKeyValidator" xsi:type="object">Klevu\Search\Validator\JsApiKeyValidator</argument>
+            <argument name="restApiKeyValidator" xsi:type="object">Klevu\Search\Validator\RestApiKeyValidator</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Service\Account\IntegrationStatus">
+        <arguments>
+            <argument name="jsApiKeyValidator" xsi:type="object">Klevu\Search\Validator\JsApiKeyValidator</argument>
+            <argument name="restApiKeyValidator" xsi:type="object">Klevu\Search\Validator\RestApiKeyValidator</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Service\Account\ConfirmIntegration">
+        <arguments>
+            <argument name="jsApiKeyValidator" xsi:type="object">Klevu\Search\Validator\JsApiKeyValidator</argument>
+            <argument name="restApiKeyValidator" xsi:type="object">Klevu\Search\Validator\RestApiKeyValidator</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Service\Account\GetStoresUsingApiKeys">
+        <arguments>
+            <argument name="jsApiKeyValidator" xsi:type="object">Klevu\Search\Validator\JsApiKeyValidator</argument>
+            <argument name="restApiKeyValidator" xsi:type="object">Klevu\Search\Validator\RestApiKeyValidator</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Controller\Adminhtml\Integration\Confirm">
+        <arguments>
+            <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Controller\Adminhtml\Integration\Endpoints">
+        <arguments>
+            <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Controller\Adminhtml\Integration\Index">
+        <arguments>
+            <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Service\Account\GetKmcUrlService">
+        <arguments>
+            <argument name="configSource" xsi:type="object">Magento\Config\App\Config\Source\ModularConfigSource</argument>
+            <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Block\Adminhtml\Form\Field\Integration\Warnings\LockFile">
+        <arguments>
+            <argument name="fileSystemIo" xsi:type="object">Magento\Framework\Filesystem\Io\File</argument>
         </arguments>
     </type>
 </config>

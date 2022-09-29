@@ -37,7 +37,6 @@ class Features extends Actionall
      * @var ConfigHelper
      */
     protected $_searchHelperConfig;
-
     /**
      * @var SearchHelper
      */

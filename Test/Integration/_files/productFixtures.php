@@ -47,7 +47,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu_simple_1_' . md5(rand()),
+        'url_key' => 'klevu_simple_1_' . crc32(rand()),
     ]
 ];
 

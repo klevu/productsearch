@@ -3,14 +3,14 @@
 namespace Klevu\Search\Console\Command;
 
 use Exception;
-use Klevu\Search\Model\Context\Proxy as Klevu_Context;
+use Klevu\Search\Model\Context as Klevu_Context;
 use Magento\Catalog\Model\Product as Product_Model;
 use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory as Magento_CollectionFactory;
-use Magento\Framework\App\Filesystem\DirectoryList as DirectoryList;
+use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\App\State as AppState;
 use Magento\Framework\Console\Cli;
 use Magento\Framework\Exception\LocalizedException;
-use Psr\Log\LoggerInterface as LoggerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\DescriptorHelper;
 use Symfony\Component\Console\Helper\ProgressBar;
@@ -20,9 +20,9 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * Class ImageGeneration
- * @package Klevu\Search\Console\Command
  *
- * Usage: This class contains product image processing on stores level. This can be set as a external job if website imports/manages product images from 3rd party system.
+ * Usage: This class contains product image processing on stores level.
+ * This can be set as a external job if website imports/manages product images from 3rd party system.
  * Make sure to run the any of the sync command after running this command in order to reflect the product images at Klevu.
  */
 class ImageGeneration extends Command
