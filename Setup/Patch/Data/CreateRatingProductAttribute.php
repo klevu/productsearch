@@ -2,7 +2,6 @@
 
 namespace Klevu\Search\Setup\Patch\Data;
 
-use Magento\Catalog\Model\Category;
 use Magento\Catalog\Model\Product;
 use Magento\Eav\Setup\EavSetupFactory;
 use Magento\Framework\Setup\ModuleDataSetupInterface;
@@ -21,6 +20,10 @@ class CreateRatingProductAttribute implements DataPatchInterface
      */
     private $eavSetupFactory;
 
+    /**
+     * @param ModuleDataSetupInterface $moduleDataSetup
+     * @param EavSetupFactory $eavSetupFactory
+     */
     public function __construct(
         ModuleDataSetupInterface $moduleDataSetup,
         EavSetupFactory $eavSetupFactory
@@ -29,11 +32,17 @@ class CreateRatingProductAttribute implements DataPatchInterface
         $this->eavSetupFactory = $eavSetupFactory;
     }
 
+    /**
+     * @return string[]
+     */
     public static function getDependencies()
     {
         return [];
     }
 
+    /**
+     * @return string[]
+     */
     public function getAliases()
     {
         return [];
@@ -59,7 +68,9 @@ class CreateRatingProductAttribute implements DataPatchInterface
                     'required' => false,
                     'user_defined' => true,
                     'group' => 'Product Details',
-                    'sort_order' => 5
+                    'sort_order' => 5,
+                    'note' => 'Automatically calculated and populated by Klevu to sync ratings data. ' .
+                        'For more information, please refer to the Klevu knowledgebase.'
                 ]
             );
         }

@@ -335,7 +335,7 @@ class SyncTest extends TestCase
         $mockGetOrderSelectMaxLimit = $this->getMockBuilder(GetOrderSelectMaxLimitInterface::class)
             ->disableOriginalConstructor()
             ->getMock();
-        $mockGetOrderSelectMaxLimit->expects($this->once())->method('execute')->willReturn(5);
+        $mockGetOrderSelectMaxLimit->expects($this->atLeastOnce())->method('execute')->willReturn(5);
 
         $mockProductTrackingAction = $this->getProducttrackingActionMock(true);
         $mockProductTrackingAction->expects($this->exactly(21))->method('execute');
@@ -569,7 +569,7 @@ class SyncTest extends TestCase
      */
     public static function loadProductFixtures()
     {
-        require_once __DIR__ . '/../../_files/productFixtures.php';
+        require __DIR__ . '/../../_files/productFixtures.php';
     }
 
     /**
@@ -578,7 +578,7 @@ class SyncTest extends TestCase
      */
     public static function loadProductFixturesRollback()
     {
-        require_once __DIR__ . '/../../_files/productFixtures_rollback.php';
+        require __DIR__ . '/../../_files/productFixtures_rollback.php';
     }
 
     /**
