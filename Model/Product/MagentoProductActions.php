@@ -1,14 +1,18 @@
 <?php
-/**
- * Class \Klevu\Search\Model\Product\MagentoProductActionsInterface
- */
 
 namespace Klevu\Search\Model\Product;
 
+use InvalidArgumentException;
 use Klevu\Logger\Constants as LoggerConstants;
 use Klevu\Search\Api\KlevuSyncRepositoryInterface;
 use Klevu\Search\Api\MagentoProductSyncRepositoryInterface;
+use Klevu\Search\Api\Service\Catalog\Product\Review\UpdateAllRatingsInterface;
+use Klevu\Search\Exception\Catalog\Product\Review\KlevuProductAttributeMissingException;
 use Klevu\Search\Helper\Config as Klevu_Config;
+use Klevu\Search\Helper\Data as SearchData;
+use Klevu\Search\Model\Api\Action\Addrecords;
+use Klevu\Search\Model\Api\Action\Deleterecords;
+use Klevu\Search\Model\Api\Action\Updaterecords;
 use Klevu\Search\Model\Context as Klevu_Context;
 use Klevu\Search\Model\Klevu\HelperManager as Klevu_HelperManager;
 use Klevu\Search\Model\Klevu\Klevu;
@@ -16,14 +20,20 @@ use Klevu\Search\Model\Klevu\KlevuFactory as Klevu_Factory;
 use Klevu\Search\Model\Product\KlevuProductActionsInterface as Klevu_Product_Actions;
 use Klevu\Search\Model\Product\LoadAttributeInterface as Klevu_LoadAttribute;
 use Klevu\Search\Model\Product\ProductParentInterface as Klevu_Product_Parent;
+use Klevu\Search\Model\Sync as KlevuSync;
+use Magento\Backend\Model\Session;
+use Magento\Catalog\Model\Product;
 use Magento\Catalog\Model\Product\Action as Klevu_Catalog_Product_Action;
 use Magento\Catalog\Model\ResourceModel\Product\Collection as ProductCollection;
 use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory as Magento_CollectionFactory;
+use Magento\Customer\Model\Group as CustomerGroup;
 use Magento\Eav\Model\Config as Eav_Config;
 use Magento\Eav\Model\Entity;
 use Magento\Eav\Model\Entity\Attribute as Klevu_Entity_Attribute;
 use Magento\Eav\Model\Entity\Type as Klevu_Entity_Type;
 use Magento\Framework\App\ObjectManager;
+use Magento\Framework\App\ProductMetadataInterface;
+use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Model\AbstractModel;
 use Magento\ConfigurableProduct\Model\ResourceModel\Attribute\OptionProvider;
@@ -35,32 +45,92 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
     const PARENT_ID_WHEN_NOT_VISIBLE = '0';
     const MAX_ITERATIONS = 100000;
 
+    /**
+     * @var Klevu_HelperManager
+     */
     protected $_klevuHelperManager;
+    /**
+     * @var ProductMetadataInterface
+     */
     protected $_ProductMetadataInterface;
+    /**
+     * @var Session
+     */
     protected $_searchModelSession;
+    /**
+     * @var Deleterecords
+     */
     protected $_apiActionDeleterecords;
+    /**
+     * @var Updaterecords
+     */
     protected $_apiActionUpdaterecords;
+    /**
+     * @var Addrecords
+     */
     protected $_apiActionAddrecords;
+    /**
+     * @var KlevuProductActionsInterface
+     */
     protected $_klevuProductAction;
+    /**
+     * @var KlevuSync
+     */
     protected $_klevuSyncModel;
+    /**
+     * @var ResourceConnection
+     */
     protected $_frameworkModelResource;
+    /**
+     * @var Eav_Config
+     */
     protected $_eavModelConfig;
+    /**
+     * @var LoadAttributeInterface
+     */
     protected $_loadAttribute;
+    /**
+     * @var Klevu_Factory
+     */
     protected $_klevuFactory;
+    /**
+     * @var Magento_CollectionFactory
+     */
     protected $_magentoCollectionFactory;
+    /**
+     * @var SearchData
+     */
     protected $_searchHelperData;
+    /**
+     * @var Klevu_Entity_Type
+     */
     protected $_klevuEntityType;
+    /**
+     * @var Klevu_Entity_Attribute
+     */
     protected $_klevuEntityAttribute;
+    /**
+     * @var ProductParentInterface
+     */
     protected $_klevuProductParentInterface;
+    /**
+     * @var ProductIndividualInterface
+     */
     protected $_klevuProductIndividualInterface;
+    /**
+     * @var Klevu_Config
+     */
     protected $_klevuConfig;
+    /**
+     * @var OptionProvider
+     */
     protected $_magentoOptionProvider;
     /**
-     * @var KlevuSyncRepositoryInterface|null
+     * @var KlevuSyncRepositoryInterface
      */
     private $klevuSyncRepository;
     /**
-     * @var MagentoProductSyncRepositoryInterface|mixed
+     * @var MagentoProductSyncRepositoryInterface
      */
     private $magentoProductRepository;
     /**
@@ -71,7 +141,34 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
      * @var StoreManagerInterface
      */
     protected $_storeModelStoreManagerInterface;
+    /**
+     * @var UpdateAllRatingsInterface
+     */
+    private $updateAllRatings;
 
+    /**
+     * @param \Magento\Framework\Model\Context $mcontext
+     * @param Klevu_Context $context
+     * @param Eav_Config $eavConfig
+     * @param ProductParentInterface $klevuProductParent
+     * @param KlevuProductActionsInterface $klevuProductAction
+     * @param LoadAttributeInterface $loadAttribute
+     * @param Klevu_Factory $klevuFactory
+     * @param Magento_CollectionFactory $magentoCollectionFactory
+     * @param Klevu_HelperManager $klevuHelperManager
+     * @param Klevu_Entity_Type $klevuEntityType
+     * @param Klevu_Entity_Attribute $klevuEntityAttribute
+     * @param Klevu_Catalog_Product_Action $klevuCatalogProductAction
+     * @param Klevu_Config $klevuConfig
+     * @param OptionProvider $magentoOptionProvider
+     * @param \Magento\Framework\Registry $registry
+     * @param \Magento\Framework\Model\ResourceModel\AbstractResource $resource
+     * @param \Magento\Framework\Data\Collection\AbstractDb $resourceCollection
+     * @param array $data
+     * @param KlevuSyncRepositoryInterface $klevuSyncRepository
+     * @param MagentoProductSyncRepositoryInterface $magentoProductRepository
+     * @param UpdateAllRatingsInterface $updateAllRatings
+     */
     public function __construct(
         \Magento\Framework\Model\Context $mcontext,
         Klevu_Context $context,
@@ -93,9 +190,9 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
         \Magento\Framework\Data\Collection\AbstractDb $resourceCollection = null,
         array $data = [],
         KlevuSyncRepositoryInterface $klevuSyncRepository = null,
-        MagentoProductSyncRepositoryInterface $magentoProductRepository = null
-    )
-    {
+        MagentoProductSyncRepositoryInterface $magentoProductRepository = null,
+        UpdateAllRatingsInterface $updateAllRatings = null
+    ) {
         parent::__construct($mcontext, $registry, $resource, $resourceCollection, $data);
         $this->_klevuHelperManager = $klevuHelperManager;
         $this->_ProductMetadataInterface = $context->getKlevuProductMeta();
@@ -119,8 +216,13 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
         $this->_klevuProductIndividualInterface = $context->getKlevuProductIndividual();
         $this->_klevuConfig = $klevuConfig;
         $this->_magentoOptionProvider = $magentoOptionProvider;
-        $this->klevuSyncRepository = $klevuSyncRepository ?: ObjectManager::getInstance()->get(KlevuSyncRepositoryInterface::class);
-        $this->magentoProductRepository = $magentoProductRepository ?: ObjectManager::getInstance()->get(MagentoProductSyncRepositoryInterface::class);
+        $objectManager = ObjectManager::getInstance();
+        $this->klevuSyncRepository = $klevuSyncRepository ?:
+            $objectManager->get(KlevuSyncRepositoryInterface::class);
+        $this->magentoProductRepository = $magentoProductRepository ?:
+            $objectManager->get(MagentoProductSyncRepositoryInterface::class);
+        $this->updateAllRatings = $updateAllRatings ?:
+            $objectManager->get(UpdateAllRatingsInterface::class);
     }
 
     /**
@@ -281,16 +383,24 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
                 $store,
                 MagentoProductSyncRepositoryInterface::NOT_VISIBLE_EXCLUDED
             );
-            $magentoVisibleProductIds = $this->getMagentoProductIds($magentoProductIdsCollection, $store, $productIdsToFilter);
+            $magentoVisibleProductIds = $this->getMagentoProductIds(
+                $magentoProductIdsCollection,
+                $store,
+                $productIdsToFilter
+            );
             // getParentRelationsByChild method has to remain in this class for backwards compatibility
             // it is called from within formatMagentoProductIds,
             $magentoVisibleProductIds = $this->formatMagentoProductIds($magentoVisibleProductIds);
 
             $magentoChildProductIdsCollection = $this->magentoProductRepository->getChildProductIdsCollection($store);
-            $magentoChildProductIds = $this->getMagentoProductIds($magentoChildProductIdsCollection, $store, $productIdsToFilter);
+            $magentoChildProductIds = $this->getMagentoProductIds(
+                $magentoChildProductIdsCollection,
+                $store,
+                $productIdsToFilter
+            );
             $magentoChildProductIds = $this->formatMagentoProductIds($magentoChildProductIds, true);
 
-            // merge invisible child products and visible products, i.e. remove invisible orphaned simple products 
+            // merge invisible child products and visible products, i.e. remove invisible orphaned simple products
             $magentoProductIds = array_merge($magentoVisibleProductIds, $magentoChildProductIds);
 
             unset($productIdsToFilter);
@@ -443,24 +553,38 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
         );
     }
 
+    /**
+     * @param StoreInterface|string|int|null $store
+     *
+     * @return array
+     */
     protected function getSyncDataSqlForCEDelete($store)
     {
         $limit = $this->_klevuSyncModel->getSessionVariable("limit");
         return $this->deleteProductCollection($store);
     }
 
+    /**
+     * @param StoreInterface|string|int|null $store
+     *
+     * @return array
+     */
     protected function getSyncDataSqlForCEUpdate($store)
     {
         $limit = $this->_klevuSyncModel->getSessionVariable("limit");
         return $this->updateProductCollection($store);
     }
 
+    /**
+     * @param StoreInterface|string|int|null $store
+     *
+     * @return array
+     */
     protected function getSyncDataSqlForCEAdd($store)
     {
         $limit = $this->_klevuSyncModel->getSessionVariable("limit");
         return $this->addProductCollection($store);
     }
-
 
     /**
      * Return the product status attribute model.
@@ -470,7 +594,10 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
     protected function getProductStatusAttribute()
     {
         if (!$this->hasData("status_attribute")) {
-            $this->setData("status_attribute", $this->_eavModelConfig->getAttribute(\Magento\Catalog\Model\Product::ENTITY, 'status'));
+            $this->setData(
+                "status_attribute",
+                $this->_eavModelConfig->getAttribute(Product::ENTITY, 'status')
+            );
         }
         return $this->getData("status_attribute");
     }
@@ -483,31 +610,39 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
     protected function getProductVisibilityAttribute()
     {
         if (!$this->hasData("visibility_attribute")) {
-            $this->setData("visibility_attribute", $this->_eavModelConfig->getAttribute(\Magento\Catalog\Model\Product::ENTITY, 'visibility'));
+            $this->setData(
+                "visibility_attribute",
+                $this->_eavModelConfig->getAttribute(Product::ENTITY, 'visibility')
+            );
         }
         return $this->getData("visibility_attribute");
     }
 
-
     /**
      * Mark all products to be updated the next time Product Sync runs.
      *
-     * @param \Magento\Store\Model\Store|int $store If passed, will only update products for the given store.
+     * @param StoreInterface|string|int|null $store If passed, will only update products for the given store.
      *
      * @return $this
      */
     public function markAllProductsForUpdate($store = null)
     {
         $where = "";
+        $connection = $this->_frameworkModelResource->getConnection("core_write");
         if ($store !== null) {
-            $store = $this->_storeModelStoreManagerInterface->getStore($store);
-            $where = $this->_frameworkModelResource->getConnection("core_write")->quoteInto("store_id =  ?", $store->getId());
+            try {
+                $store = $this->_storeModelStoreManagerInterface->getStore($store);
+                $where = $connection->quoteInto("store_id =  ?", $store->getId());
+            } catch (NoSuchEntityException $e) {
+                $this->_logger->error($e->getMessage(), ['class' => __CLASS__, 'method' => __METHOD__]);
+            }
         }
-        $this->_frameworkModelResource->getConnection("core_write")->update(
+        $connection->update(
             $this->_frameworkModelResource->getTableName('klevu_product_sync'),
             ['last_synced_at' => '0'],
             $where
         );
+
         return $this;
     }
 
@@ -515,49 +650,53 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
      * Forget the sync status of all the products for the given Store and test mode.
      * If no store or test mode status is given, clear products for all stores and modes respectively.
      *
-     * @param \Magento\Store\Model\Store|int|null $store
+     * @param StoreInterface|string|int|null $store
      *
      * @return int
      */
     public function clearAllProducts($store = null)
     {
-        $select = $this->_frameworkModelResource->getConnection("core_write")
-            ->select()
+        $connection = $this->_frameworkModelResource->getConnection("core_write");
+        $select = $connection->select()
             ->from(
                 ["k" => $this->_frameworkModelResource->getTableName("klevu_product_sync")]
             );
         if ($store) {
-            $store = $this->_storeModelStoreManagerInterface->getStore($store);
-            $select->where("k.store_id = ?", $store->getId());
+            try {
+                $store = $this->_storeModelStoreManagerInterface->getStore($store);
+                $select->where("k.store_id = ?", $store->getId());
+            } catch (NoSuchEntityException $e) {
+                $this->_logger->error($e->getMessage(), ['class' => __CLASS__, 'method' => __METHOD__]);
+            }
         }
+        $result = $connection->query($select->deleteFromSelect("k"));
 
-        $result = $this->_frameworkModelResource->getConnection("core_write")->query($select->deleteFromSelect("k"));
         return $result->rowCount();
     }
-
 
     /**
      * Run cron externally for debug using js api
      *
-     * @param $js_api
+     * @param string $restApi
      *
-     * @return $this
+     * @return void
      */
-    public function sheduleCronExteranally($rest_api)
+    public function sheduleCronExteranally($restApi)
     {
-        $configs = $this->_modelConfigData->getCollection()
-            ->addFieldToFilter('value', ["like" => "%$rest_api%"])->load();
+        $configs = $this->_modelConfigData->getCollection();
+        $configs->addFieldToFilter('value', ["like" => "%$restApi%"]);
+        $configs->load();
         $data = $configs->getData();
-        if (!empty($data[0]['scope_id'])) {
+        if (empty($data[0]['scope_id'])) {
+            return;
+        }
+        try {
             $store = $this->_storeModelStoreManagerInterface->getStore($data[0]['scope_id']);
-            if ($this->_searchHelperConfig->isExternalCronEnabled()) {
-                $this->markAllProductsForUpdate($store);
-            } else {
-                $this->markAllProductsForUpdate($store);
-            }
+            $this->markAllProductsForUpdate($store);
+        } catch (NoSuchEntityException $e) {
+            $this->_logger->error($e->getMessage(), ['class' => __CLASS__, 'method' => __METHOD__]);
         }
     }
-
 
     /**
      * Get special price expire date attribute value
@@ -566,10 +705,12 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
      */
     public function getExpiryDateAttributeId()
     {
-        $query = $this->_frameworkModelResource->getConnection("core_write")->select()
-            ->from($this->_frameworkModelResource->getTableName("eav_attribute"), ['attribute_id'])
-            ->where('attribute_code=?', 'special_to_date');
-        $data = $query->query()->fetchAll();
+        $connection = $this->_frameworkModelResource->getConnection("core_write");
+        $query = $connection->select();
+        $query->from($this->_frameworkModelResource->getTableName("eav_attribute"), ['attribute_id']);
+        $query->where('attribute_code=?', 'special_to_date');
+        $data = $connection->fetchAll($query);
+
         return $data[0]['attribute_id'];
     }
 
@@ -582,18 +723,24 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
     {
         $attribute_id = $this->getExpiryDateAttributeId();
         $current_date = date_create("now")->format("Y-m-d");
-        $query = $this->_frameworkModelResource->getConnection("core_write")->select()
-            ->from($this->_frameworkModelResource->getTableName("catalog_product_entity_datetime"), [$this->_klevuSyncModel->getData("entity_value")])
-            ->where("attribute_id=:attribute_id AND DATE_ADD(value,INTERVAL 1 DAY)=:current_date")
-            ->bind([
-                'attribute_id' => $attribute_id,
-                'current_date' => $current_date
-            ]);
-        $data = $this->_frameworkModelResource->getConnection("core_write")->fetchAll($query, $query->getBind());
+        $connection = $this->_frameworkModelResource->getConnection("core_write");
+
+        $query = $connection->select();
+        $query->from(
+            $this->_frameworkModelResource->getTableName("catalog_product_entity_datetime"),
+            [$this->_klevuSyncModel->getData("entity_value")]
+        );
+        $query->where("attribute_id=:attribute_id AND DATE_ADD(value,INTERVAL 1 DAY)=:current_date");
+        $bind = [
+            'attribute_id' => $attribute_id,
+            'current_date' => $current_date
+        ];
+        $data = $connection->fetchAll($query, $bind);
         $pro_ids = [];
-        foreach ($data as $key => $value) {
+        foreach ($data as $value) {
             $pro_ids[] = $value[$this->_klevuSyncModel->getData("entity_value")];
         }
+
         return $pro_ids;
     }
 
@@ -610,22 +757,36 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
                 $this->updateSpecificProductIds($special_pro_ids);
             }
         } catch (\Exception $e) {
-            $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_CRIT, sprintf("Exception thrown in markforupdate %s::%s - %s", __CLASS__, __METHOD__, $e->getMessage()));
+            $this->_searchHelperData->log(
+                LoggerConstants::ZEND_LOG_CRIT,
+                sprintf(
+                    "Exception thrown in markforupdate %s::%s - %s",
+                    __CLASS__,
+                    __METHOD__,
+                    $e->getMessage()
+                )
+            );
         }
     }
 
     /**
      * Mark product ids for update
      *
-     * @param array ids
+     * @param array $ids
      *
-     * @return
+     * @return void
      */
     public function updateSpecificProductIds($ids)
     {
+        $connection = $this->_frameworkModelResource->getConnection('core_write');
         $pro_ids = implode(',', $ids);
-        $where = sprintf("(product_id IN(%s) OR parent_id IN(%s)) AND %s", $pro_ids, $pro_ids, $this->_frameworkModelResource->getConnection('core_write')->quoteInto('type = ?', "products"));
-        $this->_frameworkModelResource->getConnection('core_write')->update(
+        $where = sprintf(
+            "(product_id IN(%s) OR parent_id IN(%s)) AND %s",
+            $pro_ids,
+            $pro_ids,
+            $connection->quoteInto('type = ?', "products")
+        );
+        $connection->update(
             $this->_frameworkModelResource->getTableName('klevu_product_sync'),
             ['last_synced_at' => '0'],
             $where
@@ -635,61 +796,23 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
     /**
      * Update all product ids rating attribute
      *
-     * @param string store
+     * @param StoreInterface|string|int $store
      *
-     * @return  $this
+     * @return void
      */
     public function updateProductsRating($store)
     {
-        $entity_type = $this->_klevuEntityType->loadByCode("catalog_product");
-        $entity_typeid = $entity_type->getId();
-        $attributecollection = $this->_klevuEntityAttribute->getCollection()->addFieldToFilter("entity_type_id", $entity_typeid)->addFieldToFilter("attribute_code", "rating");
-        if (count($attributecollection) > 0) {
-            $sumColumn = "AVG(rating_vote.{$this->_frameworkModelResource->getConnection("core_write")->quoteIdentifier('percent')})";
-            $select = $this->_frameworkModelResource->getConnection("core_write")->select()
-                ->from(
-                    ['rating_vote' => $this->_frameworkModelResource->getTableName('rating_option_vote')],
-                    [
-                        'entity_pk_value' => 'rating_vote.entity_pk_value',
-                        'sum' => $sumColumn,
-                    ]
-                )
-                ->join(
-                    ['review' => $this->_frameworkModelResource->getTableName('review')],
-                    'rating_vote.review_id=review.review_id',
-                    []
-                )
-                ->joinLeft(
-                    ['review_store' => $this->_frameworkModelResource->getTableName('review_store')],
-                    'rating_vote.review_id=review_store.review_id',
-                    ['review_store.store_id']
-                )
-                ->join(
-                    ['rating_store' => $this->_frameworkModelResource->getTableName('rating_store')],
-                    'rating_store.rating_id = rating_vote.rating_id AND rating_store.store_id = review_store.store_id',
-                    []
-                )
-                ->join(
-                    ['review_status' => $this->_frameworkModelResource->getTableName('review_status')],
-                    'review.status_id = review_status.status_id',
-                    []
-                )
-                ->where('review_status.status_code = :status_code AND rating_store.store_id = :storeId')
-                ->group('rating_vote.entity_pk_value')
-                ->group('review_store.store_id');
-            $bind = ['status_code' => "Approved", 'storeId' => $store->getId()];
-            $data_ratings = $this->_frameworkModelResource->getConnection("core_write")->fetchAll($select, $bind);
-            $allStores = $this->_storeModelStoreManagerInterface->getStores();
-            foreach ($data_ratings as $key => $value) {
-                if (count($allStores) > 1) {
-                    $this->_klevuCatalogProductAction->updateAttributes([$value['entity_pk_value']], ['rating' => 0], 0);
-                }
-                $this->_klevuCatalogProductAction->updateAttributes([$value['entity_pk_value']], ['rating' => $value['sum']], $store->getId());
-                $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_DEBUG, sprintf("Rating is updated for product id %s", $value['entity_pk_value']));
-            }
+        try {
+            $storeObject = $this->_storeModelStoreManagerInterface->getStore($store);
+            $this->updateAllRatings->execute($storeObject->getId());
+        } catch (NoSuchEntityException $exception) {
+            $this->_logger->error($exception->getMessage());
+        } catch (KlevuProductAttributeMissingException $exception) {
+            $this->_logger->error($exception->getMessage());
+        } catch (InvalidArgumentException $exception) {
+            $this->_logger->error($exception->getMessage());
         }
     }
-
 
     /**
      * Mark products for update if rule is expire
@@ -702,16 +825,19 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
         $timestamp_before = strtotime("-1 day", strtotime(date_create("now")->format("Y-m-d")));
         $query = $this->_frameworkModelResource->getConnection()->select()
             ->from($this->_frameworkModelResource->getTableName("catalogrule_product"), ['product_id'])
-            ->where("customer_group_id=:customer_group_id AND ((from_time BETWEEN :timestamp_before AND :timestamp_after) OR (to_time BETWEEN :timestamp_before AND :timestamp_after))")
+            ->where("customer_group_id=:customer_group_id AND (
+                (from_time BETWEEN :timestamp_before AND :timestamp_after) OR
+                (to_time BETWEEN :timestamp_before AND :timestamp_after)
+              )")
             ->bind([
-                'customer_group_id' => \Magento\Customer\Model\Group::NOT_LOGGED_IN_ID,
+                'customer_group_id' => CustomerGroup::NOT_LOGGED_IN_ID,
                 'timestamp_before' => $timestamp_before,
                 'timestamp_after' => $timestamp_after
             ]);
         $data = $this->_frameworkModelResource->getConnection()->fetchAll($query, $query->getBind());
         $pro_ids = [];
 
-        foreach ($data as $key => $value) {
+        foreach ($data as $value) {
             $pro_ids[] = $value['product_id'];
         }
         if (!empty($pro_ids)) {
@@ -722,11 +848,11 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
     /**
      * Mark records for update storewise
      *
-     * @param int|array $productIds
+     * @param string|int|array $productIds
      * @param string $recordType
-     * @param null $stores
+     * @param string|int|array|null $stores
      *
-     * @return mixed|void
+     * @return void
      */
     public function markRecordIntoQueue($productIds, $recordType = 'products', $stores = null)
     {
@@ -775,8 +901,9 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
     }
 
     /**
-     * @param null $stores
-     * @return mixed|void
+     * @param string|int|array|null $stores
+     *
+     * @return void
      */
     public function markCategoryRecordIntoQueue($stores = null)
     {
@@ -888,8 +1015,7 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
                 'parent_id' => $parentId,
                 'product_id' => $productId
             ];
-            if (
-                !(int)$parentId ||
+            if (!(int)$parentId ||
                 ($parentId && in_array($parentId, $this->getParentProductIds($store), true))
             ) {
                 continue;
@@ -916,8 +1042,7 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
             $productIds = (array)$productIds;
             $parentId = $productIds[Klevu::FIELD_PARENT_ID];
             $productId = $productIds[Klevu::FIELD_PRODUCT_ID];
-            if (
-                (int)$parentId &&
+            if ((int)$parentId &&
                 !in_array($parentId, $this->getParentProductIds($store), true)
             ) {
                 continue;

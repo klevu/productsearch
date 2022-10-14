@@ -8,11 +8,11 @@
 
 namespace Klevu\Search\Model\Product;
 
+use Magento\Catalog\Api\Data\ProductInterface as MagentoProductInterface;
 use Magento\Catalog\Model\ResourceModel\Product\Collection as ProductCollection;
 
 /**
  * Interface LoadAttributeInterface
- * @package Klevu\Search\Model\Product
  */
 interface LoadAttributeInterface
 {
@@ -30,31 +30,35 @@ interface LoadAttributeInterface
 
     /**
      * Process product data if wannt to add any extra information from third party module
-     * @param $product
-     * @param $parent
-     * @param $item
+     *
+     * @param array $product
+     * @param MagentoProductInterface|null $parent
+     * @param MagentoProductInterface $item
+     *
      * @return $this|mixed
      */
-    public function processProductBefore(&$product,&$parent,&$item);
+    public function processProductBefore(&$product, &$parent, &$item);
 
     /**
      * Process product data if wannt to add any extra information from third party module
-     * @param $product
-     * @param $parent
-     * @param $item
+     *
+     * @param array $product
+     * @param MagentoProductInterface|null $parent
+     * @param MagentoProductInterface $item
+     *
      * @return $this|mixed
      */
-    public function processProductAfter(&$product,&$parent,&$item);
+    public function processProductAfter(&$product, &$parent, &$item);
 
     /**
      * Load product data uisng magento collection method
      *
-     * @param $product_ids
+     * @param array $productIds
      * @param int|null $storeId
      *
      * @return ProductCollection
      */
-    public function loadProductDataCollection($product_ids, $storeId = null);
+    public function loadProductDataCollection($productIds, $storeId = null);
 
     /**
      * Return the attribute codes for all attributes currently used in
@@ -79,5 +83,4 @@ interface LoadAttributeInterface
      * @return array
      */
     public function getAutomaticAttributes();
-
 }

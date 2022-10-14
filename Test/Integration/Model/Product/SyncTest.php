@@ -31,6 +31,11 @@ class SyncTest extends TestCase
     private $productRepository;
 
     /**
+     * @var int[]
+     */
+    private $deleteRecordsFixtures = [];
+
+    /**
      * @return void
      * @todo Move to setUp when PHP 5.x is no longer supported
      */
@@ -39,6 +44,8 @@ class SyncTest extends TestCase
         $this->objectManager = Bootstrap::getObjectManager();
         $this->storeManager = $this->objectManager->get(StoreManagerInterface::class);
         $this->productRepository = $this->objectManager->get(ProductRepositoryInterface::class);
+
+        $this->deleteRecordsFixtures = [];
     }
 
     /**
@@ -52,16 +59,18 @@ class SyncTest extends TestCase
      * @magentoConfigFixture default_store currency/options/allow JPY,EUR,GBP
      * @magentoConfigFixture klevu_test_store_1_store currency/options/default JPY
      * @magentoConfigFixture klevu_test_store_1_store currency/options/allow JPY,EUR,GBP
+     * @magentoConfigFixture default/klevu_search/product_sync/enabled 1
+     * @magentoConfigFixture klevu_test_store_1_store klevu_search/product_sync/enabled 1
      * @magentoDataFixture loadWebsiteFixtures
+     * @magentoDataFixture loadProductFixtures
+     * @magentoDataFixture loadKlevuProductSyncFixtures
      */
     public function testSyncData_Delete_SimpleProduct()
     {
         $this->setupPhp5();
 
         $this->objectManager->addSharedInstance(
-            $this->getDeleterecordsMock(true, [
-                'klevu_simple_1',
-            ]),
+            $this->getDeleterecordsMock(true, 1),
             Deleterecords::class
         );
         $this->objectManager->addSharedInstance(
@@ -75,17 +84,18 @@ class SyncTest extends TestCase
 
         // Cannot use annotations otherwise above shared instances are already
         //  instantiated by observers / plugins on product save
-        self::loadKlevuProductSyncFixtures();
+        self::loadProductFixturesActual();
+        $productFixture = $this->productRepository->get('klevu_simple_1');
+        self::loadKlevuProductSyncFixturesActual();
+
+        $this->deleteRecordsFixtures[] = (int)$productFixture->getId();
+        self::loadProductFixturesRollback();
 
         $store = $this->storeManager->getStore('klevu_test_store_1');
 
         /** @var ProductSync $productSync */
         $productSync = $this->objectManager->get(ProductSync::class);
         $productSync->syncData($store);
-
-        self::loadKlevuProductSyncFixturesRollback();
-        static::loadWebsiteFixturesRollback();
-
     }
 
     /**
@@ -99,14 +109,18 @@ class SyncTest extends TestCase
      * @magentoConfigFixture default_store currency/options/allow JPY,EUR,GBP
      * @magentoConfigFixture klevu_test_store_1_store currency/options/default JPY
      * @magentoConfigFixture klevu_test_store_1_store currency/options/allow JPY,EUR,GBP
+     * @magentoConfigFixture default/klevu_search/product_sync/enabled 1
+     * @magentoConfigFixture klevu_test_store_1_store klevu_search/product_sync/enabled 1
      * @magentoDataFixture loadWebsiteFixtures
+     * @magentoDataFixture loadProductFixtures
+     * @magentoDataFixture loadKlevuProductSyncFixtures
      */
     public function testSyncData_Update_SimpleProduct()
     {
         $this->setupPhp5();
 
         $this->objectManager->addSharedInstance(
-            $this->getDeleterecordsMock(true, []),
+            $this->getDeleterecordsMock(true, 0),
             Deleterecords::class
         );
         $this->objectManager->addSharedInstance(
@@ -122,7 +136,7 @@ class SyncTest extends TestCase
                     'product_type' => 'simple',
                     'currency' => 'USD',
                     'category' => '',
-                    'listCategory' => 'KLEVU_PRODUCT',
+                    'listCategory' => ['KLEVU_PRODUCT'],
                     'categoryIds' => '',
                     'categoryPaths' => '',
                     'groupPrices' => null,
@@ -138,18 +152,14 @@ class SyncTest extends TestCase
 
         // Cannot use annotations otherwise above shared instances are already
         //  instantiated by observers / plugins on product save
-        self::loadProductFixtures();
-        self::loadKlevuProductSyncFixtures();
+        self::loadProductFixturesActual();
+        self::loadKlevuProductSyncFixturesActual();
 
         $store = $this->storeManager->getStore('klevu_test_store_1');
 
         /** @var ProductSync $productSync */
         $productSync = $this->objectManager->get(ProductSync::class);
         $productSync->syncData($store);
-
-        self::loadKlevuProductSyncFixturesRollback();
-        self::loadProductFixturesRollback();
-        static::loadWebsiteFixturesRollback();
     }
 
     /**
@@ -163,14 +173,18 @@ class SyncTest extends TestCase
      * @magentoConfigFixture default_store currency/options/allow JPY,EUR,GBP
      * @magentoConfigFixture klevu_test_store_1_store currency/options/default JPY
      * @magentoConfigFixture klevu_test_store_1_store currency/options/allow JPY,EUR,GBP
+     * @magentoConfigFixture default/klevu_search/product_sync/enabled 1
+     * @magentoConfigFixture klevu_test_store_1_store klevu_search/product_sync/enabled 1
      * @magentoDataFixture loadWebsiteFixtures
+     * @magentoDataFixture loadProductFixtures
+     * @magentoDataFixture loadKlevuProductSyncFixtures
      */
     public function testSyncData_Add_SimpleProduct()
     {
         $this->setupPhp5();
 
         $this->objectManager->addSharedInstance(
-            $this->getDeleterecordsMock(true, []),
+            $this->getDeleterecordsMock(true, 0),
             Deleterecords::class
         );
         $this->objectManager->addSharedInstance(
@@ -179,47 +193,44 @@ class SyncTest extends TestCase
         );
         $this->objectManager->addSharedInstance(
             $this->getAddrecordsMock(true, [
-            'klevu_simple_1' => [
-        'name' => '[Klevu] Simple Product 1',
-        'sku' => 'klevu_simple_1',
-        'price' => 10.0,
-        'salePrice' => 10.0,
-        'startPrice' => 10.0,
-        'visibility' => 'catalog-search',
-        'dateAdded' => date('Y-m-d'),
-        'product_type' => 'simple',
-        'currency' => 'USD',
-        'category' => '',
-        'listCategory' => 'KLEVU_PRODUCT',
-        'categoryIds' => '',
-        'categoryPaths' => '',
-        'groupPrices' => null,
-        'inStock' => 'yes',
-    ],
+                'klevu_simple_1' => [
+                    'name' => '[Klevu] Simple Product 1',
+                    'sku' => 'klevu_simple_1',
+                    'price' => 10.0,
+                    'salePrice' => 10.0,
+                    'startPrice' => 10.0,
+                    'visibility' => 'catalog-search',
+                    'dateAdded' => date('Y-m-d'),
+                    'product_type' => 'simple',
+                    'currency' => 'USD',
+                    'category' => '',
+                    'listCategory' => ['KLEVU_PRODUCT'],
+                    'categoryIds' => '',
+                    'categoryPaths' => '',
+                    'groupPrices' => null,
+                    'inStock' => 'yes',
+                ],
             ]),
             Addrecords::class
         );
 
         // Cannot use annotations otherwise above shared instances are already
         //  instantiated by observers / plugins on product save
-        self::loadProductFixtures();
+        self::loadProductFixturesActual();
 
         $store = $this->storeManager->getStore('klevu_test_store_1');
 
         /** @var ProductSync $productSync */
         $productSync = $this->objectManager->get(ProductSync::class);
         $productSync->syncData($store);
-
-        self::loadProductFixturesRollback();
-        static::loadWebsiteFixturesRollback();
     }
 
     /**
      * @param bool|string $return
-     * @param array $expectedSkus
+     * @param int $expectedCount
      * @return Deleterecords|\PHPUnit\Framework\MockObject\MockObject
      */
-    private function getDeleterecordsMock($return, array $expectedSkus)
+    private function getDeleterecordsMock($return, $expectedCount)
     {
         $response = $this->getResponseMock(
             true === $return,
@@ -229,9 +240,9 @@ class SyncTest extends TestCase
         $deleterecordsMock = $this->getMockBuilder(Deleterecords::class)
             ->disableOriginalConstructor()
             ->getMock();
-        $deleterecordsMock->expects($this->exactly(count($expectedSkus)))
+        $deleterecordsMock->expects($this->exactly($expectedCount))
             ->method('execute')
-            ->willReturnCallback(function ($parameters) use ($response, $expectedSkus) {
+            ->willReturnCallback(function ($parameters) use ($response) {
                 if (method_exists($this, 'assertIsArray')) {
                     $this->assertIsArray($parameters);
                 } else {
@@ -254,23 +265,7 @@ class SyncTest extends TestCase
                         $this->assertTrue(is_array($record), 'Is Array');
                     }
 
-                    $product = $this->productRepository->get($expectedSkus[$i]);
-                    switch ($product->getTypeId()) {
-                        case 'simple':
-                            $expectedData = [
-                                'id' => (string)$product->getId(),
-                            ];
-                            break;
-
-                        default:
-                            throw new \InvalidArgumentException(sprintf(
-                                'Product type %s not currently supported',
-                                $product->getTypeId()
-                            ));
-                            break;
-                    }
-
-                    $this->assertSame($expectedData, $record);
+                    $this->assertSame(['id' => (string)$this->deleteRecordsFixtures[$i]], $record);
                 }
 
                 return $response;
@@ -485,9 +480,17 @@ class SyncTest extends TestCase
      * Loads product creation scripts because annotations use a relative path
      *  from integration tests root
      */
-    public static function loadProductFixtures()
+    public static function loadProductFixturesActual()
     {
         include __DIR__ . '/../../_files/productFixtures.php';
+    }
+
+    /**
+     * Used by annotations so rollback is performed even when a test fails
+     */
+    public static function loadProductFixtures()
+    {
+        // Intentionally empty
     }
 
     /**
@@ -496,16 +499,24 @@ class SyncTest extends TestCase
      */
     public static function loadProductFixturesRollback()
     {
-        include __DIR__ . '/../../_files/klevuProductSyncFixtures_rollback.php';
+        include __DIR__ . '/../../_files/productFixtures_rollback.php';
     }
 
     /**
      * Loads klevu product sync creation scripts because annotations use a relative path
      *  from integration tests root
      */
-    public static function loadKlevuProductSyncFixtures()
+    public static function loadKlevuProductSyncFixturesActual()
     {
         include __DIR__ . '/../../_files/klevuProductSyncFixtures.php';
+    }
+
+    /**
+     * Used by annotations so rollback is performed even when a test fails
+     */
+    public static function loadKlevuProductSyncFixtures()
+    {
+        // Intentionally empty
     }
 
     /**
@@ -514,6 +525,6 @@ class SyncTest extends TestCase
      */
     public static function loadKlevuProductSyncFixturesRollback()
     {
-        include __DIR__ . '/../../_files/productFixtures_rollback.php';
+        include __DIR__ . '/../../_files/klevuProductSyncFixtures_rollback.php';
     }
 }

@@ -1,17 +1,28 @@
 <?xml version="1.0"?>
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
-	<preference for="Klevu\Search\Api\SerializerInterface" type="Klevu\Search\Serializer\Json"/>
+    <preference for="Klevu\Search\Api\SerializerInterface" type="Klevu\Search\Serializer\Json"/>
 
-	<preference for="Klevu\Search\Api\Provider\CommonProviderInterface" type="Klevu\Search\Model\Product\Provider\CommonProvider"/>
-	<preference for="Klevu\Search\Api\Service\Catalog\Product\StockServiceInterface" type="Klevu\Search\Service\Catalog\Product\Stock"/>
+    <preference for="Klevu\Search\Api\Provider\CommonProviderInterface" type="Klevu\Search\Model\Product\Provider\CommonProvider"/>
+    <preference for="Klevu\Search\Api\Service\Catalog\Product\StockServiceInterface" type="Klevu\Search\Service\Catalog\Product\Stock"/>
 
     <preference for="Klevu\Search\Api\KlevuSyncRepositoryInterface" type="Klevu\Search\Repository\KlevuSyncRepository" />
     <preference for="Klevu\Search\Api\MagentoProductSyncRepositoryInterface" type="Klevu\Search\Repository\MagentoProductSyncRepository" />
     <preference for="Klevu\Search\Api\Service\Sync\GetBatchSizeInterface" type="Klevu\Search\Service\Sync\GetBatchSize" />
     <preference for="Klevu\Search\Api\Service\Sync\GetOrderSelectMaxLimitInterface" type="Klevu\Search\Service\Sync\GetOrderSelectMaxLimit" />
 
-	<preference for="Klevu\Search\Api\Service\Account\KlevuApi\GetAccountDetailsInterface" type="Klevu\Search\Service\Account\KlevuApi\GetAccountDetails" />
-	<preference for="Klevu\Search\Api\Service\Account\Model\AccountFeaturesInterface" type="Klevu\Search\Service\Account\Model\AccountFeatures" />
+    <preference for="Klevu\Search\Api\Service\Catalog\Product\GetReviewCountInterface" type="Klevu\Search\Service\Catalog\Product\GetReviewCount" />
+    <preference for="Klevu\Search\Api\Service\Catalog\Product\GetRatingStarsInterface" type="Klevu\Search\Service\Catalog\Product\GetRatingStars" />
+    <preference for="Klevu\Search\Api\Service\Catalog\Product\Review\ConvertRatingToStarsInterface" type="Klevu\Search\Service\Catalog\Product\Review\ConvertRatingToStars" />
+    <preference for="Klevu\Search\Api\Service\Catalog\Product\Review\GetAverageRatingInterface" type="Klevu\Search\Service\Catalog\Product\Review\GetAverageRating" />
+    <preference for="Klevu\Search\Api\Service\Catalog\Product\Review\UpdateRatingInterface" type="Klevu\Search\Service\Catalog\Product\Review\UpdateRating" />
+    <preference for="Klevu\Search\Api\Service\Catalog\Product\Review\UpdateAllRatingsInterface" type="Klevu\Search\Service\Catalog\Product\Review\UpdateAllRatings" />
+    <preference for="Klevu\Search\Api\Service\Catalog\Product\IsRatingAttributeAvailableInterface" type="Klevu\Search\Service\Catalog\Product\IsRatingAttributeAvailable" />
+    <preference for="Klevu\Search\Api\Service\Catalog\Product\IsRatingCountAttributeAvailableInterface" type="Klevu\Search\Service\Catalog\Product\IsRatingCountAttributeAvailable" />
+    <preference for="Klevu\Search\Api\Service\Catalog\Product\UpdateRatingsAttributesInterface" type="Klevu\Search\Service\Catalog\Product\UpdateRatingsAttributes" />
+    <preference for="Klevu\Search\Api\Service\Catalog\Product\Review\RatingDataMapperInterface" type="Klevu\Search\Service\Catalog\Product\Review\RatingDataMapper" />
+
+    <preference for="Klevu\Search\Api\Service\Account\KlevuApi\GetAccountDetailsInterface" type="Klevu\Search\Service\Account\KlevuApi\GetAccountDetails" />
+    <preference for="Klevu\Search\Api\Service\Account\Model\AccountFeaturesInterface" type="Klevu\Search\Service\Account\Model\AccountFeatures" />
     <preference for="Klevu\Search\Api\Service\Account\GetAccountDetailsInterface" type="Klevu\Search\Service\Account\GetAccountDetails" />
     <preference for="Klevu\Search\Api\Service\Account\Model\AccountDetailsInterface" type="Klevu\Search\Service\Account\Model\AccountDetails" />
     <preference for="Klevu\Search\Api\Service\Account\ConfirmIntegrationInterface" type="Klevu\Search\Service\Account\ConfirmIntegration" />
@@ -28,73 +39,76 @@
     <preference for="Klevu\Search\Api\Provider\Customer\CustomerIdProviderInterface" type="Klevu\Search\Provider\Customer\CustomerIdProvider" />
     <preference for="Klevu\Search\Api\Provider\Customer\SessionIdProviderInterface" type="Klevu\Search\Provider\Customer\SessionIdProvider" />
     <preference for="Klevu\Search\Model\Klevu\Cron\SchedulerInterface" type="Klevu\Search\Model\Klevu\Cron\Scheduler" />
-	<preference for="Klevu\Search\Model\Klevu\Category\CategoryInterface" type="Klevu\Search\Model\Klevu\Category\Category" />
-	<preference for="Klevu\Search\Model\Api\Magento\Request\ProductInterface" type="Klevu\Search\Model\Api\Magento\Request\Product" />
-	<preference for="Klevu\Search\Model\Product\MagentoProductActionsInterface" type="Klevu\Search\Model\Product\MagentoProductActions"/>
-	<preference for="Klevu\Search\Model\Product\LoadAttributeInterface" type="Klevu\Search\Model\Product\LoadAttribute"/>
-	<preference for="Klevu\Search\Model\Product\KlevuProductActionsInterface" type="Klevu\Search\Model\Product\KlevuProductActions"/>
-	<preference for="Klevu\Search\Model\Product\ProductInterface" type="Klevu\Search\Model\Product\Product"/>
-	<preference for="Klevu\Search\Model\Category\MagentoCategoryActionsInterface" type="Klevu\Search\Model\Category\MagentoCategoryActions"/>
-	<preference for="Klevu\Search\Model\Category\LoadAttributeInterface" type="Klevu\Search\Model\Category\LoadAttribute"/>
-	<preference for="Klevu\Search\Model\Category\KlevuCategoryActionsInterface" type="Klevu\Search\Model\Category\KlevuCategoryActions"/>
-	<preference for="Klevu\Search\Model\Product\ProductParentInterface" type="Klevu\Search\Model\Product\ProductParent"/>
-	<preference for="Klevu\Search\Model\Product\ProductIndividualInterface" type="Klevu\Search\Model\Product\ProductIndividual"/>
-	<preference for="Klevu\Search\Model\Product\ProductCommonUpdaterInterface" type="Klevu\Search\Model\Product\ProductCommonUpdater"/>
+    <preference for="Klevu\Search\Model\Klevu\Category\CategoryInterface" type="Klevu\Search\Model\Klevu\Category\Category" />
+    <preference for="Klevu\Search\Model\Api\Magento\Request\ProductInterface" type="Klevu\Search\Model\Api\Magento\Request\Product" />
+    <preference for="Klevu\Search\Model\Product\MagentoProductActionsInterface" type="Klevu\Search\Model\Product\MagentoProductActions"/>
+    <preference for="Klevu\Search\Model\Product\LoadAttributeInterface" type="Klevu\Search\Model\Product\LoadAttribute"/>
+    <preference for="Klevu\Search\Model\Product\KlevuProductActionsInterface" type="Klevu\Search\Model\Product\KlevuProductActions"/>
+    <preference for="Klevu\Search\Model\Product\ProductInterface" type="Klevu\Search\Model\Product\Product"/>
+    <preference for="Klevu\Search\Model\Category\MagentoCategoryActionsInterface" type="Klevu\Search\Model\Category\MagentoCategoryActions"/>
+    <preference for="Klevu\Search\Model\Category\LoadAttributeInterface" type="Klevu\Search\Model\Category\LoadAttribute"/>
+    <preference for="Klevu\Search\Model\Category\KlevuCategoryActionsInterface" type="Klevu\Search\Model\Category\KlevuCategoryActions"/>
+    <preference for="Klevu\Search\Model\Product\ProductParentInterface" type="Klevu\Search\Model\Product\ProductParent"/>
+    <preference for="Klevu\Search\Model\Product\ProductIndividualInterface" type="Klevu\Search\Model\Product\ProductIndividual"/>
+    <preference for="Klevu\Search\Model\Product\ProductCommonUpdaterInterface" type="Klevu\Search\Model\Product\ProductCommonUpdater"/>
 
-	<type name="Magento\Catalog\Block\Product\ProductList\Toolbar">
-		<plugin name="klevu_search_toolbar" type="Klevu\Search\Plugin\Catalog\Block\Toolbar" sortOrder="101"/>
-	</type>
-	<type name="Magento\CatalogSearch\Block\Result">
-		<plugin name="Klevu_Search::setpersonalization" type="Klevu\Search\Plugin\Search\Block\Result" sortOrder="101"/>
-	</type>
-	<type name="Magento\Elasticsearch\SearchAdapter\DocumentFactory">
-		<plugin name="Klevu_Search_Plugin_Elasticsearch_SearchAdapter" type="Klevu\Search\Plugin\Elasticsearch\SearchAdapter\DocumentFactory" sortOrder="101"/>
-	</type>
-	<type name="Magento\Framework\Api\Search\SearchResult">
-		<plugin name="Klevu_Search_Plugin_Api_Search_SearchResult" type="Klevu\Search\Plugin\Api\Search\SearchResult" sortOrder="101"/>
-	</type>
-	<type name="Magento\Cron\Model\ConfigInterface">
-		<plugin name="Klevu_Search_SetCustomCronFrequencyPlugin" type="Klevu\Search\Plugin\Cron\Model\Config\SetCustomCronFrequencyPlugin"/>
-	</type>
-	<type name="Magento\CatalogInventory\Api\StockRegistryInterface">
-		<plugin name="Klevu_Search::addStockRegistryProductsInQueue" type="Klevu\Search\Plugin\Api\StockUpdatePlugin"/>
-	</type>
+    <type name="Magento\Catalog\Block\Product\ProductList\Toolbar">
+        <plugin name="klevu_search_toolbar" type="Klevu\Search\Plugin\Catalog\Block\Toolbar" sortOrder="101"/>
+    </type>
+    <type name="Magento\CatalogSearch\Block\Result">
+        <plugin name="Klevu_Search::setpersonalization" type="Klevu\Search\Plugin\Search\Block\Result" sortOrder="101"/>
+    </type>
+    <type name="Magento\Elasticsearch\SearchAdapter\DocumentFactory">
+        <plugin name="Klevu_Search_Plugin_Elasticsearch_SearchAdapter" type="Klevu\Search\Plugin\Elasticsearch\SearchAdapter\DocumentFactory" sortOrder="101"/>
+    </type>
+    <type name="Magento\Framework\Api\Search\SearchResult">
+        <plugin name="Klevu_Search_Plugin_Api_Search_SearchResult" type="Klevu\Search\Plugin\Api\Search\SearchResult" sortOrder="101"/>
+    </type>
+    <type name="Magento\Cron\Model\ConfigInterface">
+        <plugin name="Klevu_Search_SetCustomCronFrequencyPlugin" type="Klevu\Search\Plugin\Cron\Model\Config\SetCustomCronFrequencyPlugin"/>
+    </type>
+    <type name="Magento\CatalogInventory\Api\StockRegistryInterface">
+        <plugin name="Klevu_Search::addStockRegistryProductsInQueue" type="Klevu\Search\Plugin\Api\StockUpdatePlugin"/>
+    </type>
+    <type name="Magento\Review\Model\ResourceModel\Rating\Option">
+        <plugin name="Klevu_Search::updateRatingAttributesOnAggregate" type="Klevu\Search\Plugin\Review\Model\ResourceModel\Rating\Option\UpdateRatingAttributesOnAggregatePlugin"/>
+    </type>
 
-	<type name="Klevu\Search\Console\Command\SyncCategoryCommand">
-		<arguments>
-			<argument name="klevuLoggerFQCN" xsi:type="string">Klevu\Search\Logger\Logger\Search</argument>
-		</arguments>
-	</type>
-	<type name="Klevu\Search\Console\Command\SyncCommand">
-		<arguments>
-			<argument name="klevuLoggerFQCN" xsi:type="string">Klevu\Search\Logger\Logger\Search</argument>
-		</arguments>
-	</type>
-	<type name="Klevu\Search\Console\Command\SyncStoreView">
-		<arguments>
-			<argument name="klevuLoggerFQCN" xsi:type="string">Klevu\Search\Logger\Logger\Search</argument>
-		</arguments>
-	</type>
+    <type name="Klevu\Search\Console\Command\SyncCategoryCommand">
+        <arguments>
+            <argument name="klevuLoggerFQCN" xsi:type="string">Klevu\Search\Logger\Logger\Search</argument>
+        </arguments>
+    </type>
+    <type name="Klevu\Search\Console\Command\SyncCommand">
+        <arguments>
+            <argument name="klevuLoggerFQCN" xsi:type="string">Klevu\Search\Logger\Logger\Search</argument>
+        </arguments>
+    </type>
+    <type name="Klevu\Search\Console\Command\SyncStoreView">
+        <arguments>
+            <argument name="klevuLoggerFQCN" xsi:type="string">Klevu\Search\Logger\Logger\Search</argument>
+        </arguments>
+    </type>
 
-	<type name="Magento\Framework\Console\CommandList">
-		<arguments>
-			<argument name="commands" xsi:type="array">
-				<item name="syncCommand" xsi:type="object">Klevu\Search\Console\Command\SyncCommand\Proxy</item>
-				<item name="createCommand" xsi:type="object">Klevu\Search\Console\Command\UserCreation</item>
-				<item name="syncStoreViewData" xsi:type="object">Klevu\Search\Console\Command\SyncStoreView\Proxy</item>
-				<item name="RatingGeneration" xsi:type="object">Klevu\Search\Console\Command\RatingGeneration</item>
-				<item name="ImageGeneration" xsi:type="object">Klevu\Search\Console\Command\ImageGeneration</item>
-				<item name="sync_category" xsi:type="object">Klevu\Search\Console\Command\SyncCategoryCommand\Proxy</item>
+    <type name="Magento\Framework\Console\CommandList">
+        <arguments>
+            <argument name="commands" xsi:type="array">
+                <item name="syncCommand" xsi:type="object">Klevu\Search\Console\Command\SyncCommand\Proxy</item>
+                <item name="createCommand" xsi:type="object">Klevu\Search\Console\Command\UserCreation</item>
+                <item name="syncStoreViewData" xsi:type="object">Klevu\Search\Console\Command\SyncStoreView\Proxy</item>
+                <item name="RatingGeneration" xsi:type="object">Klevu\Search\Console\Command\RatingGeneration</item>
+                <item name="ImageGeneration" xsi:type="object">Klevu\Search\Console\Command\ImageGeneration</item>
+                <item name="sync_category" xsi:type="object">Klevu\Search\Console\Command\SyncCategoryCommand\Proxy</item>
                 <item name="sync_order" xsi:type="object">Klevu\Search\Console\Command\SyncOrderCommand\Proxy</item>
-			</argument>
-		</arguments>
-	</type>
+            </argument>
+        </arguments>
+    </type>
 
-	<type name="Magento\Framework\Search\Request\Cleaner">
-		<plugin name="Klevu_Search::CleanerForProductSearch"
-				type="Klevu\Search\Plugin\Framework\Search\Request\CleanerPlugin"
-				disabled="false"/>
-	</type>
+    <type name="Magento\Framework\Search\Request\Cleaner">
+        <plugin name="Klevu_Search::CleanerForProductSearch"
+                type="Klevu\Search\Plugin\Framework\Search\Request\CleanerPlugin"
+                disabled="false"/>
+    </type>
 
     <type name="Klevu\Search\Helper\Image">
         <arguments>
@@ -102,35 +116,35 @@
         </arguments>
     </type>
 
-	<!-- LOGGER CONFIGURATION -->
-	<!-- Search -->
-	<virtualType name="Klevu\Search\Service\LogFileNameProvider\Search" type="Klevu\Logger\Service\LogFileNameProvider">
-		<arguments>
-			<argument name="baseFileName" xsi:type="const">Klevu\Search\Helper\Data::LOG_FILE</argument>
-		</arguments>
-	</virtualType>
+    <!-- LOGGER CONFIGURATION -->
+    <!-- Search -->
+    <virtualType name="Klevu\Search\Service\LogFileNameProvider\Search" type="Klevu\Logger\Service\LogFileNameProvider">
+        <arguments>
+            <argument name="baseFileName" xsi:type="const">Klevu\Search\Helper\Data::LOG_FILE</argument>
+        </arguments>
+    </virtualType>
 
-	<virtualType name="Klevu\Search\Service\LoggingEnabledService\Search" type="Klevu\Logger\Service\LoggingEnabledService">
-		<arguments>
-			<argument name="isEnabledConfigPath" xsi:type="const">Klevu\Search\Helper\Config::XML_PATH_FORCE_LOG</argument>
-			<argument name="minLogLevelConfigPath" xsi:type="const">Klevu\Search\Helper\Config::XML_PATH_LOG_LEVEL</argument>
-		</arguments>
-	</virtualType>
+    <virtualType name="Klevu\Search\Service\LoggingEnabledService\Search" type="Klevu\Logger\Service\LoggingEnabledService">
+        <arguments>
+            <argument name="isEnabledConfigPath" xsi:type="const">Klevu\Search\Helper\Config::XML_PATH_FORCE_LOG</argument>
+            <argument name="minLogLevelConfigPath" xsi:type="const">Klevu\Search\Helper\Config::XML_PATH_LOG_LEVEL</argument>
+        </arguments>
+    </virtualType>
 
-	<virtualType name="Klevu\Search\Logger\Handler\LogIfConfigured\Search" type="Klevu\Logger\Logger\Handler\LogIfConfigured">
-		<arguments>
-			<argument name="logFileNameProvider" xsi:type="object">Klevu\Search\Service\LogFileNameProvider\Search</argument>
-			<argument name="loggingEnabledService" xsi:type="object">Klevu\Search\Service\LoggingEnabledService\Search</argument>
-		</arguments>
-	</virtualType>
+    <virtualType name="Klevu\Search\Logger\Handler\LogIfConfigured\Search" type="Klevu\Logger\Logger\Handler\LogIfConfigured">
+        <arguments>
+            <argument name="logFileNameProvider" xsi:type="object">Klevu\Search\Service\LogFileNameProvider\Search</argument>
+            <argument name="loggingEnabledService" xsi:type="object">Klevu\Search\Service\LoggingEnabledService\Search</argument>
+        </arguments>
+    </virtualType>
 
-	<virtualType name="Klevu\Search\Logger\Logger\Search" type="Klevu\Logger\Logger\Logger">
-		<arguments>
-			<argument name="handlers" xsi:type="array">
-				<item name="klevu_logger" xsi:type="object">Klevu\Search\Logger\Handler\LogIfConfigured\Search</item>
-			</argument>
-		</arguments>
-	</virtualType>
+    <virtualType name="Klevu\Search\Logger\Logger\Search" type="Klevu\Logger\Logger\Logger">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="klevu_logger" xsi:type="object">Klevu\Search\Logger\Handler\LogIfConfigured\Search</item>
+            </argument>
+        </arguments>
+    </virtualType>
 
     <type name="Klevu\FrontendJs\Observer\InvalidateCustomerDataObserver">
         <arguments>
@@ -152,42 +166,42 @@
         </arguments>
     </type>
 
-	<!-- Preserve Layout -->
-	<virtualType name="Klevu\Search\Service\LogFileNameProvider\PreserveLayout" type="Klevu\Logger\Service\LogFileNameProvider">
-		<arguments>
-			<argument name="baseFileName" xsi:type="const">Klevu\Search\Helper\Data::PRESERVE_LAYOUT_LOG_FILE</argument>
-		</arguments>
-	</virtualType>
+    <!-- Preserve Layout -->
+    <virtualType name="Klevu\Search\Service\LogFileNameProvider\PreserveLayout" type="Klevu\Logger\Service\LogFileNameProvider">
+        <arguments>
+            <argument name="baseFileName" xsi:type="const">Klevu\Search\Helper\Data::PRESERVE_LAYOUT_LOG_FILE</argument>
+        </arguments>
+    </virtualType>
 
-	<virtualType name="Klevu\Search\Service\LoggingEnabledService\PreserveLayout" type="Klevu\Logger\Service\LoggingEnabledService">
-		<arguments>
-			<argument name="isEnabledConfigPath" xsi:type="const">Klevu\Search\Helper\Config::XML_PATH_PRESERVE_LAYOUT_LOG_ENABLED</argument>
-			<argument name="minLogLevelConfigPath" xsi:type="const">Klevu\Search\Helper\Config::XML_PATH_PRESERVE_LAYOUT_MIN_LOG_LEVEL</argument>
-		</arguments>
-	</virtualType>
+    <virtualType name="Klevu\Search\Service\LoggingEnabledService\PreserveLayout" type="Klevu\Logger\Service\LoggingEnabledService">
+        <arguments>
+            <argument name="isEnabledConfigPath" xsi:type="const">Klevu\Search\Helper\Config::XML_PATH_PRESERVE_LAYOUT_LOG_ENABLED</argument>
+            <argument name="minLogLevelConfigPath" xsi:type="const">Klevu\Search\Helper\Config::XML_PATH_PRESERVE_LAYOUT_MIN_LOG_LEVEL</argument>
+        </arguments>
+    </virtualType>
 
-	<virtualType name="Klevu\Search\Logger\Handler\LogIfConfigured\PreserveLayout" type="Klevu\Logger\Logger\Handler\LogIfConfigured">
-		<arguments>
-			<argument name="logFileNameProvider" xsi:type="object">Klevu\Search\Service\LogFileNameProvider\PreserveLayout</argument>
-			<argument name="loggingEnabledService" xsi:type="object">Klevu\Search\Service\LoggingEnabledService\PreserveLayout</argument>
-		</arguments>
-	</virtualType>
+    <virtualType name="Klevu\Search\Logger\Handler\LogIfConfigured\PreserveLayout" type="Klevu\Logger\Logger\Handler\LogIfConfigured">
+        <arguments>
+            <argument name="logFileNameProvider" xsi:type="object">Klevu\Search\Service\LogFileNameProvider\PreserveLayout</argument>
+            <argument name="loggingEnabledService" xsi:type="object">Klevu\Search\Service\LoggingEnabledService\PreserveLayout</argument>
+        </arguments>
+    </virtualType>
 
-	<virtualType name="Klevu\Search\Logger\Logger\PreserveLayout" type="Klevu\Logger\Logger\Logger">
-		<arguments>
-			<argument name="handlers" xsi:type="array">
-				<item name="klevu_logger" xsi:type="object">Klevu\Search\Logger\Handler\LogIfConfigured\PreserveLayout</item>
-			</argument>
-		</arguments>
-	</virtualType>
+    <virtualType name="Klevu\Search\Logger\Logger\PreserveLayout" type="Klevu\Logger\Logger\Logger">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="klevu_logger" xsi:type="object">Klevu\Search\Logger\Handler\LogIfConfigured\PreserveLayout</item>
+            </argument>
+        </arguments>
+    </virtualType>
 
-	<type name="Klevu\Search\Helper\Data">
-		<arguments>
-			<argument name="convertLogLevelService" xsi:type="object">Klevu\Logger\Service\ConvertLogLevel\ZendToMonolog</argument>
-			<argument name="searchLogger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
-			<argument name="preserveLayoutLogger" xsi:type="object">Klevu\Search\Logger\Logger\PreserveLayout</argument>
-		</arguments>
-	</type>
+    <type name="Klevu\Search\Helper\Data">
+        <arguments>
+            <argument name="convertLogLevelService" xsi:type="object">Klevu\Logger\Service\ConvertLogLevel\ZendToMonolog</argument>
+            <argument name="searchLogger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
+            <argument name="preserveLayoutLogger" xsi:type="object">Klevu\Search\Logger\Logger\PreserveLayout</argument>
+        </arguments>
+    </type>
 
     <!-- Source Models -->
     <virtualType name="Klevu\Search\Model\System\Config\Source\Frequency\ProductSync" type="Klevu\Search\Model\System\Config\Source\Frequency">
@@ -217,11 +231,11 @@
         </arguments>
     </virtualType>
 
-	<type name="Klevu\Search\Helper\Image">
-		<arguments>
-			<argument name="requireJs" xsi:type="object">Magento\Backend\Block\Page\RequireJs\Proxy</argument>
-		</arguments>
-	</type>
+    <type name="Klevu\Search\Helper\Image">
+        <arguments>
+            <argument name="requireJs" xsi:type="object">Magento\Backend\Block\Page\RequireJs\Proxy</argument>
+        </arguments>
+    </type>
 
     <!-- Common Provider for queue up products -->
     <type name="Klevu\Search\Model\Product\Provider\CommonProvider">
@@ -276,7 +290,7 @@
         </arguments>
     </type>
 
-	<type name="Klevu\Search\Service\ThemeV2\InteractiveOptionsProvider\AddPriceSuffixToQueryOptionsProvider">
+    <type name="Klevu\Search\Service\ThemeV2\InteractiveOptionsProvider\AddPriceSuffixToQueryOptionsProvider">
         <arguments>
             <argument name="isEnabledCondition" xsi:type="object">Klevu\Search\Service\ThemeV2\IsEnabledCondition\AddPriceSuffixToQueryEnabledCondition</argument>
         </arguments>
@@ -297,6 +311,12 @@
     </type>
 
     <type name="Klevu\Search\Repository\KlevuSyncRepository">
+        <arguments>
+            <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Service\Catalog\Product\GetReviewCount">
         <arguments>
             <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
         </arguments>
@@ -369,6 +389,18 @@
         </arguments>
     </type>
 
+    <type name="Klevu\Search\Service\Catalog\Product\GetRatingStars">
+        <arguments>
+            <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Service\Catalog\Product\Review\GetAverageRating">
+        <arguments>
+            <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
+        </arguments>
+    </type>
+
     <type name="Klevu\Search\Service\Account\AccountFeaturesMask">
         <arguments>
             <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
@@ -386,6 +418,92 @@
                     <item name="v2Flag" xsi:type="const">Klevu\Search\Service\Account\GetFeatures::FEATURE_RECOMMENDATIONS</item>
                 </item>
             </argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Plugin\Review\Model\ResourceModel\Rating\Option\UpdateRatingAttributesOnAggregatePlugin">
+        <arguments>
+            <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Service\Catalog\Product\Review\UpdateRating">
+        <arguments>
+            <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
+            <argument name="ratingDataProvider" xsi:type="object">Klevu\Search\Provider\Catalog\Product\Review\MagentoRatingDataProvider</argument>
+            <argument name="reviewDataMapping" xsi:type="array">
+                <item name="entity_pk_value" xsi:type="const">\Klevu\Search\Service\Catalog\Product\Review\UpdateRating::PRODUCT_ID</item>
+                <item name="stores" xsi:type="const">\Klevu\Search\Service\Catalog\Product\Review\UpdateRating::RATING_STORES</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Service\Catalog\Product\Review\UpdateAllRatings">
+        <arguments>
+            <argument name="allRatingsDataProvider" xsi:type="object">Klevu\Search\Provider\Catalog\Product\Review\MagentoAllRatingsDataProvider</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Provider\Catalog\Product\Review\MagentoRatingDataProvider">
+        <arguments>
+            <argument name="reviewCountDataProvider" xsi:type="object">Klevu\Search\Provider\Catalog\Product\Review\MagentoReviewCountDataProvider</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Provider\Catalog\Product\Review\MagentoReviewCountDataProvider">
+        <arguments>
+            <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
+            <argument name="approvedOnly" xsi:type="const">Klevu\Search\Provider\Catalog\Product\Review\MagentoReviewCountDataProvider::REVIEWS_APPROVED_ONLY</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Provider\Catalog\Product\Review\MagentoProductsWithRatingAttributeDataProvider">
+        <arguments>
+            <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Provider\Catalog\Product\Review\MagentoAllRatingsDataProvider">
+        <arguments>
+            <argument name="allReviewCountsDataProvider" xsi:type="object">Klevu\Search\Provider\Catalog\Product\Review\MagentoAllReviewCountsDataProvider</argument>
+            <argument name="productsWithRatingAttributeDataProvider" xsi:type="object">Klevu\Search\Provider\Catalog\Product\Review\MagentoProductsWithRatingAttributeDataProvider</argument>
+            <argument name="reviewStatus" xsi:type="array">
+                <item name="approved" xsi:type="const">Magento\Review\Model\Review::STATUS_APPROVED</item>
+            </argument>
+            <argument name="isActive" xsi:type="boolean">true</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Service\Catalog\Product\UpdateRatingsAttributes">
+        <arguments>
+            <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Service\Catalog\Product\Review\RatingDataMapper">
+        <arguments>
+            <argument name="fieldMapping" xsi:type="array">
+                <item name="average" xsi:type="const">\Klevu\Search\Service\Catalog\Product\Review\RatingDataMapper::RATING_AVERAGE</item>
+                <item name="count" xsi:type="const">\Klevu\Search\Service\Catalog\Product\Review\RatingDataMapper::RATING_COUNT</item>
+                <item name="entity_pk_value" xsi:type="const">\Klevu\Search\Service\Catalog\Product\Review\RatingDataMapper::RATING_PRODUCT_ID</item>
+                <item name="review_count" xsi:type="const">\Klevu\Search\Service\Catalog\Product\Review\RatingDataMapper::REVIEW_COUNT</item>
+                <item name="store" xsi:type="const">\Klevu\Search\Service\Catalog\Product\Review\RatingDataMapper::RATING_STORE</item>
+                <item name="sum" xsi:type="const">\Klevu\Search\Service\Catalog\Product\Review\RatingDataMapper::RATING_SUM</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Service\Catalog\Product\Review\ConvertRatingToStars">
+        <arguments>
+            <argument name="ratingOutOf" xsi:type="const">Klevu\Search\Service\Catalog\Product\Review\ConvertRatingToStars::RATING_OUT_OF</argument>
+            <argument name="maxStars" xsi:type="const">Klevu\Search\Service\Catalog\Product\Review\ConvertRatingToStars::RATING_MAX_NUMBER_OF_STARS</argument>
+            <argument name="precision" xsi:type="const">Klevu\Search\Service\Catalog\Product\Review\ConvertRatingToStars::RATING_STAR_PRECISION</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Model\Product\LoadAttribute">
+        <arguments>
+            <argument name="reservedAttributeCodesProvider" xsi:type="object">Klevu\Search\Provider\Sync\Catalog\Product\ReservedAttributeCodesProvider</argument>
         </arguments>
     </type>
 
@@ -411,65 +529,7 @@
     <type name="Klevu\Search\Console\Command\RatingGeneration">
         <arguments>
             <argument name="magentoProductActionsInterface" xsi:type="object">Klevu\Search\Model\Product\MagentoProductActionsInterface\Proxy</argument>
-        </arguments>
-    </type>
-
-    <type name="Klevu\Search\Service\Account\GetAccountDetails">
-        <arguments>
-            <argument name="jsApiKeyValidator" xsi:type="object">Klevu\Search\Validator\JsApiKeyValidator</argument>
-            <argument name="restApiKeyValidator" xsi:type="object">Klevu\Search\Validator\RestApiKeyValidator</argument>
-        </arguments>
-    </type>
-
-    <type name="Klevu\Search\Service\Account\IntegrationStatus">
-        <arguments>
-            <argument name="jsApiKeyValidator" xsi:type="object">Klevu\Search\Validator\JsApiKeyValidator</argument>
-            <argument name="restApiKeyValidator" xsi:type="object">Klevu\Search\Validator\RestApiKeyValidator</argument>
-        </arguments>
-    </type>
-
-    <type name="Klevu\Search\Service\Account\ConfirmIntegration">
-        <arguments>
-            <argument name="jsApiKeyValidator" xsi:type="object">Klevu\Search\Validator\JsApiKeyValidator</argument>
-            <argument name="restApiKeyValidator" xsi:type="object">Klevu\Search\Validator\RestApiKeyValidator</argument>
-        </arguments>
-    </type>
-
-    <type name="Klevu\Search\Service\Account\GetStoresUsingApiKeys">
-        <arguments>
-            <argument name="jsApiKeyValidator" xsi:type="object">Klevu\Search\Validator\JsApiKeyValidator</argument>
-            <argument name="restApiKeyValidator" xsi:type="object">Klevu\Search\Validator\RestApiKeyValidator</argument>
-        </arguments>
-    </type>
-
-    <type name="Klevu\Search\Controller\Adminhtml\Integration\Confirm">
-        <arguments>
-            <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
-        </arguments>
-    </type>
-
-    <type name="Klevu\Search\Controller\Adminhtml\Integration\Endpoints">
-        <arguments>
-            <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
-        </arguments>
-    </type>
-
-    <type name="Klevu\Search\Controller\Adminhtml\Integration\Index">
-        <arguments>
-            <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
-        </arguments>
-    </type>
-
-    <type name="Klevu\Search\Service\Account\GetKmcUrlService">
-        <arguments>
-            <argument name="configSource" xsi:type="object">Magento\Config\App\Config\Source\ModularConfigSource</argument>
-            <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
-        </arguments>
-    </type>
-
-    <type name="Klevu\Search\Block\Adminhtml\Form\Field\Integration\Warnings\LockFile">
-        <arguments>
-            <argument name="fileSystemIo" xsi:type="object">Magento\Framework\Filesystem\Io\File</argument>
+            <argument name="fileDriver" xsi:type="object">Magento\Framework\Filesystem\Driver\File\Proxy</argument>
         </arguments>
     </type>
 </config>
