@@ -16,7 +16,7 @@
         "klevu/module-msi": "Add support for MSI during product sync"
     },
     "type": "magento-module",
-    "version": "2.8.2",
+    "version": "2.9.0",
     "license": [
         "OSL-3.0",
         "AFL-3.0"

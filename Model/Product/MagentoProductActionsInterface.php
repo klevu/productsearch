@@ -1,14 +1,9 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Administrator
- * Date: 9/24/2018
- * Time: 5:18 PM
- */
 
 namespace Klevu\Search\Model\Product;
 
 use Magento\Store\Api\Data\StoreInterface;
+use Magento\Store\Model\Store;
 
 interface MagentoProductActionsInterface
 {
@@ -81,7 +76,7 @@ interface MagentoProductActionsInterface
     /**
      * Mark all products to be updated the next time Product Sync runs.
      *
-     * @param \Magento\Store\Model\Store|int $store If passed, will only update products for the given store.
+     * @param Store|int $store If passed, will only update products for the given store.
      *
      * @return $this
      */
@@ -91,7 +86,7 @@ interface MagentoProductActionsInterface
      * Forget the sync status of all the products for the given Store and test mode.
      * If no store or test mode status is given, clear products for all stores and modes respectively.
      *
-     * @param \Magento\Store\Model\Store|int|null $store
+     * @param Store|int|null $store
      *
      * @return int
      */
@@ -100,11 +95,11 @@ interface MagentoProductActionsInterface
     /**
      * Run cron externally for debug using js api
      *
-     * @param $js_api
+     * @param string $restApi
      *
      * @return $this
      */
-    public function sheduleCronExteranally($rest_api);
+    public function sheduleCronExteranally($restApi);
 
     /**
      * Get special price expire date attribute value
@@ -130,18 +125,18 @@ interface MagentoProductActionsInterface
     /**
      * Mark product ids for update
      *
-     * @param array ids
+     * @param array $ids
      *
-     * @return
+     * @return void
      */
     public function updateSpecificProductIds($ids);
 
     /**
      * Update all product ids rating attribute
      *
-     * @param string store
+     * @param string $store
      *
-     * @return  $this
+     * @return $this
      */
     public function updateProductsRating($store);
 
@@ -157,22 +152,25 @@ interface MagentoProductActionsInterface
      *
      * @param int|array $productIds
      * @param string $recordType
-     * @param null $stores
+     * @param array|string|int|null $stores
      *
-     * @return mixed|void
+     * @return void
      */
-    public function markRecordIntoQueue($productIds, $recordType, $store);
+    public function markRecordIntoQueue($productIds, $recordType, $stores);
 
     /**
      * Returns the parent relations by child id
-     * @param $ids
+     *
+     * @param array $ids
+     *
      * @return array
      */
     public function getParentRelationsByChild($ids);
 
     /**
-     * @param null $stores
-     * @return mixed
+     * @param array|string|int|null $stores
+     *
+     * @return void
      */
     public function markCategoryRecordIntoQueue($stores = null);
 }

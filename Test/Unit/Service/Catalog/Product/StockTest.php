@@ -1,6 +1,6 @@
 <?php
 
-namespace Klevu\Search\test\Unit\Service\Catalog\Product;
+namespace Klevu\Search\Test\Unit\Service\Catalog\Product;
 
 use Klevu\Search\Api\Service\Catalog\Product\GetStockStatusByIdInterface;
 use Klevu\Search\Service\Catalog\Product\Stock as StockService;

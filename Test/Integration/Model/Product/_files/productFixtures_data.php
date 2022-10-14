@@ -45,7 +45,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu_synctest_simple_en-y_v-both_s-yes_' . rand(),
+        'url_key' => 'klevu_synctest_simple_en-y_v-both_s-yes_' . crc32(rand()),
     ],
     // Configurable
     [
@@ -72,7 +72,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu-simple-child-product-1',
+        'url_key' => 'klevu-simple-child-product-1' . crc32(rand()),
         'klevu_test_configurable' => $configurableAttributeOptions[1]->getValue(),
     ], [
         'type_id' => 'simple',
@@ -98,7 +98,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 0,
         ],
-        'url_key' => 'klevu-simple-child-product-2',
+        'url_key' => 'klevu-simple-child-product-2' . crc32(rand()),
         'klevu_test_configurable' => $configurableAttributeOptions[2]->getValue(),
     ], [
         'type_id' => 'simple',
@@ -124,7 +124,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu-simple-child-product-3',
+        'url_key' => 'klevu-simple-child-product-3' . crc32(rand()),
         'klevu_test_configurable' => $configurableAttributeOptions[3]->getValue(),
     ], [
         'type_id' => 'simple',
@@ -150,7 +150,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu-simple-child-product-4',
+        'url_key' => 'klevu-simple-child-product-4' . crc32(rand()),
         'klevu_test_configurable' => $configurableAttributeOptions[4]->getValue(),
     ], [
         'type_id' => 'simple',
@@ -175,7 +175,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu-simple-child-product-5',
+        'url_key' => 'klevu-simple-child-product-5' . crc32(rand()),
         'klevu_test_configurable' => $configurableAttributeOptions[5]->getValue(),
     ], [
         'type_id' => 'simple',
@@ -201,7 +201,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu-simple-child-product-6',
+        'url_key' => 'klevu-simple-child-product-6' . crc32(rand()),
         'klevu_test_configurable' => $configurableAttributeOptions[6]->getValue(),
     ], [
         'type_id' => 'simple',
@@ -227,7 +227,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu-simple-child-product-7',
+        'url_key' => 'klevu-simple-child-product-7' . crc32(rand()),
         'klevu_test_configurable' => $configurableAttributeOptions[7]->getValue(),
     ], [
         'type_id' => 'simple',
@@ -252,7 +252,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu-simple-child-product-8',
+        'url_key' => 'klevu-simple-child-product-8' . crc32(rand()),
         'klevu_test_configurable' => $configurableAttributeOptions[8]->getValue(),
     ], [
         'type_id' => 'configurable',
@@ -273,7 +273,7 @@ $fixtures = [
             'use_config_manage_stock'   => 1,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu-configurable-product-1',
+        'url_key' => 'klevu-configurable-product-1' . crc32(rand()),
         'child_skus' => [],
     ], [
         'type_id' => 'configurable',
@@ -294,7 +294,7 @@ $fixtures = [
             'use_config_manage_stock'   => 1,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu-configurable-product-2',
+        'url_key' => 'klevu-configurable-product-2' . crc32(rand()),
         'child_skus' => [
             'klevu_simple_child_2',
             'klevu_simple_child_3',
@@ -318,7 +318,7 @@ $fixtures = [
             'use_config_manage_stock'   => 1,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu-configurable-product-3',
+        'url_key' => 'klevu-configurable-product-3' . crc32(rand()),
         'child_skus' => [
             'klevu_simple_child_5',
         ],
@@ -341,7 +341,7 @@ $fixtures = [
             'use_config_manage_stock'   => 1,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu-configurable-product-4',
+        'url_key' => 'klevu-configurable-product-4' . crc32(rand()),
         'child_skus' => [
             'klevu_simple_child_1',
         ],
@@ -364,7 +364,7 @@ $fixtures = [
             'use_config_manage_stock'   => 1,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu-configurable-product-5',
+        'url_key' => 'klevu-configurable-product-5' . crc32(rand()),
         'child_skus' => [
             'klevu_simple_child_1',
             'klevu_simple_child_2',
@@ -388,7 +388,7 @@ $fixtures = [
             'use_config_manage_stock'   => 1,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu-configurable-product-6',
+        'url_key' => 'klevu-configurable-product-6' . crc32(rand()),
         'child_skus' => [
             'klevu_simple_child_1',
             'klevu_simple_child_3',
@@ -412,7 +412,7 @@ $fixtures = [
             'use_config_manage_stock'   => 1,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu-configurable-product-7',
+        'url_key' => 'klevu-configurable-product-7' . crc32(rand()),
         'child_skus' => [
             'klevu_simple_child_1',
             'klevu_simple_child_4',
@@ -436,7 +436,7 @@ $fixtures = [
             'use_config_manage_stock'   => 1,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu-configurable-product-8',
+        'url_key' => 'klevu-configurable-product-8' . crc32(rand()),
         'child_skus' => [
             'klevu_simple_child_1',
             'klevu_simple_child_6',
@@ -460,7 +460,7 @@ $fixtures = [
             'use_config_manage_stock'   => 1,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu-configurable-product-9',
+        'url_key' => 'klevu-configurable-product-9' . crc32(rand()),
         'child_skus' => [
             'klevu_simple_child_1',
             'klevu_simple_child_7',
@@ -484,7 +484,7 @@ $fixtures = [
             'use_config_manage_stock'   => 1,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu-configurable-product-10',
+        'url_key' => 'klevu-configurable-product-10' . crc32(rand()),
         'child_skus' => [
             'klevu_simple_child_1',
             'klevu_simple_child_8',
@@ -508,7 +508,7 @@ $fixtures = [
             'use_config_manage_stock'   => 1,
             'is_in_stock'               => 0,
         ],
-        'url_key' => 'klevu-configurable-product-11',
+        'url_key' => 'klevu-configurable-product-11' . crc32(rand()),
         'child_skus' => [
             'klevu_simple_child_1',
             'klevu_simple_child_5',
