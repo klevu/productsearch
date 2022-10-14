@@ -24,6 +24,7 @@ $website2->load('klevu_test_website_2', 'code');
 
 $fixtures = [
     [
+        'type_id' => 'simple',
         'sku' => 'klevu_simple_1',
         'name' => '[Klevu] Simple Product 1',
         'description' => '[Klevu Test Fixtures] Simple product 1',
@@ -34,7 +35,8 @@ $fixtures = [
             $website1->getId(),
             $website2->getId(),
         ]),
-        'price' => 10,
+        'price' => 10.00,
+        'special_price' => null,
         'weight' => 1,
         'tax_class_id' => 2,
         'meta_title' => '[Klevu] Simple Product 1',
@@ -47,7 +49,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu_simple_1_' . md5(rand()),
+        'url_key' => 'klevu_simple_1_' . crc32(rand()),
     ]
 ];
 
@@ -80,3 +82,5 @@ foreach ($indexes as $index) {
         continue;
     }
 }
+
+$productRepository->cleanCache();

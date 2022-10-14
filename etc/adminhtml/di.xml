@@ -205,4 +205,34 @@
             <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
         </arguments>
     </type>
+
+    <type name="Klevu\Search\Model\System\Config\Source\Product\Attributes">
+        <arguments>
+            <argument name="reservedAttributeCodesProvider" xsi:type="object">Klevu\Search\Provider\Sync\Catalog\Product\ReservedAttributeCodesProvider</argument>
+        </arguments>
+    </type>
+
+    <virtualType name="Magento\Catalog\Ui\DataProvider\Product\Form\Modifier\Pool">
+        <arguments>
+            <argument name="modifiers" xsi:type="array">
+                <item name="ratingAttribute" xsi:type="array">
+                    <item name="class" xsi:type="string">Klevu\Search\Ui\DataProvider\Product\Form\Modifier\Attributes\Rating</item>
+                    <item name="sortOrder" xsi:type="number">1000</item>
+                </item>
+                <item name="reviewCountAttribute" xsi:type="array">
+                    <item name="class" xsi:type="string">Klevu\Search\Ui\DataProvider\Product\Form\Modifier\Attributes\ReviewCount</item>
+                    <item name="sortOrder" xsi:type="number">1001</item>
+                </item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <type name="Klevu\Search\Observer\Catalog\Product\EditAction">
+        <arguments>
+            <argument name="attributesToLock" xsi:type="array">
+                <item name="rating" xsi:type="const">Klevu\Search\Model\Attribute\Rating::ATTRIBUTE_CODE</item>
+                <item name="review_count" xsi:type="const">Klevu\Search\Model\Attribute\ReviewCount::ATTRIBUTE_CODE</item>
+            </argument>
+        </arguments>
+    </type>
 </config>

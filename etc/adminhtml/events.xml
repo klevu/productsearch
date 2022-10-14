@@ -13,4 +13,7 @@
         <observer name="KlevuSearch_RestApiKeyChanged"
                   instance="Klevu\Search\Observer\Backend\RestApiKeyChanged" />
     </event>
+    <event name="catalog_product_edit_action">
+        <observer name="KlevuSearch_ProductEditAction" instance="Klevu\Search\Observer\Catalog\Product\EditAction" />
+    </event>
 </config>

@@ -1,67 +1,92 @@
 <?php
 
-/**
- * Class \Klevu\Search\Model\Observer
- *
- * @method setIsProductSyncScheduled($flag)
- * @method bool getIsProductSyncScheduled()
- */
-
 namespace Klevu\Search\Model\Observer;
 
 use Klevu\Logger\Constants as LoggerConstants;
+use Klevu\Search\Api\Service\Catalog\Product\Review\UpdateRatingInterface;
+use Klevu\Search\Helper\Data as SearchHelper;
+use Klevu\Search\Model\Product\MagentoProductActionsInterface;
+use Klevu\Search\Model\Product\Sync as ProductSync;
+use Magento\Catalog\Api\ProductRepositoryInterface;
+use Magento\Catalog\Model\Product\Action as ProductAction;
+use Magento\Eav\Model\Entity\Attribute;
+use Magento\Eav\Model\Entity\Type as EntityType;
+use Magento\Framework\App\ObjectManager;
+use Magento\Framework\Event;
+use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
+use Magento\Framework\Filesystem;
+use Magento\Review\Model\Rating;
+use Magento\Review\Model\Review;
+use Magento\Store\Model\StoreManagerInterface;
 
 class RatingsUpdate implements ObserverInterface
 {
-
     /**
-     * @var \Klevu\Search\Model\Product\Sync
+     * @var ProductSync
      */
     protected $_modelProductSync;
-
     /**
-     * @var \Magento\Framework\Filesystem
+     * @var Filesystem
      */
     protected $_magentoFrameworkFilesystem;
-
     /**
-     * @var \Klevu\Search\Helper\Data
+     * @var SearchHelper
      */
     protected $_searchHelperData;
-
     /**
-     * @var \Magento\Catalog\Model\Product\Action
+     * @var ProductAction
      */
     protected $_modelProductAction;
-
     /**
-     * @var \Magento\Store\Model\StoreManagerInterface
+     * @var StoreManagerInterface
      */
     protected $_storeModelStoreManagerInterface;
-
     /**
-     * @var \Magento\Rating\Model\Rating
+     * @var Rating
      */
     protected $_ratingModelRating;
-
     /**
-     * @var \Magento\Eav\Model\Entity\Type
+     * @var EntityType
      */
     protected $_modelEntityType;
+    /**
+     * @var Attribute
+     */
+    protected $_modelEntityAttribute;
+    /**
+     * @var UpdateRatingInterface
+     */
+    private $updateRating;
+    /**
+     * @var ProductRepositoryInterface
+     */
+    private $productRepository;
 
+    /**
+     * @param MagentoProductActionsInterface $modelProductSync
+     * @param Filesystem $magentoFrameworkFilesystem
+     * @param SearchHelper $searchHelperData
+     * @param StoreManagerInterface $storeModelStoreManagerInterface
+     * @param Rating $ratingModelRating
+     * @param EntityType $modelEntityType
+     * @param Attribute $modelEntityAttribute
+     * @param ProductAction $modelProductAction
+     * @param UpdateRatingInterface|null $updateRating
+     * @param ProductRepositoryInterface|null $productRepository
+     */
     public function __construct(
-        \Klevu\Search\Model\Product\MagentoProductActionsInterface $modelProductSync,
-        \Magento\Framework\Filesystem $magentoFrameworkFilesystem,
-        \Klevu\Search\Helper\Data $searchHelperData,
-        \Magento\Store\Model\StoreManagerInterface $storeModelStoreManagerInterface,
-        \Magento\Review\Model\Rating $ratingModelRating,
-        \Magento\Eav\Model\Entity\Type $modelEntityType,
-        \Magento\Eav\Model\Entity\Attribute $modelEntityAttribute,
-        \Magento\Catalog\Model\Product\Action $modelProductAction
-    )
-    {
-
+        MagentoProductActionsInterface $modelProductSync,
+        Filesystem $magentoFrameworkFilesystem,
+        SearchHelper $searchHelperData,
+        StoreManagerInterface $storeModelStoreManagerInterface,
+        Rating $ratingModelRating,
+        EntityType $modelEntityType,
+        Attribute $modelEntityAttribute,
+        ProductAction $modelProductAction,
+        UpdateRatingInterface $updateRating = null,
+        ProductRepositoryInterface $productRepository = null
+    ) {
         $this->_modelProductSync = $modelProductSync;
         $this->_magentoFrameworkFilesystem = $magentoFrameworkFilesystem;
         $this->_searchHelperData = $searchHelperData;
@@ -70,44 +95,70 @@ class RatingsUpdate implements ObserverInterface
         $this->_modelEntityType = $modelEntityType;
         $this->_modelEntityAttribute = $modelEntityAttribute;
         $this->_modelProductAction = $modelProductAction;
+
+        $objectManager = ObjectManager::getInstance();
+        $this->updateRating = $updateRating ?: $objectManager->get(UpdateRatingInterface::class);
+        $this->productRepository = $productRepository ?: $objectManager->get(ProductRepositoryInterface::class);
     }
 
     /**
      * Update the product ratings value in product attribute
+     *
+     * @param Observer $observer
+     *
+     * @return void
      */
-    public function execute(\Magento\Framework\Event\Observer $observer)
+    public function execute(Observer $observer)
     {
         try {
-            $object = $observer->getEvent()->getObject();
-            $statusId = $object->getStatusId();
-            $allStores = $this->_storeModelStoreManagerInterface->getStores();
-            if ($statusId == 1) {
-                $productId = $object->getEntityPkValue();
-                $ratingObj = $this->_ratingModelRating->getEntitySummary($productId);
-                if ($ratingObj->getCount() != 0) {
-                    $ratings = $ratingObj->getSum() / $ratingObj->getCount();
-                    $entity_type = $this->_modelEntityType->loadByCode("catalog_product");
-                    $entity_typeid = $entity_type->getId();
-                    $attributecollection = $this->_modelEntityAttribute->getCollection()->addFieldToFilter("entity_type_id", $entity_typeid)->addFieldToFilter("attribute_code", "rating");
-
-                    if (!empty($attributecollection)) {
-                        if (!empty($object->getData('stores'))) {
-                            foreach ($object->getData('stores') as $key => $value) {
-                                $this->_modelProductAction->updateAttributes([$productId], ['rating' => $ratings], $value);
-                            }
-                        }
-                        /* update attribute */
-                        if (count($allStores) > 1) {
-                            $this->_modelProductAction->updateAttributes([$productId], ['rating' => 0], 0);
-                        }
-
-                        /* mark product for update to sync data with klevu */
-                        $this->_modelProductSync->updateSpecificProductIds([$productId]);
-                    }
-                }
+            $event = $observer->getEvent();
+            $review = $this->getReview($event);
+            if (!$review || !$review->getEntityPkValue()) {
+                return;
             }
+
+            $product = $this->productRepository->getById((int)$review->getEntityPkValue());
+            $this->updateRating->execute($product);
+
+            /* mark product for update to sync data with klevu */
+            $this->_modelProductSync->updateSpecificProductIds(
+                [
+                    $review->getEntityPkValue()
+                ]
+            );
+        // Potentially undocumented issues in the process and save functionality above could throw exceptions of
+        //  any type. While it's against Magento guidelines to catch generic exceptions, it's more important that
+        //  observers don't kill execution flow for ancillary operations
         } catch (\Exception $e) {
-            $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_CRIT, sprintf("Exception thrown in %s::%s - %s", __CLASS__, __METHOD__, $e->getMessage()));
+            $this->_searchHelperData->log(
+                LoggerConstants::ZEND_LOG_CRIT,
+                sprintf(
+                    "%s Exception thrown in %s::%s - %s",
+                    get_class($e),
+                    __CLASS__,
+                    __METHOD__,
+                    $e->getMessage()
+                )
+            );
         }
+    }
+
+    /**
+     * @param Event $event
+     *
+     * @return Review|null
+     */
+    private function getReview(Event $event)
+    {
+        $review = $event->getDataUsingMethod('object');
+        if (!($review instanceof Review)) {
+            $this->_searchHelperData->log(
+                LoggerConstants::ZEND_LOG_WARN,
+                'Object passed in event must be instance of Review'
+            );
+            $review = null;
+        }
+
+        return $review;
     }
 }
