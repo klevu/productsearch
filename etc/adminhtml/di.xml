@@ -121,6 +121,7 @@
                 <item name="klevu_lock_file" xsi:type="string">Klevu\Search\Model\Message\LockFileMessage</item>
                 <item name="klevu_object_vs_collection" xsi:type="string">Klevu\Search\Model\Message\ObjectVsCollectionMessage</item>
                 <item name="klevu_same_ip_orders" xsi:type="string">Klevu\Search\Model\Message\OrdersWithSameIPMessage</item>
+                <item name="klevu_mysqlcompat_required" xsi:type="string">Klevu\Search\Model\Message\MysqlCompatRequired</item>
             </argument>
         </arguments>
     </type>
