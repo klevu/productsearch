@@ -7,8 +7,14 @@ use Klevu\Search\Model\Product\ProductParentInterface;
 use Klevu\Search\Model\Product\ResourceModel\Product as ProductResourceModel;
 use Klevu\Search\Model\Product\ResourceModel\Product\Collection as KlevuProductCollection;
 use Klevu\Search\Repository\MagentoProductSyncRepository;
+use Klevu\Search\Service\Catalog\Product\JoinParentStatusToSelect;
+use Klevu\Search\Service\Catalog\Product\JoinParentVisibilityToSelect;
+use Magento\Catalog\Model\ResourceModel\Product as ProductResource;
 use Magento\Catalog\Model\ResourceModel\Product\Collection as ProductCollection;
+use Magento\ConfigurableProduct\Model\ResourceModel\Attribute\OptionProvider;
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\DB\Adapter\AdapterInterface as DbAdapterInterface;
+use Magento\Framework\DB\Select;
 use Magento\Framework\TestFramework\Unit\Helper\ObjectManager;
 use Magento\Store\Api\Data\StoreInterface;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -24,7 +30,7 @@ class MagentoProductSyncRepositoryTest extends TestCase
     public function testGetMaxProductIdReturnsInt()
     {
         $this->setupPhp5();
-        $maxProductId = mt_rand(1,99999999);
+        $maxProductId = mt_rand(1, 99999999);
 
         $constructorClasses = $this->instantiateConstructorClasses();
         $constructorClasses['mockProductCollection']
@@ -177,13 +183,19 @@ class MagentoProductSyncRepositoryTest extends TestCase
         $mockScopeConfig = $this->getMockScopeConfig();
         $mockProductResourceModel = $this->getMockProductResourceModel();
         $mockProductCollection = $this->getMockProductCollection();
+        $mockOptionProvider = $this->getMockOptionProvider();
+        $mockJoinParentVisibilityToSelectService = $this->getMockJoinParentVisibilityToSelectService();
+        $mockJoinParentStatusToSelectService = $this->getMockJoinParentStatusToSelectService();
 
         return [
             'mockProductIndividual' => $mockProductIndividual,
             'mockProductParent' => $mockProductParent,
             'mockScopeConfig' => $mockScopeConfig,
             'mockProductResourceModel' => $mockProductResourceModel,
-            'mockProductCollection' => $mockProductCollection
+            'mockProductCollection' => $mockProductCollection,
+            'mockOptionProvider' => $mockOptionProvider,
+            'mockJoinParentVisibilityToSelectService' => $mockJoinParentVisibilityToSelectService,
+            'mockJoinParentStatusToSelectService' => $mockJoinParentStatusToSelectService,
         ];
     }
 
@@ -199,7 +211,10 @@ class MagentoProductSyncRepositoryTest extends TestCase
             'klevuProductParent' => $classes['mockProductParent'],
             'scopeConfig' => $classes['mockScopeConfig'],
             'productResourceModel' => $classes['mockProductResourceModel'],
-            'productCollection' => $classes['mockProductCollection']
+            'productCollection' => $classes['mockProductCollection'],
+            'optionProvider' => $classes['mockOptionProvider'],
+            'joinParentVisibilityToSelectService' => $classes['mockJoinParentVisibilityToSelectService'],
+            'joinParentStatusToSelectService' => $classes['mockJoinParentStatusToSelectService'],
         ]);
     }
 
@@ -258,9 +273,28 @@ class MagentoProductSyncRepositoryTest extends TestCase
      */
     private function getMockMagentoProductCollection()
     {
-        return $this->getMockBuilder(ProductCollection::class)
+        $mockConnection = $this->getMockBuilder(DbAdapterInterface::class)
             ->disableOriginalConstructor()
             ->getMock();
+        $mockConnection->method('quoteIdentifier')->willReturnArgument(0);
+
+        $mockSelect = $this->getMockBuilder(Select::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+        $mockSelect->method('getConnection')->willReturn($mockConnection);
+
+        $mockResource = $this->getMockBuilder(ProductResource::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+        $mockResource->method('getTable')->willReturnArgument(0);
+
+        $return = $this->getMockBuilder(ProductCollection::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+        $return->method('getSelect')->willReturn($mockSelect);
+        $return->method('getResource')->willReturn($mockResource);
+
+        return $return;
     }
 
     /**
@@ -271,6 +305,44 @@ class MagentoProductSyncRepositoryTest extends TestCase
         return $this->getMockBuilder(KlevuProductCollection::class)
             ->disableOriginalConstructor()
             ->getMock();
+    }
+
+    /**
+     * @return OptionProvider&MockObject
+     */
+    private function getMockOptionProvider()
+    {
+        return $this->getMockBuilder(OptionProvider::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+    }
+
+    /**
+     * @return JoinParentVisibilityToSelect&MockObject
+     */
+    private function getMockJoinParentVisibilityToSelectService()
+    {
+        $mockJoinParentVisibilityToSelectService = $this->getMockBuilder(JoinParentVisibilityToSelect::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+        $mockJoinParentVisibilityToSelectService->method('execute')
+            ->willReturnArgument(0);
+
+        return $mockJoinParentVisibilityToSelectService;
+    }
+
+    /**
+     * @return JoinParentStatusToSelect&MockObject
+     */
+    private function getMockJoinParentStatusToSelectService()
+    {
+        $mockJoinParentStatusToSelectService = $this->getMockBuilder(JoinParentStatusToSelect::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+        $mockJoinParentStatusToSelectService->method('execute')
+            ->willReturnArgument(0);
+
+        return $mockJoinParentStatusToSelectService;
     }
 
     /**

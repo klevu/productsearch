@@ -54,6 +54,7 @@ foreach ($productSkus as $productSku) {
 foreach ($fixtures as $fixture) {
     $collection = $klevuSyncModelCollectionFactory->create();
     $collection->addFieldToFilter('product_id', $fixture['product_id']);
+    $collection->addFieldToFilter('parent_id', $fixture['parent_id']);
     $collection->addFieldToFilter('store_id', $fixture['store_id']);
     $collection->addFieldToFilter('type', $fixture['type']);
 

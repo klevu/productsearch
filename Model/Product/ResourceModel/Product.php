@@ -2,17 +2,25 @@
 
 namespace Klevu\Search\Model\Product\ResourceModel;
 
+use Klevu\Search\Api\Service\Catalog\Product\JoinParentVisibilityToSelectInterface;
 use Klevu\Search\Service\Sync\GetBatchSize;
 use Magento\Catalog\Model\ResourceModel\Product as ProductResourceModel;
 use Magento\Catalog\Model\ResourceModel\Product\Collection as ProductCollection;
+use Magento\CatalogInventory\Model\Stock\Status as StockStatus;
 use Magento\ConfigurableProduct\Model\ResourceModel\Attribute\OptionProvider;
 use Magento\Eav\Model\Entity;
 use Magento\Framework\App\ObjectManager;
 use Magento\Framework\App\ResourceConnection;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Store\Api\Data\StoreInterface;
+use Magento\Store\Model\Store;
 
 class Product
 {
+    const CATALOG_PRODUCT_ENTITY_ALIAS = 'e';
+    const CATALOG_PRODUCT_SUPER_LINK_ALIAS = 'l';
+    const PARENT_STOCK_STATUS_ALIAS = 'parent_stock_status';
+
     /**
      * @var ProductResourceModel
      */
@@ -29,17 +37,33 @@ class Product
      * @var ResourceConnection
      */
     private $resourceConnection;
+    /**
+     * @var JoinParentVisibilityToSelectInterface
+     */
+    private $joinParentVisibilityToSelectService;
 
+    /**
+     * @param ProductResourceModel $productResourceModel
+     * @param OptionProvider $optionProvider
+     * @param GetBatchSize $getBatchSize
+     * @param ResourceConnection|null $resourceConnection
+     * @param JoinParentVisibilityToSelectInterface|null $joinParentVisibilityToSelectService
+     */
     public function __construct(
         ProductResourceModel $productResourceModel,
         OptionProvider $optionProvider,
         GetBatchSize $getBatchSize,
-        ResourceConnection $resourceConnection = null
+        ResourceConnection $resourceConnection = null,
+        JoinParentVisibilityToSelectInterface $joinParentVisibilityToSelectService = null
     ) {
         $this->productResourceModel = $productResourceModel;
         $this->optionProvider = $optionProvider;
         $this->getBatchSize = $getBatchSize;
-        $this->resourceConnection = $resourceConnection ?: ObjectManager::getInstance()->get(ResourceConnection::class);
+
+        $objectManager = ObjectManager::getInstance();
+        $this->resourceConnection = $resourceConnection ?: $objectManager->get(ResourceConnection::class);
+        $this->joinParentVisibilityToSelectService = $joinParentVisibilityToSelectService
+            ?: $objectManager->get(JoinParentVisibilityToSelectInterface::class);
     }
 
     /**
@@ -78,22 +102,64 @@ class Product
 
     /**
      * @param array $productIds
+     * @param int $storeId
+     * @param bool $includeOosParents
+     * @throws NoSuchEntityException
      *
-     * @return array
+     * @return array[]
      */
-    public function getParentProductRelations(array $productIds)
-    {
+    public function getParentProductRelations(
+        array $productIds,
+        $storeId = Store::DEFAULT_STORE_ID,
+        $includeOosParents = true
+    ) {
         $connection = $this->productResourceModel->getConnection();
         $select = $connection->select();
-        $select->from(['l' => $this->resourceConnection->getTableName('catalog_product_super_link')], [])
-            ->join(
-                ['e' => $this->resourceConnection->getTableName('catalog_product_entity')],
-                'e.' . $this->optionProvider->getProductEntityLinkField() . ' = l.parent_id',
-                ['e.' . Entity::DEFAULT_ENTITY_ID_FIELD]
-            )->where('l.product_id IN(?)', $productIds);
+        $select->from(
+            [self::CATALOG_PRODUCT_SUPER_LINK_ALIAS => $this->resourceConnection->getTableName('catalog_product_super_link')], // phpcs:ignore Generic.Files.LineLength.TooLong
+            []
+        );
+        $select->join(
+            [self::CATALOG_PRODUCT_ENTITY_ALIAS => $this->resourceConnection->getTableName('catalog_product_entity')],
+            sprintf(
+                '%s.%s = %s.parent_id',
+                self::CATALOG_PRODUCT_ENTITY_ALIAS,
+                $connection->quoteIdentifier($this->optionProvider->getProductEntityLinkField()),
+                self::CATALOG_PRODUCT_SUPER_LINK_ALIAS
+            ),
+            [self::CATALOG_PRODUCT_ENTITY_ALIAS . '.' . Entity::DEFAULT_ENTITY_ID_FIELD]
+        );
+        $select->where(self::CATALOG_PRODUCT_SUPER_LINK_ALIAS . '.product_id IN (?)', $productIds);
+
+        $this->joinParentVisibilityToSelectService->setTableAlias(
+            'catalog_product_super_link',
+            self::CATALOG_PRODUCT_SUPER_LINK_ALIAS
+        );
+        $select = $this->joinParentVisibilityToSelectService->execute($select, $storeId);
+
+        if (!$includeOosParents) {
+            $select->joinInner(
+                [self::PARENT_STOCK_STATUS_ALIAS => $this->resourceConnection->getTableName('cataloginventory_stock_status')], // phpcs:ignore Generic.Files.LineLength.TooLong
+                sprintf(
+                    '%s.product_id = %s.entity_id',
+                    self::PARENT_STOCK_STATUS_ALIAS,
+                    self::CATALOG_PRODUCT_ENTITY_ALIAS
+                ),
+                []
+            );
+            $select->where(
+                self::PARENT_STOCK_STATUS_ALIAS . '.stock_status = ?',
+                StockStatus::STATUS_IN_STOCK
+            );
+        }
 
         $select->reset('columns');
-        $select->columns(['e.' . Entity::DEFAULT_ENTITY_ID_FIELD, 'l.product_id', 'l.parent_id']);
+        $select->columns([
+            self::CATALOG_PRODUCT_ENTITY_ALIAS . '.' . Entity::DEFAULT_ENTITY_ID_FIELD,
+            self::CATALOG_PRODUCT_SUPER_LINK_ALIAS . '.product_id',
+            self::CATALOG_PRODUCT_SUPER_LINK_ALIAS . '.parent_id',
+        ]);
+
         $relations = $connection->fetchAll($select);
 
         unset($connection, $select);

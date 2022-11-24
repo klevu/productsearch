@@ -1,4 +1,5 @@
 <?php
+// phpcs:disable PSR1.Methods.CamelCapsMethodName.NotCamelCaps
 
 namespace Klevu\Search\Test\Integration\Model\Order;
 
@@ -82,8 +83,16 @@ class SyncTest extends TestCase
         $orderSyncModel->run();
 
         $this->assertCount(2, $this->executeCallsPerApiKey);
-        $this->assertSame(21, $this->executeCallsPerApiKey['klevu-klevu_test_store_1'], 'Execute calls for klevu_test_store_1');
-        $this->assertSame(5, $this->executeCallsPerApiKey['klevu-klevu_test_store_2'], 'Execute calls for klevu_test_store_2');
+        $this->assertSame(
+            21,
+            $this->executeCallsPerApiKey['klevu-klevu_test_store_1'],
+            'Execute calls for klevu_test_store_1'
+        );
+        $this->assertSame(
+            5,
+            $this->executeCallsPerApiKey['klevu-klevu_test_store_2'],
+            'Execute calls for klevu_test_store_2'
+        );
 
         static::loadAllFixturesRollback();
     }
@@ -127,16 +136,26 @@ class SyncTest extends TestCase
         $orderSyncModel->run();
 
         $this->assertCount(2, $this->executeCallsPerApiKey);
-        $this->assertSame(21, $this->executeCallsPerApiKey['klevu-klevu_test_store_1'], 'Execute calls for klevu_test_store_1');
-        $this->assertSame(0, $this->executeCallsPerApiKey['klevu-klevu_test_store_2'], 'Execute calls for klevu_test_store_2');
+        $this->assertSame(
+            21,
+            $this->executeCallsPerApiKey['klevu-klevu_test_store_1'],
+            'Execute calls for klevu_test_store_1'
+        );
+        $this->assertSame(
+            0,
+            $this->executeCallsPerApiKey['klevu-klevu_test_store_2'],
+            'Execute calls for klevu_test_store_2'
+        );
 
         static::loadAllFixturesRollback();
     }
 
     /**
-     * Feature: The maximum number of records sent in a single order synchronisation run can be defined by administrators
+     * Feature: The maximum number of records sent in a single order synchronisation
+     *          run can be defined by administrators
      *
-     * Scenario: Maximum batch size is defined in stores configuration and is lower than the total number of unsent orders
+     * Scenario: Maximum batch size is defined in stores configuration and is lower
+     *           than the total number of unsent orders
      *    Given: Order Sync Enabled is set to Yes for all stores
      *      and: Maximum Batch Size is set to 10 for all stores
      *      and: klevu_test_store_1 has 21 unsent orders
@@ -173,8 +192,16 @@ class SyncTest extends TestCase
         $orderSyncModel->run();
 
         $this->assertCount(2, $this->executeCallsPerApiKey);
-        $this->assertSame(10, $this->executeCallsPerApiKey['klevu-klevu_test_store_1'], 'Execute calls for klevu_test_store_1');
-        $this->assertSame(5, $this->executeCallsPerApiKey['klevu-klevu_test_store_2'], 'Execute calls for klevu_test_store_2');
+        $this->assertSame(
+            10,
+            $this->executeCallsPerApiKey['klevu-klevu_test_store_1'],
+            'Execute calls for klevu_test_store_1'
+        );
+        $this->assertSame(
+            5,
+            $this->executeCallsPerApiKey['klevu-klevu_test_store_2'],
+            'Execute calls for klevu_test_store_2'
+        );
 
         static::loadAllFixturesRollback();
     }
@@ -217,8 +244,16 @@ class SyncTest extends TestCase
         $orderSyncModel->run();
 
         $this->assertCount(2, $this->executeCallsPerApiKey);
-        $this->assertSame(21, $this->executeCallsPerApiKey['klevu-klevu_test_store_1'], 'Execute calls for klevu_test_store_1');
-        $this->assertSame(0, $this->executeCallsPerApiKey['klevu-klevu_test_store_2'], 'Execute calls for klevu_test_store_2');
+        $this->assertSame(
+            21,
+            $this->executeCallsPerApiKey['klevu-klevu_test_store_1'],
+            'Execute calls for klevu_test_store_1'
+        );
+        $this->assertSame(
+            0,
+            $this->executeCallsPerApiKey['klevu-klevu_test_store_2'],
+            'Execute calls for klevu_test_store_2'
+        );
 
         static::loadAllFixturesRollback();
     }
@@ -264,8 +299,16 @@ class SyncTest extends TestCase
         $orderSyncModel->run();
 
         $this->assertCount(2, $this->executeCallsPerApiKey);
-        $this->assertSame(0, $this->executeCallsPerApiKey['klevu-klevu_test_store_1'], 'Execute calls for klevu_test_store_1');
-        $this->assertSame(0, $this->executeCallsPerApiKey['klevu-klevu_test_store_2'], 'Execute calls for klevu_test_store_2');
+        $this->assertSame(
+            0,
+            $this->executeCallsPerApiKey['klevu-klevu_test_store_1'],
+            'Execute calls for klevu_test_store_1'
+        );
+        $this->assertSame(
+            0,
+            $this->executeCallsPerApiKey['klevu-klevu_test_store_2'],
+            'Execute calls for klevu_test_store_2'
+        );
 
         static::loadAllFixturesRollback();
     }
@@ -314,8 +357,16 @@ class SyncTest extends TestCase
         $orderSyncModel->run();
 
         $this->assertCount(2, $this->executeCallsPerApiKey);
-        $this->assertSame(21, $this->executeCallsPerApiKey['klevu-klevu_test_store_1'], 'Execute calls for klevu_test_store_1');
-        $this->assertSame(5, $this->executeCallsPerApiKey['klevu-klevu_test_store_2'], 'Execute calls for klevu_test_store_2');
+        $this->assertSame(
+            21,
+            $this->executeCallsPerApiKey['klevu-klevu_test_store_1'],
+            'Execute calls for klevu_test_store_1'
+        );
+        $this->assertSame(
+            5,
+            $this->executeCallsPerApiKey['klevu-klevu_test_store_2'],
+            'Execute calls for klevu_test_store_2'
+        );
 
         static::loadAllFixturesRollback();
     }
@@ -325,7 +376,9 @@ class SyncTest extends TestCase
      * @magentoDbIsolation disabled
      * @magentoCache all disabled
      * @magentoDataFixture loadAllFixtures
-     * @magentoConfigFixture default_store klevu_search/product_sync/order_sync_enabled 1
+     * @magentoConfigFixture default_store klevu_search/product_sync/order_sync_enabled 0
+     * @magentoConfigFixture klevu_test_store_1_store klevu_search/product_sync/order_sync_enabled 1
+     * @magentoConfigFixture klevu_test_store_2_store klevu_search/product_sync/order_sync_enabled 0
      * @magentoConfigFixture klevu_test_store_1_store klevu_search/general/js_api_key klevu-klevu_test_store_1
      */
     public function testWhileLoopIteratesCorrectNumberOfTimes()
@@ -479,7 +532,6 @@ class SyncTest extends TestCase
 
                 return $response;
             });
-
 
         return $producttrackingActionMock;
     }

@@ -16,6 +16,7 @@
             <product_sync>
                 <enabled>1</enabled>
                 <catalogvisibility>0</catalogvisibility>
+                <include_oos>0</include_oos>
                 <frequency>0 */3 * * *</frequency>
                 <last_run>Never</last_run>
                 <sync_options>1</sync_options>

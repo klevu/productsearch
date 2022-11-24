@@ -3,6 +3,7 @@
 namespace Klevu\Search\Test\Unit\Service\Catalog\Product;
 
 use Klevu\Search\Api\Service\Catalog\Product\GetStockStatusByIdInterface;
+use Klevu\Search\Api\Service\Catalog\Product\Stock\GetCompositeProductStockStatusInterface;
 use Klevu\Search\Service\Catalog\Product\Stock as StockService;
 use Magento\Catalog\Model\Product;
 use Magento\CatalogInventory\Api\Data\StockItemCollectionInterface;
@@ -12,6 +13,8 @@ use Magento\CatalogInventory\Api\StockItemCriteriaInterface;
 use Magento\CatalogInventory\Api\StockItemCriteriaInterfaceFactory;
 use Magento\CatalogInventory\Api\StockItemRepositoryInterface;
 use Magento\CatalogInventory\Api\StockRegistryInterface;
+use Magento\CatalogInventory\Helper\Stock as MagentoStockHelper;
+use Magento\CatalogInventory\Model\Spi\StockRegistryProviderInterface;
 use Magento\Store\Api\Data\StoreInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -22,6 +25,15 @@ class StockTest extends TestCase
      * @var GetStockStatusByIdInterface|MockObject
      */
     private $mockGetStockStatusById;
+    /**
+     * @var MagentoStockHelper&MockObject
+     */
+    private $mockMagentoStockHelper;
+    /**
+     * @var GetCompositeProductStockStatusInterface&MockObject
+     */
+    private $mockGetCompositeProductStockStatus;
+    private $mockStockRegistryProvider;
 
     /**
      * @dataProvider InStockProductIdsDataProvider
@@ -32,7 +44,11 @@ class StockTest extends TestCase
 
         $stockService = $this->getStockService();
         $mockParentProduct = $parentId ? $this->getMockProduct($parentId) : null;
+        if ($mockParentProduct) {
+            $mockParentProduct->method('isSaleable')->willReturn(true);
+        }
         $mockProduct = $this->getMockProduct($productId);
+        $mockProduct->method('isSaleable')->willReturn(true);
 
         $result = $stockService->getKlevuStockStatus($mockProduct, $mockParentProduct);
 
@@ -64,7 +80,11 @@ class StockTest extends TestCase
 
         $stockService = $this->getStockService();
         $mockParentProduct = $parentId ? $this->getMockProduct($parentId) : null;
+        if ($mockParentProduct) {
+            $mockParentProduct->method('isSaleable')->willReturn(true);
+        }
         $mockProduct = $this->getMockProduct($productId);
+        $mockProduct->method('isSaleable')->willReturn(true);
 
         $result = $stockService->isInStock($mockProduct, $mockParentProduct);
 
@@ -94,7 +114,11 @@ class StockTest extends TestCase
         $productId1 = '10';
         $productId2 = '30';
         $mockProduct1 = $this->getMockProduct($productId1);
+        $mockProduct1->method('getTypeId')->willReturn('simple');
+        $mockProduct1->method('isSaleable')->willReturn(true);
         $mockProduct2 = $this->getMockProduct($productId2);
+        $mockProduct2->method('getTypeId')->willReturn('virtual');
+        $mockProduct2->method('isSaleable')->willReturn(false);
 
         $mockStockRegistry = $this->getMockBuilder(StockRegistryInterface::class)
             ->disableOriginalConstructor()
@@ -113,7 +137,9 @@ class StockTest extends TestCase
             $mockStockRegistry,
             $mockStockItemCriteriaInterfaceFactory,
             $mockStockItemRepository,
-            $this->mockGetStockStatusById
+            $this->mockGetStockStatusById,
+            $this->mockMagentoStockHelper,
+            $this->mockGetCompositeProductStockStatus
         );
 
         $stockService->preloadKlevuStockStatus([$mockProduct1->getId(), $mockProduct2->getId()]);
@@ -128,8 +154,12 @@ class StockTest extends TestCase
 
         $productId1 = '10';
         $productId2 = '30';
-        $mockProduct1 = $this->getMockProduct($productId1);
+        $mockProduct1 = $this->getMockProduct($productId1);;
+        $mockProduct1->method('getTypeId')->willReturn('simple');
+        $mockProduct1->method('isSaleable')->willReturn(true);
         $mockProduct2 = $this->getMockProduct($productId2);
+        $mockProduct2->method('getTypeId')->willReturn('virtual');
+        $mockProduct2->method('isSaleable')->willReturn(false);
 
         $mockStockRegistry = $this->getMockStockRegistry();
         // i.e. data is not loaded from cache, stockRegistry->getStockStatus is called
@@ -145,7 +175,9 @@ class StockTest extends TestCase
             $mockStockRegistry,
             $mockStockItemCriteriaInterfaceFactory,
             $mockStockItemRepository,
-            $this->mockGetStockStatusById
+            $this->mockGetStockStatusById,
+            $this->mockMagentoStockHelper,
+            $this->mockGetCompositeProductStockStatus
         );
 
         $stockService->preloadKlevuStockStatus([$mockProduct1->getId(), $mockProduct2->getId()]);
@@ -190,7 +222,9 @@ class StockTest extends TestCase
             $mockStockRegistry,
             $mockStockItemCriteriaInterface,
             $mockStockItemRepository,
-            $this->mockGetStockStatusById
+            $this->mockGetStockStatusById,
+            $this->mockMagentoStockHelper,
+            $this->mockGetCompositeProductStockStatus
         );
     }
 
@@ -311,6 +345,23 @@ class StockTest extends TestCase
     private function setupPhp5()
     {
         $this->mockGetStockStatusById = $this->getMockBuilder(GetStockStatusByIdInterface::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $this->mockMagentoStockHelper = $this->getMockBuilder(MagentoStockHelper::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+//        $this->mockMagentoStockHelper
+//            ->method('assignStatusToProduct')
+//            ->willReturnCallback(static function ($product) {
+//                $foo = 'bar';
+//            });
+
+        $this->mockGetCompositeProductStockStatus = $this->getMockBuilder(GetCompositeProductStockStatusInterface::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $this->mockStockRegistryProvider = $this->getMockBuilder(StockRegistryProviderInterface::class)
             ->disableOriginalConstructor()
             ->getMock();
     }

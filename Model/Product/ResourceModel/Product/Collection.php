@@ -7,7 +7,9 @@ use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Catalog\Model\Product\Attribute\Source\Status;
 use Magento\Catalog\Model\ResourceModel\Product\Collection as ProductCollection;
 use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory as ProductCollectionFactory;
+use Magento\CatalogInventory\Model\ResourceModel\Stock\StatusFactory as StockStatusFactory;
 use Magento\Eav\Model\Entity;
+use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Data\Collection as MagentoCollection;
 use Magento\Framework\DB\Select as DbSelect;
 use Magento\Store\Api\Data\StoreInterface;
@@ -22,26 +24,40 @@ class Collection
      * @var GetBatchSize
      */
     private $getBatchSize;
+    /**
+     * @var StockStatusFactory
+     */
+    private $stockStatusFactory;
 
+    /**
+     * @param ProductCollectionFactory $productCollectionFactory
+     * @param GetBatchSize $getBatchSize
+     * @param StockStatusFactory|null $stockStatusFactory
+     */
     public function __construct(
         ProductCollectionFactory $productCollectionFactory,
-        GetBatchSize $getBatchSize
+        GetBatchSize $getBatchSize,
+        StockStatusFactory $stockStatusFactory = null
     ) {
         $this->productCollectionFactory = $productCollectionFactory;
         $this->getBatchSize = $getBatchSize;
+        $this->stockStatusFactory = $stockStatusFactory
+            ?: ObjectManager::getInstance()->get(StockStatusFactory::class);
     }
 
     /**
      * @param StoreInterface $store
      * @param array $productTypeArray
      * @param array $visibility
+     * @param bool $includeOosProducts
      *
      * @return ProductCollection
      */
     public function initCollectionByType(
         StoreInterface $store,
         array $productTypeArray,
-        array $visibility
+        array $visibility,
+        $includeOosProducts = true
     ) {
         $batchSize = $this->getBatchSize->execute($store);
 
@@ -58,6 +74,9 @@ class Collection
         $productCollection->getSelect()->reset(DbSelect::ORDER);
         $productCollection->addAttributeToSort(Entity::DEFAULT_ENTITY_ID_FIELD, MagentoCollection::SORT_ORDER_ASC);
         $productCollection->setPageSize($batchSize);
+
+        $stockStatusResource = $this->stockStatusFactory->create();
+        $stockStatusResource->addStockDataToCollection($productCollection, !$includeOosProducts);
         $productCollection->setFlag('has_stock_status_filter', true);
 
         return $productCollection;
@@ -65,14 +84,17 @@ class Collection
 
     /**
      * @param StoreInterface $store
+     * @param bool $includeOosProducts
      *
      * @return int
      */
-    public function getMaxProductId(StoreInterface $store)
+    public function getMaxProductId(StoreInterface $store, $includeOosProducts = true)
     {
         $productCollection = $this->productCollectionFactory->create();
         $productCollection->addStoreFilter($store->getId());
-        $productCollection->setFlag('has_stock_status_filter', true);
+        if ($includeOosProducts) {
+            $productCollection->setFlag('has_stock_status_filter', true);
+        }
 
         $select = $productCollection->getSelect();
         $select->reset(DbSelect::COLUMNS);

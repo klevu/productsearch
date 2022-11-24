@@ -353,19 +353,19 @@ class Product extends DataObject implements ProductInterface
      * @param array $product
      * @param StoreInterface $store
      *
-     * @return mixed
+     * @return float
      */
     public function getSalePriceData($parent, $item, $product, $store)
     {
         // Default to 0 if price can't be determined
-        $product['salePrice'] = 0;
+        $product['salePrice'] = 0.0;
         $salePrice = $this->_priceHelper->getKlevuSalePrice($parent, $item, $store);
         if ($parent) {
             $childSalePrice = $this->_priceHelper->getKlevuSalePrice(null, $item, $store);
             // also send sale price for sorting and filters for klevu
-            $product['salePrice'] = $childSalePrice['salePrice'];
+            $product['salePrice'] = (float)$childSalePrice['salePrice'];
         } else {
-            $product['salePrice'] = $salePrice['salePrice'];
+            $product['salePrice'] = (float)$salePrice['salePrice'];
         }
 
         return $product['salePrice'];
@@ -377,18 +377,17 @@ class Product extends DataObject implements ProductInterface
      * @param array $product
      * @param StoreInterface $store
      *
-     * @return mixed|null
+     * @return float|null
      */
     public function getToPriceData($parent, $item, $product, $store)
     {
         $salePrice = $this->_priceHelper->getKlevuSalePrice($parent, $item, $store);
-        if (isset($salePrice['toPrice'])) {
-            $product['toPrice'] = $salePrice['toPrice'];
 
-            return $product['toPrice'];
-        }
+        $product['toPrice'] = isset($salePrice['toPrice'])
+            ? (float)$salePrice['toPrice']
+            : null;
 
-        return null;
+        return $product['toPrice'] ?: null;
     }
 
     /**
@@ -397,7 +396,7 @@ class Product extends DataObject implements ProductInterface
      * @param array $product
      * @param StoreInterface $store
      *
-     * @return mixed
+     * @return float|null
      */
     public function getStartPriceData($parent, $item, $product, $store)
     {
@@ -405,12 +404,12 @@ class Product extends DataObject implements ProductInterface
         if ($parent) {
             $childSalePrice = $this->_priceHelper->getKlevuSalePrice(null, $item, $store);
             // show low price for config products
-            $product['startPrice'] = $salePrice['salePrice'];
+            $product['startPrice'] = (float)$salePrice['salePrice'];
         } else {
-            $product['startPrice'] = $salePrice['salePrice'];
+            $product['startPrice'] = (float)$salePrice['salePrice'];
         }
 
-        return $product['startPrice'];
+        return $product['startPrice'] ?: null;
     }
 
     /**
@@ -419,17 +418,17 @@ class Product extends DataObject implements ProductInterface
      * @param array $product
      * @param StoreInterface $store
      *
-     * @return mixed
+     * @return float
      */
     public function getPriceData($parent, $item, $product, $store)
     {
-        $product['price'] = 0;
+        $product['price'] = 0.0;
         if ($parent) {
             $childSalePrice = $this->_priceHelper->getKlevuPrice($item, $item, $store);
-            $product['price'] = $childSalePrice['price'];
+            $product['price'] = (float)$childSalePrice['price'];
         } else {
             $price = $this->_priceHelper->getKlevuPrice($parent, $item, $store);
-            $product['price'] = $price['price'];
+            $product['price'] = (float)$price['price'];
         }
 
         return $product['price'];
@@ -1006,7 +1005,7 @@ class Product extends DataObject implements ProductInterface
         $websiteId = null;
         try {
             $store = $this->_storeModelStoreManagerInterface->getStore();
-            $websiteId = $store->getWebsiteId();
+            $websiteId = (int)$store->getWebsiteId();
         } catch (NoSuchEntityException $e) {
             $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_ERR, $e->getMessage());
         }
@@ -1025,8 +1024,9 @@ class Product extends DataObject implements ProductInterface
         }
         $priceGroupData = [];
         foreach ($groupPrices as $groupPrice) {
-            if (($groupPrice['website_id'] === 0 || $websiteId === $groupPrice['website_id']) &&
-                $groupPrice['price_qty'] === 1
+            $groupWebsiteId = (int)$groupPrice['website_id'];
+            if (($groupWebsiteId === 0 || $websiteId === $groupWebsiteId) &&
+                (int)$groupPrice['price_qty'] === 1
             ) {
                 $groupPriceKey = $groupPrice['cust_group'];
                 $customerGroup = $this->_customerModelGroup->load($groupPrice['cust_group']);

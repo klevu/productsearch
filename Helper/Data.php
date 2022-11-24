@@ -2,85 +2,117 @@
 
 namespace Klevu\Search\Helper;
 
+use InvalidArgumentException;
 use Klevu\Logger\Api\ConvertLogLevelServiceInterface;
+use Klevu\Logger\Logger\Logger;
+use Klevu\Search\Helper\Config as ConfigHelper;
+use Magento\Catalog\Api\Data\ProductInterface;
+use Magento\Catalog\Helper\Data as CatalogHelper;
+use Magento\Config\Model\ResourceModel\Config\Data\Collection as ConfigDataCollection;
+use Magento\Directory\Helper\Data as DirectoryHelper;
+use Magento\Directory\Model\CurrencyFactory;
+use Magento\Eav\Model\Entity\Attribute as EntityAttribute;
+use Magento\Eav\Model\Entity\Type as EntityType;
+use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\ObjectManager;
-use Magento\Framework\Debug;
+use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Framework\Locale\CurrencyInterface;
+use Magento\Framework\UrlInterface;
+use Magento\Store\Api\Data\StoreInterface;
 use \Magento\Store\Model\StoreManagerInterface;
 use \Magento\Backend\Model\Url;
-use \Klevu\Search\Helper\Config;
+use Magento\Tax\Helper\Data as TaxHelper;
 use \Psr\Log\LoggerInterface;
 use \Magento\Catalog\Model\Product;
 use Magento\Config\Model\ResourceModel\Config\Data\Collection;
-use \Magento\Framework\App\RequestInterface;
 
-
-
-class Data extends \Magento\Framework\App\Helper\AbstractHelper
+class Data extends AbstractHelper
 {
+    const LOG_FILE = "Klevu_Search.log";
+    const PRESERVE_LAYOUT_LOG_FILE = "Klevu_Search_Preserve_Layout.log";
+    const ID_SEPARATOR = "-";
+    const SKU_SEPARATOR = ";;;;";
+    const SANITISE_STRING = "/:|,|;/";
+
     /**
-     * @var \Magento\Store\Model\StoreManagerInterface
+     * @var StoreManagerInterface
      */
     protected $_storeModelStoreManagerInterface;
 
     /**
-     * @var \Magento\Backend\Model\Url
+     * @var Url
      */
     protected $_backendModelUrl;
 
     /**
-     * @var \Klevu\Search\Helper\Config
+     * @var ConfigHelper
      */
     protected $_searchHelperConfig;
 
     /**
-     * @var \Psr\Log\LoggerInterface
+     * @var LoggerInterface
      */
     protected $_psrLogLoggerInterface;
 
     /**
-     * @var \Magento\Catalog\Model\Product
+     * @var ProductInterface
      */
     protected $_catalogModelProduct;
 
     /**
-     * @var \Magento\Tax\Helper\Data
+     * @var TaxHelper
      */
     protected $_taxHelperData;
 
     /**
-     * @var \Magento\Eav\Model\Entity\Type
+     * @var EntityType
      */
     protected $_modelEntityType;
 
     /**
-     * @var \Magento\Eav\Model\Entity\Attribute
+     * @var EntityAttribute
      */
     protected $_modelEntityAttribute;
 
     /**
-     * @var \Magento\Framework\Locale\CurrencyInterface
+     * @var CurrencyInterface
      */
     protected $_localeCurrency;
 
     /**
-     * @var Magento\Directory\Model\CurrencyFactory
+     * @var CurrencyFactory
      */
     protected $_currencyFactory;
 
-	/**
-     * @var Magento\Config\Model\ResourceModel\Config\Data\Collection
+    /**
+     * @var ConfigDataCollection
      */
     protected $_configDataCollection;
 
     /**
-     * @var \Magento\Store\Model\Store
+     * @var mixed
+     * deprecated no used in class
+     * maintained for backward compatibility
      */
     protected $_frameworkModelStore;
 
+    /**
+     * @var mixed
+     * deprecated no used in class
+     * maintained for backward compatibility
+     */
     protected $_klevu_features_response;
 
+    /**
+     * @var mixed
+     * deprecated no used in class
+     * maintained for backward compatibility
+     */
     protected $_klevu_enabled_feature_response;
 
+    /**
+     * @var ConvertLogLevelServiceInterface
+     */
     private $convertLogLevelService;
 
     /**
@@ -95,32 +127,34 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
     /**
      * Data constructor.
+     *
      * @param StoreManagerInterface $storeModelStoreManagerInterface
      * @param Url $backendModelUrl
-     * @param \Klevu\Search\Helper\Config $searchHelperConfig
+     * @param ConfigHelper $searchHelperConfig
      * @param LoggerInterface $psrLogLoggerInterface
      * @param Product $catalogModelProduct
-     * @param \Magento\Catalog\Helper\Data $taxHelperData
-     * @param \Magento\Eav\Model\Entity\Type $modelEntityType
-     * @param \Magento\Eav\Model\Entity\Attribute $modelEntityAttribute
-     * @param \Magento\Directory\Model\CurrencyFactory $currencyFactory
-     * @param \Magento\Framework\Locale\CurrencyInterface $localeCurrency
+     * @param CatalogHelper $taxHelperData
+     * @param EntityType $modelEntityType
+     * @param EntityAttribute $modelEntityAttribute
+     * @param CurrencyFactory $currencyFactory
+     * @param CurrencyInterface $localeCurrency
      * @param Collection $configDataCollection
-     * @param LoggerInterface|null $searchLogger
-     * @param LoggerInterface|null $preserveLayoutLogger
+     * @param ConvertLogLevelServiceInterface $convertLogLevelService
+     * @param LoggerInterface $searchLogger
+     * @param LoggerInterface $preserveLayoutLogger
      */
     public function __construct(
-        \Magento\Store\Model\StoreManagerInterface $storeModelStoreManagerInterface,
-        \Magento\Backend\Model\Url $backendModelUrl,
-        \Klevu\Search\Helper\Config $searchHelperConfig,
-        \Psr\Log\LoggerInterface $psrLogLoggerInterface,
-        \Magento\Catalog\Model\Product $catalogModelProduct,
-        \Magento\Catalog\Helper\Data $taxHelperData,
-        \Magento\Eav\Model\Entity\Type $modelEntityType,
-        \Magento\Eav\Model\Entity\Attribute $modelEntityAttribute,
-        \Magento\Directory\Model\CurrencyFactory $currencyFactory,
-        \Magento\Framework\Locale\CurrencyInterface $localeCurrency,
-		\Magento\Config\Model\ResourceModel\Config\Data\Collection $configDataCollection,
+        StoreManagerInterface $storeModelStoreManagerInterface,
+        Url $backendModelUrl,
+        ConfigHelper $searchHelperConfig,
+        LoggerInterface $psrLogLoggerInterface,
+        Product $catalogModelProduct,
+        CatalogHelper $taxHelperData,
+        EntityType $modelEntityType,
+        EntityAttribute $modelEntityAttribute,
+        CurrencyFactory $currencyFactory,
+        CurrencyInterface $localeCurrency,
+        ConfigDataCollection $configDataCollection,
         ConvertLogLevelServiceInterface $convertLogLevelService = null,
         LoggerInterface $searchLogger = null,
         LoggerInterface $preserveLayoutLogger = null
@@ -135,22 +169,12 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         $this->_modelEntityAttribute = $modelEntityAttribute;
         $this->_localeCurrency = $localeCurrency;
         $this->_currencyFactory = $currencyFactory;
-		$this->_configDataCollection = $configDataCollection;
-		$this->convertLogLevelService = $convertLogLevelService;
-        $this->searchLogger = $searchLogger ?: ObjectManager::getInstance()->get(LoggerInterface::class);
-        $this->preserveLayoutLogger = $preserveLayoutLogger ?: ObjectManager::getInstance()->get(LoggerInterface::class);
+        $this->_configDataCollection = $configDataCollection;
+        $this->convertLogLevelService = $convertLogLevelService;
+        $objectManager = ObjectManager::getInstance();
+        $this->searchLogger = $searchLogger ?: $objectManager->get(LoggerInterface::class);
+        $this->preserveLayoutLogger = $preserveLayoutLogger ?: $objectManager->get(LoggerInterface::class);
     }
-
-
-    const LOG_FILE = "Klevu_Search.log";
-
-    const PRESERVE_LAYOUT_LOG_FILE = "Klevu_Search_Preserve_Layout.log";
-
-    const ID_SEPARATOR = "-";
-
-	const SKU_SEPARATOR = ";;;;";
-
-    const SANITISE_STRING = "/:|,|;/";
 
     /**
      * Given a locale code, extract the language code from it
@@ -160,7 +184,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function getLanguageFromLocale($locale)
     {
-        if (strlen((string)$locale) == 5 && strpos($locale, "_") === 2) {
+        if (strlen((string)$locale) === 5 && strpos($locale, "_") === 2) {
             return substr($locale, 0, 2);
         }
 
@@ -170,60 +194,69 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     /**
      * Return the language code for the given store.
      *
-     * @param int|\Magento\Framework\Model\Store $store
+     * @param int|StoreInterface $store
      *
      * @return string
+     * @throws NoSuchEntityException
      */
     public function getStoreLanguage($store = null)
     {
         if ($store = $this->_storeModelStoreManagerInterface->getStore($store)) {
-            return $this->getLanguageFromLocale($store->getConfig(\Magento\Directory\Helper\Data::XML_PATH_DEFAULT_LOCALE));
+            return $this->getLanguageFromLocale(
+                $store->getConfig(DirectoryHelper::XML_PATH_DEFAULT_LOCALE)
+            );
         }
     }
 
     /**
      * Return the timezone for the given store.
      *
-     * @param int|\Magento\Framework\Model\Store $store
+     * @param int|StoreInterface $store
      *
      * @return string
+     * @throws NoSuchEntityException
      */
     public function getStoreTimeZone($store = null)
     {
         if ($store = $this->_storeModelStoreManagerInterface->getStore($store)) {
-            return $this->getLanguageFromLocale($store->getConfig(\Magento\Directory\Helper\Data::XML_PATH_DEFAULT_TIMEZONE));
+            return $this->getLanguageFromLocale(
+                $store->getConfig(DirectoryHelper::XML_PATH_DEFAULT_TIMEZONE)
+            );
         }
     }
 
     /**
      * Check if the given domain is considered to be a valid domain for a production environment.
      *
-     * @param $domain
+     * @param string $domain
      *
      * @return bool
      */
     public function isProductionDomain($domain)
     {
-        return preg_match("/\b(staging|dev|local)\b/", $domain) == 0;
+        if (!is_scalar($domain)) {
+            return false;
+        }
+
+        return preg_match("/\b(staging|dev|local)\b/", (string)$domain) === 0;
     }
 
     /**
      * Generate a Klevu product ID for the given product.
      *
-     * @param int      $product_id Magento ID of the product to generate a Klevu ID for.
-     * @param null|int $parent_id  Optional Magento ID of the parent product.
+     * @param int $productId Magento ID of the product to generate a Klevu ID for.
+     * @param null|int $parentId Optional Magento ID of the parent product.
      *
      * @return string
      */
-    public function getKlevuProductId($product_id, $parent_id = 0)
+    public function getKlevuProductId($productId, $parentId = 0)
     {
-        if ($parent_id != 0) {
-            $parent_id .= static::ID_SEPARATOR;
-        } else {
-            $parent_id = "";
+        $formattedParentId = "";
+        if ((int)$parentId !== 0) {
+            $formattedParentId = $parentId . static::ID_SEPARATOR;
         }
 
-        return sprintf("%s%s", $parent_id, $product_id);
+        return sprintf("%s%s", $formattedParentId, $productId);
     }
 
     /**
@@ -232,26 +265,29 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      * element for the parent product ID or 0 if the Klevu product doesn't have
      * a parent.
      *
-     * @param $klevu_id
+     * @param string $klevuId
      *
-     * @return array
+     * @return array|null
      */
-    public function getMagentoProductId($klevu_id)
+    public function getMagentoProductId($klevuId)
     {
-        $parts = explode(static::ID_SEPARATOR, $klevu_id, 2);
+        if (!is_scalar($klevuId)) {
+            return null;
+        }
+        $parts = explode(static::ID_SEPARATOR, $klevuId, 2);
 
         if (count($parts) > 1) {
             return ['product_id' => $parts[1], 'parent_id' => $parts[0]];
-        } else {
-            return ['product_id' => $parts[0], 'parent_id' => "0"];
         }
+
+        return ['product_id' => $parts[0], 'parent_id' => "0"];
     }
 
     /**
      * Format bytes into a human readable representation, e.g.
      * 6815744 => 6.5M
      *
-     * @param     $bytes
+     * @param int $bytes
      * @param int $precision
      *
      * @return string
@@ -260,6 +296,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     {
         $suffixes = ["", "k", "M", "G", "T", "P"];
         $base = log($bytes) / log(1024);
+
         return round(pow(1024, $base - floor($base)), $precision) . $suffixes[floor($base)];
     }
 
@@ -267,24 +304,27 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      * Convert human readable formatting of bytes to bytes, e.g.
      * 6.5M => 6815744
      *
-     * @param $string
+     * @param string $string
      *
      * @return int
      */
     public function humanReadableToBytes($string)
     {
         $suffix = strtolower(substr($string, -1));
-		$result = intval(substr($string, 0, -1));
+        $result = (int)substr($string, 0, -1);
         switch ($suffix) {
             case 'g':
                 $result *= 1024;
+            // no break
             case 'm':
                 $result *= 1024;
+            // no break
             case 'k':
                 $result *= 1024;
                 break;
             default:
                 $result = $string;
+                break;
         }
 
         return ceil($result);
@@ -299,16 +339,20 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     public function getSyncAllButtonData()
     {
         return [
-            'label'   => __("Sync All Products to Klevu"),
-            'onclick' => sprintf("setLocation('%s')", $this->_backendModelUrl->getUrl("adminhtml/klevu_search/sync_all"))
+            'label' => __("Sync All Products to Klevu"),
+            'onclick' => sprintf(
+                "setLocation('%s')",
+                $this->_backendModelUrl->getUrl("adminhtml/klevu_search/sync_all")
+            )
         ];
     }
 
     /**
      * Write a log message to the \Klevu\Search log file.
      *
-     * @param int    $level
+     * @param int $level
      * @param string $message
+     *
      * @return void
      * @deprecated Logging should be handled through implementation of LoggerInterface provided by Klevu_Logger
      * @see Klevu\Logger\Logger\Logger
@@ -327,6 +371,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      * Write a log message to the \Klevu\Search\preserve log file.
      *
      * @param string $message
+     *
      * @return void
      * @deprecated Logging should be handled through implementation of LoggerInterface provided by Klevu_Logger
      * @see Klevu\Logger\Logger\Logger
@@ -340,19 +385,21 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      * Remove the characters used to organise the other attribute values from the
      * passed in string.
      *
-     * @param string $value
-     * @return string
+     * @param string|array $value
+     *
+     * @return string|array
      */
     public function santiseAttributeValue($value)
     {
         if (is_array($value) && !empty($value)) {
-            $sanitised_array = [];
+            $sanitisedArray = [];
             foreach ($value as $item) {
                 if (!is_array($item) && !is_object($item)) {
-                    $sanitised_array[] = $this->processCharHtml($item);
+                    $sanitisedArray[] = $this->processCharHtml($item);
                 }
             }
-            return $sanitised_array;
+
+            return $sanitisedArray;
         }
 
         return $this->processCharHtml($value);
@@ -362,44 +409,44 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      * Replace the characters used to organise the other attribute values from the
      * passed in string.
      *
-     * @param string $value
-     * @return string
+     * @param string|array $value
+     *
+     * @return string|array
      */
     private function processCharHtml($value)
     {
+        if (!(is_scalar($value) || is_array($value))) {
+            return '';
+        }
+        if (is_scalar($value)) {
+            $value = (string)$value;
+        }
+
         return str_replace(
             [';', ',', ':',],
             ['&semi;', '&comma;', '&colon;'],
             $value
         );
-        return $colon_replace;
     }
-
 
     /**
      * Generate a Klevu product sku with parent product.
      *
-     * @param string      $product_sku Magento Sku of the product to generate a Klevu sku for.
-     * @param null $parent_sku  Optional Magento Parent Sku of the parent product.
+     * @param string $productSku Magento Sku of the product to generate a Klevu sku for.
+     * @param string|null $parentSku Optional Magento Parent Sku of the parent product.
      *
      * @return string
      */
-    public function getKlevuProductSku($product_sku, $parent_sku = "")
+    public function getKlevuProductSku($productSku, $parentSku = '')
     {
-        if (!empty($parent_sku)) {
-            if(!is_array($parent_sku)) {
-                $parent_sku .= static::SKU_SEPARATOR;
-            }
+        if (!is_scalar($parentSku) || empty($parentSku)) {
+            $parentSku = '';
         } else {
-            $parent_sku = "";
+            $parentSku .= static::SKU_SEPARATOR;
         }
-        if(!is_array($parent_sku)) {
-            return sprintf("%s%s", $parent_sku, $product_sku);
-        } else {
-            return $product_sku;
-        }
-    }
 
+        return sprintf('%s%s', $parentSku, $productSku);
+    }
 
     /**
      * Get the is active attribute id
@@ -408,10 +455,16 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function getIsActiveAttributeId()
     {
-        $entity_type = $this->_modelEntityType->loadByCode("catalog_category");
-        $entity_typeid = $entity_type->getId();
-        $attributecollection = $this->_modelEntityAttribute->getCollection()->addFieldToFilter("entity_type_id", $entity_typeid)->addFieldToFilter("attribute_code", "is_active");
-        $attribute = $attributecollection->getFirstItem();
+        $entityType = $this->_modelEntityType->loadByCode("catalog_category");
+        $entityTypeId = $entityType->getId();
+        $attributeCollection = $this->_modelEntityAttribute->getCollection();
+        if (!$attributeCollection) {
+            return '';
+        }
+        $attributeCollection->addFieldToFilter("entity_type_id", $entityTypeId);
+        $attributeCollection->addFieldToFilter("attribute_code", "is_active");
+        $attribute = $attributeCollection->getFirstItem();
+
         return $attribute->getAttributeId();
     }
 
@@ -422,41 +475,60 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function getIsMediaGalleryAttributeId()
     {
-        $entity_type = $this->_modelEntityType->loadByCode("catalog_product");
-        $entity_typeid = $entity_type->getId();
-        $attributecollection = $this->_modelEntityAttribute->getCollection()->addFieldToFilter("entity_type_id", $entity_typeid)->addFieldToFilter("attribute_code", "media_gallery");
-        $attribute = $attributecollection->getFirstItem();
+        $entityType = $this->_modelEntityType->loadByCode("catalog_product");
+        $entityTypeId = $entityType->getId();
+        $attributeCollection = $this->_modelEntityAttribute->getCollection();
+        if (!$attributeCollection) {
+            return '';
+        }
+        $attributeCollection->addFieldToFilter("entity_type_id", $entityTypeId);
+        $attributeCollection->addFieldToFilter("attribute_code", "media_gallery");
+        $attribute = $attributeCollection->getFirstItem();
+
         return $attribute->getAttributeId();
     }
 
     /**
-     * Get the is active attribute id
-     *
      * @return string
      */
     public function getIsExcludeAttributeId()
     {
-        $entity_type = $this->_modelEntityType->loadByCode("catalog_category");
-        $entity_typeid = $entity_type->getId();
-        $attributecollection = $this->_modelEntityAttribute->getCollection()->addFieldToFilter("entity_type_id", $entity_typeid)->addFieldToFilter("attribute_code", "is_exclude_cat");
-        $attribute = $attributecollection->getFirstItem();
+        $entityType = $this->_modelEntityType->loadByCode("catalog_category");
+        $entityTypeId = $entityType->getId();
+        $attributeCollection = $this->_modelEntityAttribute->getCollection();
+        if (!$attributeCollection) {
+            return '';
+        }
+        $attributeCollection->addFieldToFilter("entity_type_id", $entityTypeId);
+        $attributeCollection->addFieldToFilter("attribute_code", "is_exclude_cat");
+        $attribute = $attributeCollection->getFirstItem();
+
         return $attribute->getAttributeId();
     }
 
-	public function processIp($ips)
-	{
-		$iplist = explode(',', $ips);
-		if(count($iplist) > 1) {
+    /**
+     * @param string $ips
+     *
+     * @return string|null
+     */
+    public function processIp($ips)
+    {
+        if (!is_scalar($ips)) {
+            return null;
+        }
+        $iplist = explode(',', (string)$ips);
+        if (count($iplist) > 1) {
             foreach ($iplist as $ip) {
-				if (filter_var(trim($ip), FILTER_VALIDATE_IP, FILTER_FLAG_IPV4))
-				{
-					return $ip;
-				}
+                if (filter_var(trim($ip), FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+                    return $ip;
+                }
             }
-		} else {
-			return $ips;
-		}
-	}
+        } else {
+            return $ips;
+        }
+
+        return null;
+    }
 
     /**
      * Get the client ip
@@ -465,7 +537,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function getIp()
     {
-        $ip = '';
+        // phpcs:disable Magento2.Security.Superglobal.SuperglobalUsageWarning
         if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
             $ip = $_SERVER['HTTP_CLIENT_IP'];
         } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
@@ -486,66 +558,78 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
     /**
-     * Get the currecy switcher data
+     * Get the currency switcher data
      *
-     * @return string
+     * @param StoreInterface $store
+     *
+     * @return string|null
      */
-    public function getCurrencyData($store)
+    public function getCurrencyData(StoreInterface $store)
     {
-        $baseCurrencyCode = $store->getBaseCurrency()->getCode();
+        $baseCurrency = $store->getBaseCurrency();
+        $baseCurrencyCode = $baseCurrency->getCode();
         $currentCurrencyCode = $store->getCurrentCurrencyCode();
-        if ($baseCurrencyCode != $currentCurrencyCode) {
-            $availableCurrencies = $store->getAvailableCurrencyCodes();
-            $currencyResource = $this->_currencyFactory
-            ->create()
-            ->getResource();
-            $currencyRates = $currencyResource->getCurrencyRates($baseCurrencyCode, array_values($availableCurrencies));
-            if (count($availableCurrencies) > 1) {
-                foreach ($currencyRates as $key => &$value) {
-                    $Symbol = $this->_localeCurrency->getCurrency($key)->getSymbol() ? $this->_localeCurrency->getCurrency($key)->getSymbol() : $this->_localeCurrency->getCurrency($key)->getShortName();
-                    $value = sprintf("'%s':'%s:%s'", $key, $value, $Symbol);
-                }
-                $currency = implode(",", $currencyRates);
-                return $currency;
-            }
+        if ($baseCurrencyCode === $currentCurrencyCode) {
+            return null;
         }
+        $availableCurrencies = $store->getAvailableCurrencyCodes();
+        $currency = $this->_currencyFactory->create();
+        $currencyResource = $currency->getResource();
+        $currencyRates = $currencyResource->getCurrencyRates($baseCurrencyCode, array_values($availableCurrencies));
+        if (count($availableCurrencies) <= 1) {
+            return null;
+        }
+        foreach ($currencyRates as $key => &$value) {
+            $localeCurrency = $this->_localeCurrency->getCurrency($key);
+
+            $symbol = $localeCurrency->getSymbol() ?: $localeCurrency->getShortName();
+            $value = sprintf("'%s':'%s:%s'", $key, $value, $symbol);
+        }
+
+        return implode(",", $currencyRates);
     }
 
-	/**
-     * get for base domain
-     *
+    /**
+     * @return string|null
+     * @throws NoSuchEntityException
+     */
+    public function getBaseDomain()
+    {
+        $store = $this->_storeModelStoreManagerInterface->getStore();
+        $baseDomain = $store->getBaseUrl(UrlInterface::URL_TYPE_LINK);
+        if (empty($baseDomain)) {
+            return null;
+        }
+        // phpcs:ignore Magento2.Functions.DiscouragedFunction.Discouraged
+        $baseUrlValue = parse_url($baseDomain);
+
+        return $baseUrlValue['host'];
+    }
+
+    /**
      * @return string
      */
-	public function getBaseDomain() {
-		$base_domain = $this->_storeModelStoreManagerInterface->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_LINK);
-		if(!empty($base_domain)) {
-			$base_url_value = parse_url($base_domain);
-			return $base_url_value['host'];
-		}
+    public function getJsApiKey()
+    {
+        return $this->_searchHelperConfig->getJsApiKey();
     }
 
-	/**
-     * return JsApiKey
-     *
-     * @return string
-     */
-	public function getJsApiKey() {
-		return $this->_searchHelperConfig->getJsApiKey();
-    }
-
-	/**
+    /**
      * Return the value of store id from api key.
      *
-     * @param $klevuApi
-     *
-     * @return int
+     * @return StoreInterface|null
+     * @throws NoSuchEntityException
      */
-	public function storeFromScopeId(){
-		$configs =  $this->_configDataCollection->addFieldToFilter('value',$this->getJsApiKey())->load();
-        $scope_id = $configs->getData();
-		if(!empty($scope_id)) {
-			return $this->_storeModelStoreManagerInterface->getStore(intval($scope_id[0]['scope_id']));
-		}
-	}
+    public function storeFromScopeId()
+    {
+        $configCollection = $this->_configDataCollection;
+        $configCollection->addFieldToFilter('value', $this->getJsApiKey());
+        $configCollection->load();
+        $cofigData = $configCollection->getData();
+        if (empty($cofigData)) {
+            return null;
+        }
 
+        return $this->_storeModelStoreManagerInterface->getStore((int)$cofigData[0]['scope_id']);
+    }
 }

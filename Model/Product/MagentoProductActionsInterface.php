@@ -159,13 +159,15 @@ interface MagentoProductActionsInterface
     public function markRecordIntoQueue($productIds, $recordType, $stores);
 
     /**
-     * Returns the parent relations by child id
+     * Returns parent relations data by child ids
      *
      * @param array $ids
+     * @param int $storeId
+     * @param bool $includeOosParents
      *
      * @return array
      */
-    public function getParentRelationsByChild($ids);
+    public function getParentRelationsByChild($ids, $storeId = Store::DEFAULT_STORE_ID, $includeOosParents = true);
 
     /**
      * @param array|string|int|null $stores
