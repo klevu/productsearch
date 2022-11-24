@@ -34,6 +34,8 @@
     <preference for="Klevu\Search\Api\Service\Account\GetStoresUsingApiKeysInterface" type="Klevu\Search\Service\Account\GetStoresUsingApiKeys" />
     <preference for="Klevu\Search\Api\Service\Account\AccountFeaturesMaskInterface" type="Klevu\Search\Service\Account\AccountFeaturesMask"/>
     <preference for="Klevu\Search\Api\Service\Catalog\Product\GetStockStatusByIdInterface" type="Klevu\Search\Service\Catalog\Product\GetStockStatusById" />
+    <preference for="Klevu\Search\Api\Service\Catalog\Product\Stock\GetCompositeProductStockStatusInterface" type="Klevu\Search\Service\Catalog\Product\Stock\GetCompositeProductStockStatus" />
+    <preference for="Klevu\Search\Api\Service\Catalog\Product\JoinParentVisibilityToSelectInterface" type="Klevu\Search\Service\Catalog\Product\JoinParentVisibilityToSelect" />
     <preference for="Klevu\Search\Api\Service\WebRestApi\Admin\GetBearerTokenInterface" type="Klevu\Search\Service\WebRestApi\Admin\GetBearerTokenService" />
 
     <preference for="Klevu\Search\Api\Provider\Customer\CustomerIdProviderInterface" type="Klevu\Search\Provider\Customer\CustomerIdProvider" />
@@ -530,6 +532,32 @@
         <arguments>
             <argument name="magentoProductActionsInterface" xsi:type="object">Klevu\Search\Model\Product\MagentoProductActionsInterface\Proxy</argument>
             <argument name="fileDriver" xsi:type="object">Magento\Framework\Filesystem\Driver\File\Proxy</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Service\Catalog\Product\Stock\GetCompositeProductStockStatus">
+        <arguments>
+            <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
+        </arguments>
+    </type>
+
+    <virtualType name="Klevu\Search\Service\Catalog\Product\JoinParentStatusToSelect\Enabled"
+                 type="Klevu\Search\Service\Catalog\Product\JoinParentStatusToSelect">
+        <arguments>
+            <argument name="status" xsi:type="const">Magento\Catalog\Model\Product\Attribute\Source\Status::STATUS_ENABLED</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="Klevu\Search\Service\Catalog\Product\JoinParentStatusToSelect\Disabled"
+                 type="Klevu\Search\Service\Catalog\Product\JoinParentStatusToSelect">
+        <arguments>
+            <argument name="status" xsi:type="const">Magento\Catalog\Model\Product\Attribute\Source\Status::STATUS_DISABLED</argument>
+        </arguments>
+    </virtualType>
+
+    <type name="Klevu\Search\Repository\MagentoProductSyncRepository">
+        <arguments>
+            <argument name="joinParentStatusToSelect" xsi:type="object">Klevu\Search\Service\Catalog\Product\JoinParentStatusToSelect\Enabled</argument>
         </arguments>
     </type>
 </config>

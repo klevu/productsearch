@@ -44,6 +44,7 @@ class RenderPlugin
                 'Render Action (%s) must be instance of %s; %s provided',
                 $key,
                 SystemConfigFormFieldRenderActionInterface::class,
+                // phpcs:ignore Magento2.Functions.DiscouragedFunction.Discouraged
                 is_object($renderAction) ? get_class($renderAction) : gettype($renderAction)
             ));
         }
@@ -72,11 +73,15 @@ class RenderPlugin
     /**
      * @param Field $subject
      * @param mixed $result
-     * @param AbstractElement $element
+     * @param AbstractElement|null $element
      * @return mixed
      */
-    public function afterRender(Field $subject, $result, AbstractElement $element)
+    public function afterRender(Field $subject, $result, $element = null)
     {
+        if (!($element instanceof AbstractElement)) {
+            return $result;
+        }
+
         foreach ($this->renderActions as $renderAction) {
             if (!$renderAction->applies($subject, $element)) {
                 continue;

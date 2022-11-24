@@ -3,11 +3,13 @@
 namespace Klevu\Search\Test\Integration\Model\Product;
 
 use Klevu\Search\Model\Product\Product as ProductModel;
+use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\Catalog\Model\ResourceModel\Category\Collection as CategoryCollection;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\TestFramework\Helper\Bootstrap;
 use Magento\TestFramework\ObjectManager;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 class ProductTest extends TestCase
@@ -645,6 +647,130 @@ class ProductTest extends TestCase
         $actualResult = $productModel->getCurrency();
 
         $this->assertSame($expectedResult, $actualResult);
+    }
+
+    /**
+     * @magentoAppIsolation enabled
+     * @magentoDbIsolation disabled
+     * @magentoCache all disabled
+     * @magentoDataFixture loadWebsiteFixtures
+     */
+    public function testGetGroupPricesDataReturnsNullIfNotGroupedPricesAreSet()
+    {
+        $this->setupPhp5();
+
+        /** @var StoreManagerInterface $storeManager */
+        $storeManager = $this->objectManager->get(StoreManagerInterface::class);
+        $storeManager->setCurrentStore('klevu_test_store_2');
+
+        $mockProductBuilder = $this->getMockBuilder(\Magento\Catalog\Model\Product::class);
+        $mockProduct = $mockProductBuilder->disableOriginalConstructor()->getMock();
+        $mockProduct->expects($this->once())
+            ->method('getData')
+            ->with('tier_price')
+            ->willReturn([]);
+
+        /** @var ProductModel $productModel */
+        $productModel = $this->objectManager->create(ProductModel::class);
+        $groupPrices = $productModel->getGroupPricesData($mockProduct);
+
+        $this->assertNull($groupPrices);
+    }
+
+    /**
+     * @magentoAppIsolation enabled
+     * @magentoDbIsolation disabled
+     * @magentoCache all disabled
+     * @magentoDataFixture loadWebsiteFixtures
+     */
+    public function testGetGroupPricesDataReturnsArray()
+    {
+        $this->setupPhp5();
+
+        $tierPrice1 = [
+            'all_groups' => '0',
+            'cust_group' => '0',
+            'percentage_value' => null,
+            'price' => '11.000000',
+            'price_id' => '1',
+            'price_qty' => '1.0000',
+            'product_id' => '1',
+            'website_id' => '0',
+            'website_price' => '11.000000'
+        ];
+        $tierPrice2 = [
+            'all_groups' => '0',
+            'cust_group' => '1',
+            'percentage_value' => null,
+            'price' => '10.000000',
+            'price_id' => '2',
+            'price_qty' => '1.0000',
+            'product_id' => '1',
+            'website_id' => '0',
+            'website_price' => '10.000000'
+        ];
+        $tierPrice3 = [
+            'all_groups' => '0',
+            'cust_group' => '2',
+            'percentage_value' => null,
+            'price' => '9.000000',
+            'price_id' => '3',
+            'price_qty' => '1.0000',
+            'product_id' => '1',
+            'website_id' => '0',
+            'website_price' => '9.000000'
+        ];
+
+        /** @var StoreManagerInterface $storeManager */
+        $storeManager = $this->objectManager->get(StoreManagerInterface::class);
+        $storeManager->setCurrentStore('klevu_test_store_2');
+
+        $mockProductBuilder = $this->getMockBuilder(\Magento\Catalog\Model\Product::class);
+        $mockProduct = $mockProductBuilder->disableOriginalConstructor()->getMock();
+        $mockProduct->expects($this->once())
+            ->method('getData')
+            ->with('tier_price')
+            ->willReturn([$tierPrice1, $tierPrice2, $tierPrice3]);
+
+        /** @var ProductModel $productModel */
+        $productModel = $this->objectManager->create(ProductModel::class);
+        $groupPrices = $productModel->getGroupPricesData($mockProduct);
+
+        if (method_exists($this, 'assertIsArray')) {
+            $this->assertIsArray($groupPrices);
+        } else {
+            $this->assertTrue(is_array($groupPrices), 'Is Array');
+        }
+
+        $this->assertArrayHasKey('0', $groupPrices);
+        if (method_exists($this, 'assertIsArray')) {
+            $this->assertIsArray($groupPrices['0']);
+        } else {
+            $this->assertTrue(is_array($groupPrices['0']), 'Is Array');
+        }
+        $this->assertArrayHasKey('label', $groupPrices['0']);
+        $this->assertArrayHasKey('values', $groupPrices['0']);
+        $this->assertSame($tierPrice1['website_price'], $groupPrices['0']['values']);
+
+        $this->assertArrayHasKey('1', $groupPrices);
+        if (method_exists($this, 'assertIsArray')) {
+            $this->assertIsArray($groupPrices['1']);
+        } else {
+            $this->assertTrue(is_array($groupPrices['1']), 'Is Array');
+        }
+        $this->assertArrayHasKey('label', $groupPrices['1']);
+        $this->assertArrayHasKey('values', $groupPrices['1']);
+        $this->assertSame($tierPrice2['website_price'], $groupPrices['1']['values']);
+
+        $this->assertArrayHasKey('2', $groupPrices);
+        if (method_exists($this, 'assertIsArray')) {
+            $this->assertIsArray($groupPrices['2']);
+        } else {
+            $this->assertTrue(is_array($groupPrices['2']), 'Is Array');
+        }
+        $this->assertArrayHasKey('label', $groupPrices['2']);
+        $this->assertArrayHasKey('values', $groupPrices['2']);
+        $this->assertSame($tierPrice3['website_price'], $groupPrices['2']['values']);
     }
 
     /**

@@ -14,7 +14,6 @@ define([
             if ($.ui.keyCode.ENTER === keyCode) {
                 if (this.element.val().length >= 1) {
                     this.searchForm.trigger('submit');
-                    e.preventDefault();
                 }
                 return true;
             }

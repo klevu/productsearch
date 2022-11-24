@@ -5,11 +5,14 @@ namespace Klevu\Search\Test\Unit\Helper;
 use Klevu\Logger\Constants as LoggerConstants;
 use Klevu\Search\Helper\Config as ConfigHelper;
 use Klevu\Search\Helper\VersionReader;
+use Magento\Config\Model\ResourceModel\Config as ConfigResource;
+use Magento\Config\Model\ResourceModel\ConfigFactory as ConfigResourceFactory;
 use Magento\Framework\App\Config as ScopeConfig;
 use Magento\Framework\App\Request\Http;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\App\State;
 use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Serialize\SerializerInterface;
 use Magento\Framework\Url;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\Store;
@@ -55,6 +58,14 @@ class GetLogLevelTest extends TestCase
      * @var State|MockObject
      */
     private $mockState;
+    /**
+     * @var MockObject&ConfigResource
+     */
+    private $mockConfigResource;
+    /**
+     * @var MockObject&SerializerInterface
+     */
+    private $mockSerializer;
 
     public function testReturnsDefaultLevelWhenDbValueIsNullAndStoreProvided()
     {
@@ -210,6 +221,12 @@ class GetLogLevelTest extends TestCase
         $this->mockState = $this->getMockBuilder(State::class)
             ->disableOriginalConstructor()
             ->getMock();
+        $this->mockConfigResource = $this->getMockBuilder(ConfigResource::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+        $this->mockSerializer = $this->getMockBuilder(SerializerInterface::class)
+            ->disableOriginalConstructor()
+            ->getMock();
     }
 
     /**
@@ -217,6 +234,11 @@ class GetLogLevelTest extends TestCase
      */
     private function instantiateConfigHelper()
     {
+        $mockConfigResourceFactory = $this->getMockBuilder(ConfigResourceFactory::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+        $mockConfigResourceFactory->method('create')->willReturn($this->mockConfigResource);
+
         return new ConfigHelper(
             $this->mockScopeConfig,
             $this->mockUrl,
@@ -226,7 +248,9 @@ class GetLogLevelTest extends TestCase
             $this->mockConfigValue,
             $this->mockResourceConnection,
             $this->mockVersionReader,
-            $this->mockState
+            $this->mockState,
+            $this->mockSerializer,
+            $mockConfigResourceFactory
         );
     }
 

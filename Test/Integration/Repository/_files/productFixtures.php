@@ -3,10 +3,12 @@
 /** @noinspection PhpUnhandledExceptionInspection */
 
 use Magento\Catalog\Api\Data\ProductExtensionInterface;
+use Magento\Catalog\Api\Data\ProductLinkInterfaceFactory;
 use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\Catalog\Api\ProductTypeListInterface;
 use Magento\Catalog\Model\Indexer\Product\Price\Processor as IndexerProcessor;
 use Magento\Catalog\Model\Product;
+use Magento\Catalog\Model\ProductType;
 use Magento\Catalog\Model\ResourceModel\Product as ProductResource;
 use Magento\ConfigurableProduct\Helper\Product\Options\Factory as ConfigurableOptionsFactory;
 use Magento\Eav\Model\Config as EavConfig;
@@ -17,6 +19,7 @@ use Magento\TestFramework\Helper\Bootstrap;
 use Magento\Bundle\Api\Data\OptionInterfaceFactory;
 use Magento\Bundle\Api\Data\LinkInterfaceFactory;
 
+require __DIR__ . '/productFixtures_rollback.php';
 require __DIR__ . '/productAttributeFixtures.php';
 
 $objectManager = Bootstrap::getObjectManager();
@@ -39,8 +42,11 @@ $configurableOptionsFactory = $objectManager->get(ConfigurableOptionsFactory::cl
 
 // ------------------------------------------------------------------
 
-$configurableAttribute = $eavConfig->getAttribute('catalog_product', 'klevu_test_configurable');
+$configurableAttribute = $eavConfig->getAttribute('catalog_product', 'klevu_synctest_configurable');
 $configurableAttributeOptions = $configurableAttribute->getOptions();
+
+/** @var ProductLinkInterfaceFactory $productLinkFactory */
+$productLinkFactory = $objectManager->get(ProductLinkInterfaceFactory::class);
 
 /** @var array[] $fixtures */
 include __DIR__ . '/productFixtures_data.php';
@@ -63,15 +69,25 @@ foreach ($collection as $product) {
 // ------------------------------------------------------------------
 
 $productTypeList = $objectManager->create(ProductTypeListInterface::class);
-$availableProductTypes = array_map(function(\Magento\Catalog\Model\ProductType $productType) {
+$availableProductTypes = array_map(function (ProductType $productType) {
     return $productType->getName();
 }, $productTypeList->getProductTypes());
 
 // Simple products
 $attributeValues = [];
 $productSkuToId = [];
+$configurableChildSkus = [];
 foreach ($fixtures as $fixture) {
-    if ($fixture['type_id']!== 'simple' || !in_array('simple', $availableProductTypes, true)) {
+    if (!isset($fixture['child_skus']) || $fixture['type_id'] !== 'configurable') {
+        continue;
+    }
+
+    $configurableChildSkus[] = $fixture['child_skus'];
+}
+$configurableChildSkus = array_filter(array_unique(array_merge([], ...$configurableChildSkus)));
+
+foreach ($fixtures as $fixture) {
+    if ($fixture['type_id'] !== 'simple' || !in_array('simple', $availableProductTypes, true)) {
         continue;
     }
 
@@ -84,11 +100,18 @@ foreach ($fixtures as $fixture) {
     $product = $productRepository->save($product);
     $indexerProcessor->reindexRow($product->getId());
 
-    if (0 === strpos($fixture['sku'], 'klevu_simple_child_')) {
+    if (in_array($fixture['sku'], $configurableChildSkus, true)) {
+        if (!isset($fixture['klevu_synctest_configurable'])) {
+            throw new \LogicException(sprintf(
+                'Fixture "%s" used as a configurable variant does not contain "klevu_synctest_configurable"',
+                $fixture['sku']
+            ));
+        }
+
         $attributeValues[$fixture['sku']] = [
             'label' => 'test',
             'attribute_id' => $configurableAttribute->getId(),
-            'value_index' => $fixture['klevu_test_configurable'],
+            'value_index' => $fixture['klevu_synctest_configurable'],
         ];
         $productSkuToId[$product->getSku()] = $product->getId();
     }
@@ -109,7 +132,7 @@ foreach ($fixtures as $fixture) {
     $product = $productRepository->save($product);
     $indexerProcessor->reindexRow($product->getId());
 
-    if (0 === strpos($fixture['sku'], 'klevu_simple_child_')) {
+    if (in_array($fixture['sku'], $configurableChildSkus, true)) {
         $attributeValues[$fixture['sku']] = [
             'label' => 'test',
             'attribute_id' => $configurableAttribute->getId(),
@@ -204,35 +227,35 @@ foreach ($fixtures as $fixture) {
         continue;
     }
 
+    $childSkus = $fixture['associated_skus'];
+
     /** @var $product Product */
     $product = $objectManager->create(Product::class);
     $product->isObjectNew(true);
     $product->addData($fixture);
 
     $product = $productRepository->save($product);
+    $productRepository->cleanCache();
+
+    $simpleProductLinks = [];
+    foreach ($childSkus as $i => $childSku) {
+        $simpleProductLink = $productLinkFactory->create();
+        $simpleProductLink->setSku($fixture['sku']);
+        $simpleProductLink->setLinkType('associated');
+        $simpleProductLink->setLinkedProductSku($childSku);
+        $simpleProductLink->setLinkedProductType('simple');
+        $simpleProductLink->setPosition($i + 1);
+        $extensionAttributes = $simpleProductLink->getExtensionAttributes();
+        $extensionAttributes->setQty(1);
+
+        $simpleProductLinks[] = $simpleProductLink;
+    }
+
+    $product->setProductLinks($simpleProductLinks);
     $indexerProcessor->reindexRow($product->getId());
 
-    $newLinks = [];
-    $productLinkFactory = $objectManager->get(\Magento\Catalog\Api\Data\ProductLinkInterfaceFactory::class);
-
-    /** @var \Magento\Catalog\Api\ProductRepositoryInterface $productRepositorySimple */
-    $productRepositorySimple = $objectManager->get(\Magento\Catalog\Api\ProductRepositoryInterface::class);
-
-    /** @var \Magento\Catalog\Api\Data\ProductLinkInterface $productLink */
-    $productLink = $productLinkFactory->create();
-    $linkedProduct = $productRepositorySimple->get($fixture['associated_skus'][0]);
-    $productLink->setSku($product->getSku())
-        ->setLinkType('associated')
-        ->setLinkedProductSku($linkedProduct->getSku())
-        ->setLinkedProductType($linkedProduct->getTypeId())
-        ->setPosition(1)
-        ->getExtensionAttributes()
-        ->setQty(1);
-    $newLinks[] = $productLink;
-
-    $product->setProductLinks($newLinks);
-    $product->setStockData(['use_config_manage_stock' => 1, 'is_in_stock' => 1]);
-    $productRepositorySimple->save($product);
+    $productRepository->save($product);
+    $productRepository->cleanCache();
 }
 
 //setting up bundle product
@@ -241,84 +264,92 @@ foreach ($fixtures as $fixture) {
         continue;
     }
 
-    /** @var $bundleProduct Product */
-    $bundleProduct = $objectManager->create(Product::class);
-    $bundleProduct->isObjectNew(true);
-    $bundleProduct->addData($fixture);
+    $childSkus = $fixture['associated_skus'];
 
-    /** @var \Magento\Catalog\Api\ProductRepositoryInterface $productRepositorySimple */
-    $productRepositorySimple = $objectManager->get(\Magento\Catalog\Api\ProductRepositoryInterface::class);
-    $linkedProduct = $productRepositorySimple->get($fixture['associated_skus'][0]);
+    /** @var $product Product */
+    $product = $objectManager->create(Product::class);
+    $product->isObjectNew(true);
+    $product->addData($fixture);
 
-    $bundleProduct->setPriceView(1)
-        ->setSkuType(1)
-        ->setWeightType(1)
-        ->setPriceType(1)
-        ->setShipmentType(0)
-        ->setPrice(10.0)
-        ->setBundleOptionsData(
+    $product->setPriceView(1);
+    $product->setSkuType(1);
+    $product->setWeightType(1);
+    $product->setPriceType($fixture['price_type']);
+    $product->setShipmentType(0);
+    if (isset($fixture['price'])) {
+        $product->setPrice($fixture['price']);
+    }
+    $product->setBundleOptionsData(
+        [
             [
-                [
-                    'title' => 'Bundle Product Items',
-                    'default_title' => 'Bundle Product Items',
-                    'type' => 'select', 'required' => 1,
-                    'delete' => '',
-                ],
-            ]
-        )
-        ->setBundleSelectionsData(
-            [
-                [
-                    [
-                        'product_id' => $linkedProduct->getId(),
-                        'selection_price_value' => 1.99,
-                        'selection_qty' => 1,
-                        'selection_can_change_qty' => 1,
-                        'delete' => '',
+                'title' => 'Bundle Product Items',
+                'default_title' => 'Bundle Product Items',
+                'type' => 'select',
+                'required' => 1,
+                'delete' => '',
+            ],
+        ]
+    );
 
-                    ],
-                ],
-            ]
-        );
+    $bundleSelectionsData = [];
+    foreach ($childSkus as $childSku) {
+        $childProduct = $productRepository->get($childSku);
+        $bundleSelectionsData[] = [
+            'product_id' => $childProduct->getId(),
+            'selection_price_value' => $childProduct->getPrice(),
+            'selection_qty' => 1,
+            'selection_can_change_qty' => 1,
+            'delete' => '',
+        ];
+    }
+    $product->setBundleSelectionsData([$bundleSelectionsData]);
 
-    if ($bundleProduct->getBundleOptionsData()) {
+    if ($product->getBundleOptionsData()) {
         $options = [];
-        foreach ($bundleProduct->getBundleOptionsData() as $key => $optionData) {
-            if (!(bool)$optionData['delete']) {
-                $option = $objectManager->create(OptionInterfaceFactory::class)
-                    ->create(['data' => $optionData]);
-                $option->setSku($bundleProduct->getSku());
-                $option->setOptionId(null);
-
-                $links = [];
-                $bundleLinks = $bundleProduct->getBundleSelectionsData();
-                if (!empty($bundleLinks[$key])) {
-                    foreach ($bundleLinks[$key] as $linkData) {
-                        if (!(bool)$linkData['delete']) {
-                            /** @var \Magento\Bundle\Api\Data\LinkInterface$link */
-                            $link = $objectManager->create(LinkInterfaceFactory::class)
-                                ->create(['data' => $linkData]);
-                            $linkProduct = $productRepository->getById($linkData['product_id']);
-                            $link->setSku($linkProduct->getSku());
-                            $link->setQty($linkData['selection_qty']);
-                            $link->setPrice($linkData['selection_price_value']);
-                            if (isset($linkData['selection_can_change_qty'])) {
-                                $link->setCanChangeQuantity($linkData['selection_can_change_qty']);
-                            }
-                            $links[] = $link;
-                        }
-                    }
-                    $option->setProductLinks($links);
-                    $options[] = $option;
-                }
+        $optionFactory = $objectManager->create(OptionInterfaceFactory::class);
+        $linkFactory = $objectManager->create(LinkInterfaceFactory::class);
+        foreach ($product->getBundleOptionsData() as $key => $optionData) {
+            if ((bool)$optionData['delete']) {
+                continue;
             }
+
+            $option = $optionFactory->create(['data' => $optionData]);
+            $option->setSku($product->getSku());
+            $option->setOptionId(null);
+
+            $links = [];
+            $bundleLinks = $product->getBundleSelectionsData();
+            if (empty($bundleLinks[$key])) {
+                continue;
+            }
+
+            foreach ($bundleLinks[$key] as $linkData) {
+                if ((bool)$linkData['delete']) {
+                    continue;
+                }
+
+                $linkProduct = $productRepository->getById($linkData['product_id']);
+
+                $link = $linkFactory->create(['data' => $linkData]);
+                $link->setSku($linkProduct->getSku());
+                $link->setQty($linkData['selection_qty']);
+                $link->setPrice($linkData['selection_price_value']);
+                if (isset($linkData['selection_can_change_qty'])) {
+                    $link->setCanChangeQuantity($linkData['selection_can_change_qty']);
+                }
+                $links[] = $link;
+            }
+
+            $option->setProductLinks($links);
+            $options[] = $option;
         }
-        $extension = $bundleProduct->getExtensionAttributes();
-        $extension->setBundleProductOptions($options);
-        $bundleProduct->setExtensionAttributes($extension);
+
+        $extensionAttributes = $product->getExtensionAttributes();
+        $extensionAttributes->setBundleProductOptions($options);
+        $product->setExtensionAttributes($extensionAttributes);
     }
 
-    $productRepository->save($bundleProduct, true);
+    $product = $productRepository->save($product);
     $productRepository->cleanCache();
 }//end bundle product
 

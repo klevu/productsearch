@@ -1,4 +1,5 @@
 <?php
+// phpcs:disable PSR1.Methods.CamelCapsMethodName.NotCamelCaps
 
 namespace Klevu\Search\Test\Integration\Model\Product;
 
@@ -59,8 +60,8 @@ class SyncTest extends TestCase
      * @magentoConfigFixture default_store currency/options/allow JPY,EUR,GBP
      * @magentoConfigFixture klevu_test_store_1_store currency/options/default JPY
      * @magentoConfigFixture klevu_test_store_1_store currency/options/allow JPY,EUR,GBP
-     * @magentoConfigFixture default/klevu_search/product_sync/enabled 1
-     * @magentoConfigFixture klevu_test_store_1_store klevu_search/product_sync/enabled 1
+     * @magentoConfigFixture default/klevu_search/product_sync/include_oos 0
+     * @magentoConfigFixture klevu_test_store_1_store klevu_search/product_sync/include_oos 0
      * @magentoDataFixture loadWebsiteFixtures
      * @magentoDataFixture loadProductFixtures
      * @magentoDataFixture loadKlevuProductSyncFixtures
@@ -69,8 +70,14 @@ class SyncTest extends TestCase
     {
         $this->setupPhp5();
 
+        $expectedDeletedSkus = [
+            [
+                'parent' => null,
+                'product' => 'klevu_simple_1',
+            ]
+        ];
         $this->objectManager->addSharedInstance(
-            $this->getDeleterecordsMock(true, 1),
+            $this->getDeleterecordsMock(true, count($expectedDeletedSkus)),
             Deleterecords::class
         );
         $this->objectManager->addSharedInstance(
@@ -85,10 +92,23 @@ class SyncTest extends TestCase
         // Cannot use annotations otherwise above shared instances are already
         //  instantiated by observers / plugins on product save
         self::loadProductFixturesActual();
-        $productFixture = $this->productRepository->get('klevu_simple_1');
         self::loadKlevuProductSyncFixturesActual();
 
-        $this->deleteRecordsFixtures[] = (int)$productFixture->getId();
+        $this->deleteRecordsFixtures = array_map(function ($deleteFixture) {
+            $product = $this->productRepository->get($deleteFixture['product']);
+            $parent = isset($deleteFixture['parent'])
+                ? $this->productRepository->get($deleteFixture['parent'])
+                : null;
+
+            $return = '';
+            if ($parent) {
+                $return .= $parent->getId() . '-';
+            }
+            $return .= $product->getId();
+
+            return $return;
+        }, $expectedDeletedSkus);
+
         self::loadProductFixturesRollback();
 
         $store = $this->storeManager->getStore('klevu_test_store_1');
@@ -109,8 +129,8 @@ class SyncTest extends TestCase
      * @magentoConfigFixture default_store currency/options/allow JPY,EUR,GBP
      * @magentoConfigFixture klevu_test_store_1_store currency/options/default JPY
      * @magentoConfigFixture klevu_test_store_1_store currency/options/allow JPY,EUR,GBP
-     * @magentoConfigFixture default/klevu_search/product_sync/enabled 1
-     * @magentoConfigFixture klevu_test_store_1_store klevu_search/product_sync/enabled 1
+     * @magentoConfigFixture default/klevu_search/product_sync/include_oos 0
+     * @magentoConfigFixture klevu_test_store_1_store klevu_search/product_sync/include_oos 0
      * @magentoDataFixture loadWebsiteFixtures
      * @magentoDataFixture loadProductFixtures
      * @magentoDataFixture loadKlevuProductSyncFixtures
@@ -173,8 +193,8 @@ class SyncTest extends TestCase
      * @magentoConfigFixture default_store currency/options/allow JPY,EUR,GBP
      * @magentoConfigFixture klevu_test_store_1_store currency/options/default JPY
      * @magentoConfigFixture klevu_test_store_1_store currency/options/allow JPY,EUR,GBP
-     * @magentoConfigFixture default/klevu_search/product_sync/enabled 1
-     * @magentoConfigFixture klevu_test_store_1_store klevu_search/product_sync/enabled 1
+     * @magentoConfigFixture default/klevu_search/product_sync/include_oos 0
+     * @magentoConfigFixture klevu_test_store_1_store klevu_search/product_sync/include_oos 0
      * @magentoDataFixture loadWebsiteFixtures
      * @magentoDataFixture loadProductFixtures
      * @magentoDataFixture loadKlevuProductSyncFixtures
@@ -240,7 +260,7 @@ class SyncTest extends TestCase
         $deleterecordsMock = $this->getMockBuilder(Deleterecords::class)
             ->disableOriginalConstructor()
             ->getMock();
-        $deleterecordsMock->expects($this->exactly($expectedCount))
+        $deleterecordsMock->expects($expectedCount ? $this->once() : $this->never())
             ->method('execute')
             ->willReturnCallback(function ($parameters) use ($response) {
                 if (method_exists($this, 'assertIsArray')) {
@@ -258,15 +278,12 @@ class SyncTest extends TestCase
                     $this->assertTrue(is_array($parameters['records']), 'Is Array');
                 }
 
-                foreach (array_values($parameters['records']) as $i => $record) {
-                    if (method_exists($this, 'assertIsArray')) {
-                        $this->assertIsArray($record);
-                    } else {
-                        $this->assertTrue(is_array($record), 'Is Array');
-                    }
+                $expectedData = array_fill_keys($this->deleteRecordsFixtures, null);
+                ksort($expectedData);
+                $receivedData = array_fill_keys(array_column($parameters['records'], 'id'), null);
+                ksort($receivedData);
 
-                    $this->assertSame(['id' => (string)$this->deleteRecordsFixtures[$i]], $record);
-                }
+                $this->assertSame($expectedData, $receivedData, 'IDs received in deleteRecord execution');
 
                 return $response;
             });
@@ -330,7 +347,7 @@ class SyncTest extends TestCase
                                 'Product type %s not currently supported',
                                 $expectedProductData[$sku]['product_type']
                             ));
-                            break;
+                            break; // phpcs:ignore Squiz.PHP.NonExecutableCode.Unreachable
                     }
 
                     $missingData = array_diff_key($expectedProductData[$sku], $record);
@@ -404,7 +421,7 @@ class SyncTest extends TestCase
                                 'Product type %s not currently supported',
                                 $expectedProductData[$sku]['product_type']
                             ));
-                            break;
+                            break; // phpcs:ignore Squiz.PHP.NonExecutableCode.Unreachable
                     }
 
                     $missingData = array_diff_key($expectedProductData[$sku], $record);
@@ -477,20 +494,20 @@ class SyncTest extends TestCase
     }
 
     /**
+     * Used by annotations so rollback is performed even when a test fails
+     */
+    public static function loadProductFixtures()
+    {
+        // Intentionally empty
+    }
+
+    /**
      * Loads product creation scripts because annotations use a relative path
      *  from integration tests root
      */
     public static function loadProductFixturesActual()
     {
         include __DIR__ . '/../../_files/productFixtures.php';
-    }
-
-    /**
-     * Used by annotations so rollback is performed even when a test fails
-     */
-    public static function loadProductFixtures()
-    {
-        // Intentionally empty
     }
 
     /**
@@ -503,20 +520,20 @@ class SyncTest extends TestCase
     }
 
     /**
+     * Used by annotations so rollback is performed even when a test fails
+     */
+    public static function loadKlevuProductSyncFixtures()
+    {
+        // Intentionally empty
+    }
+
+    /**
      * Loads klevu product sync creation scripts because annotations use a relative path
      *  from integration tests root
      */
     public static function loadKlevuProductSyncFixturesActual()
     {
         include __DIR__ . '/../../_files/klevuProductSyncFixtures.php';
-    }
-
-    /**
-     * Used by annotations so rollback is performed even when a test fails
-     */
-    public static function loadKlevuProductSyncFixtures()
-    {
-        // Intentionally empty
     }
 
     /**

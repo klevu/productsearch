@@ -178,6 +178,7 @@ class Config extends AbstractHelper
     const XML_PATH_PRICE_DISPLAY_METHOD = "tax/display/type";
     const XML_PATH_PRICE_TYPEINSEARCH_METHOD = "tax/display/typeinsearch";
     const XML_PATH_CATALOGINVENTRY_OPTIONS_STOCK = "cataloginventory/options/show_out_of_stock";
+    const XML_PATH_INCLUDE_OOS_PRODUCTS = 'klevu_search/product_sync/include_oos';
     const XML_PATH_CATALOG_SEARCH_RELEVANCE = "klevu_search/searchlanding/klevu_search_relevance";
     const XML_PATH_CATALOG_SEARCH_SORT_ORDERS = 'klevu_search/searchlanding/klevu_search_sort_orders';
     const XML_PATH_PRODUCT_SYNC_CATALOGVISIBILITY = "klevu_search/product_sync/catalogvisibility";
@@ -1473,6 +1474,19 @@ class Config extends AbstractHelper
     public function displayOutofstock()
     {
         return $this->_appConfigScopeConfigInterface->isSetFlag(static::XML_PATH_CATALOGINVENTRY_OPTIONS_STOCK);
+    }
+
+    /**
+     * @param StoreInterface|string|int $store
+     * @return bool
+     */
+    public function includeOosProductsInSync($store = null)
+    {
+        return $this->_appConfigScopeConfigInterface->isSetFlag(
+            static::XML_PATH_INCLUDE_OOS_PRODUCTS,
+            ScopeInterface::SCOPE_STORES,
+            $store
+        );
     }
 
     /**

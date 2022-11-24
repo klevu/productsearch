@@ -2,6 +2,8 @@
 
 namespace Klevu\Search\Model\Api\Action;
 
+use Magento\Store\Api\Data\StoreInterface;
+
 class Addrecords extends \Klevu\Search\Model\Api\Actionall
 {
     const ENDPOINT = "/rest/service/addRecords";
@@ -35,8 +37,8 @@ class Addrecords extends \Klevu\Search\Model\Api\Actionall
     protected $_searchHelperData;
 
     /**
-     * @var array
      * mandatory_field_name => allowed_empty
+     * @var array
      */
     protected $mandatory_fields = [
         "id" => false,
@@ -48,6 +50,13 @@ class Addrecords extends \Klevu\Search\Model\Api\Actionall
         "listCategory" => true
     ];
 
+    /**
+     * @param \Klevu\Search\Model\Api\Response\Invalid $apiResponseInvalid
+     * @param \Klevu\Search\Helper\Api $searchHelperApi
+     * @param \Klevu\Search\Helper\Config $searchHelperConfig
+     * @param \Magento\Store\Model\StoreManagerInterface $storeModelStoreManagerInterface
+     * @param \Klevu\Search\Helper\Data $searchHelperData
+     */
     public function __construct(
         \Klevu\Search\Model\Api\Response\Invalid $apiResponseInvalid,
         \Klevu\Search\Helper\Api $searchHelperApi,
@@ -63,7 +72,7 @@ class Addrecords extends \Klevu\Search\Model\Api\Actionall
     }
 
     /**
-     * @param $parameters
+     * @param array $parameters
      *
      * @return \Klevu\Search\Model\Api\Response|\Klevu\Search\Model\Api\Response\Rempty
      * @throws \Exception
@@ -108,7 +117,7 @@ class Addrecords extends \Klevu\Search\Model\Api\Actionall
 
     /**
      * Get the store used for this request.
-     * @return \Magento\Framework\Model\Store
+     * @return StoreInterface
      */
     public function getStore()
     {
@@ -120,7 +129,7 @@ class Addrecords extends \Klevu\Search\Model\Api\Actionall
     }
 
     /**
-     * @param $parameters
+     * @param array $parameters
      *
      * @return array|bool
      */
@@ -148,7 +157,7 @@ class Addrecords extends \Klevu\Search\Model\Api\Actionall
      * the $parameters argument in place. Return the list of skipped records and
      * their error messages.
      *
-     * @param $parameters
+     * @param array $parameters
      *
      * @return array
      */
@@ -208,7 +217,7 @@ class Addrecords extends \Klevu\Search\Model\Api\Actionall
     /**
      * Convert the given parameters to a format expected by the XML request model.
      *
-     * @param $parameters
+     * @param array $parameters
      */
     protected function prepareParameters(&$parameters)
     {
@@ -251,7 +260,7 @@ class Addrecords extends \Klevu\Search\Model\Api\Actionall
     /**
      * Flattens other parameters array to a string formatted: key:value[,value]
      *
-     * @param string
+     * @param array $record
      */
     protected function prepareOtherParameters(&$record)
     {
@@ -287,7 +296,6 @@ class Addrecords extends \Klevu\Search\Model\Api\Actionall
                 }
             }
         }
-        $record['other'] = '';
         if (is_array($record['other'])) {
             $record['other'] = implode(";", $record['other']);
         }
@@ -296,7 +304,7 @@ class Addrecords extends \Klevu\Search\Model\Api\Actionall
     /**
      * Flattens otherAttributeToIndex parameters array to a string formatted: key:value[,value]
      *
-     * @param string
+     * @param array $record
      */
     protected function prepareOtherAttributeToIndexParameters(&$record)
     {
@@ -347,7 +355,7 @@ class Addrecords extends \Klevu\Search\Model\Api\Actionall
     /**
      * Flattens GroupPrices parameters array to a string formatted: key:value[,value]
      *
-     * @param string
+     * @param array $record
      */
     protected function prepareGroupPricesParameters(&$record)
     {
@@ -375,7 +383,7 @@ class Addrecords extends \Klevu\Search\Model\Api\Actionall
      * Remove the characters used to organise the other attribute values from the
      * passed in string.
      *
-     * @param $value
+     * @param string $value
      *
      * @return string
      */
@@ -385,9 +393,9 @@ class Addrecords extends \Klevu\Search\Model\Api\Actionall
     }
 
     /**
-     * @param $endpoint
-     * @param $store
-     * @param $hostname
+     * @param string $endpoint
+     * @param string $store
+     * @param string $hostname
      *
      * @return string
      */
