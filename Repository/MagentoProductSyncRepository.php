@@ -3,20 +3,31 @@
 namespace Klevu\Search\Repository;
 
 use Klevu\Search\Api\MagentoProductSyncRepositoryInterface;
+use Klevu\Search\Api\Service\Catalog\Product\JoinParentStatusToSelectInterface;
+use Klevu\Search\Api\Service\Catalog\Product\JoinParentVisibilityToSelectInterface;
 use Klevu\Search\Model\Product\ProductIndividualInterface;
 use Klevu\Search\Model\Product\ProductParentInterface;
 use Klevu\Search\Model\Product\ResourceModel\Product as KlevuProductResourceModel;
 use Klevu\Search\Model\Product\ResourceModel\Product\Collection as KlevuProductCollection;
 use Magento\Catalog\Model\Product\Visibility;
 use Magento\Catalog\Model\ResourceModel\Product\Collection as ProductCollection;
+use Magento\CatalogInventory\Model\Stock\Status as StockStatus;
+use Magento\ConfigurableProduct\Model\ResourceModel\Attribute\OptionProvider;
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\App\ObjectManager;
 use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Model\ScopeInterface;
+use Magento\Store\Model\Store;
 
 class MagentoProductSyncRepository implements MagentoProductSyncRepositoryInterface
 {
     const XML_PATH_PRODUCT_SYNC_CATALOGVISIBILITY = "klevu_search/product_sync/catalogvisibility";
     const MAX_ITERATIONS = 100000;
+    const CATALOG_PRODUCT_ENTITY_ALIAS = 'e';
+    const CATALOG_PRODUCT_SUPER_LINK_ALIAS = 'l';
+    const STOCK_STATUS_ALIAS = 'stock_status';
+    const PARENT_STOCK_STATUS_ALIAS = 'parent_stock_status';
+    const PARENT_CATALOG_PRODUCT_ENTITY_ALIAS = 'parent';
 
     /**
      * @var ProductIndividualInterface
@@ -39,64 +50,208 @@ class MagentoProductSyncRepository implements MagentoProductSyncRepositoryInterf
      */
     private $productCollection;
     /**
+     * @var OptionProvider
+     */
+    private $optionProvider;
+    /**
+     * @var JoinParentVisibilityToSelectInterface
+     */
+    private $joinParentVisibilityToSelectService;
+    /**
+     * @var JoinParentStatusToSelectInterface
+     */
+    private $joinParentStatusToSelectService;
+    /**
      * @var array
      */
     private $visibility = [];
 
+    /**
+     * @param ProductIndividualInterface $klevuProductIndividual
+     * @param ProductParentInterface $klevuProductParent
+     * @param ScopeConfigInterface $scopeConfig
+     * @param KlevuProductResourceModel $productResourceModel
+     * @param KlevuProductCollection $productCollection
+     * @param OptionProvider|null $optionProvider
+     * @param JoinParentVisibilityToSelectInterface|null $joinParentVisibilityToSelectService
+     * @param JoinParentStatusToSelectInterface|null $joinParentStatusToSelectService
+     */
     public function __construct(
         ProductIndividualInterface $klevuProductIndividual,
         ProductParentInterface $klevuProductParent,
         ScopeConfigInterface $scopeConfig,
         KlevuProductResourceModel $productResourceModel,
-        KlevuProductCollection $productCollection
+        KlevuProductCollection $productCollection,
+        OptionProvider $optionProvider = null,
+        JoinParentVisibilityToSelectInterface $joinParentVisibilityToSelectService = null,
+        JoinParentStatusToSelectInterface $joinParentStatusToSelectService = null
     ) {
         $this->klevuProductIndividual = $klevuProductIndividual;
         $this->klevuProductParent = $klevuProductParent;
         $this->scopeConfig = $scopeConfig;
         $this->productResourceModel = $productResourceModel;
         $this->productCollection = $productCollection;
+
+        $objectManager = ObjectManager::getInstance();
+        $this->optionProvider = $optionProvider ?: $objectManager->get(OptionProvider::class);
+        $this->joinParentVisibilityToSelectService = $joinParentVisibilityToSelectService
+            ?: $objectManager->get(JoinParentVisibilityToSelectInterface::class);
+        // Hardcoded FQCN as using virtualType - concrete class requires status parameter set via di.xml
+        // phpcs:disable Magento2.PHP.LiteralNamespaces.LiteralClassUsage
+        $this->joinParentStatusToSelectService = $joinParentStatusToSelectService
+            ?: $objectManager->get('\Klevu\Search\Service\Catalog\Product\JoinParentStatusToSelect\Enabled');
+        // phpcs:enable Magento2.PHP.LiteralNamespaces.LiteralClassUsage
     }
 
     /**
      * @param StoreInterface $store
-     * @param int|null $visibility self::NOT_VISIBLE_EXCLUDED|self::NOT_VISIBLE_INCLUDED|self::NOT_VISIBLE_ONLY
+     * @param int $visibility self::NOT_VISIBLE_EXCLUDED|self::NOT_VISIBLE_INCLUDED|self::NOT_VISIBLE_ONLY
+     * @param bool $includeOosProducts
      *
      * @return ProductCollection
      */
-    public function getProductIdsCollection(StoreInterface $store, $visibility = self::NOT_VISIBLE_EXCLUDED)
-    {
-        $productTypeArray = $this->klevuProductIndividual->getProductIndividualTypeArray();
-
-        return $this->getInitCollectionByType($store, $productTypeArray, $visibility);
+    public function getProductIdsCollection(
+        StoreInterface $store,
+        $visibility = self::NOT_VISIBLE_EXCLUDED,
+        $includeOosProducts = true
+    ) {
+        return $this->getInitCollectionByType(
+            $store,
+            $this->klevuProductIndividual->getProductIndividualTypeArray(),
+            $visibility,
+            $includeOosProducts
+        );
     }
 
     /**
      * @param StoreInterface $store
+     * @param int $parentVisibility self::NOT_VISIBLE_EXCLUDED|self::NOT_VISIBLE_INCLUDED|self::NOT_VISIBLE_ONLY
+     * @param bool $includeOosProducts
      *
      * @return ProductCollection
      */
-    public function getChildProductIdsCollection(StoreInterface $store)
-    {
-        $productTypeArray = $this->klevuProductIndividual->getProductChildTypeArray();
+    public function getChildProductIdsCollection(
+        StoreInterface $store,
+        $parentVisibility = self::NOT_VISIBLE_EXCLUDED,
+        $includeOosProducts = true
+    ) {
+        $return = $this->getInitCollectionByType(
+            $store,
+            $this->klevuProductIndividual->getProductChildTypeArray(),
+            null,
+            $includeOosProducts
+        );
 
-        return $this->getInitCollectionByType($store, $productTypeArray, static::NOT_VISIBLE_ONLY);
+        $select = $return->getSelect();
+        $resource = $return->getResource();
+        $connection = $select->getConnection();
+        $select->distinct();
+        $select->joinInner(
+            [self::CATALOG_PRODUCT_SUPER_LINK_ALIAS => $resource->getTable('catalog_product_super_link')],
+            sprintf(
+                '%s.entity_id = %s.product_id',
+                self::CATALOG_PRODUCT_ENTITY_ALIAS,
+                self::CATALOG_PRODUCT_SUPER_LINK_ALIAS
+            ),
+            []
+        );
+
+        $storeId = (int)$store->getId();
+
+        $this->joinParentStatusToSelectService->setTableAlias(
+            'catalog_product_super_link',
+            self::CATALOG_PRODUCT_SUPER_LINK_ALIAS
+        );
+        $this->joinParentStatusToSelectService->setTableAlias(
+            'parent_catalog_product_entity',
+            self::PARENT_CATALOG_PRODUCT_ENTITY_ALIAS
+        );
+        $select = $this->joinParentStatusToSelectService->execute($select, $storeId);
+
+        if ($parentVisibility !== static::NOT_VISIBLE_INCLUDED) {
+            $this->joinParentVisibilityToSelectService->setTableAlias(
+                'catalog_product_super_link',
+                self::CATALOG_PRODUCT_SUPER_LINK_ALIAS
+            );
+            $this->joinParentVisibilityToSelectService->setTableAlias(
+                'parent_catalog_product_entity',
+                self::PARENT_CATALOG_PRODUCT_ENTITY_ALIAS
+            );
+            $select = $this->joinParentVisibilityToSelectService->execute($select, $storeId);
+        }
+
+        if (!$includeOosProducts) {
+            $select->joinInner(
+                [self::PARENT_CATALOG_PRODUCT_ENTITY_ALIAS => $resource->getTable('catalog_product_entity')],
+                sprintf(
+                    '%s.%s = %s.parent_id',
+                    self::PARENT_CATALOG_PRODUCT_ENTITY_ALIAS,
+                    $connection->quoteIdentifier($this->optionProvider->getProductEntityLinkField()),
+                    self::CATALOG_PRODUCT_SUPER_LINK_ALIAS
+                ),
+                []
+            );
+            $select->joinInner(
+                [self::PARENT_STOCK_STATUS_ALIAS => $resource->getTable('cataloginventory_stock_status')],
+                sprintf(
+                    '%s.product_id = %s.entity_id',
+                    self::PARENT_STOCK_STATUS_ALIAS,
+                    self::PARENT_CATALOG_PRODUCT_ENTITY_ALIAS
+                ),
+                []
+            );
+            $select->where(
+                self::PARENT_STOCK_STATUS_ALIAS . '.stock_status = ?',
+                StockStatus::STATUS_IN_STOCK
+            );
+        }
+
+        return $return;
     }
 
     /**
      * @param StoreInterface $store
+     * @param bool $includeOosProducts
      *
      * @return array
      */
-    public function getParentProductIds(StoreInterface $store)
+    public function getParentProductIds(StoreInterface $store, $includeOosProducts = true)
     {
         $parentProductTypeArray = $this->klevuProductParent->getProductParentTypeArray();
-        $productCollection = $this->getInitCollectionByType($store, $parentProductTypeArray, static::NOT_VISIBLE_INCLUDED);
+        $productCollection = $this->getInitCollectionByType(
+            $store,
+            $parentProductTypeArray,
+            static::NOT_VISIBLE_EXCLUDED
+        );
+
+        if (!$includeOosProducts) {
+            $select = $productCollection->getSelect();
+            $resource = $productCollection->getResource();
+            $select->joinInner(
+                [self::STOCK_STATUS_ALIAS => $resource->getTable('cataloginventory_stock_status')],
+                sprintf(
+                    '%s.product_id = %s.entity_id',
+                    self::STOCK_STATUS_ALIAS,
+                    self::CATALOG_PRODUCT_ENTITY_ALIAS
+                ),
+                []
+            );
+            $select->where(
+                self::STOCK_STATUS_ALIAS . '.stock_status = ?',
+                StockStatus::STATUS_IN_STOCK
+            );
+        }
 
         $enabledParentIds = [];
         $lastEntityId = 0;
         $i = 0;
         while (true) {
-            $enabledParentIds[$i] = $this->productResourceModel->getBatchDataForCollection($productCollection, $store, [], $lastEntityId);
+            $enabledParentIds[$i] = $this->productResourceModel->getBatchDataForCollection(
+                $productCollection,
+                $store,
+                [],
+                $lastEntityId
+            );
             if (!$enabledParentIds[$i]) {
                 break;
             }
@@ -120,13 +275,18 @@ class MagentoProductSyncRepository implements MagentoProductSyncRepositoryInterf
     }
 
     /**
-     * @param array $productIds
+     * @param string[] $productIds
+     * @param int $storeId
+     * @param bool $includeOosParents
      *
-     * @return array
+     * @return array[]
      */
-    public function getParentProductRelations($productIds)
-    {
-        return $this->productResourceModel->getParentProductRelations($productIds);
+    public function getParentProductRelations(
+        $productIds,
+        $storeId = Store::DEFAULT_STORE_ID,
+        $includeOosParents = true
+    ) {
+        return $this->productResourceModel->getParentProductRelations($productIds, $storeId, $includeOosParents);
     }
 
     /**
@@ -137,23 +297,44 @@ class MagentoProductSyncRepository implements MagentoProductSyncRepositoryInterf
      *
      * @return array
      */
-    public function getBatchDataForCollection(ProductCollection $productCollection, StoreInterface $store, $productIds = [], $lastEntityId = null)
-    {
-        return $this->productResourceModel->getBatchDataForCollection($productCollection, $store, $productIds, $lastEntityId);
+    public function getBatchDataForCollection(
+        ProductCollection $productCollection,
+        StoreInterface $store,
+        $productIds = [],
+        $lastEntityId = null
+    ) {
+        return $this->productResourceModel->getBatchDataForCollection(
+            $productCollection,
+            $store,
+            $productIds,
+            $lastEntityId
+        );
     }
 
     /**
      * @param StoreInterface $store
      * @param array $productTypeArray
-     * @param int $visibility
+     * @param int|null $visibility
+     * @param bool $includeOosProducts
      *
      * @return ProductCollection
      */
-    private function getInitCollectionByType(StoreInterface $store, array $productTypeArray, $visibility)
-    {
-        $visibilityArray = $this->getVisibility($store, $visibility);
+    private function getInitCollectionByType(
+        StoreInterface $store,
+        array $productTypeArray,
+        $visibility,
+        $includeOosProducts = true
+    ) {
+        $visibilityArray = (is_int($visibility))
+            ? $this->getVisibility($store, $visibility)
+            : [];
 
-        return $this->productCollection->initCollectionByType($store, $productTypeArray, $visibilityArray);
+        return $this->productCollection->initCollectionByType(
+            $store,
+            $productTypeArray,
+            $visibilityArray,
+            $includeOosProducts
+        );
     }
 
     /**

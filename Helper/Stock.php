@@ -19,6 +19,10 @@ class Stock extends AbstractHelper
      */
     private $stockService;
 
+    /**
+     * @param StockRegistryInterface $stockRegistryInterface
+     * @param StockServiceInterface|null $stockService
+     */
     public function __construct(
         StockRegistryInterface $stockRegistryInterface,
         StockServiceInterface $stockService = null
@@ -31,16 +35,18 @@ class Stock extends AbstractHelper
 
     /**
      * Get stock data for simple and parent product
-     * @deprecated see \Klevu\Search\Service\Catalog\Product\Stock::getKlevuStockStatus
+     * @deprecated Replaced by standalone service
+     * @see \Klevu\Search\Service\Catalog\Product\Stock::getKlevuStockStatus
      *
      * @param ProductInterface|null $parentProduct
      * @param ProductInterface $product
+     * @param int|null $websiteId
      *
      * @return string
      */
-    public function getKlevuStockStatus($parentProduct, $product)
+    public function getKlevuStockStatus($parentProduct, $product, $websiteId = null)
     {
         // params are intentionally inverted here, $parentProduct can be null, $product cannot
-        return $this->stockService->getKlevuStockStatus($product, $parentProduct);
+        return $this->stockService->getKlevuStockStatus($product, $parentProduct, $websiteId);
     }
 }

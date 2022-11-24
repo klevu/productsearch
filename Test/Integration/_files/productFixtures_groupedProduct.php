@@ -72,7 +72,7 @@ $simpleProduct->addData([
         'is_qty_decimal'            => 0,
         'is_in_stock'               => 1,
     ],
-    'url_key' => 'klevu-grouped-product-test-simple-'. md5(rand()),
+    'url_key' => 'klevu-grouped-product-test-simple-'. crc32(rand()),
 ]);
 $simpleProduct = $productRepository->save($simpleProduct);
 
@@ -102,7 +102,7 @@ $groupedProduct->addData([
         'is_qty_decimal'            => 0,
         'is_in_stock'               => 1,
     ],
-    'url_key' => 'klevu-grouped-product-test-'. md5(rand()),
+    'url_key' => 'klevu-grouped-product-test-'. crc32(rand()),
 ]);
 
 $groupedProduct = $productRepository->save($groupedProduct);

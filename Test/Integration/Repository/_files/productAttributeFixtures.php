@@ -7,6 +7,8 @@ use Magento\Eav\Api\AttributeRepositoryInterface;
 use Magento\Eav\Model\Config as EavConfig;
 use Magento\TestFramework\Helper\Bootstrap;
 
+include __DIR__ . '/productAttributeFixtures_rollback.php';
+
 $objectManager = Bootstrap::getObjectManager();
 
 /** @var EavConfig $eavConfig */
@@ -55,6 +57,16 @@ if (!$configurableAttribute->getId()) {
                 'option_7' => ['Option 8'],
                 'option_8' => ['Option 9'],
                 'option_9' => ['Option 10'],
+                'option_10' => ['Option 11'],
+                'option_11' => ['Option 12'],
+                'option_12' => ['Option 13'],
+                'option_13' => ['Option 14'],
+                'option_14' => ['Option 15'],
+                'option_15' => ['Option 16'],
+                'option_16' => ['Option 17'],
+                'option_17' => ['Option 18'],
+                'option_18' => ['Option 19'],
+                'option_19' => ['Option 20'],
             ],
             'order' => [
                 'option_0' => 1,
@@ -67,6 +79,16 @@ if (!$configurableAttribute->getId()) {
                 'option_7' => 8,
                 'option_8' => 9,
                 'option_9' => 10,
+                'option_10' => 11,
+                'option_11' => 12,
+                'option_12' => 13,
+                'option_13' => 14,
+                'option_14' => 15,
+                'option_15' => 16,
+                'option_16' => 17,
+                'option_17' => 18,
+                'option_18' => 19,
+                'option_19' => 20,
             ],
         ],
     ]);

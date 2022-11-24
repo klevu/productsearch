@@ -25,17 +25,15 @@ class SimpleProvider implements CommonProviderInterface
      */
     public function __construct(
         array $providers = []
-    )
-    {
+    ) {
         array_walk($providers, [$this, 'addProvider']);
-
     }
 
     /**
      * @param CommonProviderInterface $provider
      * @param string $productTypeId
      */
-    public function addProvider(CommonProviderInterface $provider, string $productTypeId)
+    public function addProvider(CommonProviderInterface $provider, $productTypeId)
     {
         $this->providers[$productTypeId] = $provider;
     }
@@ -77,7 +75,13 @@ class SimpleProvider implements CommonProviderInterface
             foreach ($this->providers as $provider) {
                 $parentIds[] = $provider->getParentIds($product);
             }
-            $this->parentIds[$product->getSku()] = array_values(array_unique(array_filter(array_merge([], ...$parentIds))));
+            $this->parentIds[$product->getSku()] = array_values(
+                array_unique(
+                    array_filter(
+                        array_merge([], ...$parentIds)
+                    )
+                )
+            );
         }
         return $this->parentIds[$product->getSku()];
     }

@@ -2,13 +2,17 @@
 
 namespace Klevu\Search\Setup;
 
+use Klevu\Search\Helper\Config as ConfigHelper;
 use Klevu\Search\Model\Attribute\Rating;
 use Klevu\Search\Model\Attribute\ReviewCount;
 use Magento\Catalog\Model\Category;
 use Magento\Catalog\Model\Product;
+use Magento\CatalogInventory\Model\Configuration as CatalogInventoryConfiguration;
 use Magento\Eav\Model\Entity\Attribute\Source\Boolean;
-use Magento\Eav\Setup\EavSetup;
 use Magento\Eav\Setup\EavSetupFactory;
+use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\App\Config\Storage\WriterInterface as ConfigWriterInterface;
+use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Setup\UpgradeDataInterface;
 use Magento\Framework\Setup\ModuleContextInterface;
 use Magento\Framework\Setup\ModuleDataSetupInterface;
@@ -22,13 +26,29 @@ class UpgradeData implements UpgradeDataInterface
      * @var EavSetupFactory
      */
     private $eavSetupFactory;
+    /**
+     * @var ScopeConfigInterface|mixed
+     */
+    private $scopeConfig;
+    /**
+     * @var ConfigWriterInterface
+     */
+    private $configWriter;
 
     /**
      * @param EavSetupFactory $eavSetupFactory
+     * @param ScopeConfigInterface|null $scopeConfig
+     * @param ConfigWriterInterface|null $configWriter
      */
-    public function __construct(EavSetupFactory $eavSetupFactory)
-    {
+    public function __construct(
+        EavSetupFactory $eavSetupFactory,
+        ScopeConfigInterface $scopeConfig = null,
+        ConfigWriterInterface $configWriter = null
+    ) {
         $this->eavSetupFactory = $eavSetupFactory;
+        $objectManager = ObjectManager::getInstance();
+        $this->scopeConfig = $scopeConfig ?: $objectManager->get(ScopeConfigInterface::class);
+        $this->configWriter = $configWriter ?: $objectManager->get(ConfigWriterInterface::class);
     }
 
     /**
@@ -102,6 +122,21 @@ class UpgradeData implements UpgradeDataInterface
                         'note' => 'Automatically calculated and populated by Klevu to sync ratings data. ' .
                             'For more information, please refer to the Klevu knowledgebase.',
                     ]
+                );
+            }
+        }
+
+        if (version_compare($context->getVersion(), '2.9.1', '<')) {
+            $showOutOfStockProducts = $this->scopeConfig->isSetFlag(
+                CatalogInventoryConfiguration::XML_PATH_SHOW_OUT_OF_STOCK,
+                ScopeConfigInterface::SCOPE_TYPE_DEFAULT
+            );
+
+            if ($showOutOfStockProducts) {
+                $this->configWriter->save(
+                    ConfigHelper::XML_PATH_INCLUDE_OOS_PRODUCTS,
+                    1,
+                    ScopeConfigInterface::SCOPE_TYPE_DEFAULT
                 );
             }
         }

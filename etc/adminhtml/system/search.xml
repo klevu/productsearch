@@ -141,6 +141,19 @@
                 ]]>
             </comment>
         </field>
+        <field id="include_oos" translate="label comment" sortOrder="30" type="select"
+               showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Include Out of Stock Products</label>
+            <depends>
+                <field id="enabled">1</field>
+            </depends>
+            <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+            <comment>
+                <![CDATA[
+
+                ]]>
+            </comment>
+        </field>
         <field id="frequency" translate="label comment" sortOrder="10" type="select" showInDefault="1">
             <label>Frequency</label>
             <source_model>Klevu\Search\Model\System\Config\Source\Frequency\ProductSync</source_model>

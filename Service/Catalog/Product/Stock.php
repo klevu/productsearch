@@ -3,12 +3,19 @@
 namespace Klevu\Search\Service\Catalog\Product;
 
 use Klevu\Search\Api\Service\Catalog\Product\GetStockStatusByIdInterface;
+use Klevu\Search\Api\Service\Catalog\Product\Stock\GetCompositeProductStockStatusInterface;
 use Klevu\Search\Api\Service\Catalog\Product\StockServiceInterface;
+use Magento\Bundle\Model\Product\Type as BundleType;
 use Magento\Catalog\Api\Data\ProductInterface;
+use Magento\Catalog\Model\Product\Type as ProductType;
 use Magento\CatalogInventory\Api\StockItemCriteriaInterfaceFactory;
 use Magento\CatalogInventory\Api\StockItemRepositoryInterface;
 use Magento\CatalogInventory\Api\StockRegistryInterface;
+use Magento\CatalogInventory\Helper\Stock as MagentoStockHelper;
+use Magento\ConfigurableProduct\Model\Product\Type\Configurable as ConfigurableType;
+use Magento\Downloadable\Model\Product\Type as DownloadableProductType;
 use Magento\Framework\App\ObjectManager;
+use Magento\GroupedProduct\Model\Product\Type\Grouped as GroupedType;
 
 class Stock implements StockServiceInterface
 {
@@ -35,24 +42,45 @@ class Stock implements StockServiceInterface
      * @var GetStockStatusByIdInterface
      */
     private $getStockStatusById;
+    /**
+     * @var MagentoStockHelper
+     */
+    private $magentoStockHelper;
+    /**
+     * @var GetCompositeProductStockStatusInterface
+     */
+    private $getCompositeProductStockStatus;
+    /**
+     * @var string[]
+     */
+    private $cachedKlevuStockStatus = [];
 
     /**
      * @param StockRegistryInterface $stockRegistryInterface
      * @param StockItemCriteriaInterfaceFactory $stockItemCriteriaInterfaceFactory
      * @param StockItemRepositoryInterface $stockItemRepository
      * @param GetStockStatusByIdInterface|null $getStockStatusById
+     * @param MagentoStockHelper|null $magentoStockHelper
+     * @param GetCompositeProductStockStatusInterface|null $getCompositeProductStockStatus
      */
     public function __construct(
         StockRegistryInterface $stockRegistryInterface,
         StockItemCriteriaInterfaceFactory $stockItemCriteriaInterfaceFactory,
         StockItemRepositoryInterface $stockItemRepository,
-        GetStockStatusByIdInterface $getStockStatusById = null
+        GetStockStatusByIdInterface $getStockStatusById = null,
+        MagentoStockHelper $magentoStockHelper = null,
+        GetCompositeProductStockStatusInterface $getCompositeProductStockStatus = null
     ) {
         $this->_stockRegistryInterface = $stockRegistryInterface;
         $this->stockItemCriteriaInterfaceFactory = $stockItemCriteriaInterfaceFactory;
         $this->stockItemRepository = $stockItemRepository;
-        $this->getStockStatusById = $getStockStatusById ?:
-            ObjectManager::getInstance()->get(GetStockStatusByIdInterface::class);
+        $objectManager = ObjectManager::getInstance();
+        $this->getStockStatusById = $getStockStatusById
+            ?: $objectManager->get(GetStockStatusByIdInterface::class);
+        $this->magentoStockHelper = $magentoStockHelper
+            ?: $objectManager->get(MagentoStockHelper::class);
+        $this->getCompositeProductStockStatus = $getCompositeProductStockStatus
+            ?: $objectManager->get(GetCompositeProductStockStatusInterface::class);
     }
 
     /**
@@ -61,6 +89,7 @@ class Stock implements StockServiceInterface
     public function clearCache()
     {
         $this->cache = [];
+        $this->cachedKlevuStockStatus = [];
     }
 
     /**
@@ -92,9 +121,19 @@ class Stock implements StockServiceInterface
      */
     public function getKlevuStockStatus(ProductInterface $product, $parentProduct = null, $websiteId = null)
     {
-        return $this->isInStock($product, $parentProduct, $websiteId) ?
-            static::KLEVU_IN_STOCK :
-            static::KLEVU_OUT_OF_STOCK;
+        $cacheKey = implode('::', [
+            $product->getSku(),
+            $parentProduct ? $parentProduct->getSku() : '',
+            (int)$websiteId
+        ]);
+
+        if (empty($this->cachedKlevuStockStatus[$cacheKey])) {
+            $this->cachedKlevuStockStatus[$cacheKey] = $this->isInStock($product, $parentProduct, $websiteId) ?
+                static::KLEVU_IN_STOCK :
+                static::KLEVU_OUT_OF_STOCK;
+        }
+
+        return $this->cachedKlevuStockStatus[$cacheKey];
     }
 
     /**
@@ -124,15 +163,44 @@ class Stock implements StockServiceInterface
     private function getStockStatus(ProductInterface $product, $websiteId = null)
     {
         $cacheId = $this->getCacheId($websiteId);
-        if (isset($this->cache[$cacheId][$product->getId()])) {
+        $isCacheable = in_array(
+            $product->getTypeId(),
+            [
+                ProductType::TYPE_SIMPLE,
+                ProductType::TYPE_VIRTUAL,
+                DownloadableProductType::TYPE_DOWNLOADABLE,
+                'giftcard',
+            ],
+            true
+        );
+        if ($isCacheable && isset($this->cache[$cacheId][$product->getId()])) {
             return $this->cache[$cacheId][$product->getId()];
         }
-        $stockStatusInterface = $this->_stockRegistryInterface->getStockStatus(
-            $product->getId(),
-            $product->getStore()->getWebsiteId()
-        );
-        $stockStatus = (bool)$stockStatusInterface->getStockStatus();
-        $this->cache[$cacheId][$product->getId()] = $stockStatus;
+
+        if (in_array($product->getTypeId(), [BundleType::TYPE_CODE, ConfigurableType::TYPE_CODE], true)) {
+            $stockStatus = $this->getCompositeProductStockStatus->execute($product, [], null);
+        } else {
+            $this->magentoStockHelper->assignStatusToProduct($product);
+            $product->unsetData('salable');
+            $product->unsetData('is_salable');
+            $isSaleable = method_exists($product, 'isSaleable')
+                ? $product->isSaleable()
+                : true;
+
+            if (!$isSaleable && GroupedType::TYPE_CODE === $product->getTypeId()) {
+                $stockStatus = false;
+            } else {
+                $stockStatusInterface = $this->_stockRegistryInterface->getStockStatus(
+                    $product->getId(),
+                    $product->getStore()->getWebsiteId()
+                );
+                $stockStatus = (bool)$stockStatusInterface->getStockStatus() && $isSaleable;
+            }
+        }
+
+        if ($isCacheable) {
+            $this->cache[$cacheId][$product->getId()] = $stockStatus;
+        }
 
         return $stockStatus;
     }

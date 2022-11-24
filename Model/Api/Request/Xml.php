@@ -2,11 +2,15 @@
 
 namespace Klevu\Search\Model\Api\Request;
 
-use \Klevu\Search\Model\Api\Request\XMLExtended;
+use Klevu\Search\Model\Api\Request;
+use Magento\Framework\App\ObjectManager;
+use Zend\Http\Client;
 
-class Xml extends \Klevu\Search\Model\Api\Request
+class Xml extends Request
 {
-
+    /**
+     * @return string
+     */
     public function __toString()
     {
         $string = parent::__toString();
@@ -20,7 +24,7 @@ class Xml extends \Klevu\Search\Model\Api\Request
      */
     public function getDataAsXml()
     {
-        $xml = new \Klevu\Search\Model\Api\Request\XMLExtended("<request/>");
+        $xml = new XMLExtended("<request/>");
         $this->_convertArrayToXml($this->getData(), $xml);
         return $xml->asXML();
     }
@@ -28,13 +32,13 @@ class Xml extends \Klevu\Search\Model\Api\Request
     /**
      * Add data to the request as XML content and set the Content-Type to application/xml.
      *
-     * @return \Zend\Http\Client
+     * @return Client
      */
     protected function build()
     {
         $client = parent::build();
         $convertDataToXml = $this->getDataAsXml();
-        $gZen = gzencode($convertDataToXml, 5);
+        $gZen = gzencode($convertDataToXml, 5); // phpcs:ignore Magento2.Functions.DiscouragedFunction.Discouraged
         $requestHeaders  = $client->getRequest()->getHeaders();
         if ($gZen !== false) {
             $requestHeaders->addHeaders(["Content-Encoding" => "gzip"]);
@@ -124,10 +128,10 @@ class Xml extends \Klevu\Search\Model\Api\Request
      *     </records>
      * </request>
      *
-     * @param array            $array  The data to convert.
-     * @param SimpleXmlElement $parent XML element used as a parent for the data.
+     * @param array $array The data to convert.
+     * @param XMLExtended $parent XML element used as a parent for the data.
      */
-    protected function _convertArrayToXml(array $array, \Klevu\Search\Model\Api\Request\XMLExtended &$parent)
+    protected function _convertArrayToXml(array $array, XMLExtended &$parent)
     {
         $flag = 0;
         foreach ($array as $key => $value) {
@@ -141,6 +145,10 @@ class Xml extends \Klevu\Search\Model\Api\Request
             } else {
                 $key = (is_numeric($key)) ? "item" . $key : $key;
 
+                // Disabling checks on htmlspecialchars usage as alternatives using Escaper
+                //  all prevent double encoding, which breaks sync where html entities are used
+                //  eg, we need &trade; to be converted to &amp;trade;
+                // phpcs:disable Magento2.Functions.DiscouragedFunction.DiscouragedWithAlternative
                 if ($value == "desc" || $value == "shortDesc") {
                     $flag =1;
                     $parent->addChild($key, $this->stripInvalidXml(htmlspecialchars((string)$value)));
@@ -153,6 +161,7 @@ class Xml extends \Klevu\Search\Model\Api\Request
                         $parent->addChild($key, $this->stripInvalidXml(htmlspecialchars((string)$value)));
                     }
                 }
+                // phpcs:enable Magento2.Functions.DiscouragedFunction.DiscouragedWithAlternative
             }
         }
     }
@@ -171,7 +180,7 @@ class Xml extends \Klevu\Search\Model\Api\Request
         }
         $ret = "";
         $current="";
-        if (empty($value)) {
+        if (empty($value) && '0' !== $value && !is_int($value) && !is_float($value)) {
             return $ret;
         }
 
@@ -184,7 +193,7 @@ class Xml extends \Klevu\Search\Model\Api\Request
                 (($current >= 0x20) && ($current <= 0xD7FF)) ||
                 (($current >= 0xE000) && ($current <= 0xFFFD)) ||
                 (($current >= 0x10000) && ($current <= 0x10FFFF))) {
-                $ret .= chr($current);
+                $ret .= chr($current); // phpcs:ignore Magento2.Functions.DiscouragedFunction.Discouraged
             } else {
                 $ret .= " ";
             }

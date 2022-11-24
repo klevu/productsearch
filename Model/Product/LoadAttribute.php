@@ -410,14 +410,16 @@ class LoadAttribute extends AbstractModel implements LoadAttributeInterface
             return null;
         }
         $collection->addAttributeToSelect($this->getUsedMagentoAttributes());
+        $collection->addAttributeToSelect('price_type');
         $collection->addIdFilter($productIds);
         $collection->setStore($store);
         $collection->addStoreFilter();
-        $collection->addMinimalPrice();
-        $collection->addFinalPrice();
-        $collection->setFlag('has_stock_status_filter', false);
+        $collection->setFlag('has_stock_status_filter', true);
 
-        return $collection->load()->addCategoryIds();
+        $collection->load();
+        $collection->addCategoryIds();
+
+        return $collection;
     }
 
     /**

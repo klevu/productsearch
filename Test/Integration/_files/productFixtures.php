@@ -29,6 +29,7 @@ $fixtures = [
         'name' => '[Klevu] Simple Product 1',
         'description' => '[Klevu Test Fixtures] Simple product 1',
         'short_description' => '[Klevu Test Fixtures] Simple product 1',
+        'type_id' => Product\Type::TYPE_SIMPLE,
         'attribute_set_id' => 4,
         'website_ids' => array_filter([
             $baseWebsite->getId(),
