@@ -22,7 +22,7 @@ use Klevu\Search\Model\Product\LoadAttributeInterface as Klevu_LoadAttribute;
 use Klevu\Search\Model\Product\ProductParentInterface as Klevu_Product_Parent;
 use Klevu\Search\Model\Sync as KlevuSync;
 use Magento\Backend\Model\Session;
-use Magento\Catalog\Model\Product;
+use Magento\Catalog\Model\Product as MagentoProduct;
 use Magento\Catalog\Model\Product\Action as Klevu_Catalog_Product_Action;
 use Magento\Catalog\Model\ResourceModel\Product\Collection as ProductCollection;
 use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory as Magento_CollectionFactory;
@@ -38,6 +38,7 @@ use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Model\AbstractModel;
 use Magento\ConfigurableProduct\Model\ResourceModel\Attribute\OptionProvider;
 use Magento\Store\Api\Data\StoreInterface;
+use Magento\Store\Model\Store;
 use Magento\Store\Model\StoreManagerInterface;
 
 class MagentoProductActions extends AbstractModel implements MagentoProductActionsInterface
@@ -136,7 +137,7 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
     /**
      * @var array
      */
-    private $parentProductIds;
+    private $parentProductIds = [];
     /**
      * @var StoreManagerInterface
      */
@@ -284,17 +285,30 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
                     LoggerConstants::ZEND_LOG_CRIT,
                     $exception->getMessage()
                 );
+
                 return[];
             }
         }
+        $storeId = (int)$store->getId();
+
         $maxEntityId = $this->magentoProductRepository->getMaxProductId($store);
         if (!$maxEntityId) {
             return [];
         }
+
         $this->klevuSyncRepository->clearKlevuCollection();
         $batchedProductIds = [];
-        $productCollection = $this->magentoProductRepository->getProductIdsCollection($store);
-        $childProductCollection = $this->magentoProductRepository->getChildProductIdsCollection($store);
+        $includeOosProductsInSync = $this->_klevuConfig->includeOosProductsInSync($store);
+        $productCollection = $this->magentoProductRepository->getProductIdsCollection(
+            $store,
+            MagentoProductSyncRepositoryInterface::NOT_VISIBLE_EXCLUDED,
+            $includeOosProductsInSync
+        );
+        $childProductCollection = $this->magentoProductRepository->getChildProductIdsCollection(
+            $store,
+            MagentoProductSyncRepositoryInterface::NOT_VISIBLE_EXCLUDED,
+            $includeOosProductsInSync
+        );
         $lastProductEntityId = 0;
         $lastChildEntityId = 0;
         $i = 0;
@@ -316,8 +330,8 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
             // getParentRelationsByChild method has to remain in this class for backwards compatibility
             // it is called from within formatMagentoProductIds,
             $magentoProductIds = array_merge(
-                $this->formatMagentoProductIds($productIds),
-                $this->formatMagentoProductIds($childProductIds, true)
+                $this->formatMagentoProductIds($storeId, $productIds, false, $includeOosProductsInSync),
+                $this->formatMagentoProductIds($storeId, $childProductIds, true, $includeOosProductsInSync)
             );
             unset($productIds, $childProductIds);
 
@@ -330,7 +344,7 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
             unset($magentoProductIdsToFilter);
 
             if ($diff = $this->diffMultiDimensionalArrays($magentoProductIds, $klevuProductIds)) {
-                $batchedProductIds[] = $this->formatProductIdsToAdd($diff, $store);
+                $batchedProductIds[] = $this->formatProductIdsToAdd($diff, $store, $includeOosProductsInSync);
             }
             unset($klevuProductIds, $magentoProductIds);
         }
@@ -353,13 +367,19 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
                     LoggerConstants::ZEND_LOG_CRIT,
                     $exception->getMessage()
                 );
+
                 return[];
             }
         }
+        $storeId = (int)$store->getId();
+
         $maxEntityId = $this->klevuSyncRepository->getMaxSyncId($store);
         if (!$maxEntityId) {
             return [];
         }
+
+        $includeOosProductsInSync = $this->_klevuConfig->includeOosProductsInSync($store);
+
         $batchedProductIds = [];
         $this->klevuSyncRepository->clearKlevuCollection();
         $lastEntityId = 0;
@@ -381,7 +401,8 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
             // check magento products for this batch of klevu products ($productIdsToFilter)
             $magentoProductIdsCollection = $this->magentoProductRepository->getProductIdsCollection(
                 $store,
-                MagentoProductSyncRepositoryInterface::NOT_VISIBLE_EXCLUDED
+                MagentoProductSyncRepositoryInterface::NOT_VISIBLE_EXCLUDED,
+                $includeOosProductsInSync
             );
             $magentoVisibleProductIds = $this->getMagentoProductIds(
                 $magentoProductIdsCollection,
@@ -390,15 +411,24 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
             );
             // getParentRelationsByChild method has to remain in this class for backwards compatibility
             // it is called from within formatMagentoProductIds,
-            $magentoVisibleProductIds = $this->formatMagentoProductIds($magentoVisibleProductIds);
+            $magentoVisibleProductIds = $this->formatMagentoProductIds($storeId, $magentoVisibleProductIds);
 
-            $magentoChildProductIdsCollection = $this->magentoProductRepository->getChildProductIdsCollection($store);
+            $magentoChildProductIdsCollection = $this->magentoProductRepository->getChildProductIdsCollection(
+                $store,
+                MagentoProductSyncRepositoryInterface::NOT_VISIBLE_EXCLUDED,
+                $includeOosProductsInSync
+            );
             $magentoChildProductIds = $this->getMagentoProductIds(
                 $magentoChildProductIdsCollection,
                 $store,
                 $productIdsToFilter
             );
-            $magentoChildProductIds = $this->formatMagentoProductIds($magentoChildProductIds, true);
+            $magentoChildProductIds = $this->formatMagentoProductIds(
+                $storeId,
+                $magentoChildProductIds,
+                true,
+                $includeOosProductsInSync
+            );
 
             // merge invisible child products and visible products, i.e. remove invisible orphaned simple products
             $magentoProductIds = array_merge($magentoVisibleProductIds, $magentoChildProductIds);
@@ -406,7 +436,7 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
             unset($productIdsToFilter);
 
             if ($diff = $this->diffMultiDimensionalArrays($klevuProductIds, $magentoProductIds)) {
-                $batchedProductIds[] = $this->formatProductIdsToDelete($diff, $store);
+                $batchedProductIds[] = $this->formatProductIdsToDelete($diff, $store, $includeOosProductsInSync);
             }
             unset($klevuProductIds, $magentoProductIds);
         }
@@ -596,7 +626,7 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
         if (!$this->hasData("status_attribute")) {
             $this->setData(
                 "status_attribute",
-                $this->_eavModelConfig->getAttribute(Product::ENTITY, 'status')
+                $this->_eavModelConfig->getAttribute(MagentoProduct::ENTITY, 'status')
             );
         }
         return $this->getData("status_attribute");
@@ -612,7 +642,7 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
         if (!$this->hasData("visibility_attribute")) {
             $this->setData(
                 "visibility_attribute",
-                $this->_eavModelConfig->getAttribute(Product::ENTITY, 'visibility')
+                $this->_eavModelConfig->getAttribute(MagentoProduct::ENTITY, 'visibility')
             );
         }
         return $this->getData("visibility_attribute");
@@ -882,12 +912,14 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
      * Returns parent relations data by child ids
      *
      * @param array $ids
+     * @param int $storeId
+     * @param bool $includeOosParents
      *
      * @return array
      */
-    public function getParentRelationsByChild($ids)
+    public function getParentRelationsByChild($ids, $storeId = Store::DEFAULT_STORE_ID, $includeOosParents = true)
     {
-        $list = $this->magentoProductRepository->getParentProductRelations($ids);
+        $list = $this->magentoProductRepository->getParentProductRelations($ids, $storeId, $includeOosParents);
         $result = [];
         foreach ($list as $row) {
             if (!isset($result[$row['product_id']])) {
@@ -947,21 +979,25 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
     }
 
     /**
+     * @param int $storeId
      * @param array $productIds
-     * @param bool|null $skipChildProducts
+     * @param bool $skipChildProducts
+     * @param bool $includeOosParents
      *
      * @return array
      */
     private function formatMagentoProductIds(
+        $storeId,
         $productIds = [],
-        $skipChildProducts = false
+        $skipChildProducts = false,
+        $includeOosParents = true
     ) {
         $magentoProductIds = [];
         if (!$productIds) {
             return $magentoProductIds;
         }
         // getParentRelationsByChild method has to remain in this class for backwards compatibility
-        $parentIds = $this->getParentRelationsByChild($productIds);
+        $parentIds = $this->getParentRelationsByChild($productIds, $storeId, $includeOosParents);
 
         foreach ($productIds as $entityId) {
             $entityParentIds = isset($parentIds[$entityId]) ? $parentIds[$entityId] : [];
@@ -986,27 +1022,36 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
 
     /**
      * @param StoreInterface $store
+     * @param bool $includeOosProducts
      *
      * @return array
      */
-    private function getParentProductIds(StoreInterface $store)
+    private function getParentProductIds(StoreInterface $store, $includeOosProducts = true)
     {
-        if (!$this->parentProductIds) {
-            $this->parentProductIds = $this->magentoProductRepository->getParentProductIds($store);
+        if (empty($this->parentProductIds[(int)$includeOosProducts])) {
+            $this->parentProductIds[(int)$includeOosProducts] = $this->magentoProductRepository->getParentProductIds(
+                $store,
+                $includeOosProducts
+            );
         }
 
-        return $this->parentProductIds;
+        return $this->parentProductIds[(int)$includeOosProducts];
     }
 
     /**
      * @param array $productIdsToDelete
      * @param StoreInterface $store
+     * @param bool $includeOosProducts
      *
      * @return array
      */
-    private function formatProductIdsToDelete(array $productIdsToDelete, StoreInterface $store)
-    {
+    private function formatProductIdsToDelete(
+        array $productIdsToDelete,
+        StoreInterface $store,
+        $includeOosProducts = true
+    ) {
         $return = [];
+        $parentProductIds = $this->getParentProductIds($store, $includeOosProducts);
         foreach ($productIdsToDelete as $productIds) {
             $productIds = (array)$productIds;
             $parentId = $productIds[Klevu::FIELD_PARENT_ID];
@@ -1016,7 +1061,7 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
                 'product_id' => $productId
             ];
             if (!(int)$parentId ||
-                ($parentId && in_array($parentId, $this->getParentProductIds($store), true))
+                ($parentId && in_array($parentId, $parentProductIds, true))
             ) {
                 continue;
             }
@@ -1032,18 +1077,23 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
     /**
      * @param array|Object[] $productIdsToAdd
      * @param StoreInterface $store
+     * @param bool $includeOosProducts
      *
      * @return array
      */
-    private function formatProductIdsToAdd(array $productIdsToAdd, StoreInterface $store)
-    {
+    private function formatProductIdsToAdd(
+        array $productIdsToAdd,
+        StoreInterface $store,
+        $includeOosProducts = true
+    ) {
         $productsIds = [];
+        $parentProductIds = $this->getParentProductIds($store, $includeOosProducts);
         foreach ($productIdsToAdd as $productIds) {
             $productIds = (array)$productIds;
             $parentId = $productIds[Klevu::FIELD_PARENT_ID];
             $productId = $productIds[Klevu::FIELD_PRODUCT_ID];
             if ((int)$parentId &&
-                !in_array($parentId, $this->getParentProductIds($store), true)
+                !in_array($parentId, $parentProductIds, true)
             ) {
                 continue;
             }

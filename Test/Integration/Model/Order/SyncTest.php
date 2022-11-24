@@ -325,7 +325,9 @@ class SyncTest extends TestCase
      * @magentoDbIsolation disabled
      * @magentoCache all disabled
      * @magentoDataFixture loadAllFixtures
-     * @magentoConfigFixture default_store klevu_search/product_sync/order_sync_enabled 1
+     * @magentoConfigFixture default_store klevu_search/product_sync/order_sync_enabled 0
+     * @magentoConfigFixture klevu_test_store_1_store klevu_search/product_sync/order_sync_enabled 1
+     * @magentoConfigFixture klevu_test_store_2_store klevu_search/product_sync/order_sync_enabled 0
      * @magentoConfigFixture klevu_test_store_1_store klevu_search/general/js_api_key klevu-klevu_test_store_1
      */
     public function testWhileLoopIteratesCorrectNumberOfTimes()

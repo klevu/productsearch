@@ -15,6 +15,9 @@ use Psr\Log\LoggerInterface;
 
 class RestApiKeyChanged implements ObserverInterface
 {
+    /**
+     * @var string[]
+     */
     private $resetSyncDateOnFieldChange = [
         ConfigHelper::XML_PATH_REST_API_KEY
     ];
@@ -35,6 +38,12 @@ class RestApiKeyChanged implements ObserverInterface
      */
     private $reinitableConfig;
 
+    /**
+     * @param StoreManagerInterface $storeManager
+     * @param ScopeConfigWriterInterface $scopeConfigWriter
+     * @param LoggerInterface $logger
+     * @param ReinitableConfigInterface $reinitableConfig
+     */
     public function __construct(
         StoreManagerInterface $storeManager,
         ScopeConfigWriterInterface $scopeConfigWriter,
@@ -54,7 +63,8 @@ class RestApiKeyChanged implements ObserverInterface
      */
     public function execute(EventObserver $observer)
     {
-        if (!array_intersect($this->resetSyncDateOnFieldChange, $observer->getData('changed_paths'))) {
+        $changedPaths = array_filter((array)$observer->getData('changed_paths'));
+        if (!array_intersect($this->resetSyncDateOnFieldChange, $changedPaths)) {
             return;
         }
         try {

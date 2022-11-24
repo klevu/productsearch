@@ -1,4 +1,5 @@
 <?php
+/** phpcs:disable PSR1.Methods.CamelCapsMethodName.NotCamelCaps */
 
 namespace Klevu\Search\Test\Integration\Repository\MagentoProductSyncRepository;
 
@@ -10,7 +11,7 @@ use Magento\Store\Model\StoreManagerInterface;
 use Magento\TestFramework\ObjectManager;
 use PHPUnit\Framework\TestCase;
 
-class GetParentProductIdsTest  extends TestCase
+class GetParentProductIdsTest extends TestCase
 {
     /**
      * @var ObjectManager
@@ -23,36 +24,196 @@ class GetParentProductIdsTest  extends TestCase
      * @magentoDbIsolation disabled
      * @magentoCache all disabled
      * @magentoDataFixture loadProductFixtures
-     * @magentoConfigFixture default_store klevu_search/product_sync/catalogvisibility 1
+     * @magentoConfigFixture default_store klevu_search/product_sync/include_oos 0
+     * @magentoConfigFixture default_store klevu_search/product_sync/catalogvisibility 0
      * @magentoConfigFixture default_store klevu_search/product_sync/batch_size 500
      */
-    public function testAllEnabledConfigurableProducts_AreReturned()
+    public function testGetParentProductIds_ExcludeOos_ExcludeCatalogVisibility()
     {
         $this->setupPhp5();
 
         $storeManager = $this->objectManager->get(StoreManagerInterface::class);
         $store = $storeManager->getStore('default');
 
+        // Disabled products should not be included
+        // Catalog-Search and Search visibility because we disable catalogvisibility
+        // Only in stock products should be included
+        $expectedResult = [
+            'klevu_synctest_conf_enabled_catalog-search_in-stock-has-qty',
+            'klevu_synctest_conf_enabled_search_in-stock-has-qty',
+        ];
+
+        /** @var MagentoProductSyncRepository $productRepository */
         $productRepository = $this->objectManager->get(MagentoProductSyncRepository::class);
-        /** @var ProductCollection $productCollection */
-        $parentIds = $productRepository->getParentProductIds($store);
-        $skus = $this->getAllProductSkusByEntityIds($parentIds);
+        $parentIds = $productRepository->getParentProductIds($store, false);
+        $actualResult = $this->getAllProductSkusByEntityIds($parentIds);
 
-        if ($this->isProductTypeAvailable('configurable')) {
-            // configurable products enabled, in stock
-            $this->assertContains('klevu_synctest_configurable_en-y_v-both_s-yes_chd-yes', $skus);
-            $this->assertContains('klevu_synctest_configurable_en-y_v-search_s-yes_chd-yes', $skus);
-            $this->assertContains('klevu_synctest_configurable_en-y_v-catalog_s-yes_chd-yes', $skus);
-            $this->assertContains('klevu_synctest_configurable_en-y_v-none_s-yes_chd-yes', $skus);
+        sort($expectedResult);
+        sort($actualResult);
 
-            // configurable products enabled, out of stock
-            $this->assertContains('klevu_synctest_configurable_en-y_v-both_s-no_chd-yes', $skus);
-            $this->assertContains('klevu_synctest_configurable_en-y_v-search_s-no_chd-yes', $skus);
-            $this->assertContains('klevu_synctest_configurable_en-y_v-catalog_s-no_chd-yes', $skus);
-            $this->assertContains('klevu_synctest_configurable_en-y_v-none_s-no_chd-yes', $skus);
-        }
-        $this->commonAssertions($skus);
+        $this->assertSame(
+            array_fill_keys($expectedResult, null),
+            array_fill_keys($actualResult, null)
+        );
     }
+
+    /**
+     * @magentoAppArea frontend
+     * @magentoAppIsolation enabled
+     * @magentoDbIsolation disabled
+     * @magentoCache all disabled
+     * @magentoDataFixture loadProductFixtures
+     * @magentoConfigFixture default_store klevu_search/product_sync/include_oos 0
+     * @magentoConfigFixture default_store klevu_search/product_sync/catalogvisibility 1
+     * @magentoConfigFixture default_store klevu_search/product_sync/batch_size 500
+     */
+    public function testGetParentProductIds_ExcludeOos_IncludeCatalogVisibility()
+    {
+        $this->setupPhp5();
+
+        $storeManager = $this->objectManager->get(StoreManagerInterface::class);
+        $store = $storeManager->getStore('default');
+
+        // Disabled products should not be included
+        // Catalog-Search, Catalog, and Search visibility because we enable catalogvisibility
+        // Only in stock products should be included
+        $expectedResult = [
+            'klevu_synctest_conf_enabled_catalog-search_in-stock-has-qty',
+            'klevu_synctest_conf_enabled_catalog_in-stock-has-qty',
+            'klevu_synctest_conf_enabled_search_in-stock-has-qty',
+        ];
+
+        /** @var MagentoProductSyncRepository $productRepository */
+        $productRepository = $this->objectManager->get(MagentoProductSyncRepository::class);
+        $parentIds = $productRepository->getParentProductIds($store, false);
+        $actualResult = $this->getAllProductSkusByEntityIds($parentIds);
+
+        sort($expectedResult);
+        sort($actualResult);
+
+        $this->assertSame(
+            array_fill_keys($expectedResult, null),
+            array_fill_keys($actualResult, null)
+        );
+    }
+
+    /**
+     * @magentoAppArea frontend
+     * @magentoAppIsolation enabled
+     * @magentoDbIsolation disabled
+     * @magentoCache all disabled
+     * @magentoDataFixture loadProductFixtures
+     * @magentoConfigFixture default_store klevu_search/product_sync/include_oos 1
+     * @magentoConfigFixture default_store klevu_search/product_sync/catalogvisibility 0
+     * @magentoConfigFixture default_store klevu_search/product_sync/batch_size 500
+     */
+    public function testGetParentProductIds_IncludeOos_ExcludeCatalogVisibility()
+    {
+        $this->setupPhp5();
+
+        $storeManager = $this->objectManager->get(StoreManagerInterface::class);
+        $store = $storeManager->getStore('default');
+
+        // Disabled products should not be included
+        // Catalog-Search and Search visibility because we disnable catalogvisibility
+        // In stock and OOS products should be included
+        $expectedResult = [
+            'klevu_synctest_conf_enabled_catalog-search_in-stock-has-qty',
+            'klevu_synctest_conf_enabled_search_in-stock-has-qty',
+            'klevu_synctest_conf_enabled_catalog-search_out-of-stock-has-qty',
+        ];
+
+        /** @var MagentoProductSyncRepository $productRepository */
+        $productRepository = $this->objectManager->get(MagentoProductSyncRepository::class);
+        $parentIds = $productRepository->getParentProductIds($store, true);
+        $actualResult = $this->getAllProductSkusByEntityIds($parentIds);
+
+        sort($expectedResult);
+        sort($actualResult);
+
+        $this->assertSame(
+            array_fill_keys($expectedResult, null),
+            array_fill_keys($actualResult, null)
+        );
+    }
+
+    /**
+     * @magentoAppArea frontend
+     * @magentoAppIsolation enabled
+     * @magentoDbIsolation disabled
+     * @magentoCache all disabled
+     * @magentoDataFixture loadProductFixtures
+     * @magentoConfigFixture default_store klevu_search/product_sync/include_oos 1
+     * @magentoConfigFixture default_store klevu_search/product_sync/catalogvisibility 1
+     * @magentoConfigFixture default_store klevu_search/product_sync/batch_size 500
+     */
+    public function testGetParentProductIds_IncludeOos_IncludeCatalogVisibility()
+    {
+        $this->setupPhp5();
+
+        $storeManager = $this->objectManager->get(StoreManagerInterface::class);
+        $store = $storeManager->getStore('default');
+
+        // Disabled products should not be included
+        // Catalog-Search and Search visibility because we disnable catalogvisibility
+        // In stock and OOS products should be included
+        $expectedResult = [
+            'klevu_synctest_conf_enabled_catalog-search_in-stock-has-qty',
+            'klevu_synctest_conf_enabled_catalog_in-stock-has-qty',
+            'klevu_synctest_conf_enabled_search_in-stock-has-qty',
+            'klevu_synctest_conf_enabled_catalog-search_out-of-stock-has-qty',
+        ];
+
+        /** @var MagentoProductSyncRepository $productRepository */
+        $productRepository = $this->objectManager->get(MagentoProductSyncRepository::class);
+        $parentIds = $productRepository->getParentProductIds($store, true);
+        $actualResult = $this->getAllProductSkusByEntityIds($parentIds);
+
+        sort($expectedResult);
+        sort($actualResult);
+
+        $this->assertSame(
+            array_fill_keys($expectedResult, null),
+            array_fill_keys($actualResult, null)
+        );
+    }
+
+    /**
+     * @magentoAppArea frontend
+     * @magentoAppIsolation enabled
+     * @magentoDbIsolation disabled
+     * @magentoCache all disabled
+     * @magentoDataFixture loadProductFixtures
+     * @magentoConfigFixture default_store klevu_search/product_sync/catalogvisibility 1
+     * @magentoConfigFixture default_store klevu_search/product_sync/batch_size 500
+     */
+//    public function testAllEnabledConfigurableProducts_AreReturned()
+//    {
+//        $this->setupPhp5();
+//
+//        $storeManager = $this->objectManager->get(StoreManagerInterface::class);
+//        $store = $storeManager->getStore('default');
+//
+//        $productRepository = $this->objectManager->get(MagentoProductSyncRepository::class);
+//        /** @var ProductCollection $productCollection */
+//        $parentIds = $productRepository->getParentProductIds($store);
+//        $skus = $this->getAllProductSkusByEntityIds($parentIds);
+//
+//        if ($this->isProductTypeAvailable('configurable')) {
+//            // configurable products enabled, in stock
+//            $this->assertContains('klevu_synctest_configurable_en-y_v-both_s-yes_chd-yes', $skus);
+//            $this->assertContains('klevu_synctest_configurable_en-y_v-search_s-yes_chd-yes', $skus);
+//            $this->assertContains('klevu_synctest_configurable_en-y_v-catalog_s-yes_chd-yes', $skus);
+//            $this->assertContains('klevu_synctest_configurable_en-y_v-none_s-yes_chd-yes', $skus);
+//
+//            // configurable products enabled, out of stock
+//            $this->assertContains('klevu_synctest_configurable_en-y_v-both_s-no_chd-yes', $skus);
+//            $this->assertContains('klevu_synctest_configurable_en-y_v-search_s-no_chd-yes', $skus);
+//            $this->assertContains('klevu_synctest_configurable_en-y_v-catalog_s-no_chd-yes', $skus);
+//            $this->assertContains('klevu_synctest_configurable_en-y_v-none_s-no_chd-yes', $skus);
+//        }
+//        $this->commonAssertions($skus);
+//    }
 
     /**
      * @magentoAppArea frontend
@@ -63,35 +224,35 @@ class GetParentProductIdsTest  extends TestCase
      * @magentoConfigFixture default_store klevu_search/product_sync/catalogvisibility 0
      * @magentoConfigFixture default_store klevu_search/product_sync/batch_size 500
      */
-    public function testEnabledConfigurableProducts_AreReturned_ExceptCatalogVisible_WhenDisabledInAdmin()
-    {
-        $this->setupPhp5();
-
-        $storeManager = $this->objectManager->get(StoreManagerInterface::class);
-        $store = $storeManager->getStore('default');
-
-        $productRepository = $this->objectManager->get(MagentoProductSyncRepository::class);
-        /** @var ProductCollection $productCollection */
-        $parentIds = $productRepository->getParentProductIds($store);
-        $skus = $this->getAllProductSkusByEntityIds($parentIds);
-
-        if ($this->isProductTypeAvailable('configurable')) {
-            // configurable products enabled, in stock
-            $this->assertContains('klevu_synctest_configurable_en-y_v-both_s-yes_chd-yes', $skus);
-            $this->assertContains('klevu_synctest_configurable_en-y_v-search_s-yes_chd-yes', $skus);
-            $this->assertContains('klevu_synctest_configurable_en-y_v-none_s-yes_chd-yes', $skus);
-
-            // configurable products enabled, out of stock
-            $this->assertContains('klevu_synctest_configurable_en-y_v-both_s-no_chd-yes', $skus);
-            $this->assertContains('klevu_synctest_configurable_en-y_v-search_s-no_chd-yes', $skus);
-            $this->assertContains('klevu_synctest_configurable_en-y_v-none_s-no_chd-yes', $skus);
-
-            // configurable products enabled, visibility catalog
-            $this->assertNotContains('klevu_synctest_configurable_en-y_v-catalog_s-yes_chd-yes', $skus);
-            $this->assertNotContains('klevu_synctest_configurable_en-y_v-catalog_s-no_chd-yes', $skus);
-        }
-        $this->commonAssertions($skus);
-    }
+//    public function testEnabledConfigurableProducts_AreReturned_ExceptCatalogVisible_WhenDisabledInAdmin()
+//    {
+//        $this->setupPhp5();
+//
+//        $storeManager = $this->objectManager->get(StoreManagerInterface::class);
+//        $store = $storeManager->getStore('default');
+//
+//        $productRepository = $this->objectManager->get(MagentoProductSyncRepository::class);
+//        /** @var ProductCollection $productCollection */
+//        $parentIds = $productRepository->getParentProductIds($store);
+//        $skus = $this->getAllProductSkusByEntityIds($parentIds);
+//
+//        if ($this->isProductTypeAvailable('configurable')) {
+//            // configurable products enabled, in stock
+//            $this->assertContains('klevu_synctest_configurable_en-y_v-both_s-yes_chd-yes', $skus);
+//            $this->assertContains('klevu_synctest_configurable_en-y_v-search_s-yes_chd-yes', $skus);
+//            $this->assertContains('klevu_synctest_configurable_en-y_v-none_s-yes_chd-yes', $skus);
+//
+//            // configurable products enabled, out of stock
+//            $this->assertContains('klevu_synctest_configurable_en-y_v-both_s-no_chd-yes', $skus);
+//            $this->assertContains('klevu_synctest_configurable_en-y_v-search_s-no_chd-yes', $skus);
+//            $this->assertContains('klevu_synctest_configurable_en-y_v-none_s-no_chd-yes', $skus);
+//
+//            // configurable products enabled, visibility catalog
+//            $this->assertNotContains('klevu_synctest_configurable_en-y_v-catalog_s-yes_chd-yes', $skus);
+//            $this->assertNotContains('klevu_synctest_configurable_en-y_v-catalog_s-no_chd-yes', $skus);
+//        }
+//        $this->commonAssertions($skus);
+//    }
 
     private function commonAssertions(array $productSkus)
     {
@@ -104,20 +265,20 @@ class GetParentProductIdsTest  extends TestCase
         }
         if ($this->isProductTypeAvailable('simple')) {
             // simple products enabled, in stock
-            $this->assertNotContains('klevu_synctest_simple_en-y_v-none_s-yes', $productSkus);
-            $this->assertNotContains('klevu_synctest_simple_en-y_v-catalog_s-yes', $productSkus);
-            $this->assertNotContains('klevu_synctest_simple_en-y_v-search_s-yes', $productSkus);
-            $this->assertNotContains('klevu_synctest_simple_en-y_v-both_s-yes', $productSkus);
+            $this->assertNotContains('klevu_synctest_smp_en-y_v-none_s-yes', $productSkus);
+            $this->assertNotContains('klevu_synctest_smp_en-y_v-catalog_s-yes', $productSkus);
+            $this->assertNotContains('klevu_synctest_smp_en-y_v-search_s-yes', $productSkus);
+            $this->assertNotContains('klevu_synctest_smp_en-y_v-both_s-yes', $productSkus);
             // simple products enabled, out of stock
-            $this->assertNotContains('klevu_synctest_simple_en-y_v-none_s-no', $productSkus);
-            $this->assertNotContains('klevu_synctest_simple_en-y_v-catalog_s-no', $productSkus);
-            $this->assertNotContains('klevu_synctest_simple_en-y_v-search_s-no', $productSkus);
-            $this->assertNotContains('klevu_synctest_simple_en-y_v-both_s-no', $productSkus);
+            $this->assertNotContains('klevu_synctest_smp_en-y_v-none_s-no', $productSkus);
+            $this->assertNotContains('klevu_synctest_smp_en-y_v-catalog_s-no', $productSkus);
+            $this->assertNotContains('klevu_synctest_smp_en-y_v-search_s-no', $productSkus);
+            $this->assertNotContains('klevu_synctest_smp_en-y_v-both_s-no', $productSkus);
             // simple products disabled
-            $this->assertNotContains('klevu_synctest_simple_en-n_v-none_s-yes', $productSkus);
-            $this->assertNotContains('klevu_synctest_simple_en-n_v-catalog_s-yes', $productSkus);
-            $this->assertNotContains('klevu_synctest_simple_en-n_v-search_s-yes', $productSkus);
-            $this->assertNotContains('klevu_synctest_simple_en-n_v-both_s-yes', $productSkus);
+            $this->assertNotContains('klevu_synctest_smp_en-n_v-none_s-yes', $productSkus);
+            $this->assertNotContains('klevu_synctest_smp_en-n_v-catalog_s-yes', $productSkus);
+            $this->assertNotContains('klevu_synctest_smp_en-n_v-search_s-yes', $productSkus);
+            $this->assertNotContains('klevu_synctest_smp_en-n_v-both_s-yes', $productSkus);
         }
         if ($this->isProductTypeAvailable('virtual')) {
             // virtual products enabled, in stock
@@ -232,7 +393,7 @@ class GetParentProductIdsTest  extends TestCase
     private function isProductTypeAvailable($productType)
     {
         $productTypeList = $this->objectManager->create(ProductTypeListInterface::class);
-        $availableProductTypes = array_map(function(ProductType $productType) {
+        $availableProductTypes = array_map(function (ProductType $productType) {
             return $productType->getName();
         }, $productTypeList->getProductTypes());
 

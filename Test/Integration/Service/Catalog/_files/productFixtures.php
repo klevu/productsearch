@@ -8,6 +8,8 @@ use Magento\Catalog\Model\Product\Visibility;
 use Magento\Indexer\Model\IndexerFactory;
 use Magento\Store\Model\Website;
 
+include __DIR__ . '/productFixtures_rollback.php';
+
 $objectManager = Bootstrap::getObjectManager();
 
 /** @var Website $baseWebsite */
