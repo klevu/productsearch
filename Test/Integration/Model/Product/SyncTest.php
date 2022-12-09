@@ -338,7 +338,7 @@ class SyncTest extends TestCase
                     $product = $this->productRepository->get($sku);
                     switch ($expectedProductData[$sku]['product_type']) {
                         case 'simple':
-                            $expectedProductData[$sku]['itemGroupId'] = 0;
+                            $expectedProductData[$sku]['itemGroupId'] = '';
                             $expectedProductData[$sku]['id'] = (string)$product->getId();
                             break;
 
@@ -412,7 +412,7 @@ class SyncTest extends TestCase
                     $product = $this->productRepository->get($sku);
                     switch ($expectedProductData[$sku]['product_type']) {
                         case 'simple':
-                            $expectedProductData[$sku]['itemGroupId'] = 0;
+                            $expectedProductData[$sku]['itemGroupId'] = '';
                             $expectedProductData[$sku]['id'] = (string)$product->getId();
                             break;
 

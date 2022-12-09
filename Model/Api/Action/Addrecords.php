@@ -2,6 +2,7 @@
 
 namespace Klevu\Search\Model\Api\Action;
 
+use Klevu\Logger\Constants as LoggerConstants;
 use Magento\Store\Api\Data\StoreInterface;
 
 class Addrecords extends \Klevu\Search\Model\Api\Actionall
@@ -284,7 +285,23 @@ class Addrecords extends \Klevu\Search\Model\Api\Actionall
 
             if (!empty($value)) {
                 if (is_array($value)) {
-                    $value = implode(",", $value);
+                    $filteredValue = array_filter($value, static function ($item) {
+                        return !is_array($item) && !is_object($item);
+                    });
+                    if (count($filteredValue) !== count($value)) {
+                        $this->_searchHelperData->log(
+                            LoggerConstants::ZEND_LOG_ERR,
+                            __(
+                                '%1: Multi dimensional array provided for "other" for SKU %2 : attribute %3.',
+                                __METHOD__,
+                                $record['sku'],
+                                $key
+                            )
+                        );
+                        $value = '';
+                    } else {
+                        $value = implode(",", $value);
+                    }
                 }
             }
 
@@ -297,7 +314,36 @@ class Addrecords extends \Klevu\Search\Model\Api\Actionall
             }
         }
         if (is_array($record['other'])) {
-            $record['other'] = implode(";", $record['other']);
+            $other = array_filter($record['other'], static function ($item) {
+                return !is_array($item) && !is_object($item);
+            });
+            if (count($other) !== count($record['other'])) {
+                $this->_searchHelperData->log(
+                    LoggerConstants::ZEND_LOG_ERR,
+                    __(
+                        '%1: Multi dimensional array provided for "other" for SKU %2.',
+                        __METHOD__,
+                        $record['sku']
+                    )
+                );
+                $record['other'] = '';
+            } else {
+                $record['other'] = implode(";", $other);
+            }
+        } elseif (is_scalar($record['other'])) {
+            $record['other'] = (string)$record['other'];
+        } else {
+            $record['other'] = '';
+            $this->_searchHelperData->log(
+                LoggerConstants::ZEND_LOG_ERR,
+                __(
+                    'Unexpected value provided for "other". %1',
+                    is_object($record['other'])
+                        ? get_class($record['other'])
+                        // phpcs:ignore Magento2.Functions.DiscouragedFunction.Discouraged
+                        : gettype($record['other'])
+                )
+            );
         }
     }
 
@@ -332,7 +378,24 @@ class Addrecords extends \Klevu\Search\Model\Api\Actionall
 
             if (!empty($value)) {
                 if (is_array($value)) {
-                    $value = implode(",", $value);
+                    $filteredValue = array_filter($value, static function ($item) {
+                        return !is_array($item) && !is_object($item);
+                    });
+                    if (count($filteredValue) !== count($value)) {
+                        $this->_searchHelperData->log(
+                            LoggerConstants::ZEND_LOG_ERR,
+                            __(
+                                '%1: Multi dimensional array provided for "otherAttributeToIndex" for SKU %2:'
+                                . ' attribute %3.',
+                                __METHOD__,
+                                $record['sku'],
+                                $key
+                            )
+                        );
+                        $value = '';
+                    } else {
+                        $value = implode(",", $value);
+                    }
                 }
             }
             if (!empty($value) && !empty($label)) {
@@ -349,6 +412,20 @@ class Addrecords extends \Klevu\Search\Model\Api\Actionall
         }
         if (is_array($recordOtherAttributeToIndex)) {
             $record['otherAttributeToIndex'] = implode(";", $recordOtherAttributeToIndex);
+        } elseif (is_scalar($recordOtherAttributeToIndex)) {
+            $record['otherAttributeToIndex'] = (string)$recordOtherAttributeToIndex;
+        } else {
+            $record['otherAttributeToIndex'] = '';
+            $this->_searchHelperData->log(
+                LoggerConstants::ZEND_LOG_ERR,
+                __(
+                    'Unexpected value provided for "otherAttributeToIndex". %1',
+                    is_object($record['otherAttributeToIndex'])
+                        ? get_class($record['otherAttributeToIndex'])
+                        // phpcs:ignore Magento2.Functions.DiscouragedFunction.Discouraged
+                        : gettype($record['otherAttributeToIndex'])
+                )
+            );
         }
     }
 
