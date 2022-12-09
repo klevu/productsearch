@@ -256,7 +256,10 @@ class LoadAttribute extends AbstractModel implements LoadAttributeInterface
                     $baseUrl
                 );
                 $product['inStock'] = $this->_stockHelper->getKlevuStockStatus($parent, $item, $website->getId());
-                $product['itemGroupId'] = $this->_productData->getItemGroupId($product['parent_id'], $product) ?: 0;
+                $product['itemGroupId'] = $this->_productData->getItemGroupId($product['parent_id'], $product) ?: '';
+                if ((int)$product['itemGroupId'] === 0) {
+                    $product['itemGroupId'] = ''; // Ref: KS-15006
+                }
                 $product['id'] = $this->_productData->getId($product['product_id'], $product['parent_id']);
                 $this->processProductAfter($product, $parent, $item);
                 if ($item) {

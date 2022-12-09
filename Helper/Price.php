@@ -327,6 +327,9 @@ class Price extends AbstractHelper
             $groupProductIds = $product->getTypeInstance()->getChildrenIds($product->getId());
             $groupPrices = [];
             foreach ($groupProductIds as $ids) {
+                if (!is_array($ids)) {
+                    continue;
+                }
                 foreach ($ids as $id) {
                     if ((int)$id === (int)$product->getId()) {
                         continue;
@@ -377,6 +380,9 @@ class Price extends AbstractHelper
         $groupPrices = [];
 
         foreach ($groupProductIds as $ids) {
+            if (!is_array($ids)) {
+                continue;
+            }
             foreach ($ids as $id) {
                 if ((int)$id === (int)$product->getId()) {
                     continue;
