@@ -543,6 +543,34 @@ $fixtures = [
         ],
         'url_key' => 'klevu_simple_synctest_groupchild_oos_' . crc32(rand()),
     ],
+    [
+        'type_id' => 'simple',
+        'sku' => 'klevu_simple_synctest_groupchild_disabled',
+        'name' => '[Klevu] Sync Test: Child Product: Disabled',
+        'description' => '[Klevu Test Fixtures]',
+        'short_description' => '[Klevu Test Fixtures]',
+        'attribute_set_id' => 4,
+        'website_ids' => array_filter([
+            $website1->getId(),
+            $website2->getId(),
+        ]),
+        'price' => 50.00,
+        'special_price' => 22.99,
+        'weight' => 1,
+        'tax_class_id' => 2,
+        'meta_title' => '[Klevu]',
+        'meta_description' => '[Klevu Test Fixtures]',
+        'visibility' => Visibility::VISIBILITY_NOT_VISIBLE,
+        'status' => Status::STATUS_DISABLED,
+        'stock_data' => [
+            'use_config_manage_stock'   => 1,
+            'qty'                       => 100,
+            'is_qty_decimal'            => 0,
+            'is_in_stock'               => 1,
+        ],
+        'url_key' => 'klevu_simple_synctest_groupchild_disabled_' . crc32(rand()),
+    ],
+
 
     // Grouped
     [
@@ -669,6 +697,36 @@ $fixtures = [
             'klevu_simple_synctest_groupchild_instock_1',
             'klevu_simple_synctest_groupchild_instock_2',
             'klevu_simple_synctest_groupchild_oos',
+        ],
+    ],
+    [
+        'type_id' => 'grouped',
+        'sku' => 'klevu_grouped_synctest_instock_childrendisabled',
+        'name' => '[Klevu] Sync Test: Grouped Product: In Stock; Children Disabled',
+        'description' => '[Klevu Test Fixtures]',
+        'short_description' => '[Klevu Test Fixtures]',
+        'attribute_set_id' => 4,
+        'website_ids' => array_filter([
+            $website1->getId(),
+            $website2->getId(),
+        ]),
+        'price' => 0.01,
+        'special_price' => 0.01,
+        'weight' => 1,
+        'tax_class_id' => 2,
+        'meta_title' => '[Klevu]',
+        'meta_description' => '[Klevu Test Fixtures]',
+        'visibility' => Visibility::VISIBILITY_BOTH,
+        'status' => Status::STATUS_ENABLED,
+        'stock_data' => [
+            'use_config_manage_stock'   => 1,
+            'qty'                       => 0,
+            'is_qty_decimal'            => 0,
+            'is_in_stock'               => 0,
+        ],
+        'url_key' => 'klevu_grouped_synctest_instock_childrendisabled_' . crc32(rand()),
+        'child_skus' => [
+            'klevu_simple_synctest_groupchild_disabled',
         ],
     ],
 

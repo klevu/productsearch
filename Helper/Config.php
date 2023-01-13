@@ -21,6 +21,7 @@ use Magento\Framework\App\Config\ReinitableConfigInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Config\Value as ConfigValue;
 use Magento\Framework\App\Helper\AbstractHelper;
+use Magento\Framework\App\Helper\Context;
 use Magento\Framework\App\ObjectManager;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\App\ResourceConnection;
@@ -36,6 +37,77 @@ use Zend\Http\Client\Exception\RuntimeException;
 
 class Config extends AbstractHelper
 {
+    const XML_PATH_EXTENSION_ENABLED = "klevu_search/general/enabled";
+    const XML_PATH_TAX_ENABLED = "tax/display/typeinsearch";
+    const XML_PATH_SECUREURL_ENABLED = "klevu_search/secureurl_setting/enabled";
+    const XML_PATH_LANDING_ENABLED = "klevu_search/searchlanding/landenabled";
+    const XML_PATH_JS_API_KEY = "klevu_search/general/js_api_key";
+    const XML_PATH_REST_API_KEY = GetFeatures::XML_PATH_REST_API_KEY;
+    const XML_PATH_PRODUCT_SYNC_ENABLED = "klevu_search/product_sync/enabled";
+    const XML_PATH_PRODUCT_SYNC_FREQUENCY = "klevu_search/product_sync/frequency";
+    const XML_PATH_PRODUCT_SYNC_LAST_RUN = "klevu_search/product_sync/last_run";
+    const XML_PATH_ATTRIBUTES_ADDITIONAL = "klevu_search/attributes/additional";
+    const XML_PATH_ATTRIBUTES_AUTOMATIC = "klevu_search/attributes/automatic";
+    const XML_PATH_ATTRIBUTES_OTHER = "klevu_search/attributes/other";
+    const XML_PATH_ATTRIBUTES_BOOSTING = "klevu_search/attributes/boosting";
+    const XML_PATH_CATEGORY_ANCHOR = "klevu_search/attributes/categoryanchor";
+    const XML_PATH_ORDER_SYNC_ENABLED = "klevu_search/product_sync/order_sync_enabled";
+    const XML_PATH_ORDER_SYNC_FREQUENCY = "klevu_search/product_sync/order_sync_frequency";
+    const XML_PATH_ORDER_SYNC_FREQUENCY_CUSTOM = "klevu_search/product_sync/order_sync_frequency_custom";
+    const XML_PATH_ORDER_SYNC_MAX_BATCH_SIZE = 'klevu_search/product_sync/order_sync_max_batch_size';
+    const XML_PATH_ORDER_SYNC_LAST_RUN = "klevu_search/order_sync/last_run";
+    const XML_PATH_FORCE_LOG = "klevu_search/developer/force_log";
+    const XML_PATH_LOG_LEVEL = "klevu_search/developer/log_level";
+    const XML_PATH_STORE_ID = "stores/%s/system/store/id";
+    const XML_PATH_HOSTNAME = GetAccountDetails::XML_PATH_HOSTNAME;
+    const XML_PATH_API_URL = GetAccountDetails::XML_PATH_API_URL;
+    const XML_PATH_RESTHOSTNAME = UpdateEndpoints::XML_PATH_INDEXING_URL;
+    const XML_PATH_CLOUD_SEARCH_URL = "klevu_search/general/cloud_search_url";
+    const XML_PATH_CLOUD_SEARCH_V2_URL = UpdateEndpoints::XML_PATH_SEARCH_URL;
+    const XML_PATH_ANALYTICS_URL = UpdateEndpoints::XML_PATH_ANALYTICS_URL;
+    const XML_PATH_JS_URL = UpdateEndpoints::XML_PATH_JS_URL;
+    const KLEVU_PRODUCT_FORCE_OLDERVERSION = 2;
+    const XML_PATH_SYNC_OPTIONS = "klevu_search/product_sync/sync_options";
+    const XML_PATH_UPGRADE_PREMIUM = "klevu_search/general/premium";
+    const XML_PATH_RATING = "klevu_search/general/rating_flag";
+    const XML_PATH_UPGRADE_FEATURES = "klevu_search/general/upgrade_features";
+    const XML_PATH_UPGRADE_TIRES_URL = UpdateEndpoints::XML_PATH_TIRES_URL;
+    const XML_PATH_COLLECTION_METHOD = "klevu_search/developer/collection_method";
+    const XML_PATH_CONFIG_IMAGE_FLAG = "klevu_search/image_setting/enabled";
+    const XML_PATH_TRIGGER_OPTIONS = "klevu_search/developer/trigger_options_info";
+    const XML_PATH_CONFIG_IMAGE_HEIGHT = "klevu_search/image_setting/image_height";
+    const XML_PATH_CONFIG_IMAGE_WIDHT = "klevu_search/image_setting/image_width";
+    const DATETIME_FORMAT = "Y-m-d H:i:s T"; // deprecated, do not use DATETIME_FORMAT
+    const XML_PATH_CONFIG_SYNC_FREQUENCY = "klevu_search/product_sync/frequency";
+    const XML_PATH_PRICE_INCLUDES_TAX = "tax/calculation/price_includes_tax";
+    const XML_PATH_PRICE_DISPLAY_METHOD = "tax/display/type";
+    const XML_PATH_PRICE_TYPEINSEARCH_METHOD = "tax/display/typeinsearch";
+    const XML_PATH_CATALOGINVENTRY_OPTIONS_STOCK = "cataloginventory/options/show_out_of_stock";
+    const XML_PATH_INCLUDE_OOS_PRODUCTS = 'klevu_search/product_sync/include_oos';
+    const XML_PATH_CATALOG_SEARCH_RELEVANCE = "klevu_search/searchlanding/klevu_search_relevance";
+    const XML_PATH_CATALOG_SEARCH_SORT_ORDERS = 'klevu_search/searchlanding/klevu_search_sort_orders';
+    const XML_PATH_PRODUCT_SYNC_CATALOGVISIBILITY = "klevu_search/product_sync/catalogvisibility";
+    const XML_PATH_SEARCHENGINE = 'catalog/search/engine';
+    const XML_PATH_PRICE_PER_CUSTOMER_GROUP_METHOD = "klevu_search/price_per_customer_group/enabled";
+    const XML_PATH_CATALOG_SEARCH_RELEVANCE_LABEL = "klevu_search/searchlanding/relevance_label";
+    const XML_PATH_SYNC_LOCKFILE_OPTION = "klevu_search/product_sync/lockfile";
+    const XML_PATH_NOTIFICATION_ORDERS_WITH_SAME_IP = "klevu_search/notification/orders_with_same_ip";
+    const XML_PATH_DEVELOPER_ORDERS_PERCENTAGE = "klevu_search/developer/orders_percentage";
+    const XML_PATH_DEVELOPER_DAYS_CALCULATE_ORDERS = "klevu_search/developer/days_to_calculate_orders";
+    const XML_PATH_CATEGORY_SYNC_ENABLED = "klevu_search/product_sync/category_sync_enabled";
+    const XML_PATH_NOTIFICATION_OBJECT_VS_COLLECTION = "klevu_search/notification/object_vs_collection";
+    const XML_PATH_NOTIFICATION_LOCK_FILE = "klevu_search/notification/lock_file";
+    const XML_PATH_PRESERVE_LAYOUT_LOG_ENABLED = "klevu_search/developer/preserve_layout_log_enabled";
+    const XML_PATH_PRESERVE_LAYOUT_MIN_LOG_LEVEL = "klevu_search/developer/preserve_layout_log_level";
+    const XML_PATH_THEME_VERSION = 'klevu_search/developer/theme_version';
+    const XML_PATH_QUICKSEARCH_SELECTOR = 'klevu_search/developer/quicksearch_selector';
+    const ADMIN_RESOURCE_CONFIG = 'Klevu_Search::config_search';
+    const XML_PATH_ORDER_IP = 'klevu_search/developer/orderip';
+    const XML_PATH_RATING_SYNC_ENABLED = 'klevu_search/product_sync/rating_sync_enabled';
+    const XML_PATH_LAZYLOAD_QUICK_SEARCH = 'klevu_search/developer/lazyload_js_quick_search';
+    const XML_PATH_LAZYLOAD_SEARCH_LANDING = 'klevu_search/developer/lazyload_js_search_landing';
+    const XML_PATH_SRLP_CONTENT_MIN_HEIGHT = 'klevu_search/developer/content_min_height_srlp';
+
     /**
      * @var RequestInterface
      */
@@ -121,79 +193,14 @@ class Config extends AbstractHelper
         $this->appState = $appState ?: $objectManager->get(AppState::class);
         $configResourceFactory = $configResourceFactory ?: $objectManager->get(ConfigResourceFactory::class);
         $this->configResource = $configResourceFactory->create();
-    }
 
-    const XML_PATH_EXTENSION_ENABLED = "klevu_search/general/enabled";
-    //const XML_PATH_TAX_ENABLED       = "klevu_search/tax_setting/enabled";
-    const XML_PATH_TAX_ENABLED = "tax/display/typeinsearch";
-    const XML_PATH_SECUREURL_ENABLED = "klevu_search/secureurl_setting/enabled";
-    const XML_PATH_LANDING_ENABLED = "klevu_search/searchlanding/landenabled";
-    const XML_PATH_JS_API_KEY = "klevu_search/general/js_api_key";
-    const XML_PATH_REST_API_KEY = GetFeatures::XML_PATH_REST_API_KEY;
-    const XML_PATH_PRODUCT_SYNC_ENABLED = "klevu_search/product_sync/enabled";
-    const XML_PATH_PRODUCT_SYNC_FREQUENCY = "klevu_search/product_sync/frequency";
-    const XML_PATH_PRODUCT_SYNC_LAST_RUN = "klevu_search/product_sync/last_run";
-    const XML_PATH_ATTRIBUTES_ADDITIONAL = "klevu_search/attributes/additional";
-    const XML_PATH_ATTRIBUTES_AUTOMATIC = "klevu_search/attributes/automatic";
-    const XML_PATH_ATTRIBUTES_OTHER = "klevu_search/attributes/other";
-    const XML_PATH_ATTRIBUTES_BOOSTING = "klevu_search/attributes/boosting";
-    const XML_PATH_CATEGORY_ANCHOR = "klevu_search/attributes/categoryanchor";
-    const XML_PATH_ORDER_SYNC_ENABLED = "klevu_search/product_sync/order_sync_enabled";
-    const XML_PATH_ORDER_SYNC_FREQUENCY = "klevu_search/product_sync/order_sync_frequency";
-    const XML_PATH_ORDER_SYNC_FREQUENCY_CUSTOM = "klevu_search/product_sync/order_sync_frequency_custom";
-    const XML_PATH_ORDER_SYNC_MAX_BATCH_SIZE = 'klevu_search/product_sync/order_sync_max_batch_size';
-    const XML_PATH_ORDER_SYNC_LAST_RUN = "klevu_search/order_sync/last_run";
-    const XML_PATH_FORCE_LOG = "klevu_search/developer/force_log";
-    const XML_PATH_LOG_LEVEL = "klevu_search/developer/log_level";
-    const XML_PATH_STORE_ID = "stores/%s/system/store/id";
-    const XML_PATH_HOSTNAME = GetAccountDetails::XML_PATH_HOSTNAME;
-    const XML_PATH_API_URL = GetAccountDetails::XML_PATH_API_URL;
-    const XML_PATH_RESTHOSTNAME = UpdateEndpoints::XML_PATH_INDEXING_URL;
-    const XML_PATH_CLOUD_SEARCH_URL = "klevu_search/general/cloud_search_url";
-    const XML_PATH_CLOUD_SEARCH_V2_URL = UpdateEndpoints::XML_PATH_SEARCH_URL;
-    const XML_PATH_ANALYTICS_URL = UpdateEndpoints::XML_PATH_ANALYTICS_URL;
-    const XML_PATH_JS_URL = UpdateEndpoints::XML_PATH_JS_URL;
-    const KLEVU_PRODUCT_FORCE_OLDERVERSION = 2;
-    const XML_PATH_SYNC_OPTIONS = "klevu_search/product_sync/sync_options";
-    const XML_PATH_UPGRADE_PREMIUM = "klevu_search/general/premium";
-    const XML_PATH_RATING = "klevu_search/general/rating_flag";
-    const XML_PATH_UPGRADE_FEATURES = "klevu_search/general/upgrade_features";
-    const XML_PATH_UPGRADE_TIRES_URL = UpdateEndpoints::XML_PATH_TIRES_URL;
-    const XML_PATH_COLLECTION_METHOD = "klevu_search/developer/collection_method";
-    const XML_PATH_CONFIG_IMAGE_FLAG = "klevu_search/image_setting/enabled";
-    const XML_PATH_TRIGGER_OPTIONS = "klevu_search/developer/trigger_options_info";
-    const XML_PATH_CONFIG_IMAGE_HEIGHT = "klevu_search/image_setting/image_height";
-    const XML_PATH_CONFIG_IMAGE_WIDHT = "klevu_search/image_setting/image_width";
-    const DATETIME_FORMAT = "Y-m-d H:i:s T"; // deprecated, do not use DATETIME_FORMAT
-    const XML_PATH_CONFIG_SYNC_FREQUENCY = "klevu_search/product_sync/frequency";
-    const XML_PATH_PRICE_INCLUDES_TAX = "tax/calculation/price_includes_tax";
-    const XML_PATH_PRICE_DISPLAY_METHOD = "tax/display/type";
-    const XML_PATH_PRICE_TYPEINSEARCH_METHOD = "tax/display/typeinsearch";
-    const XML_PATH_CATALOGINVENTRY_OPTIONS_STOCK = "cataloginventory/options/show_out_of_stock";
-    const XML_PATH_INCLUDE_OOS_PRODUCTS = 'klevu_search/product_sync/include_oos';
-    const XML_PATH_CATALOG_SEARCH_RELEVANCE = "klevu_search/searchlanding/klevu_search_relevance";
-    const XML_PATH_CATALOG_SEARCH_SORT_ORDERS = 'klevu_search/searchlanding/klevu_search_sort_orders';
-    const XML_PATH_PRODUCT_SYNC_CATALOGVISIBILITY = "klevu_search/product_sync/catalogvisibility";
-    const  XML_PATH_SEARCHENGINE = 'catalog/search/engine';
-    const XML_PATH_PRICE_PER_CUSTOMER_GROUP_METHOD = "klevu_search/price_per_customer_group/enabled";
-    const XML_PATH_CATALOG_SEARCH_RELEVANCE_LABEL = "klevu_search/searchlanding/relevance_label";
-    const XML_PATH_SYNC_LOCKFILE_OPTION = "klevu_search/product_sync/lockfile";
-    const XML_PATH_NOTIFICATION_ORDERS_WITH_SAME_IP = "klevu_search/notification/orders_with_same_ip";
-    const XML_PATH_DEVELOPER_ORDERS_PERCENTAGE = "klevu_search/developer/orders_percentage";
-    const XML_PATH_DEVELOPER_DAYS_CALCULATE_ORDERS = "klevu_search/developer/days_to_calculate_orders";
-    const XML_PATH_CATEGORY_SYNC_ENABLED = "klevu_search/product_sync/category_sync_enabled";
-    const XML_PATH_NOTIFICATION_OBJECT_VS_COLLECTION = "klevu_search/notification/object_vs_collection";
-    const XML_PATH_NOTIFICATION_LOCK_FILE = "klevu_search/notification/lock_file";
-    const XML_PATH_PRESERVE_LAYOUT_LOG_ENABLED = "klevu_search/developer/preserve_layout_log_enabled";
-    const XML_PATH_PRESERVE_LAYOUT_MIN_LOG_LEVEL = "klevu_search/developer/preserve_layout_log_level";
-    const XML_PATH_THEME_VERSION = 'klevu_search/developer/theme_version';
-    const XML_PATH_QUICKSEARCH_SELECTOR = 'klevu_search/developer/quicksearch_selector';
-    const ADMIN_RESOURCE_CONFIG = 'Klevu_Search::config_search';
-    const XML_PATH_ORDER_IP = 'klevu_search/developer/orderip';
-    const XML_PATH_RATING_SYNC_ENABLED = 'klevu_search/product_sync/rating_sync_enabled';
-    const XML_PATH_LAZYLOAD_QUICK_SEARCH = 'klevu_search/developer/lazyload_js_quick_search';
-    const XML_PATH_LAZYLOAD_SEARCH_LANDING = 'klevu_search/developer/lazyload_js_search_landing';
-    const XML_PATH_SRLP_CONTENT_MIN_HEIGHT = 'klevu_search/developer/content_min_height_srlp';
+        // Context cannot be passed as an argument as it fails validation in Magento 2.1 and lower
+        // Existing arguments (ScopeConfigInterface, UrlInterface, amd RequestInterface) are present
+        //  in the Context object, causing \Magento\Framework\Code\Validator\ContextAggregation::validate
+        //  to fail
+        // Context is passed as an argument in 3.x releases which do not support earlier versions of Magento
+        parent::__construct($objectManager->get(Context::class));
+    }
 
     /**
      * Set the Enable on Frontend flag in System Configuration for the given store.

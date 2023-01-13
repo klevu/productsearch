@@ -676,6 +676,14 @@ class VisibilityAndStockStatusTest extends TestCase
                     'visibility' => 'catalog-search',
                     'inStock' => 'no',
                 ],
+                'klevu_grouped_synctest_instock_childrendisabled' => [
+                    'price' => 0.0,
+                    'salePrice' => 0.0,
+                    'startPrice' => null,
+                    'toPrice' => null,
+                    'visibility' => 'catalog-search',
+                    'inStock' => 'no',
+                ],
                 'klevu_bundle_synctest_instock_childreninstock' => [
                     'price' => 15.99,
                     'salePrice' => 15.99,
@@ -886,6 +894,14 @@ class VisibilityAndStockStatusTest extends TestCase
                     'price' => 12.5, // Because Magento's setting pulls the OOS child into the calculations
                     'salePrice' => 12.5,
                     'startPrice' => 12.5,
+                    'toPrice' => null,
+                    'visibility' => 'catalog-search',
+                    'inStock' => 'no',
+                ],
+                'klevu_grouped_synctest_instock_childrendisabled' => [
+                    'price' => 0.0,
+                    'salePrice' => 0.0,
+                    'startPrice' => null,
                     'toPrice' => null,
                     'visibility' => 'catalog-search',
                     'inStock' => 'no',
@@ -1139,6 +1155,14 @@ class VisibilityAndStockStatusTest extends TestCase
                     'price' => 12.5, // Because Magento's setting pulls the OOS child into the calculations
                     'salePrice' => 12.5,
                     'startPrice' => 12.5,
+                    'toPrice' => null,
+                    'visibility' => 'catalog-search',
+                    'inStock' => 'no',
+                ],
+                'klevu_grouped_synctest_instock_childrendisabled' => [
+                    'price' => 0.0,
+                    'salePrice' => 0.0,
+                    'startPrice' => null,
                     'toPrice' => null,
                     'visibility' => 'catalog-search',
                     'inStock' => 'no',
@@ -1803,6 +1827,14 @@ class VisibilityAndStockStatusTest extends TestCase
                     'visibility' => 'catalog-search',
                     'inStock' => 'no',
                 ],
+                'klevu_grouped_synctest_instock_childrendisabled' => [
+                    'price' => 0.0,
+                    'salePrice' => 0.0,
+                    'startPrice' => null,
+                    'toPrice' => null,
+                    'visibility' => 'catalog-search',
+                    'inStock' => 'no',
+                ],
                 'klevu_bundle_synctest_instock_childreninstock' => [
                     'price' => 15.99,
                     'salePrice' => 15.99,
@@ -2012,6 +2044,14 @@ class VisibilityAndStockStatusTest extends TestCase
                     'price' => 12.5, // Because Magento's setting pulls the OOS child into the calculations
                     'salePrice' => 12.5,
                     'startPrice' => 12.5,
+                    'toPrice' => null,
+                    'visibility' => 'catalog-search',
+                    'inStock' => 'no',
+                ],
+                'klevu_grouped_synctest_instock_childrendisabled' => [
+                    'price' => 0.0,
+                    'salePrice' => 0.0,
+                    'startPrice' => null,
                     'toPrice' => null,
                     'visibility' => 'catalog-search',
                     'inStock' => 'no',
@@ -2269,6 +2309,14 @@ class VisibilityAndStockStatusTest extends TestCase
                     'visibility' => 'catalog-search',
                     'inStock' => 'no',
                 ],
+                'klevu_grouped_synctest_instock_childrendisabled' => [
+                    'price' => 0.0,
+                    'salePrice' => 0.0,
+                    'startPrice' => null,
+                    'toPrice' => null,
+                    'visibility' => 'catalog-search',
+                    'inStock' => 'no',
+                ],
                 'klevu_bundle_synctest_instock_childreninstock' => [
                     'price' => 15.99,
                     'salePrice' => 15.99,
@@ -2365,37 +2413,31 @@ class VisibilityAndStockStatusTest extends TestCase
             ], [
                 'parent' => null,
                 'product' => 'klevu_simple_synctest_oos_notvisible',
-            ],
-            [
+            ], [
                 'parent' => 'klevu_configurable_synctest_instock_childreninstock',
                 'product' => 'klevu_simple_synctest_child_oos',
-            ],
-            [
+            ], [
                 'parent' => 'klevu_configurable_synctest_instock_viscatalog_childreninstock',
                 'product' => 'klevu_simple_synctest_child_instock_1',
             ], [
                 'parent' => 'klevu_configurable_synctest_instock_viscatalog_childreninstock',
                 'product' => 'klevu_simple_synctest_child_instock_2',
-            ],
-            [
+            ], [
                 'parent' => 'klevu_configurable_synctest_instock_childrenoos',
                 'product' => 'klevu_simple_synctest_child_oos',
-            ],
-            [
+            ], [
                 'parent' => 'klevu_configurable_synctest_oos_childreninstock',
                 'product' => 'klevu_simple_synctest_child_instock_1',
             ], [
                 'parent' => 'klevu_configurable_synctest_oos_childreninstock',
                 'product' => 'klevu_simple_synctest_child_instock_2',
-            ],
-            [
+            ], [
                 'parent' => 'klevu_configurable_synctest_instock_notvisible_childreninstock',
                 'product' => 'klevu_simple_synctest_child_instock_1',
             ], [
                 'parent' => 'klevu_configurable_synctest_instock_notvisible_childreninstock',
                 'product' => 'klevu_simple_synctest_child_instock_2',
-            ],
-            [
+            ], [
                 'parent' => null,
                 'product' => 'klevu_grouped_synctest_instock_notvisible_childreninstock',
             ], [
@@ -2404,8 +2446,10 @@ class VisibilityAndStockStatusTest extends TestCase
             ], [
                 'parent' => null,
                 'product' => 'klevu_grouped_synctest_oos_childreninstock',
-            ],
-            [
+            ], [
+                'parent' => null,
+                'product' => 'klevu_grouped_synctest_instock_childrendisabled',
+            ], [
                 'parent' => null,
                 'product' => 'klevu_bundle_synctest_instock_notvisible_childreninstock',
             ], [
@@ -2577,30 +2621,25 @@ class VisibilityAndStockStatusTest extends TestCase
             ], [
                 'parent' => null,
                 'product' => 'klevu_simple_synctest_oos_notvisible',
-            ],
-            [
+            ], [
                 'parent' => 'klevu_configurable_synctest_instock_childreninstock',
                 'product' => 'klevu_simple_synctest_child_oos',
-            ],
-            [
+            ], [
                 'parent' => 'klevu_configurable_synctest_instock_childrenoos',
                 'product' => 'klevu_simple_synctest_child_oos',
-            ],
-            [
+            ], [
                 'parent' => 'klevu_configurable_synctest_oos_childreninstock',
                 'product' => 'klevu_simple_synctest_child_instock_1',
             ], [
                 'parent' => 'klevu_configurable_synctest_oos_childreninstock',
                 'product' => 'klevu_simple_synctest_child_instock_2',
-            ],
-            [
+            ], [
                 'parent' => 'klevu_configurable_synctest_instock_notvisible_childreninstock',
                 'product' => 'klevu_simple_synctest_child_instock_1',
             ], [
                 'parent' => 'klevu_configurable_synctest_instock_notvisible_childreninstock',
                 'product' => 'klevu_simple_synctest_child_instock_2',
-            ],
-            [
+            ], [
                 'parent' => null,
                 'product' => 'klevu_grouped_synctest_instock_notvisible_childreninstock',
             ], [
@@ -2609,8 +2648,10 @@ class VisibilityAndStockStatusTest extends TestCase
             ], [
                 'parent' => null,
                 'product' => 'klevu_grouped_synctest_oos_childreninstock',
-            ],
-            [
+            ], [
+                'parent' => null,
+                'product' => 'klevu_grouped_synctest_instock_childrendisabled',
+            ], [
                 'parent' => null,
                 'product' => 'klevu_bundle_synctest_instock_notvisible_childreninstock',
             ], [
@@ -2809,8 +2850,7 @@ class VisibilityAndStockStatusTest extends TestCase
             ], [
                 'parent' => null,
                 'product' => 'klevu_simple_synctest_oos_notvisible',
-            ],
-            [
+            ], [
                 'parent' => 'klevu_configurable_synctest_instock_childreninstock',
                 'product' => 'klevu_simple_synctest_child_oos',
             ],
@@ -2820,26 +2860,22 @@ class VisibilityAndStockStatusTest extends TestCase
             ], [
                 'parent' => 'klevu_configurable_synctest_instock_viscatalog_childreninstock',
                 'product' => 'klevu_simple_synctest_child_instock_2',
-            ],
-            [
+            ], [
                 'parent' => 'klevu_configurable_synctest_instock_childrenoos',
                 'product' => 'klevu_simple_synctest_child_oos',
-            ],
-            [
+            ], [
                 'parent' => 'klevu_configurable_synctest_oos_childreninstock',
                 'product' => 'klevu_simple_synctest_child_instock_1',
             ], [
                 'parent' => 'klevu_configurable_synctest_oos_childreninstock',
                 'product' => 'klevu_simple_synctest_child_instock_2',
-            ],
-            [
+            ], [
                 'parent' => 'klevu_configurable_synctest_instock_notvisible_childreninstock',
                 'product' => 'klevu_simple_synctest_child_instock_1',
             ], [
                 'parent' => 'klevu_configurable_synctest_instock_notvisible_childreninstock',
                 'product' => 'klevu_simple_synctest_child_instock_2',
-            ],
-            [
+            ], [
                 'parent' => null,
                 'product' => 'klevu_grouped_synctest_instock_notvisible_childreninstock',
             ], [
@@ -2848,8 +2884,10 @@ class VisibilityAndStockStatusTest extends TestCase
             ], [
                 'parent' => null,
                 'product' => 'klevu_grouped_synctest_oos_childreninstock',
-            ],
-            [
+            ], [
+                'parent' => null,
+                'product' => 'klevu_grouped_synctest_instock_childrendisabled',
+            ], [
                 'parent' => null,
                 'product' => 'klevu_bundle_synctest_instock_notvisible_childreninstock',
             ], [
@@ -3021,26 +3059,22 @@ class VisibilityAndStockStatusTest extends TestCase
             ], [
                 'parent' => null,
                 'product' => 'klevu_simple_synctest_oos_notvisible',
-            ],
-            [
+            ], [
                 'parent' => 'klevu_configurable_synctest_instock_notvisible_childreninstock',
                 'product' => 'klevu_simple_synctest_child_instock_1',
             ], [
                 'parent' => 'klevu_configurable_synctest_instock_notvisible_childreninstock',
                 'product' => 'klevu_simple_synctest_child_instock_2',
-            ],
-            [
+            ], [
                 'parent' => 'klevu_configurable_synctest_instock_viscatalog_childreninstock',
                 'product' => 'klevu_simple_synctest_child_instock_1',
             ], [
                 'parent' => 'klevu_configurable_synctest_instock_viscatalog_childreninstock',
                 'product' => 'klevu_simple_synctest_child_instock_2',
-            ],
-            [
+            ], [
                 'parent' => null,
                 'product' => 'klevu_grouped_synctest_instock_notvisible_childreninstock',
-            ],
-            [
+            ], [
                 'parent' => null,
                 'product' => 'klevu_bundle_synctest_instock_notvisible_childreninstock',
             ]
@@ -3167,6 +3201,14 @@ class VisibilityAndStockStatusTest extends TestCase
                     'price' => 25.5,
                     'salePrice' => 25.5,
                     'startPrice' => 25.5,
+                    'toPrice' => null,
+                    'visibility' => 'catalog-search',
+                    'inStock' => 'no',
+                ],
+                'klevu_grouped_synctest_instock_childrendisabled' => [
+                    'price' => 0.0,
+                    'salePrice' => 0.0,
+                    'startPrice' => null,
                     'toPrice' => null,
                     'visibility' => 'catalog-search',
                     'inStock' => 'no',
@@ -3278,26 +3320,22 @@ class VisibilityAndStockStatusTest extends TestCase
             ], [
                 'parent' => null,
                 'product' => 'klevu_simple_synctest_oos_notvisible',
-            ],
-            [
+            ], [
                 'parent' => 'klevu_configurable_synctest_instock_notvisible_childreninstock',
                 'product' => 'klevu_simple_synctest_child_instock_1',
             ], [
                 'parent' => 'klevu_configurable_synctest_instock_notvisible_childreninstock',
                 'product' => 'klevu_simple_synctest_child_instock_2',
-            ],
-            [
+            ], [
                 'parent' => 'klevu_configurable_synctest_instock_viscatalog_childreninstock',
                 'product' => 'klevu_simple_synctest_child_instock_1',
             ], [
                 'parent' => 'klevu_configurable_synctest_instock_viscatalog_childreninstock',
                 'product' => 'klevu_simple_synctest_child_instock_2',
-            ],
-            [
+            ], [
                 'parent' => null,
                 'product' => 'klevu_grouped_synctest_instock_notvisible_childreninstock',
-            ],
-            [
+            ], [
                 'parent' => null,
                 'product' => 'klevu_bundle_synctest_instock_notvisible_childreninstock',
             ]
@@ -3428,6 +3466,14 @@ class VisibilityAndStockStatusTest extends TestCase
                     'visibility' => 'catalog-search',
                     'inStock' => 'no',
                 ],
+                'klevu_grouped_synctest_instock_childrendisabled' => [
+                    'price' => 0.0,
+                    'salePrice' => 0.0,
+                    'startPrice' => null,
+                    'toPrice' => null,
+                    'visibility' => 'catalog-search',
+                    'inStock' => 'no',
+                ],
                 'klevu_bundle_synctest_instock_childreninstock' => [
                     'price' => 15.99,
                     'salePrice' => 15.99,
@@ -3532,19 +3578,16 @@ class VisibilityAndStockStatusTest extends TestCase
             ], [
                 'parent' => null,
                 'product' => 'klevu_simple_synctest_oos_notvisible',
-            ],
-            [
+            ], [
                 'parent' => 'klevu_configurable_synctest_instock_notvisible_childreninstock',
                 'product' => 'klevu_simple_synctest_child_instock_1',
             ], [
                 'parent' => 'klevu_configurable_synctest_instock_notvisible_childreninstock',
                 'product' => 'klevu_simple_synctest_child_instock_2',
-            ],
-            [
+            ], [
                 'parent' => null,
                 'product' => 'klevu_grouped_synctest_instock_notvisible_childreninstock',
-            ],
-            [
+            ], [
                 'parent' => null,
                 'product' => 'klevu_bundle_synctest_instock_notvisible_childreninstock',
             ]
@@ -3715,6 +3758,14 @@ class VisibilityAndStockStatusTest extends TestCase
                     'visibility' => 'catalog-search',
                     'inStock' => 'no',
                 ],
+                'klevu_grouped_synctest_instock_childrendisabled' => [
+                    'price' => 0.0,
+                    'salePrice' => 0.0,
+                    'startPrice' => null,
+                    'toPrice' => null,
+                    'visibility' => 'catalog-search',
+                    'inStock' => 'no',
+                ],
                 'klevu_bundle_synctest_instock_childreninstock' => [
                     'price' => 15.99,
                     'salePrice' => 15.99,
@@ -3825,37 +3876,31 @@ class VisibilityAndStockStatusTest extends TestCase
             ], [
                 'parent' => null,
                 'product' => 'klevu_simple_synctest_oos_notvisible',
-            ],
-            [
+            ], [
                 'parent' => 'klevu_configurable_synctest_instock_childreninstock',
                 'product' => 'klevu_simple_synctest_child_oos',
-            ],
-            [
+            ], [
                 'parent' => 'klevu_configurable_synctest_instock_viscatalog_childreninstock',
                 'product' => 'klevu_simple_synctest_child_instock_1',
             ], [
                 'parent' => 'klevu_configurable_synctest_instock_viscatalog_childreninstock',
                 'product' => 'klevu_simple_synctest_child_instock_2',
-            ],
-            [
+            ], [
                 'parent' => 'klevu_configurable_synctest_instock_childrenoos',
                 'product' => 'klevu_simple_synctest_child_oos',
-            ],
-            [
+            ], [
                 'parent' => 'klevu_configurable_synctest_oos_childreninstock',
                 'product' => 'klevu_simple_synctest_child_instock_1',
             ], [
                 'parent' => 'klevu_configurable_synctest_oos_childreninstock',
                 'product' => 'klevu_simple_synctest_child_instock_2',
-            ],
-            [
+            ], [
                 'parent' => 'klevu_configurable_synctest_instock_notvisible_childreninstock',
                 'product' => 'klevu_simple_synctest_child_instock_1',
             ], [
                 'parent' => 'klevu_configurable_synctest_instock_notvisible_childreninstock',
                 'product' => 'klevu_simple_synctest_child_instock_2',
-            ],
-            [
+            ], [
                 'parent' => null,
                 'product' => 'klevu_grouped_synctest_instock_notvisible_childreninstock',
             ], [
@@ -3864,8 +3909,10 @@ class VisibilityAndStockStatusTest extends TestCase
             ], [
                 'parent' => null,
                 'product' => 'klevu_grouped_synctest_oos_childreninstock',
-            ],
-            [
+            ], [
+                'parent' => null,
+                'product' => 'klevu_grouped_synctest_instock_childrendisabled',
+            ], [
                 'parent' => null,
                 'product' => 'klevu_bundle_synctest_instock_notvisible_childreninstock',
             ], [
@@ -4037,30 +4084,25 @@ class VisibilityAndStockStatusTest extends TestCase
             ], [
                 'parent' => null,
                 'product' => 'klevu_simple_synctest_oos_notvisible',
-            ],
-            [
+            ], [
                 'parent' => 'klevu_configurable_synctest_instock_childreninstock',
                 'product' => 'klevu_simple_synctest_child_oos',
-            ],
-            [
+            ], [
                 'parent' => 'klevu_configurable_synctest_instock_childrenoos',
                 'product' => 'klevu_simple_synctest_child_oos',
-            ],
-            [
+            ], [
                 'parent' => 'klevu_configurable_synctest_oos_childreninstock',
                 'product' => 'klevu_simple_synctest_child_instock_1',
             ], [
                 'parent' => 'klevu_configurable_synctest_oos_childreninstock',
                 'product' => 'klevu_simple_synctest_child_instock_2',
-            ],
-            [
+            ], [
                 'parent' => 'klevu_configurable_synctest_instock_notvisible_childreninstock',
                 'product' => 'klevu_simple_synctest_child_instock_1',
             ], [
                 'parent' => 'klevu_configurable_synctest_instock_notvisible_childreninstock',
                 'product' => 'klevu_simple_synctest_child_instock_2',
-            ],
-            [
+            ], [
                 'parent' => null,
                 'product' => 'klevu_grouped_synctest_instock_notvisible_childreninstock',
             ], [
@@ -4069,8 +4111,10 @@ class VisibilityAndStockStatusTest extends TestCase
             ], [
                 'parent' => null,
                 'product' => 'klevu_grouped_synctest_oos_childreninstock',
-            ],
-            [
+            ], [
+                'parent' => null,
+                'product' => 'klevu_grouped_synctest_instock_childrendisabled',
+            ], [
                 'parent' => null,
                 'product' => 'klevu_bundle_synctest_instock_notvisible_childreninstock',
             ], [
@@ -4269,37 +4313,31 @@ class VisibilityAndStockStatusTest extends TestCase
             ], [
                 'parent' => null,
                 'product' => 'klevu_simple_synctest_oos_notvisible',
-            ],
-            [
+            ], [
                 'parent' => 'klevu_configurable_synctest_instock_childreninstock',
                 'product' => 'klevu_simple_synctest_child_oos',
-            ],
-            [
+            ], [
                 'parent' => 'klevu_configurable_synctest_instock_viscatalog_childreninstock',
                 'product' => 'klevu_simple_synctest_child_instock_1',
             ], [
                 'parent' => 'klevu_configurable_synctest_instock_viscatalog_childreninstock',
                 'product' => 'klevu_simple_synctest_child_instock_2',
-            ],
-            [
+            ], [
                 'parent' => 'klevu_configurable_synctest_instock_childrenoos',
                 'product' => 'klevu_simple_synctest_child_oos',
-            ],
-            [
+            ], [
                 'parent' => 'klevu_configurable_synctest_oos_childreninstock',
                 'product' => 'klevu_simple_synctest_child_instock_1',
             ], [
                 'parent' => 'klevu_configurable_synctest_oos_childreninstock',
                 'product' => 'klevu_simple_synctest_child_instock_2',
-            ],
-            [
+            ], [
                 'parent' => 'klevu_configurable_synctest_instock_notvisible_childreninstock',
                 'product' => 'klevu_simple_synctest_child_instock_1',
             ], [
                 'parent' => 'klevu_configurable_synctest_instock_notvisible_childreninstock',
                 'product' => 'klevu_simple_synctest_child_instock_2',
-            ],
-            [
+            ], [
                 'parent' => null,
                 'product' => 'klevu_grouped_synctest_instock_notvisible_childreninstock',
             ], [
@@ -4308,8 +4346,10 @@ class VisibilityAndStockStatusTest extends TestCase
             ], [
                 'parent' => null,
                 'product' => 'klevu_grouped_synctest_oos_childreninstock',
-            ],
-            [
+            ], [
+                'parent' => null,
+                'product' => 'klevu_grouped_synctest_instock_childrendisabled',
+            ], [
                 'parent' => null,
                 'product' => 'klevu_bundle_synctest_instock_notvisible_childreninstock',
             ], [
@@ -4481,26 +4521,22 @@ class VisibilityAndStockStatusTest extends TestCase
             ], [
                 'parent' => null,
                 'product' => 'klevu_simple_synctest_oos_notvisible',
-            ],
-            [
+            ], [
                 'parent' => 'klevu_configurable_synctest_instock_notvisible_childreninstock',
                 'product' => 'klevu_simple_synctest_child_instock_1',
             ], [
                 'parent' => 'klevu_configurable_synctest_instock_notvisible_childreninstock',
                 'product' => 'klevu_simple_synctest_child_instock_2',
-            ],
-            [
+            ], [
                 'parent' => 'klevu_configurable_synctest_instock_viscatalog_childreninstock',
                 'product' => 'klevu_simple_synctest_child_instock_1',
             ], [
                 'parent' => 'klevu_configurable_synctest_instock_viscatalog_childreninstock',
                 'product' => 'klevu_simple_synctest_child_instock_2',
-            ],
-            [
+            ], [
                 'parent' => null,
                 'product' => 'klevu_grouped_synctest_instock_notvisible_childreninstock',
-            ],
-            [
+            ], [
                 'parent' => null,
                 'product' => 'klevu_bundle_synctest_instock_notvisible_childreninstock',
             ]
@@ -4627,6 +4663,14 @@ class VisibilityAndStockStatusTest extends TestCase
                     'price' => 25.5,
                     'salePrice' => 25.5,
                     'startPrice' => 25.5,
+                    'toPrice' => null,
+                    'visibility' => 'catalog-search',
+                    'inStock' => 'no',
+                ],
+                'klevu_grouped_synctest_instock_childrendisabled' => [
+                    'price' => 0.0,
+                    'salePrice' => 0.0,
+                    'startPrice' => null,
                     'toPrice' => null,
                     'visibility' => 'catalog-search',
                     'inStock' => 'no',
@@ -4738,26 +4782,22 @@ class VisibilityAndStockStatusTest extends TestCase
             ], [
                 'parent' => null,
                 'product' => 'klevu_simple_synctest_oos_notvisible',
-            ],
-            [
+            ], [
                 'parent' => 'klevu_configurable_synctest_instock_notvisible_childreninstock',
                 'product' => 'klevu_simple_synctest_child_instock_1',
             ], [
                 'parent' => 'klevu_configurable_synctest_instock_notvisible_childreninstock',
                 'product' => 'klevu_simple_synctest_child_instock_2',
-            ],
-            [
+            ], [
                 'parent' => 'klevu_configurable_synctest_instock_viscatalog_childreninstock',
                 'product' => 'klevu_simple_synctest_child_instock_1',
             ], [
                 'parent' => 'klevu_configurable_synctest_instock_viscatalog_childreninstock',
                 'product' => 'klevu_simple_synctest_child_instock_2',
-            ],
-            [
+            ], [
                 'parent' => null,
                 'product' => 'klevu_grouped_synctest_instock_notvisible_childreninstock',
-            ],
-            [
+            ], [
                 'parent' => null,
                 'product' => 'klevu_bundle_synctest_instock_notvisible_childreninstock',
             ]
@@ -4888,6 +4928,14 @@ class VisibilityAndStockStatusTest extends TestCase
                     'visibility' => 'catalog-search',
                     'inStock' => 'no',
                 ],
+                'klevu_grouped_synctest_instock_childrendisabled' => [
+                    'price' => 0.0,
+                    'salePrice' => 0.0,
+                    'startPrice' => null,
+                    'toPrice' => null,
+                    'visibility' => 'catalog-search',
+                    'inStock' => 'no',
+                ],
                 'klevu_bundle_synctest_instock_childreninstock' => [
                     'price' => 15.99,
                     'salePrice' => 15.99,
@@ -4992,19 +5040,16 @@ class VisibilityAndStockStatusTest extends TestCase
             ], [
                 'parent' => null,
                 'product' => 'klevu_simple_synctest_oos_notvisible',
-            ],
-            [
+            ], [
                 'parent' => 'klevu_configurable_synctest_instock_notvisible_childreninstock',
                 'product' => 'klevu_simple_synctest_child_instock_1',
             ], [
                 'parent' => 'klevu_configurable_synctest_instock_notvisible_childreninstock',
                 'product' => 'klevu_simple_synctest_child_instock_2',
-            ],
-            [
+            ], [
                 'parent' => null,
                 'product' => 'klevu_grouped_synctest_instock_notvisible_childreninstock',
-            ],
-            [
+            ], [
                 'parent' => null,
                 'product' => 'klevu_bundle_synctest_instock_notvisible_childreninstock',
             ]
@@ -5171,6 +5216,14 @@ class VisibilityAndStockStatusTest extends TestCase
                     'price' => 12.5, // Because Magento's setting pulls the OOS child into the calculations
                     'salePrice' => 12.5,
                     'startPrice' => 12.5,
+                    'toPrice' => null,
+                    'visibility' => 'catalog-search',
+                    'inStock' => 'no',
+                ],
+                'klevu_grouped_synctest_instock_childrendisabled' => [
+                    'price' => 0.0,
+                    'salePrice' => 0.0,
+                    'startPrice' => null,
                     'toPrice' => null,
                     'visibility' => 'catalog-search',
                     'inStock' => 'no',

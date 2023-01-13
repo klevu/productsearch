@@ -1,57 +1,62 @@
 <?php
-/**
- * Class \Klevu\Search\Block\Adminhtml\Form\Field\Sync\UpdatesOnly
- */
+
 namespace Klevu\Search\Block\Adminhtml\Form\Field\Sync;
 
+use Klevu\Search\Helper\Config as ConfigHelper;
 use Klevu\Search\Model\Sync as Klevu_Sync;
+use Klevu\Search\Model\System\Config\Source\Syncoptions;
+use Magento\Backend\Block\Template\Context;
+use Magento\Config\Block\System\Config\Form\Field;
+use Magento\Framework\Data\Form\Element\AbstractElement;
+use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Store\Model\StoreManagerInterface;
 
-/**
- * Class UpdatesOnly
- * @package Klevu\Search\Block\Adminhtml\Form\Field\Sync
- */
-class UpdatesOnly extends \Magento\Config\Block\System\Config\Form\Field
+class UpdatesOnly extends Field
 {
     /**
-     * Store manager
-     *
-     * @var \Magento\Store\Model\StoreManagerInterface
+     * @var StoreManagerInterface
      */
     protected $_storeManager;
+    /**
+     * @var Klevu_Sync
+     */
+    protected $_klevuSync;
+    /**
+     * @var string
+     */
+    protected $_template = 'klevu/search/form/field/sync/updatesonly.phtml';
 
     /**
      * UpdatesOnly constructor.
-     * @param \Magento\Backend\Block\Template\Context $context
+     *
+     * @param Context $context
      * @param Klevu_Sync $klevuSync
      * @param array $data
      */
     public function __construct(
-        \Magento\Backend\Block\Template\Context $context,
+        Context $context,
         Klevu_Sync $klevuSync,
-        array $data = [])
-    {
+        array $data = []
+    ) {
         $this->_storeManager = $context->getStoreManager();
         $this->_klevuSync = $klevuSync;
         parent::__construct($context, $data);
     }
 
-    protected $_template = 'klevu/search/form/field/sync/updatesonly.phtml';
-
     /**
      * Retrieve HTML markup for given form element
      *
-     * @param \Magento\Framework\Data\Form\Element\AbstractElement $element
+     * @param AbstractElement $element
+     *
      * @return string
      */
-    public function render(\Magento\Framework\Data\Form\Element\AbstractElement $element)
+    public function render(AbstractElement $element)
     {
-        if ($element->getScope() == "stores") {
+        if ($element->getScope() === "stores") {
             $this->setStoreId($element->getScopeId());
         }
-
         // Remove the scope information so it doesn't get printed out
-        $element
-            ->unsScope()
+        $element->unsScope()
             ->unsCanUseWebsiteValue()
             ->unsCanUseDefaultValue();
 
@@ -61,20 +66,20 @@ class UpdatesOnly extends \Magento\Config\Block\System\Config\Form\Field
     /**
      * Retrieve element HTML markup
      *
-     * @param \Magento\Framework\Data\Form\Element\AbstractElement $element
+     * @param AbstractElement $element
+     *
      * @return string
      */
-    protected function _getElementHtml(\Magento\Framework\Data\Form\Element\AbstractElement $element)
+    protected function _getElementHtml(AbstractElement $element)
     {
-        $url_params = ($this->getStoreId()) ? ["store" => $this->getStoreId()] : [];
-        $label_suffix = ($this->getStoreId()) ? " for This Store" : "";
+        $urlParams = ($this->getStoreId()) ? ["store" => $this->getStoreId()] : [];
+        $labelSuffix = ($this->getStoreId()) ? " for This Store" : "";
 
         $this->addData([
-            "sync_option_id" => \Klevu\Search\Model\System\Config\Source\Syncoptions::SYNC_PARTIALLY,
+            "sync_option_id" => Syncoptions::SYNC_PARTIALLY,
             "html_id" => $element->getHtmlId(),
-            "button_label" => sprintf("Sync Updates Only %s", $label_suffix),
-            "destination_url" => $this->getUrl("klevu_search/sync/all/store/" . $this->getStoreId(), $url_params)
-
+            "button_label" => sprintf("Sync Updates Only %s", $labelSuffix),
+            "destination_url" => $this->getUrl("klevu_search/sync/all/store/" . $this->getStoreId(), $urlParams)
         ]);
 
         return $this->_toHtml();
@@ -86,25 +91,29 @@ class UpdatesOnly extends \Magento\Config\Block\System\Config\Form\Field
      */
     public function getStoreParam()
     {
-        $store_id = $this->getRequest()->getParam('store');
-        return $store_id;
+        return $this->getRequest()->getParam('store');
     }
 
     /**
      * Retrieve Rest API for Magento configured store
      *
-     * @param $store_id
+     * @param string|int $storeId
+     *
      * @return string
      */
-    public function getRestApi($store_id)
+    public function getRestApi($storeId)
     {
-        return $this->_klevuSync->getHelper()->getConfigHelper()->getRestApiKey((int)$store_id);
+        $helperManager = $this->_klevuSync->getHelper();
+        /** @var ConfigHelper $configHeelpr */
+        $configHelper = $helperManager->getConfigHelper();
+
+        return $configHelper->getRestApiKey((int)$storeId);
     }
 
     /**
      * Retrieve sync url for current store
      * @return string
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws NoSuchEntityException
      */
     public function getSyncUrlForStore()
     {
@@ -114,8 +123,11 @@ class UpdatesOnly extends \Magento\Config\Block\System\Config\Form\Field
         } else {
             $store_id = $this->getRequest()->getParam('store');
         }
-        $hashkey = hash('sha256', (string)$this->getRestApi($store_id));
-        return $this->_storeManager->getStore($store_id)->getBaseUrl() . "search/index/syncstore/store/" . $store_id . "/hashkey/" . $hashkey;
+        $restApiKey = $this->getRestApi($store_id);
+        $hashkey = $restApiKey ? hash('sha256', (string)$restApiKey) : '';
+
+        return $this->_storeManager->getStore($store_id)->getBaseUrl()
+            . "search/index/syncstore/store/" . $store_id
+            . "/hashkey/" . $hashkey;
     }
 }
-
