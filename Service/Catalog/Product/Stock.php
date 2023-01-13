@@ -186,14 +186,21 @@ class Stock implements StockServiceInterface
             $isSaleable = method_exists($product, 'isSaleable')
                 ? $product->isSaleable()
                 : true;
+            $store = $product->getStore();
+            $stockStatusInterface = $this->_stockRegistryInterface->getStockStatus(
+                $product->getId(),
+                $store->getWebsiteId()
+            );
 
-            if (!$isSaleable && GroupedType::TYPE_CODE === $product->getTypeId()) {
-                $stockStatus = false;
+            if (GroupedType::TYPE_CODE === $product->getTypeId()) {
+                $isAvailable = method_exists($product, 'isAvailable')
+                    ? $product->isAvailable()
+                    : $isSaleable;
+
+                $stockStatus = $isAvailable
+                    && $this->hasAssociatedProducts($product)
+                    && (bool)$stockStatusInterface->getStockStatus();
             } else {
-                $stockStatusInterface = $this->_stockRegistryInterface->getStockStatus(
-                    $product->getId(),
-                    $product->getStore()->getWebsiteId()
-                );
                 $stockStatus = (bool)$stockStatusInterface->getStockStatus() && $isSaleable;
             }
         }
@@ -213,5 +220,21 @@ class Stock implements StockServiceInterface
     private function getCacheId($websiteId)
     {
         return $websiteId ? (string)$websiteId : "default";
+    }
+
+    /**
+     * @param ProductInterface $product
+     *
+     * @return bool
+     */
+    private function hasAssociatedProducts(ProductInterface $product)
+    {
+        $associatedProducts = [];
+        $productTypeInstance = $product->getTypeInstance();
+        if (GroupedType::TYPE_CODE === $product->getTypeId()) {
+            $associatedProducts = $productTypeInstance->getAssociatedProducts($product);
+        }
+
+        return (bool)count($associatedProducts);
     }
 }

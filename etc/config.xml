@@ -37,6 +37,7 @@
             </attributes>
             <developer>
                 <collection_method>0</collection_method>
+                <product_sync_records_per_page>100</product_sync_records_per_page>
                 <force_log>1</force_log>
                 <log_level>6</log_level>
                 <preserve_layout_log_enabled>0</preserve_layout_log_enabled>

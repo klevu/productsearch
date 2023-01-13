@@ -2,16 +2,22 @@
 
 namespace Klevu\Search\Model\Product;
 
+use Exception;
 use Klevu\Logger\Constants as LoggerConstants;
+use Klevu\Search\Api\Service\Sync\Product\GetRecordsPerPageInterface;
+use Klevu\Search\Helper\Config as ConfigHelper;
+use Klevu\Search\Helper\Data as SearchHelepr;
 use Klevu\Search\Model\Category\MagentoCategoryActions as Klevu_MagentoCategoryActions;
 use Klevu\Search\Model\Category\KlevuCategoryActions as Klevu_KlevuCategoryActions;
 use Klevu\Search\Model\Klevu\HelperManager as KlevuHelperManager;
 use Klevu\Search\Model\Klevu\KlevuFactory;
 use Klevu\Search\Model\Product\MagentoProductActionsInterface as Klevu_MagentoProductActions;
 use Klevu\Search\Model\Product\KlevuProductActionsInterface as Klevu_KlevuProductActions;
+use Klevu\Search\Model\Session;
 use Klevu\Search\Model\Sync as KlevuSync;
 use Magento\Backend\Model\Session as BackendSession;
 use Magento\Framework\App\Area as AppArea;
+use Magento\Framework\App\ObjectManager;
 use Magento\Framework\App\ProductMetadataInterface;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\App\ResourceConnection;
@@ -33,20 +39,21 @@ class Sync extends AbstractModel
      * It has been determined during development that Product Sync uses around
      * 120kB of memory for each product it syncs, or around 10MB of memory for
      * each 100 product page.
+     * @deprecated in favour of a dedicated service to get the admin setting for this records per page.
+     * @see \Klevu\Search\Service\Sync\Product\GetRecordsPerPage
      */
     const RECORDS_PER_PAGE = 100;
     const NOTIFICATION_GLOBAL_TYPE = "product_sync";
     const NOTIFICATION_STORE_TYPE_PREFIX = "product_sync_store_";
 
     /**
-     * @var \Magento\Framework\Model\Resource
+     * @var ResourceConnection
      */
     protected $_frameworkModelResource;
     /**
-     * @var \Klevu\Search\Model\Session
+     * @var Session
      */
     protected $_searchModelSession;
-
     /**
      * @var LoggerInterface
      */
@@ -64,6 +71,50 @@ class Sync extends AbstractModel
      * @var KlevuSync
      */
     protected $_klevuSyncModel;
+    /**
+     * @var ProductMetadataInterface
+     */
+    protected $_ProductMetadataInterface;
+    /**
+     * @var KlevuFactory
+     */
+    protected $_klevuFactory;
+    /**
+     * @var MagentoProductActionsInterface
+     */
+    protected $_magentoProductActions;
+    /**
+     * @var KlevuProductActionsInterface
+     */
+    protected $_klevuProductActions;
+    /**
+     * @var Klevu_MagentoCategoryActions
+     */
+    protected $_klevuMagentoCategoryAction;
+    /**
+     * @var Klevu_KlevuCategoryActions
+     */
+    protected $_klevuCategoryActions;
+    /**
+     * @var KlevuHelperManager
+     */
+    protected $_klevuHelperManager;
+    /**
+     * @var ConfigHelper
+     */
+    protected $_searchHelperConfig;
+    /**
+     * @var SearchHelepr
+     */
+    protected $_searchHelperData;
+    /**
+     * @var array
+     */
+    private $recordsPerPage = [];
+    /**
+     * @var GetRecordsPerPageInterface
+     */
+    private $getRecordsPerPage;
 
     /**
      * @param KlevuFactory $klevuFactory
@@ -83,6 +134,7 @@ class Sync extends AbstractModel
      * @param AbstractResource|null $resource
      * @param AbstractDb|null $resourceCollection
      * @param array $data
+     * @param GetRecordsPerPageInterface $getRecordsPerPage
      */
     public function __construct(
         KlevuFactory $klevuFactory,
@@ -102,7 +154,8 @@ class Sync extends AbstractModel
         Registry $registry,
         AbstractResource $resource = null,
         AbstractDb $resourceCollection = null,
-        array $data = []
+        array $data = [],
+        GetRecordsPerPageInterface $getRecordsPerPage = null
     ) {
         parent::__construct($context, $registry, $resource, $resourceCollection, $data);
 
@@ -121,6 +174,8 @@ class Sync extends AbstractModel
         $this->_storeModelStoreManagerInterface = $storeModelStoreManagerInterface;
         $this->_ProductMetadataInterface = $productMetadataInterface;
         $this->_klevuFactory = $klevuFactory;
+        $this->getRecordsPerPage = $getRecordsPerPage
+            ?: ObjectManager::getInstance()->get(GetRecordsPerPageInterface::class);
     }
 
     /**
@@ -134,6 +189,9 @@ class Sync extends AbstractModel
     /**
      * Perform Product Sync on any configured stores, adding new products, updating modified and
      * deleting removed products since last sync.
+     * @return void
+     * @throws LocalizedException
+     * @throws NoSuchEntityException
      */
     public function run()
     {
@@ -174,7 +232,7 @@ class Sync extends AbstractModel
                 $this->runCategory($store);
                 $this->reset();
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             // Catch the exception that was thrown, log it, then throw a new exception to be caught the Magento cron.
             $this->_searchHelperData->log(
                 LoggerConstants::ZEND_LOG_CRIT,
@@ -195,22 +253,24 @@ class Sync extends AbstractModel
      * @param Store|int $store If passed, will only update products for the given store.
      *
      * @return array
+     * @throws LocalizedException
+     * @throws NoSuchEntityException
      */
     public function syncStoreView($store)
     {
+        $recordsCount = [];
         if (!$this->_klevuProductActions->setupSession($store)) {
-            return;
+            return $recordsCount;
         }
-
         $this->syncData($store);
         $this->runCategory($store);
         $this->reset();
         $registry = $this->_klevuSyncModel->getRegistry();
-        $records_count['numberOfRecord_add'] = $registry->registry("numberOfRecord_add");
-        $records_count['numberOfRecord_update'] = $registry->registry("numberOfRecord_update");
-        $records_count['numberOfRecord_delete'] = $registry->registry("numberOfRecord_delete");
+        $recordsCount['numberOfRecord_add'] = $registry->registry("numberOfRecord_add");
+        $recordsCount['numberOfRecord_update'] = $registry->registry("numberOfRecord_update");
+        $recordsCount['numberOfRecord_delete'] = $registry->registry("numberOfRecord_delete");
 
-        return $records_count;
+        return $recordsCount;
     }
 
     /**
@@ -229,7 +289,7 @@ class Sync extends AbstractModel
             $this->reset();
 
             return true;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->_searchHelperData->log(
                 LoggerConstants::ZEND_LOG_CRIT,
                 sprintf(
@@ -246,12 +306,15 @@ class Sync extends AbstractModel
 
     /**
      * @return void
-     * @throws \Exception
+     * @throws Exception
      */
     public function runCron()
     {
         try {
-            $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_INFO, "Sync action performed through Magento Cron");
+            $this->_searchHelperData->log(
+                LoggerConstants::ZEND_LOG_INFO,
+                "Sync action performed through Magento Cron"
+            );
             /* mark for update special price product */
             //$this->_magentoProductActions->markProductForUpdate();
 
@@ -303,7 +366,7 @@ class Sync extends AbstractModel
                 );
             }
             // update rating flag after all store view sync
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             // Catch the exception that was thrown, log it, then throw a new exception to be caught the Magento cron.
             $this->_searchHelperData->log(
                 LoggerConstants::ZEND_LOG_CRIT,
@@ -348,12 +411,13 @@ class Sync extends AbstractModel
         if ($this->rescheduleIfOutOfMemory()) {
             return;
         }
+        $website = $store->getWebsite();
 
         $config = $this->_searchHelperConfig;
         if (!$config->isProductSyncEnabled($store->getId())) {
             $this->_searchHelperData->log(
                 LoggerConstants::ZEND_LOG_INFO,
-                sprintf("Product Sync found disabled for %s (%s).", $store->getWebsite()->getName(), $store->getName())
+                sprintf("Product Sync found disabled for %s (%s).", $website->getName(), $store->getName())
             );
 
             return;
@@ -367,7 +431,7 @@ class Sync extends AbstractModel
                     // update rating flag after all store view sync
                     $this->_searchHelperConfig->saveRatingUpgradeFlag(1, $store);
                 }
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 $this->_searchHelperData->log(
                     LoggerConstants::ZEND_LOG_WARN,
                     sprintf("Unable to update rating attribute %s", $e->getMessage())
@@ -378,12 +442,13 @@ class Sync extends AbstractModel
         $this->_storeModelStoreManagerInterface->setCurrentStore($store->getId());
         $this->_searchHelperData->log(
             LoggerConstants::ZEND_LOG_INFO,
-            sprintf("Starting sync for %s (%s).", $store->getWebsite()->getName(), $store->getName())
+            sprintf("Starting sync for %s (%s).", $website->getName(), $store->getName())
         );
 
         $actions = ['delete', 'update', 'add'];
         $errors = 0;
 
+        $recordsPerPage = $this->getRecordsPerPage($store);
         foreach ($actions as $action) {
             if ($this->rescheduleIfOutOfMemory()) {
                 return;
@@ -396,14 +461,14 @@ class Sync extends AbstractModel
                 LoggerConstants::ZEND_LOG_INFO,
                 sprintf("Found %d products to %s.", $total, $action)
             );
-            $pages = ceil($total / static::RECORDS_PER_PAGE);
+            $pages = ceil($total / $recordsPerPage);
             for ($page = 1; $page <= $pages; $page++) {
                 if ($this->rescheduleIfOutOfMemory()) {
                     return;
                 }
-                $offset = ($page - 1) * static::RECORDS_PER_PAGE;
+                $offset = ($page - 1) * $recordsPerPage;
                 $result = $this->_magentoProductActions->$method(
-                    array_slice($products, $offset, static::RECORDS_PER_PAGE)
+                    array_slice($products, $offset, $recordsPerPage)
                 );
                 if ($result !== true) {
                     $errors++;
@@ -411,7 +476,7 @@ class Sync extends AbstractModel
                         "Errors occurred while attempting to %s products %d - %d: %s",
                         $action,
                         $offset + 1,
-                        ($offset + static::RECORDS_PER_PAGE <= $total) ? $offset + static::RECORDS_PER_PAGE : $total,
+                        ($offset + $recordsPerPage <= $total) ? $offset + $recordsPerPage : $total,
                         $result
                     ));
                 }
@@ -419,7 +484,7 @@ class Sync extends AbstractModel
         }
         $this->_searchHelperData->log(
             LoggerConstants::ZEND_LOG_INFO,
-            sprintf("Finished sync for %s (%s).", $store->getWebsite()->getName(), $store->getName())
+            sprintf("Finished sync for %s (%s).", $website->getName(), $store->getName())
         );
 
         // Enable Klevu Search after the first sync
@@ -427,7 +492,7 @@ class Sync extends AbstractModel
             $config->setExtensionEnabledFlag(true, $store);
             $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_INFO, sprintf(
                 "Automatically enabled Klevu Search on Frontend for %s (%s).",
-                $store->getWebsite()->getName(),
+                $website->getName(),
                 $store->getName()
             ));
         }
@@ -466,7 +531,7 @@ class Sync extends AbstractModel
                     $productIds = $this->_magentoProductActions->addProductCollection($store);
                     break;
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->_searchHelperData->log(
                 LoggerConstants::ZEND_LOG_ERR,
                 sprintf(
@@ -497,7 +562,7 @@ class Sync extends AbstractModel
 
         try {
             $this->run();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->_psrLogLoggerInterface->error($e);
             $operations = [
                 "setMessages" => $e->getMessage(),
@@ -536,7 +601,9 @@ class Sync extends AbstractModel
      * deleting removed category since last sync.
      *
      * @param Store|null $store
+     *
      * @return string|null
+     * @throws NoSuchEntityException
      */
     public function runCategory($store)
     {
@@ -564,6 +631,7 @@ class Sync extends AbstractModel
         //$actions = $this->_klevuMagentoCategoryAction->getCategorySyncDataActions($store);
         $actions = ['delete', 'update', 'add'];
 
+        $recordsPerPage = $this->getRecordsPerPage($store);
         $errors = 0;
         foreach ($actions as $key => $action) {
             if ($this->rescheduleIfOutOfMemory()) {
@@ -581,14 +649,14 @@ class Sync extends AbstractModel
                     $action
                 )
             );
-            $pages = ceil($total / static ::RECORDS_PER_PAGE);
+            $pages = ceil($total / $recordsPerPage);
             for ($page = 1; $page <= $pages; $page++) {
                 if ($this->rescheduleIfOutOfMemory()) {
                     return null;
                 }
-                $offset = ($page - 1) * static ::RECORDS_PER_PAGE;
+                $offset = ($page - 1) * $recordsPerPage;
                 $result = $this->_klevuMagentoCategoryAction->$method(
-                    array_slice($category_pages, $offset, static ::RECORDS_PER_PAGE)
+                    array_slice($category_pages, $offset, $recordsPerPage)
                 );
                 if ($result !== true) {
                     $errors++;
@@ -598,8 +666,8 @@ class Sync extends AbstractModel
                             "Errors occurred while attempting to %s categories pages %d - %d: %s",
                             $action,
                             $offset + 1,
-                            ($offset + static ::RECORDS_PER_PAGE <= $total)
-                                ? $offset + static ::RECORDS_PER_PAGE
+                            ($offset + $recordsPerPage <= $total)
+                                ? $offset + $recordsPerPage
                                 : $total,
                             $result
                         )
@@ -662,5 +730,28 @@ class Sync extends AbstractModel
     public function isExtensionConfigured($store_id)
     {
         return $this->_searchHelperConfig->isExtensionConfigured($store_id);
+    }
+
+    /**
+     * @param StoreInterface|string|int|null $store
+     *
+     * @return int
+     */
+    private function getRecordsPerPage($store = null)
+    {
+        if ((is_object($store) && !($store instanceof StoreInterface))) {
+            $this->_searchHelperData->log(
+                LoggerConstants::ZEND_LOG_WARN,
+                sprintf('Object provided must be instance of StoreInterface, %s given', get_class($store))
+            );
+            $store = null;
+        }
+        $key = is_object($store) ? $store->getId() : $store;
+        $key = $key ? (string)$key : (string)Store::DEFAULT_STORE_ID;
+        if (empty($this->recordsPerPage[$key])) {
+            $this->recordsPerPage[$key] = $this->getRecordsPerPage->execute($store);
+        }
+
+        return $this->recordsPerPage[$key];
     }
 }

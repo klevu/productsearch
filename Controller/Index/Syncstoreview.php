@@ -21,10 +21,6 @@ use Magento\Framework\Filesystem;
 use Magento\Framework\View\Result\PageFactory;
 use Magento\Store\Model\StoreManagerInterface;
 
-/**
- * Class Syncstoreview
- * @package Klevu\Search\Controller\Index
- */
 class Syncstoreview extends Action
 {
     /**
@@ -70,7 +66,7 @@ class Syncstoreview extends Action
     /**
      * @var StoreManagerInterface
      */
-    private $_storeInterface;
+    private $_storeManager;
     /**
      * @var ContentInterface
      */
@@ -81,7 +77,6 @@ class Syncstoreview extends Action
     protected $_context;
 
     /**
-     * Sync store view constructor.
      * @param Context $context
      * @param TypeListInterface $cacheTypeList
      * @param StateInterface $cacheState
@@ -97,22 +92,20 @@ class Syncstoreview extends Action
      * @param ContentInterface $modelSyncContent
      */
     public function __construct(
-        Context               $context,
-        TypeListInterface     $cacheTypeList,
-        StateInterface        $cacheState,
-        Pool                  $cacheFrontendPool,
-        PageFactory           $resultPageFactory,
-        Sync                  $modelProductSync,
-        Filesystem            $magentoFrameworkFilesystem,
-        Debuginfo             $apiActionDebuginfo,
-        Session               $frameworkModelSession,
-        Data                  $searchHelperData,
-        Klevu_ModelSync       $modelSync,
+        Context $context,
+        TypeListInterface $cacheTypeList,
+        StateInterface $cacheState,
+        Pool $cacheFrontendPool,
+        PageFactory $resultPageFactory,
+        Sync $modelProductSync,
+        Filesystem $magentoFrameworkFilesystem,
+        Debuginfo $apiActionDebuginfo,
+        Session $frameworkModelSession,
+        Data $searchHelperData,
+        Klevu_ModelSync $modelSync,
         StoreManagerInterface $storeInterface,
-        ContentInterface      $modelSyncContent
-    )
-    {
-
+        ContentInterface $modelSyncContent
+    ) {
         parent::__construct($context);
         $this->_cacheTypeList = $cacheTypeList;
         $this->_cacheState = $cacheState;
@@ -124,7 +117,7 @@ class Syncstoreview extends Action
         $this->_frameworkModelSession = $frameworkModelSession;
         $this->_searchHelperData = $searchHelperData;
         $this->_klevuSyncModel = $modelSync;
-        $this->_storeInterface = $storeInterface;
+        $this->_storeManager = $storeInterface;
         $this->_klevuSyncContent = $modelSyncContent;
         $this->_context = $context;
         $this->_request = $this->_context->getRequest();
@@ -137,23 +130,29 @@ class Syncstoreview extends Action
     public function execute()
     {
         try {
-            if ($this->_storeInterface->isSingleStoreMode()) {
-                $store_id = (int)$this->_storeInterface->getStore()->getId();
+            if ($this->_storeManager->isSingleStoreMode()) {
+                $singleStore = $this->_storeManager->getStore();
+                $storeId = (int)$singleStore->getId();
             } else {
-                $store_id = (int)$this->_request->getParam('store');
+                $storeId = (int)$this->_request->getParam('store');
             }
+            $store = $this->_storeManager->getStore($storeId);
+            $hashKey = urlencode($this->_request->getParam('hashkey'));
 
-            $store_object = $this->_storeInterface->getStore($store_id);
-            $hashkey = urlencode($this->_request->getParam('hashkey'));
-            $store_rest_api = hash('sha256', (string)$this->_klevuSyncModel->getHelper()->getConfigHelper()->getRestApiKey((int)$store_id));
-            if ($store_rest_api == $hashkey) {
-                $this->_storeInterface->setCurrentStore($store_id);
+            $helperManager = $this->_klevuSyncModel->getHelper();
+            $configHelper = $helperManager->getConfigHelper();
+            $restApiKey = $configHelper->getRestApiKey((int)$storeId);
+            $storeRestApi = $restApiKey ? hash('sha256', (string)$restApiKey) : '';
+
+            if ($storeRestApi === $hashKey) {
+                $this->_storeManager->setCurrentStore($storeId);
+                $website = $store->getWebsite();
                 $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_INFO, sprintf(
                     "Updates only data sync action performed from Magento Admin Panel %s (%s).",
-                    $store_object->getWebsite()->getName(),
-                    $store_object->getName()
+                    $website->getName(),
+                    $store->getName()
                 ));
-                $this->_klevuSyncContent->syncCmsData($store_object);
+                $this->_klevuSyncContent->syncCmsData($store);
                 $this->_klevuSyncModel->setSessionVariable("limit", 500);
                 $this->_klevuSyncModel->getRegistry()->unregister("numberOfRecord_add");
                 $this->_klevuSyncModel->getRegistry()->unregister("numberOfRecord_delete");
@@ -161,10 +160,16 @@ class Syncstoreview extends Action
                 $this->_klevuSyncModel->getRegistry()->register("numberOfRecord_add", 0);
                 $this->_klevuSyncModel->getRegistry()->register("numberOfRecord_delete", 0);
                 $this->_klevuSyncModel->getRegistry()->register("numberOfRecord_update", 0);
-                $records_count = $this->_modelProductSync->syncStoreView($store_object);
-                $result['numberOfRecord_add'] = isset($records_count["numberOfRecord_add"]) ? $records_count["numberOfRecord_add"] : null;
-                $result['numberOfRecord_delete'] = isset($records_count["numberOfRecord_delete"]) ? $records_count["numberOfRecord_delete"] : null;
-                $result['numberOfRecord_update'] = isset($records_count["numberOfRecord_update"]) ? $records_count["numberOfRecord_update"] : null;
+                $recordsCount = $this->_modelProductSync->syncStoreView($store);
+                $result['numberOfRecord_add'] = isset($recordsCount["numberOfRecord_add"])
+                    ? $recordsCount["numberOfRecord_add"]
+                    : null;
+                $result['numberOfRecord_delete'] = isset($recordsCount["numberOfRecord_delete"])
+                    ? $recordsCount["numberOfRecord_delete"]
+                    : null;
+                $result['numberOfRecord_update'] = isset($recordsCount["numberOfRecord_update"])
+                    ? $recordsCount["numberOfRecord_update"]
+                    : null;
             } else {
                 $result['msg'] = __("Rest API key not found for requested store.");
             }
@@ -178,4 +183,3 @@ class Syncstoreview extends Action
         $this->getResponse()->setBody(json_encode($result));
     }
 }
-
