@@ -17,6 +17,7 @@ use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Locale\CurrencyInterface;
+use Magento\Framework\Phrase;
 use Magento\Framework\UrlInterface;
 use Magento\Store\Api\Data\StoreInterface;
 use \Magento\Store\Model\StoreManagerInterface;
@@ -409,12 +410,15 @@ class Data extends AbstractHelper
      * Replace the characters used to organise the other attribute values from the
      * passed in string.
      *
-     * @param string|array $value
+     * @param string|array|Phrase $value
      *
      * @return string|array
      */
     private function processCharHtml($value)
     {
+        if (is_object($value) && ($value instanceof Phrase)) {
+            $value = $value->getText();
+        }
         if (!(is_scalar($value) || is_array($value))) {
             return '';
         }

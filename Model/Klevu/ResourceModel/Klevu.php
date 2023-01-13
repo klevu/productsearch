@@ -29,6 +29,11 @@ class Klevu extends AbstractDb
         $this->_init(self::TABLE, KlevuSync::FIELD_ENTITY_ID);
     }
 
+    /**
+     * @param Context $context
+     * @param string|null $connectionName
+     * @param GetBatchSizeInterface|null $getBatchSize
+     */
     public function __construct(
         Context $context,
         $connectionName = null,
@@ -63,6 +68,8 @@ class Klevu extends AbstractDb
             $select->where('main_table.' . KlevuSync::FIELD_ENTITY_ID . ' > ?', $lastEntityId);
             $select->limit($batchSize);
         }
+        $select->order('main_table.' . KlevuSync::FIELD_ENTITY_ID . ' ASC');
+
         $return = $connection->fetchAll($select, $filter);
 
         unset($connection, $select);

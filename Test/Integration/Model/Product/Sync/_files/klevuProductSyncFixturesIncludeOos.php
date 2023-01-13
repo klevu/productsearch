@@ -109,6 +109,9 @@ $fixtureSkus = [
     ], [
         'parent' => null,
         'product' => 'klevu_grouped_synctest_oos_childreninstock',
+    ], [
+        'parent' => null,
+        'product' => 'klevu_grouped_synctest_instock_childrendisabled',
     ],
     // Bundle
     [

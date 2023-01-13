@@ -29,6 +29,11 @@ class Button extends Field
      */
     protected $_klevuSync;
 
+    /**
+     * @param Context $context
+     * @param Klevu_Sync $klevuSync
+     * @param array $data
+     */
     public function __construct(
         Context $context,
         Klevu_Sync $klevuSync,
@@ -88,16 +93,16 @@ class Button extends Field
     }
 
     /**
-     * @param $store_id
+     * @param int $storeId
      *
      * @return string
      */
-    public function getRestApi($store_id)
+    public function getRestApi($storeId)
     {
         return $this->_scopeConfig->getValue(
             ConfigHelper::XML_PATH_REST_API_KEY,
             ScopeInterface::SCOPE_STORES,
-            (int)$store_id
+            (int)$storeId
         );
     }
 
@@ -115,7 +120,8 @@ class Button extends Field
             return '';
         }
 
-        $restApiHash = hash('sha256', $this->getRestApi($storeId));
+        $restApiKey = $this->getRestApi($storeId);
+        $restApiHash = $restApiKey ? hash('sha256', $restApiKey) : '';
         try {
             $store = $this->_storeManager->getStore($storeId);
         } catch (NoSuchEntityException $exception) {

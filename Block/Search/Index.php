@@ -1,38 +1,65 @@
 <?php
-/**
- * Copyright © 2015 Dd . All rights reserved.
- */
 
 namespace Klevu\Search\Block\Search;
 
 use Klevu\Search\Helper\Backend as KlevuHelperBackend;
 use Klevu\Search\Helper\Config as KlevuConfig;
+use Klevu\Search\Helper\Data as SearchHelper;
 use Klevu\Search\Model\Source\ThemeVersion;
 use Klevu\Search\Model\Sync as KlevuSync;
 use Magento\Framework\App\Filesystem\DirectoryList;
+use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\View\Element\Template;
 use Magento\Framework\View\Element\Template\Context as Magento_TemplateContext;
+use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Model\ScopeInterface;
+use Magento\Store\Model\StoreManagerInterface;
 
-
-/**
- * Class Index
- * @package Klevu\Search\Block\Search
- */
 class Index extends Template
 {
+    // phpcs:ignore Generic.NamingConventions.UpperCaseConstantName.ClassConstantNotUpperCase
     const KlEVUPRESERVELAYOUT = 1;
     const DISABLE = 0;
+    // phpcs:ignore Generic.NamingConventions.UpperCaseConstantName.ClassConstantNotUpperCase
     const KlEVUTEMPLATE = 2;
 
+    /**
+     * @var DirectoryList
+     */
     protected $_directoryList;
-
+    /**
+     * @var KlevuConfig
+     */
     protected $_klevuConfig;
-
+    /**
+     * @var StoreManagerInterface
+     */
     protected $_storeManager;
-
+    /**
+     * @var RequestInterface
+     */
     protected $_requestInterface;
+    /**
+     * @var Magento_TemplateContext
+     */
+    protected $_context;
+    /**
+     * @var KlevuSync
+     */
+    protected $_klevusync;
+    /**
+     * @var SearchHelper
+     */
+    protected $_klevuDataHelper;
+    /**
+     * @var KlevuConfig
+     */
+    protected $_klevuConfigHelper;
+    /**
+     * @var KlevuHelperBackend
+     */
+    protected $_klevuHelperBackend;
 
     /**
      * Index constructor.
@@ -51,8 +78,7 @@ class Index extends Template
         KlevuConfig $klevuConfig,
         KlevuHelperBackend $klevuHelperBackend,
         array $data = []
-    )
-    {
+    ) {
         $this->_context = $context;
         $this->_storeManager = $this->_context->getStoreManager();
         $this->_requestInterface = $this->_context->getRequest();
@@ -66,36 +92,50 @@ class Index extends Template
         parent::__construct($context, $data);
     }
 
-    public function _prepareLayout()
-    {
-        return parent::_prepareLayout();
-    }
-
+    /**
+     * @return bool
+     */
     public function isExtensionConfigured()
     {
         return $this->_klevuConfigHelper->isExtensionConfigured();
     }
 
+    /**
+     * @return int
+     */
     public function isLandingEnabled()
     {
         return $this->_klevuConfigHelper->isLandingEnabled();
     }
 
+    /**
+     * @return string
+     */
     public function getJsApiKey()
     {
         return $this->_klevuConfigHelper->getJsApiKey();
     }
 
+    /**
+     * @return mixed
+     */
     public function getModuleInfo()
     {
         return $this->_klevuConfigHelper->getModuleInfo();
     }
 
+    /**
+     * @return string
+     */
     public function getJsUrl()
     {
         return $this->_klevuConfigHelper->getJsUrl();
     }
 
+    /**
+     * @return string
+     * @throws NoSuchEntityException
+     */
     public function getStoreLanguage()
     {
         return $this->_klevuDataHelper->getStoreLanguage();
@@ -133,13 +173,17 @@ class Index extends Template
         return $return;
     }
 
+    /**
+     * @return string|null
+     * @throws NoSuchEntityException
+     */
     public function getCurrencyData()
     {
         return $this->_klevuDataHelper->getCurrencyData($this->getStore());
     }
 
     /**
-     * @return \Magento\Store\Api\Data\StoreInterface
+     * @return StoreInterface
      * @throws NoSuchEntityException
      */
     protected function getStore()
@@ -147,42 +191,67 @@ class Index extends Template
         return $this->_storeManager->getStore();
     }
 
-    //Based on the usage it can be removed
+    /**
+     * Based on the usage it can be removed
+     *
+     * @return KlevuSync
+     */
     public function getKlevuSync()
     {
         return $this->_klevusync;
     }
 
+    /**
+     * @param string $key
+     *
+     * @return mixed
+     */
     public function getKlevuRequestParam($key)
     {
         return $this->_request->getParam($key);
     }
 
+    /**
+     * @return mixed
+     */
     public function getStoreParam()
     {
         return $this->_request->getParam('store');
     }
 
+    /**
+     * @return string
+     */
     public function getRestApiParam()
     {
         return urlencode($this->_request->getParam('hashkey'));
     }
 
-    public function getRestApi($store_id)
+    /**
+     * @param string|int $storeId
+     *
+     * @return false|string|null
+     */
+    public function getRestApi($storeId)
     {
-        return hash('sha256', (string)$this->_klevuConfigHelper->getRestApiKey((int)$store_id));
+        $restApiKey = $this->_klevuConfigHelper->getRestApiKey((int)$storeId);
+
+        return $restApiKey ? hash('sha256', (string)$restApiKey) : null;
     }
 
+    /**
+     * @return bool
+     */
     public function isPubInUse()
     {
         $pub = $this->_directoryList->getUrlPath("pub");
-        if ($pub == "pub") {
-            return false;
-        }
-        return true;
+
+        return $pub !== "pub";
     }
 
-
+    /**
+     * @return bool
+     */
     public function isCustomerGroupPriceEnabled()
     {
         return $this->_klevuConfigHelper->isCustomerGroupPriceEnabled();
@@ -212,7 +281,7 @@ class Index extends Template
     /**
      * To show message indexers are invalid
      *
-     * @return boolean
+     * @return bool
      */
     public function isShowIndexerMessage()
     {
@@ -247,4 +316,3 @@ class Index extends Template
         return parent::_toHtml();
     }
 }
-
