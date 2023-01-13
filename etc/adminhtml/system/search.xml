@@ -427,6 +427,23 @@
                 ]]>
             </comment>
         </field>
+
+        <field id="product_sync_records_per_page" translate="label comment" sortOrder="301"
+               showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Product Sync Batch Size</label>
+            <validate>validate-positive-integer validate-digits-range digits-range-1-500</validate>
+            <depends>
+                <field id="klevu_search/product_sync/enabled">1</field>
+            </depends>
+            <comment>
+                <![CDATA[
+                Range 1-500. <br/>
+                Batch size for product sync. Default of 100 should be fine for most stores.
+                If your products have a large amount of data this may be reduced to improve memory consumption during sync.
+                ]]>
+            </comment>
+        </field>
+
         <field id="order_sync_max_batch_size" translate="label comment" sortOrder="302"
                showInDefault="1" showInWebsite="1" showInStore="1">
             <label>Order Sync Max Batch Size</label>

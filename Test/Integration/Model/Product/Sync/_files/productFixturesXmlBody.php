@@ -88,6 +88,7 @@ $fixtures = [
             'is_qty_decimal'            => 0,
             'is_in_stock'               => 1,
         ],
+        'klevu_boolean_attribute' => 1,
         'url_key' => 'klevu_simple_synctest_xmlbody_' . crc32(rand()),
     ],
     [
@@ -114,6 +115,7 @@ $fixtures = [
             'is_in_stock'               => 1,
         ],
         'url_key' => 'klevu_virtual_synctest_xmlbody_' . crc32(rand()),
+        'klevu_boolean_attribute' => 1,
     ],
     [
         'type_id' => 'downloadable',
@@ -139,6 +141,7 @@ $fixtures = [
             'is_in_stock'               => 0,
         ],
         'url_key' => 'klevu_downloadable_synctest_xmlbody_' . crc32(rand()),
+        'klevu_boolean_attribute' => 1,
     ],
 
     [
@@ -168,6 +171,7 @@ $fixtures = [
         ],
         'url_key' => 'klevu_configchild_synctest_xmlbody_' . crc32(rand()),
         'klevu_test_configurable' => $configurableAttributeOptions[4]->getValue(),
+        'klevu_boolean_attribute' => 1,
     ],
     [
         'type_id' => 'configurable',
@@ -193,6 +197,7 @@ $fixtures = [
         'child_skus' => [
             'klevu_configchild_synctest_xmlbody',
         ],
+        'klevu_boolean_attribute' => 1,
     ],
 
     [
@@ -221,6 +226,7 @@ $fixtures = [
             'is_in_stock'               => 1,
         ],
         'url_key' => 'klevu_groupchild_synctest_xmlbody_' . crc32(rand()),
+        'klevu_boolean_attribute' => 1,
     ],
     [
         'type_id' => 'grouped',
@@ -251,6 +257,7 @@ $fixtures = [
         'child_skus' => [
             'klevu_groupchild_synctest_xmlbody',
         ],
+        'klevu_boolean_attribute' => 1,
     ],
     [
         'type_id' => 'simple',
@@ -278,6 +285,7 @@ $fixtures = [
             'is_in_stock'               => 1,
         ],
         'url_key' => 'klevu_bundlechild_synctest_xmlbody_' . crc32(rand()),
+        'klevu_boolean_attribute' => 1,
     ],
     [
         'type_id' => 'bundle',
@@ -307,6 +315,7 @@ $fixtures = [
         'child_skus' => [
             'klevu_bundlechild_synctest_xmlbody',
         ],
+        'klevu_boolean_attribute' => 1,
     ],
 
     [
@@ -342,6 +351,7 @@ $fixtures = [
             'is_in_stock'               => 1,
         ],
         'url_key' => 'klevu_giftcard_synctest_xmlbody_' . crc32(rand()),
+        'klevu_boolean_attribute' => 1,
     ]
 ];
 if (isset($CREATE_SKUS) && null !== $CREATE_SKUS) {

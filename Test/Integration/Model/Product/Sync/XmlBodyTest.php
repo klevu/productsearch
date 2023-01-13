@@ -84,7 +84,9 @@ class XmlBodyTest extends TestCase
      * @magentoConfigFixture klevu_test_store_1_store cataloginventory/options/show_out_of_stock 0
      * @magentoConfigFixture default/klevu_search/product_sync/catalogvisibility 0
      * @magentoConfigFixture klevu_test_store_1_store klevu_search/product_sync/catalogvisibility 0
+     * @magentoConfigFixture klevu_test_store_1_store klevu_search/attributes/other klevu_boolean_attribute
      * @magentoDataFixture loadWebsiteFixtures
+     * @magentoDataFixture loadBooleanAttributeFixtures
      * @magentoDataFixture loadProductFixtures
      */
     public function testSimpleProduct_ZeroPrice()
@@ -117,6 +119,8 @@ class XmlBodyTest extends TestCase
             '<key>visibility</key><value>catalog-search</value>',
             // Fixture is freshly created so should always return today's date (no time)
             '<key>dateAdded</key><value>' . date('Y-m-d') . '</value>',
+            '<key>other</key><value>klevu_boolean_attribute:Klevu Boolean Attribute:Yes</value>',
+            '<key>otherAttributeToIndex</key><value>klevu_boolean_attribute:Klevu Boolean Attribute:Yes</value>',
             '<key>product_type</key><value>simple</value>',
             '<key>isCustomOptionsAvailable</key><value>no</value>',
             '<key>currency</key><value>USD</value>',
@@ -160,7 +164,9 @@ class XmlBodyTest extends TestCase
      * @magentoConfigFixture klevu_test_store_1_store cataloginventory/options/show_out_of_stock 0
      * @magentoConfigFixture default/klevu_search/product_sync/catalogvisibility 0
      * @magentoConfigFixture klevu_test_store_1_store klevu_search/product_sync/catalogvisibility 0
+     * @magentoConfigFixture klevu_test_store_1_store klevu_search/attributes/other klevu_boolean_attribute
      * @magentoDataFixture loadWebsiteFixtures
+     * @magentoDataFixture loadBooleanAttributeFixtures
      * @magentoDataFixture loadProductFixtures
      */
     public function testVirtualProduct()
@@ -193,6 +199,8 @@ class XmlBodyTest extends TestCase
             '<key>visibility</key><value>search</value>',
             // Fixture is freshly created so should always return today's date (no time)
             '<key>dateAdded</key><value>' . date('Y-m-d') . '</value>',
+            '<key>other</key><value>klevu_boolean_attribute:Klevu Boolean Attribute:Yes</value>',
+            '<key>otherAttributeToIndex</key><value>klevu_boolean_attribute:Klevu Boolean Attribute:Yes</value>',
             '<key>product_type</key><value>virtual</value>',
             '<key>isCustomOptionsAvailable</key><value>no</value>',
             '<key>currency</key><value>USD</value>',
@@ -236,7 +244,9 @@ class XmlBodyTest extends TestCase
      * @magentoConfigFixture klevu_test_store_1_store cataloginventory/options/show_out_of_stock 0
      * @magentoConfigFixture default/klevu_search/product_sync/catalogvisibility 1
      * @magentoConfigFixture klevu_test_store_1_store klevu_search/product_sync/catalogvisibility 1
+     * @magentoConfigFixture klevu_test_store_1_store klevu_search/attributes/other klevu_boolean_attribute
      * @magentoDataFixture loadWebsiteFixtures
+     * @magentoDataFixture loadBooleanAttributeFixtures
      * @magentoDataFixture loadProductFixtures
      */
     public function testDownloadableProduct()
@@ -269,6 +279,8 @@ class XmlBodyTest extends TestCase
             '<key>visibility</key><value>catalog</value>',
             // Fixture is freshly created so should always return today's date (no time)
             '<key>dateAdded</key><value>' . date('Y-m-d') . '</value>',
+            '<key>other</key><value>klevu_boolean_attribute:Klevu Boolean Attribute:Yes</value>',
+            '<key>otherAttributeToIndex</key><value>klevu_boolean_attribute:Klevu Boolean Attribute:Yes</value>',
             '<key>product_type</key><value>downloadable</value>',
             '<key>isCustomOptionsAvailable</key><value>yes</value>',
             '<key>currency</key><value>USD</value>',
@@ -312,7 +324,9 @@ class XmlBodyTest extends TestCase
      * @magentoConfigFixture klevu_test_store_1_store cataloginventory/options/show_out_of_stock 0
      * @magentoConfigFixture default/klevu_search/product_sync/catalogvisibility 1
      * @magentoConfigFixture klevu_test_store_1_store klevu_search/product_sync/catalogvisibility 1
+     * @magentoConfigFixture klevu_test_store_1_store klevu_search/attributes/other klevu_boolean_attribute
      * @magentoDataFixture loadWebsiteFixtures
+     * @magentoDataFixture loadBooleanAttributeFixtures
      * @magentoDataFixture loadProductFixtures
      */
     public function testConfigurableProduct()
@@ -349,6 +363,8 @@ class XmlBodyTest extends TestCase
             '<key>visibility</key><value>catalog-search</value>',
             // Fixture is freshly created so should always return today's date (no time)
             '<key>dateAdded</key><value>' . date('Y-m-d') . '</value>',
+            '<key>other</key><value>klevu_boolean_attribute:Klevu Boolean Attribute:Yes</value>',
+            '<key>otherAttributeToIndex</key><value>klevu_boolean_attribute:Klevu Boolean Attribute:Yes</value>',
             '<key>product_type</key><value>configurable</value>',
             '<key>isCustomOptionsAvailable</key><value>yes</value>',
             '<key>currency</key><value>USD</value>',
@@ -396,7 +412,9 @@ class XmlBodyTest extends TestCase
      * @magentoConfigFixture klevu_test_store_1_store cataloginventory/options/show_out_of_stock 0
      * @magentoConfigFixture default/klevu_search/product_sync/catalogvisibility 1
      * @magentoConfigFixture klevu_test_store_1_store klevu_search/product_sync/catalogvisibility 1
+     * @magentoConfigFixture klevu_test_store_1_store klevu_search/attributes/other klevu_boolean_attribute
      * @magentoDataFixture loadWebsiteFixtures
+     * @magentoDataFixture loadBooleanAttributeFixtures
      * @magentoDataFixture loadProductFixtures
      */
     public function testGroupedProduct()
@@ -433,6 +451,8 @@ class XmlBodyTest extends TestCase
             '<key>visibility</key><value>catalog-search</value>',
             // Fixture is freshly created so should always return today's date (no time)
             '<key>dateAdded</key><value>' . date('Y-m-d') . '</value>',
+            '<key>other</key><value>klevu_boolean_attribute:Klevu Boolean Attribute:Yes</value>',
+            '<key>otherAttributeToIndex</key><value>klevu_boolean_attribute:Klevu Boolean Attribute:Yes</value>',
             '<key>product_type</key><value>grouped</value>',
             '<key>isCustomOptionsAvailable</key><value>yes</value>',
             '<key>currency</key><value>USD</value>',
@@ -476,7 +496,9 @@ class XmlBodyTest extends TestCase
      * @magentoConfigFixture klevu_test_store_1_store cataloginventory/options/show_out_of_stock 0
      * @magentoConfigFixture default/klevu_search/product_sync/catalogvisibility 1
      * @magentoConfigFixture klevu_test_store_1_store klevu_search/product_sync/catalogvisibility 1
+     * @magentoConfigFixture klevu_test_store_1_store klevu_search/attributes/other klevu_boolean_attribute
      * @magentoDataFixture loadWebsiteFixtures
+     * @magentoDataFixture loadBooleanAttributeFixtures
      * @magentoDataFixture loadProductFixtures
      */
     public function testBundleProduct()
@@ -513,6 +535,8 @@ class XmlBodyTest extends TestCase
             '<key>visibility</key><value>catalog-search</value>',
             // Fixture is freshly created so should always return today's date (no time)
             '<key>dateAdded</key><value>' . date('Y-m-d') . '</value>',
+            '<key>other</key><value>klevu_boolean_attribute:Klevu Boolean Attribute:Yes</value>',
+            '<key>otherAttributeToIndex</key><value>klevu_boolean_attribute:Klevu Boolean Attribute:Yes</value>',
             '<key>product_type</key><value>bundle</value>',
             '<key>isCustomOptionsAvailable</key><value>yes</value>',
             '<key>currency</key><value>USD</value>',
@@ -556,7 +580,9 @@ class XmlBodyTest extends TestCase
      * @magentoConfigFixture klevu_test_store_1_store cataloginventory/options/show_out_of_stock 0
      * @magentoConfigFixture default/klevu_search/product_sync/catalogvisibility 1
      * @magentoConfigFixture klevu_test_store_1_store klevu_search/product_sync/catalogvisibility 1
+     * @magentoConfigFixture klevu_test_store_1_store klevu_search/attributes/other klevu_boolean_attribute
      * @magentoDataFixture loadWebsiteFixtures
+     * @magentoDataFixture loadBooleanAttributeFixtures
      * @magentoDataFixture loadProductFixtures
      */
     public function testGiftcardProduct()
@@ -595,6 +621,8 @@ class XmlBodyTest extends TestCase
             '<key>visibility</key><value>catalog-search</value>',
             // Fixture is freshly created so should always return today's date (no time)
             '<key>dateAdded</key><value>' . date('Y-m-d') . '</value>',
+            '<key>other</key><value>klevu_boolean_attribute:Klevu Boolean Attribute:Yes</value>',
+            '<key>otherAttributeToIndex</key><value>klevu_boolean_attribute:Klevu Boolean Attribute:Yes</value>',
             '<key>product_type</key><value>giftcard</value>',
             '<key>isCustomOptionsAvailable</key><value>yes</value>',
             '<key>currency</key><value>USD</value>',
@@ -719,6 +747,24 @@ class XmlBodyTest extends TestCase
     public static function loadWebsiteFixturesRollback()
     {
         include __DIR__ . '/../../../_files/websiteFixtures_rollback.php';
+    }
+
+    /**
+     * Loads attribute creation scripts because annotations use a relative path
+     *  from integration tests root
+     */
+    public static function loadBooleanAttributeFixtures()
+    {
+        include __DIR__ . '/_files/productAttributeBooleanFixtures.php';
+    }
+
+    /**
+     * Rolls attribute creation scripts because annotations use a relative path
+     *  from integration tests root
+     */
+    public static function loadBooleanAttributeFixturesRollback()
+    {
+        include __DIR__ . '/_files/productAttributeBooleanFixtures_rollback.php';
     }
 
     /**
