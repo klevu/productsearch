@@ -28,6 +28,7 @@
 				<category_sync_enabled>1</category_sync_enabled>
 				<rating_sync_enabled>1</rating_sync_enabled>
                 <batch_size>100</batch_size>
+                <history_length>1</history_length>
             </product_sync>
             <order_sync>
                 <max_sync_select_limit />

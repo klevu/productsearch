@@ -8,6 +8,8 @@ use Magento\Catalog\Model\Product\Visibility;
 use Magento\Indexer\Model\IndexerFactory;
 use Magento\Store\Model\Website;
 
+include __DIR__ . '/productFixtures_rollback.php';
+
 $objectManager = Bootstrap::getObjectManager();
 
 /** @var Website $baseWebsite */
@@ -27,6 +29,7 @@ $fixtures = [
         'type_id' => 'simple',
         'sku' => 'klevu_simple_1',
         'name' => '[Klevu] Simple Product 1',
+        'type_id' => Product\Type::TYPE_SIMPLE,
         'description' => '[Klevu Test Fixtures] Simple product 1',
         'short_description' => '[Klevu Test Fixtures] Simple product 1',
         'type_id' => Product\Type::TYPE_SIMPLE,

@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<listing xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Ui:etc/ui_configuration.xsd">
+    <argument name="data" xsi:type="array">
+        <item name="js_config" xsi:type="array">
+            <item name="provider" xsi:type="string">sync_product_history_listing.sync_product_history_listing_data_source</item>
+            <item name="deps" xsi:type="string">sync_product_history_listing.sync_product_history_listing_data_source</item>
+        </item>
+        <item name="spinner" xsi:type="string">sync_product_history_listing_columns</item>
+        <item name="acl" xsi:type="string">Klevu_Search::sync_product_grid</item>
+    </argument>
+
+    <dataSource name="sync_product_history_listing_data_source">
+        <argument name="dataProvider" xsi:type="configurableObject">
+            <argument name="class" xsi:type="string">Klevu\Search\Ui\DataProvider\Listing\Sync\Product\History\DataProvider</argument>
+            <argument name="name" xsi:type="string">sync_product_history_listing_data_source</argument>
+            <argument name="primaryFieldName" xsi:type="string">sync_id</argument>
+            <argument name="requestFieldName" xsi:type="string">id</argument>
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="component" xsi:type="string">Klevu_Search/js/grid/sync/history/provider</item>
+                    <item name="update_url" xsi:type="url" path="mui/index/render"/>
+                    <item name="filter_url_params" xsi:type="array">
+                        <item name="unique_entity_id" xsi:type="string">*</item>
+                        <item name="store" xsi:type="string">*</item>
+                    </item>
+                    <item name="storageConfig" xsi:type="array">
+                        <item name="indexField" xsi:type="string">sync_id</item>
+                    </item>
+                </item>
+            </argument>
+        </argument>
+    </dataSource>
+
+    <listingToolbar name="listing_top">
+        <bookmark name="bookmarks"/>
+        <columnsControls name="columns_controls"/>
+        <filters name="listing_filters" />
+        <paging name="listing_paging"/>
+    </listingToolbar>
+
+    <columns name="sync_product_history_listing_columns">
+        <column name="sync_id">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="sortOrder" xsi:type="string">10</item>
+                    <item name="label" xsi:type="string" translate="true">ID</item>
+                </item>
+            </argument>
+        </column>
+        <column name="action">
+            <argument name="data" xsi:type="array">
+                <item name="options" xsi:type="object">Klevu\Search\Model\Source\NextAction</item>
+                <item name="config" xsi:type="array">
+                    <item name="sortOrder" xsi:type="string">20</item>
+                    <item name="label" xsi:type="string" translate="true">Action</item>
+                    <item name="component" xsi:type="string">Magento_Ui/js/grid/columns/select</item>
+                    <item name="dataType" xsi:type="string">select</item>
+                    <item name="visible" xsi:type="boolean">true</item>
+                    <item name="sortable" xsi:type="boolean">true</item>
+                </item>
+            </argument>
+        </column>
+        <column name="success">
+            <argument name="data" xsi:type="array">
+                <item name="options" xsi:type="object">Magento\Config\Model\Config\Source\Yesno</item>
+                <item name="config" xsi:type="array">
+                    <item name="sortOrder" xsi:type="string">20</item>
+                    <item name="label" xsi:type="string" translate="true">Success</item>
+                    <item name="component" xsi:type="string">Magento_Ui/js/grid/columns/select</item>
+                    <item name="dataType" xsi:type="string">select</item>
+                    <item name="visible" xsi:type="boolean">true</item>
+                    <item name="sortable" xsi:type="boolean">true</item>
+                </item>
+            </argument>
+        </column>
+        <column name="message">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="sortOrder" xsi:type="string">40</item>
+                    <item name="label" xsi:type="string" translate="true">Response</item>
+                    <item name="visible" xsi:type="boolean">true</item>
+                    <item name="bodyTmpl" xsi:type="string">ui/grid/cells/text</item>
+                    <item name="filter" xsi:type="string">text</item>
+                </item>
+            </argument>
+        </column>
+        <column name="synced_at" class="Magento\Ui\Component\Listing\Columns\Date">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="sortOrder" xsi:type="string">40</item>
+                    <item name="label" xsi:type="string" translate="true">Klevu Sync Requested On</item>
+                    <item name="component" xsi:type="string">Magento_Ui/js/grid/columns/date</item>
+                    <item name="dataType" xsi:type="string">date</item>
+                    <item name="visible" xsi:type="boolean">true</item>
+                    <item name="sortable" xsi:type="boolean">true</item>
+                    <item name="filter" xsi:type="string">dateRange</item>
+                </item>
+            </argument>
+        </column>
+    </columns>
+</listing>

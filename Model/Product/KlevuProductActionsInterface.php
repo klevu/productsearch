@@ -1,12 +1,11 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Administrator
- * Date: 9/18/2018
- * Time: 7:06 PM
- */
 
 namespace Klevu\Search\Model\Product;
+
+use Klevu\Search\Model\Api\Response;
+use Magento\Framework\DB\Select;
+use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Store\Api\Data\StoreInterface;
 
 interface KlevuProductActionsInterface
 {
@@ -15,7 +14,7 @@ interface KlevuProductActionsInterface
      * true on success or false if Product Sync is disabled, store is not configured or the
      * session API call fails.
      *
-     * @param \Magento\Store\Model\Store $store
+     * @param StoreInterface $store
      *
      * @return bool
      */
@@ -23,21 +22,42 @@ interface KlevuProductActionsInterface
 
     /**
      * Delete success processing , separated for easier override
+     *
+     * @param array $data
+     * @param Response $response
+     *
+     * @return bool|string
+     * @throws NoSuchEntityException
      */
     public function executeDeleteProductsSuccess(array $data, $response);
 
     /**
      * Build the delete SQL , separated for easier override
+     *
+     * @param array $data
+     * @param array $skipped_record_ids
+     *
+     * @return Select
+     * @throws NoSuchEntityException
      */
-    public function getDeleteProductsSuccessSql(array $data, $skipped_record_ids);
+    public function getDeleteProductsSuccessSql(array $data, array $skipped_record_ids);
 
     /**
      * Update success processing , separated for easier override
+     *
+     * @param array $data
+     * @param Response $response
      */
     public function executeUpdateProductsSuccess(array $data, $response);
 
     /**
      * Add success processing , separated for easier override
+     *
+     * @param array $data
+     * @param Response $response
+     *
+     * @return bool|string
+     * @throws NoSuchEntityException
      */
     public function executeAddProductsSuccess(array $data, $response);
 }

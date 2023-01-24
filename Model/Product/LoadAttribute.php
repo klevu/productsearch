@@ -655,6 +655,9 @@ class LoadAttribute extends AbstractModel implements LoadAttributeInterface
      */
     protected function getAttributeData($code, $value = null)
     {
+        if (!$this->isAttributeValueValid($value)) {
+            return null;
+        }
         try {
             $store = $this->_storeModelStoreManagerInterface->getStore();
         } catch (NoSuchEntityException $e) {
@@ -663,9 +666,7 @@ class LoadAttribute extends AbstractModel implements LoadAttributeInterface
             return null;
         }
         $currentStoreID = $store->getId();
-        if (empty($value)) {
-            return null;
-        }
+
         //If store ID changes then fetch facets title
         if ((!$attributeData = $this->getData('attribute_data')) ||
             ($currentStoreID !== $this->getData('attributeStoreID'))
@@ -777,17 +778,32 @@ class LoadAttribute extends AbstractModel implements LoadAttributeInterface
     private function getOtherAttributes($attributes, $item, $parent)
     {
         $data = [];
+        if (!$item) {
+            return $data;
+        }
         foreach ($attributes as $attribute) {
-            if ($item && $item->getData($attribute)) {
+            if ($this->isAttributeValueValid($item->getData($attribute))) {
                 $data[$attribute] = $this->getAttributeData($attribute, $item->getData($attribute));
                 continue;
             }
-            if ($parent && $parent->getData($attribute)) {
+            if ($parent && $this->isAttributeValueValid($parent->getData($attribute))) {
                 $data[$attribute] = $this->getAttributeData($attribute, $parent->getData($attribute));
             }
         }
 
         return $data;
+    }
+
+    /**
+     * @param mixed $value
+     *
+     * @return bool
+     */
+    private function isAttributeValueValid($value)
+    {
+        // Allow values of '0' and 0, but not empty strings '' or null
+        return !empty($value)
+            || (is_numeric($value) && (int)$value == $value); // intentionally used weak comparison here
     }
 
     /**

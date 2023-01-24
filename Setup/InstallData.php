@@ -1,4 +1,4 @@
-<?php
+<?php // phpcs:disable Magento2.Legacy.InstallUpgrade.ObsoleteUpgradeDataScript
 
 namespace Klevu\Search\Setup;
 
@@ -60,7 +60,7 @@ class InstallData implements InstallDataInterface
     }
 
     /**
-     * {@inheritdoc}
+     * @inheritdoc
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      * @SuppressWarnings(PHPMD.NPathComplexity)

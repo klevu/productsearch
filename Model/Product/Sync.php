@@ -3,10 +3,11 @@
 namespace Klevu\Search\Model\Product;
 
 use Exception;
+use Klevu\Logger\Api\StoreScopeResolverInterface;
 use Klevu\Logger\Constants as LoggerConstants;
 use Klevu\Search\Api\Service\Sync\Product\GetRecordsPerPageInterface;
 use Klevu\Search\Helper\Config as ConfigHelper;
-use Klevu\Search\Helper\Data as SearchHelepr;
+use Klevu\Search\Helper\Data as SearchHelper;
 use Klevu\Search\Model\Category\MagentoCategoryActions as Klevu_MagentoCategoryActions;
 use Klevu\Search\Model\Category\KlevuCategoryActions as Klevu_KlevuCategoryActions;
 use Klevu\Search\Model\Klevu\HelperManager as KlevuHelperManager;
@@ -14,6 +15,7 @@ use Klevu\Search\Model\Klevu\KlevuFactory;
 use Klevu\Search\Model\Product\MagentoProductActionsInterface as Klevu_MagentoProductActions;
 use Klevu\Search\Model\Product\KlevuProductActionsInterface as Klevu_KlevuProductActions;
 use Klevu\Search\Model\Session;
+use Klevu\Search\Model\Source\NextAction;
 use Klevu\Search\Model\Sync as KlevuSync;
 use Magento\Backend\Model\Session as BackendSession;
 use Magento\Framework\App\Area as AppArea;
@@ -45,13 +47,16 @@ class Sync extends AbstractModel
     const RECORDS_PER_PAGE = 100;
     const NOTIFICATION_GLOBAL_TYPE = "product_sync";
     const NOTIFICATION_STORE_TYPE_PREFIX = "product_sync_store_";
+    const SYNC_IDS_PARENT_ID_KEY = 0;
+    const SYNC_IDS_PRODUCT_ID_KEY = 1;
+    const SYNC_IDS_ROW_ID_KEY = 2;
 
     /**
      * @var ResourceConnection
      */
     protected $_frameworkModelResource;
     /**
-     * @var Session
+     * @var BackendSession
      */
     protected $_searchModelSession;
     /**
@@ -115,6 +120,10 @@ class Sync extends AbstractModel
      * @var GetRecordsPerPageInterface
      */
     private $getRecordsPerPage;
+    /**
+     * @var StoreScopeResolverInterface
+     */
+    private $storeScopeResolver;
 
     /**
      * @param KlevuFactory $klevuFactory
@@ -135,6 +144,7 @@ class Sync extends AbstractModel
      * @param AbstractDb|null $resourceCollection
      * @param array $data
      * @param GetRecordsPerPageInterface $getRecordsPerPage
+     * @param StoreScopeResolverInterface|null $storeScopeResolver
      */
     public function __construct(
         KlevuFactory $klevuFactory,
@@ -149,16 +159,15 @@ class Sync extends AbstractModel
         RequestInterface $frameworkAppRequestInterface,
         ProductMetadataInterface $productMetadataInterface,
         KlevuSync $klevuSyncModel,
-        // abstract parent
         Context $context,
         Registry $registry,
         AbstractResource $resource = null,
         AbstractDb $resourceCollection = null,
         array $data = [],
-        GetRecordsPerPageInterface $getRecordsPerPage = null
+        GetRecordsPerPageInterface $getRecordsPerPage = null,
+        StoreScopeResolverInterface $storeScopeResolver = null
     ) {
         parent::__construct($context, $registry, $resource, $resourceCollection, $data);
-
         $this->_magentoProductActions = $magentoProductActions;
         $this->_klevuProductActions = $klevuProductActions;
         $this->_klevuMagentoCategoryAction = $klevuMagentoCategoryAction;
@@ -176,6 +185,9 @@ class Sync extends AbstractModel
         $this->_klevuFactory = $klevuFactory;
         $this->getRecordsPerPage = $getRecordsPerPage
             ?: ObjectManager::getInstance()->get(GetRecordsPerPageInterface::class);
+        $this->storeScopeResolver = $storeScopeResolver ?: ObjectManager::getInstance()->get(
+            StoreScopeResolverInterface::class
+        );
     }
 
     /**
@@ -196,34 +208,31 @@ class Sync extends AbstractModel
     public function run()
     {
         try {
-            /* mark for update special price product */
             // Sync Data only for selected store from config wizard
             $firstSync = $this->_searchModelSession->getFirstSync();
             $this->_searchModelSession->setKlevuFailedFlag(0);
 
             if (!empty($firstSync)) {
-                /** @var Store $store */
-                $onestore = $this->_storeModelStoreManagerInterface->getStore($firstSync);
-                if (!$this->_klevuProductActions->setupSession($onestore)) {
+                $oneStore = $this->_storeModelStoreManagerInterface->getStore($firstSync);
+                if (!$this->_klevuProductActions->setupSession($oneStore)) {
                     return;
                 }
-
-                $this->syncData($onestore);
-                $this->runCategory($onestore);
+                $this->syncData($oneStore);
+                $this->runCategory($oneStore);
                 $this->reset();
 
                 return;
             }
-
             if ($this->isRunning(2)) {
                 // Stop if another copy is already running
-                $this->log(LoggerConstants::ZEND_LOG_INFO, "Stopping because another copy is already running.");
+                $this->log(
+                    LoggerConstants::ZEND_LOG_INFO,
+                    "Stopping because another copy is already running."
+                );
 
                 return;
             }
-
             $stores = $this->_storeModelStoreManagerInterface->getStores();
-
             foreach ($stores as $store) {
                 if (!$this->_klevuProductActions->setupSession($store)) {
                     continue;
@@ -250,7 +259,7 @@ class Sync extends AbstractModel
     /**
      * Sync store view data.
      *
-     * @param Store|int $store If passed, will only update products for the given store.
+     * @param StoreInterface|int $store If passed, will only update products for the given store.
      *
      * @return array
      * @throws LocalizedException
@@ -275,6 +284,7 @@ class Sync extends AbstractModel
 
     /**
      * @param StoreInterface $store
+     *
      * @return bool
      */
     public function runStore($store)
@@ -283,7 +293,6 @@ class Sync extends AbstractModel
             if (!$this->_klevuProductActions->setupSession($store)) {
                 return false;
             }
-
             $this->syncData($store);
             $this->runCategory($store);
             $this->reset();
@@ -302,11 +311,13 @@ class Sync extends AbstractModel
 
             return false;
         }
+
+        return true;
     }
 
     /**
      * @return void
-     * @throws Exception
+     * @throws NoSuchEntityException
      */
     public function runCron()
     {
@@ -315,27 +326,22 @@ class Sync extends AbstractModel
                 LoggerConstants::ZEND_LOG_INFO,
                 "Sync action performed through Magento Cron"
             );
-            /* mark for update special price product */
-            //$this->_magentoProductActions->markProductForUpdate();
 
             // Sync Data only for selected store from config wizard
             $firstSync = $this->_searchModelSession->getFirstSync();
             $this->_searchModelSession->setKlevuFailedFlag(0);
 
             if (!empty($firstSync)) {
-                /** @var Store $store */
                 $oneStore = $this->_storeModelStoreManagerInterface->getStore($firstSync);
                 if (!$this->_klevuProductActions->setupSession($oneStore)) {
                     return;
                 }
-
                 $this->syncData($oneStore);
                 $this->runCategory($oneStore);
                 $this->reset();
 
                 return;
             }
-
             if ($this->isRunning(2)) {
                 // Stop if another copy is already running
                 $this->log(
@@ -345,7 +351,6 @@ class Sync extends AbstractModel
 
                 return;
             }
-
             $storeList = $this->_storeModelStoreManagerInterface->getStores();
             $websiteList = [];
             foreach ($storeList as $store) {
@@ -353,11 +358,11 @@ class Sync extends AbstractModel
                 if (!isset($websiteList[$websiteId])) {
                     $websiteList[$websiteId] = [];
                 }
-
                 $storeCode = $store->getCode();
-                if (!in_array($storeCode, $websiteList[$websiteId], true)) {
-                    $websiteList[$websiteId][] = $storeCode;
+                if (in_array($storeCode, $websiteList[$websiteId], true)) {
+                    continue;
                 }
+                $websiteList[$websiteId][] = $storeCode;
             }
 
             foreach ($websiteList as $storeList) {
@@ -365,7 +370,6 @@ class Sync extends AbstractModel
                     'klevu:syncstore:storecode ' . implode(",", $storeList)
                 );
             }
-            // update rating flag after all store view sync
         } catch (Exception $e) {
             // Catch the exception that was thrown, log it, then throw a new exception to be caught the Magento cron.
             $this->_searchHelperData->log(
@@ -383,12 +387,52 @@ class Sync extends AbstractModel
 
     /**
      * @param StoreInterface $store
+     * @param array $productIds
+     *
+     * @return bool
+     * @throws NoSuchEntityException
+     */
+    public function runProductSync(StoreInterface $store, array $productIds)
+    {
+        $self = $this;
+        try {
+            return $this->_appState->emulateAreaCode(
+                AppArea::AREA_FRONTEND,
+                function () use ($self, $store, $productIds) {
+                    $originalStore = $this->storeScopeResolver->getCurrentStore();
+                    $this->storeScopeResolver->setCurrentStore($store);
+
+                    if (!$self->_klevuProductActions->setupSession($store)) {
+                        $this->storeScopeResolver->setCurrentStore($originalStore);
+                        return false;
+                    }
+                    $self->syncData($store, $productIds);
+                    $self->reset();
+
+                    $this->storeScopeResolver->setCurrentStore($originalStore);
+                    return true;
+                }
+            );
+        } catch (NoSuchEntityException $exception) {
+            throw $exception;
+        } catch (LocalizedException $exception) {
+            $this->_logger->error(
+                sprintf('Error in %s::%s - %s', __CLASS__, __METHOD__, $exception->getMessage())
+            );
+        }
+
+        return false;
+    }
+
+    /**
+     * @param StoreInterface $store
+     * @param array|null $filterProductIds
      *
      * @return void
      * @throws LocalizedException
      * @throws NoSuchEntityException
      */
-    public function syncData($store)
+    public function syncData($store, $filterProductIds = [])
     {
         $currentAreaCode = $this->_appState->getAreaCode();
         switch ($currentAreaCode) {
@@ -396,7 +440,7 @@ class Sync extends AbstractModel
                 break;
 
             case '':
-                $this->_appState->setAreaCode('frontend');
+                $this->_appState->setAreaCode(AppArea::AREA_FRONTEND);
                 break;
 
             default:
@@ -412,12 +456,14 @@ class Sync extends AbstractModel
             return;
         }
         $website = $store->getWebsite();
-
-        $config = $this->_searchHelperConfig;
-        if (!$config->isProductSyncEnabled($store->getId())) {
+        if (!$this->_searchHelperConfig->isProductSyncEnabled($store->getId())) {
             $this->_searchHelperData->log(
                 LoggerConstants::ZEND_LOG_INFO,
-                sprintf("Product Sync found disabled for %s (%s).", $website->getName(), $store->getName())
+                sprintf(
+                    "Product Sync found disabled for %s (%s).",
+                    $website->getName(),
+                    $store->getName()
+                )
             );
 
             return;
@@ -425,8 +471,7 @@ class Sync extends AbstractModel
         $firstSync = $this->_searchModelSession->getFirstSync();
         if ($this->_searchHelperConfig->isRatingSyncEnable($store->getId())) {
             try {
-                $rating_upgrade_flag = $this->_searchHelperConfig->getRatingUpgradeFlag($store);
-                if ($rating_upgrade_flag == 0) {
+                if ((int)($this->_searchHelperConfig->getRatingUpgradeFlag($store)) === 0) {
                     $this->_magentoProductActions->updateProductsRating($store);
                     // update rating flag after all store view sync
                     $this->_searchHelperConfig->saveRatingUpgradeFlag(1, $store);
@@ -445,51 +490,38 @@ class Sync extends AbstractModel
             sprintf("Starting sync for %s (%s).", $website->getName(), $store->getName())
         );
 
-        $actions = ['delete', 'update', 'add'];
-        $errors = 0;
-
-        $recordsPerPage = $this->getRecordsPerPage($store);
+        $isProductFilterApplied = (bool)count($filterProductIds);
+        $trackProductIds = [];
+        $actions = [
+            NextAction::ACTION_DELETE,
+            NextAction::ACTION_UPDATE,
+            NextAction::ACTION_ADD
+        ];
         foreach ($actions as $action) {
             if ($this->rescheduleIfOutOfMemory()) {
                 return;
             }
-            $productIds = $this->getProductsIds($action, $store);
-            $method = $action . "Products";
-            $products = array_values($productIds);  //resetting key index
-            $total = count($productIds);
-            $this->_searchHelperData->log(
-                LoggerConstants::ZEND_LOG_INFO,
-                sprintf("Found %d products to %s.", $total, $action)
-            );
-            $pages = ceil($total / $recordsPerPage);
-            for ($page = 1; $page <= $pages; $page++) {
-                if ($this->rescheduleIfOutOfMemory()) {
-                    return;
-                }
-                $offset = ($page - 1) * $recordsPerPage;
-                $result = $this->_magentoProductActions->$method(
-                    array_slice($products, $offset, $recordsPerPage)
-                );
-                if ($result !== true) {
-                    $errors++;
-                    $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_ERR, sprintf(
-                        "Errors occurred while attempting to %s products %d - %d: %s",
-                        $action,
-                        $offset + 1,
-                        ($offset + $recordsPerPage <= $total) ? $offset + $recordsPerPage : $total,
-                        $result
-                    ));
-                }
+            $productIds = $this->getProductsIds($action, $store, $filterProductIds);
+            if (!count($productIds)) {
+                continue;
+            }
+            $this->syncProductsForAction($productIds, $action, $store);
+            if ($isProductFilterApplied) {
+                $trackProductIds[$action] = $productIds;
             }
         }
+        if ($isProductFilterApplied) {
+            $this->triggerSyncForProductsWithoutNextAction($filterProductIds, $trackProductIds, $store);
+        }
+
         $this->_searchHelperData->log(
             LoggerConstants::ZEND_LOG_INFO,
             sprintf("Finished sync for %s (%s).", $website->getName(), $store->getName())
         );
 
         // Enable Klevu Search after the first sync
-        if (!$config->isExtensionEnabled($store) && !empty($firstSync)) {
-            $config->setExtensionEnabledFlag(true, $store);
+        if (!empty($firstSync) && !$this->_searchHelperConfig->isExtensionEnabled($store)) {
+            $this->_searchHelperConfig->setExtensionEnabledFlag(true, $store);
             $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_INFO, sprintf(
                 "Automatically enabled Klevu Search on Frontend for %s (%s).",
                 $website->getName(),
@@ -499,60 +531,265 @@ class Sync extends AbstractModel
     }
 
     /**
-     * @param string $action
+     * @param string|null $action
      * @param StoreInterface|null $store
+     * @param array|null $filterProductIds
      *
      * @return array
-     * @throws NoSuchEntityException
      */
-    protected function getProductsIds($action = null, $store = null)
+    protected function getProductsIds($action = null, $store = null, $filterProductIds = [])
     {
-        $productIds = [];
-        if (null === $action) {
-            return $productIds;
+        $return = [];
+        $allowedActions = [NextAction::ACTION_ADD, NextAction::ACTION_DELETE, NextAction::ACTION_UPDATE];
+        if (!in_array($action, $allowedActions, true)) {
+            $this->_searchHelperData->log(
+                LoggerConstants::ZEND_LOG_ERR,
+                __('$action argument is not one of the allowed values: %1', implode('-', $allowedActions))
+            );
+            return $return;
         }
-
-        $currentStore = $this->_storeModelStoreManagerInterface->getStore();
-        if (null === $store || null === $store->getId()) {
-            $store = $currentStore;
-        } elseif ($store->getId() !== $currentStore->getId()) {
-            $this->_storeModelStoreManagerInterface->setCurrentStore($store->getId());
+        if (!($store instanceof StoreInterface)) {
+            $this->_searchHelperData->log(
+                LoggerConstants::ZEND_LOG_ERR,
+                __('$store argument must be instance of StoreInterface')
+            );
+            return $return;
         }
 
         try {
+            $currentStore = $this->_storeModelStoreManagerInterface->getStore();
+            if (null === $store || null === $store->getId()) {
+                $store = $currentStore;
+            } elseif ((int)$currentStore->getId() !== (int)$store->getId()) {
+                $this->_storeModelStoreManagerInterface->setCurrentStore($store->getId());
+            }
+        } catch (NoSuchEntityException $e) {
+            $this->_searchHelperData->log(
+                LoggerConstants::ZEND_LOG_ERR,
+                $e->getMessage()
+            );
+            return $return;
+        }
+        // get product_ids if from the table row_id string which consists of parent_id, product_id, sync_id
+        $productIds = $this->getFilteredProductIds($filterProductIds);
+        try {
             switch ($action) {
-                case "delete":
-                    $productIds = $this->_magentoProductActions->deleteProductCollection($store);
+                case NextAction::ACTION_DELETE:
+                    $return = $this->_magentoProductActions->deleteProductCollection($store, $productIds);
                     break;
-                case "update":
-                    $productIds = $this->_magentoProductActions->updateProductCollection($store);
+                case NextAction::ACTION_UPDATE:
+                    $return = $this->_magentoProductActions->updateProductCollection($store, $productIds);
                     break;
-                case "add":
-                    $productIds = $this->_magentoProductActions->addProductCollection($store);
+                case NextAction::ACTION_ADD:
+                    $return = $this->_magentoProductActions->addProductCollection($store, $productIds);
                     break;
             }
         } catch (Exception $e) {
             $this->_searchHelperData->log(
                 LoggerConstants::ZEND_LOG_ERR,
-                sprintf(
-                    "Error in collecting product ids for action %s - %s",
-                    $action,
-                    $e->getMessage()
-                )
+                sprintf("Error in collecting product ids for action %s - %s", $action, $e->getMessage())
             );
         }
+        if (count($filterProductIds)) {
+            // filter out any extra products returned by passing just the product_id to the collection methods above.
+            $idsToFilterReturn = $this->mapIdsToProductIds($filterProductIds);
 
-        return $productIds;
+            $return = array_filter($return, static function ($productId) use ($idsToFilterReturn) {
+                return in_array($productId, $idsToFilterReturn, true);
+            }, ARRAY_FILTER_USE_KEY);
+        }
+
+        return $return;
+    }
+
+    /**
+     * @param array $filterProductIds
+     *
+     * @return array|null[]|string[]
+     */
+    private function getFilteredProductIds(array $filterProductIds)
+    {
+        return array_map(static function ($productIds) {
+            return (strpos($productIds, '-') !== false) ?
+                explode('-', $productIds)[self::SYNC_IDS_PRODUCT_ID_KEY] :
+                null;
+        }, $filterProductIds);
+    }
+
+    /**
+     * @param string[] $uniqueIds
+     *
+     * @return string[]
+     */
+    private function mapIdsToProductIds(array $uniqueIds)
+    {
+        return array_map(static function ($id) {
+            $ids = explode('-', $id);
+
+            return $ids[self::SYNC_IDS_PARENT_ID_KEY] . '-' . $ids[self::SYNC_IDS_PRODUCT_ID_KEY];
+        }, $uniqueIds);
+    }
+
+    /**
+     * @param array $productIds
+     * @param string $action
+     * @param StoreInterface|string|int|null $store
+     *
+     * @return void
+     */
+    private function syncProductsForAction(array $productIds, $action, $store)
+    {
+        $method = $action . "Products";
+        $products = array_values($productIds); //resetting key index
+        $total = count($productIds);
+        $this->_searchHelperData->log(
+            LoggerConstants::ZEND_LOG_INFO,
+            sprintf("Found %d products to %s.", $total, $action)
+        );
+        $recordsPerPage = $this->getRecordsPerPage($store);
+        $pages = ceil($total / $recordsPerPage);
+        for ($page = 1; $page <= $pages; $page++) {
+            if ($this->rescheduleIfOutOfMemory()) {
+                return;
+            }
+            $offset = ($page - 1) * $recordsPerPage;
+            $result = $this->_magentoProductActions->$method(
+                array_slice($products, $offset, $recordsPerPage)
+            );
+            if ($result !== true) {
+                $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_ERR, sprintf(
+                    "Errors occurred while attempting to %s products %d - %d: %s",
+                    $action,
+                    $offset + 1,
+                    ($offset + $recordsPerPage <= $total) ? $offset + $recordsPerPage : $total,
+                    $result
+                ));
+            }
+        }
+    }
+
+    /**
+     * @param array $filterProductIds
+     * @param array $trackProductIds
+     * @param StoreInterface|string|int|null $store
+     *
+     * @return void
+     */
+    private function triggerSyncForProductsWithoutNextAction(array $filterProductIds, array $trackProductIds, $store)
+    {
+        $productIdsToSync = $this->filterOutSyncedProducts($trackProductIds, $filterProductIds);
+
+        $productsToDelete = $this->filterProductsNotInSyncTable($productIdsToSync);
+        if (count($productsToDelete)) {
+            $productsToDelete = $this->formatProductIds($productsToDelete);
+            $this->syncProductsForAction($productsToDelete, NextAction::ACTION_DELETE, $store);
+        }
+
+        $productsToUpdate = $this->filterProductsInSyncTable($productIdsToSync);
+        if (count($productsToUpdate)) {
+            $productsToUpdate = $this->formatProductIds($productsToUpdate);
+            $this->syncProductsForAction($productsToUpdate, NextAction::ACTION_UPDATE, $store);
+        }
+    }
+
+    /**
+     * @param array $syncedProductIds
+     * @param array $filterProductIds
+     *
+     * @return array
+     */
+    private function filterOutSyncedProducts(array $syncedProductIds, array $filterProductIds)
+    {
+        $add = isset($syncedProductIds[NextAction::ACTION_ADD]) ?
+            $syncedProductIds[NextAction::ACTION_ADD] :
+            [];
+        $delete = isset($syncedProductIds[NextAction::ACTION_DELETE]) ?
+            $syncedProductIds[NextAction::ACTION_DELETE] :
+            [];
+        $update = isset($syncedProductIds[NextAction::ACTION_UPDATE]) ?
+            $syncedProductIds[NextAction::ACTION_UPDATE] :
+            [];
+        $syncedProducts = array_merge([], $add, $delete, $update);
+
+        return array_filter($filterProductIds, static function ($productId) use ($syncedProducts) {
+            if (!is_string($productId)) {
+                return false;
+            }
+            $ids = explode('-', $productId);
+            $productId = $ids[self::SYNC_IDS_PARENT_ID_KEY] . '-' . $ids[self::SYNC_IDS_PRODUCT_ID_KEY];
+
+            return !array_key_exists($productId, $syncedProducts);
+        });
+    }
+
+    /**
+     * @param array $productIdsToSync
+     *
+     * @return array
+     */
+    private function filterProductsInSyncTable(array $productIdsToSync)
+    {
+        return array_filter($productIdsToSync, static function ($productId) {
+            if (!is_string($productId)) {
+                return false;
+            }
+            $ids = explode('-', $productId);
+
+            return $ids[self::SYNC_IDS_ROW_ID_KEY] !== '0';
+        });
+    }
+
+    /**
+     * @param array $productIdsToSync
+     *
+     * @return array
+     */
+    private function filterProductsNotInSyncTable(array $productIdsToSync)
+    {
+        return array_filter($productIdsToSync, static function ($productId) {
+            if (!is_string($productId)) {
+                return false;
+            }
+            $ids = explode('-', $productId);
+
+            return $ids[self::SYNC_IDS_ROW_ID_KEY] === '0';
+        });
+    }
+
+    /**
+     * @param array $productIds
+     *
+     * @return array
+     */
+    private function formatProductIds(array $productIds)
+    {
+        $return = array_map(static function ($productId) {
+            if (!is_string($productId)) {
+                return [];
+            }
+            $ids = explode('-', $productId);
+
+            return [
+                $ids[self::SYNC_IDS_PARENT_ID_KEY] . '-' . $ids[self::SYNC_IDS_PRODUCT_ID_KEY] => [
+                    'parent_id' => $ids[self::SYNC_IDS_PARENT_ID_KEY],
+                    'product_id' => $ids[self::SYNC_IDS_PRODUCT_ID_KEY]
+                ]
+            ];
+        }, $productIds);
+
+        return array_merge([], ...$return);
     }
 
     /**
      * Run the product sync manually, creating a cron schedule entry
      * to prevent other syncs from running.
+     *
+     * @return void
+     *
      */
     public function runManually()
     {
         $scheduler = $this->_klevuSyncModel->getScheduler();
-
         $operations = [
             "setJobCode" => $this->getJobCode(),
             "setStatus" => $scheduler->getStatusByCode('running'),
@@ -600,7 +837,7 @@ class Sync extends AbstractModel
      * Perform Category Sync on any configured stores, adding new categories, updating modified and
      * deleting removed category since last sync.
      *
-     * @param Store|null $store
+     * @param StoreInterface|null $store
      *
      * @return string|null
      * @throws NoSuchEntityException
@@ -609,14 +846,14 @@ class Sync extends AbstractModel
     {
         $website = $store->getWebsite();
         if (!$this->_searchHelperConfig->getCategorySyncEnabledFlag($store->getId())) {
-            $msg = sprintf(
+            $message = sprintf(
                 "Category Sync option found disabled for %s (%s).",
                 $website->getName(),
                 $store->getName()
             );
-            $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_INFO, $msg);
+            $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_INFO, $message);
 
-            return $msg;
+            return $message;
         }
         $this->_searchHelperData->log(
             LoggerConstants::ZEND_LOG_INFO,
@@ -627,27 +864,23 @@ class Sync extends AbstractModel
             )
         );
 
-        // replace below code
-        //$actions = $this->_klevuMagentoCategoryAction->getCategorySyncDataActions($store);
-        $actions = ['delete', 'update', 'add'];
+        $actions = [
+            NextAction::ACTION_DELETE,
+            NextAction::ACTION_UPDATE,
+            NextAction::ACTION_ADD
+        ];
 
         $recordsPerPage = $this->getRecordsPerPage($store);
-        $errors = 0;
-        foreach ($actions as $key => $action) {
+        foreach ($actions as $action) {
             if ($this->rescheduleIfOutOfMemory()) {
                 return null;
             }
-
             $method = $action . "Category";
-            $category_pages = $this->_klevuMagentoCategoryAction->getCategorySyncDataActions($store, $action);
-            $total = count($category_pages);
+            $categoryPages = $this->_klevuMagentoCategoryAction->getCategorySyncDataActions($store, $action);
+            $total = count($categoryPages);
             $this->_searchHelperData->log(
                 LoggerConstants::ZEND_LOG_INFO,
-                sprintf(
-                    "Found %d category Pages to %s.",
-                    $total,
-                    $action
-                )
+                sprintf("Found %d category Pages to %s.", $total, $action)
             );
             $pages = ceil($total / $recordsPerPage);
             for ($page = 1; $page <= $pages; $page++) {
@@ -656,23 +889,23 @@ class Sync extends AbstractModel
                 }
                 $offset = ($page - 1) * $recordsPerPage;
                 $result = $this->_klevuMagentoCategoryAction->$method(
-                    array_slice($category_pages, $offset, $recordsPerPage)
+                    array_slice($categoryPages, $offset, $recordsPerPage)
                 );
-                if ($result !== true) {
-                    $errors++;
-                    $this->_searchHelperData->log(
-                        LoggerConstants::ZEND_LOG_ERR,
-                        sprintf(
-                            "Errors occurred while attempting to %s categories pages %d - %d: %s",
-                            $action,
-                            $offset + 1,
-                            ($offset + $recordsPerPage <= $total)
-                                ? $offset + $recordsPerPage
-                                : $total,
-                            $result
-                        )
-                    );
+                if ($result === true) {
+                    continue;
                 }
+                $this->_searchHelperData->log(
+                    LoggerConstants::ZEND_LOG_ERR,
+                    sprintf(
+                        "Errors occurred while attempting to %s categories pages %d - %d: %s",
+                        $action,
+                        $offset + 1,
+                        ($offset + $recordsPerPage <= $total)
+                            ? $offset + $recordsPerPage
+                            : $total,
+                        $result
+                    )
+                );
             }
         }
         $this->_searchHelperData->log(
@@ -689,6 +922,7 @@ class Sync extends AbstractModel
 
     /**
      * @param string $time
+     *
      * @return KlevuSync
      */
     public function schedule($time = "now")
@@ -698,6 +932,7 @@ class Sync extends AbstractModel
 
     /**
      * @param int $copies
+     *
      * @return bool
      */
     public function isRunning($copies = 1)
@@ -714,8 +949,9 @@ class Sync extends AbstractModel
     }
 
     /**
-     * @param string $level
+     * @param int $level
      * @param string $message
+     *
      * @return KlevuSync
      */
     public function log($level, $message)
@@ -724,12 +960,13 @@ class Sync extends AbstractModel
     }
 
     /**
-     * @param int $store_id
-     * @return mixed
+     * @param StoreInterface|string|int|null $storeId
+     *
+     * @return bool
      */
-    public function isExtensionConfigured($store_id)
+    public function isExtensionConfigured($storeId)
     {
-        return $this->_searchHelperConfig->isExtensionConfigured($store_id);
+        return $this->_searchHelperConfig->isExtensionConfigured($storeId);
     }
 
     /**

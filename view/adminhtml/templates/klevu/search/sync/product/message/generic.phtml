@@ -1,0 +1,13 @@
+<?php /** @var \Klevu\Search\Block\Adminhtml\Sync\Product\Message $block */ ?>
+
+<div class="message message-info">
+    <?= $block->escapeHtml(
+        __('We recommend to use this grid when you wish to sync a (group of) product changes with Klevu.')
+    ) ?>
+    <?= $block->escapeHtml(
+        __('You can choose to sync now or schedule to sync at the next scheduled CRON job.')
+    ) ?>
+    <?= $block->escapeHtml(
+        __('You can also view sync history for troubleshooting.')
+    ) ?>
+</div>

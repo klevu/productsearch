@@ -10,6 +10,9 @@
                             <resource id="Klevu_Search::klevu" title="Klevu" translate="title" sortOrder="80">
                                 <resource id="Klevu_Search::integration" title="Klevu Integration" translate="title" sortOrder="10" />
                                 <resource id="Klevu_Search::config_search" title="Klevu Search" translate="title" sortOrder="20" />
+                                <resource id="Klevu_Search::sync" title="Klevu Sync" translate="title" sortOrder="30">
+                                    <resource id="Klevu_Search::sync_product_grid" title="Klevu Sync Products" translate="title" sortOrder="10" />
+                                </resource>
                             </resource>
                         </resource>
                     </resource>
