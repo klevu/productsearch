@@ -42,5 +42,17 @@
         "constraint": {
             "PRIMARY": true
         }
+    },
+    "klevu_product_sync_history": {
+        "column": {
+            "sync_id": true,
+            "product_id": true,
+            "parent_id": true,
+            "store_id": true,
+            "action": true,
+            "success": true,
+            "message": true,
+            "synced_at": true
+        }
     }
 }

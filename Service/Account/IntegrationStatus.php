@@ -55,6 +55,16 @@ class IntegrationStatus implements IntegrationStatusInterface
      */
     private $reinitableConfig;
 
+    /**
+     * @param ScopeConfigInterface $scopeConfig
+     * @param RequestInterface $request
+     * @param StoreManagerInterface $storeManager
+     * @param ScopeConfigWriter $scopeConfigWriter
+     * @param LoggerInterface $logger
+     * @param ValidatorInterface $jsApiKeyValidator
+     * @param ValidatorInterface $restApiKeyValidator
+     * @param ReinitableConfigInterface $reinitableConfig
+     */
     public function __construct(
         ScopeConfigInterface $scopeConfig,
         RequestInterface $request,
@@ -125,7 +135,7 @@ class IntegrationStatus implements IntegrationStatusInterface
     }
 
     /**
-     * @param StoreInterface $store
+     * @param StoreInterface|null $store
      *
      * @return bool
      */

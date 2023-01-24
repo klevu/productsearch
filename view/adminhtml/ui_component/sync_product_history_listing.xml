@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<listing xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Ui:etc/ui_configuration.xsd">
+    <argument name="data" xsi:type="array">
+        <item name="js_config" xsi:type="array">
+            <item name="provider" xsi:type="string">sync_product_history_listing.sync_product_history_listing_data_source</item>
+            <item name="deps" xsi:type="string">sync_product_history_listing.sync_product_history_listing_data_source</item>
+        </item>
+        <item name="spinner" xsi:type="string">sync_product_history_listing_columns</item>
+    </argument>
+
+    <dataSource name="sync_product_history_listing_data_source">
+        <argument name="dataProvider" xsi:type="configurableObject">
+            <argument name="class" xsi:type="string">Klevu\Search\Ui\DataProvider\Listing\Sync\Product\History\DataProvider</argument>
+            <argument name="name" xsi:type="string">sync_product_history_listing_data_source</argument>
+            <argument name="primaryFieldName" xsi:type="string">sync_id</argument>
+            <argument name="requestFieldName" xsi:type="string">id</argument>
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="component" xsi:type="string">Klevu_Search/js/grid/sync/history/provider</item>
+                    <item name="update_url" xsi:type="url" path="mui/index/render"/>
+                    <item name="filter_url_params" xsi:type="array">
+                        <item name="unique_entity_id" xsi:type="string">*</item>
+                        <item name="store" xsi:type="string">*</item>
+                    </item>
+                    <item name="storageConfig" xsi:type="array">
+                        <item name="indexField" xsi:type="string">sync_id</item>
+                    </item>
+                </item>
+            </argument>
+        </argument>
+        <aclResource>Klevu_Search::sync_product_grid</aclResource>
+    </dataSource>
+
+    <listingToolbar name="listing_top">
+        <settings>
+            <sticky>true</sticky>
+        </settings>
+        <bookmark name="bookmarks"/>
+        <columnsControls name="columns_controls"/>
+        <filters name="listing_filters" />
+        <paging name="listing_paging"/>
+    </listingToolbar>
+
+    <columns name="sync_product_history_listing_columns">
+        <column name="sync_id" sortOrder="10">
+            <settings>
+                <label translate="true">ID</label>
+            </settings>
+        </column>
+        <column name="action" component="Magento_Ui/js/grid/columns/select" sortOrder="20">
+            <settings>
+                <addField>true</addField>
+                <filter>select</filter>
+                <options class="Klevu\Search\Model\Source\NextAction"/>
+                <dataType>select</dataType>
+                <label translate="true">Action</label>
+                <visible>true</visible>
+                <sortable>true</sortable>
+            </settings>
+        </column>
+        <column name="success" component="Magento_Ui/js/grid/columns/select" sortOrder="30">
+            <settings>
+                <addField>true</addField>
+                <options class="Magento\Config\Model\Config\Source\Yesno"/>
+                <filter>select</filter>
+                <dataType>select</dataType>
+                <label translate="true">Success</label>
+                <visible>true</visible>
+                <sortable>true</sortable>
+            </settings>
+        </column>
+        <column name="message" sortOrder="40">
+            <settings>
+                <addField>true</addField>
+                <filter>text</filter>
+                <bodyTmpl>ui/grid/cells/text</bodyTmpl>
+                <dataType>text</dataType>
+                <label translate="true">Response</label>
+            </settings>
+        </column>
+        <column name="synced_at" class="Magento\Ui\Component\Listing\Columns\Date" component="Magento_Ui/js/grid/columns/date" sortOrder="40">
+            <settings>
+                <addField>true</addField>
+                <filter>dateRange</filter>
+                <dataType>date</dataType>
+                <label translate="true">Klevu Sync Requested On</label>
+                <visible>true</visible>
+                <sortable>true</sortable>
+                <sorting>desc</sorting>
+            </settings>
+        </column>
+    </columns>
+</listing>

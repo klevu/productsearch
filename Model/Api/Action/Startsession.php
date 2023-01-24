@@ -5,8 +5,10 @@ namespace Klevu\Search\Model\Api\Action;
 use Klevu\Search\Helper\Api as ApiHelper;
 use Klevu\Search\Helper\Config as ConfigHelper;
 use Klevu\Search\Model\Api\Actionall as ApiActionall;
+use Klevu\Search\Model\Api\Request\Xml as RequestXml;
 use Klevu\Search\Model\Api\Response;
 use Klevu\Search\Model\Api\Response\Invalid as ApiResponseInvalid;
+use Klevu\Search\Model\Api\Response\Message as ResponseMessage;
 use Klevu\Search\Model\Api\Response\Rempty as EmptyResponse;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
@@ -15,16 +17,19 @@ use Magento\Store\Model\StoreManagerInterface;
 
 class Startsession extends ApiActionall
 {
+    const ENDPOINT = "/rest/service/startSession";
+    const METHOD = "POST";
+    const DEFAULT_REQUEST_MODEL = RequestXml::class;
+    const DEFAULT_RESPONSE_MODEL = ResponseMessage::class;
+
     /**
      * @var ApiResponseInvalid
      */
     protected $_apiResponseInvalid;
-
     /**
      * @var ApiHelper
      */
     protected $_searchHelperApi;
-
     /**
      * @var ConfigHelper
      */
@@ -48,14 +53,9 @@ class Startsession extends ApiActionall
         $this->_storeModelStoreManagerInterface = $storeModelStoreManagerInterface;
     }
 
-    const ENDPOINT = "/rest/service/startSession";
-    const METHOD   = "POST";
-
-    const DEFAULT_REQUEST_MODEL  = "Klevu\Search\Model\Api\Request\Xml";
-    const DEFAULT_RESPONSE_MODEL = "Klevu\Search\Model\Api\Response\Message";
-
     /**
      * @param array $parameters
+     *
      * @return Response|EmptyResponse
      * @throws LocalizedException
      */
@@ -65,7 +65,6 @@ class Startsession extends ApiActionall
         if ($validation_result !== true) {
             return $this->_apiResponseInvalid->setErrors($validation_result);
         }
-
         if (isset($parameters['store'])) {
             switch (true) {
                 case is_string($parameters['store']):
@@ -84,13 +83,14 @@ class Startsession extends ApiActionall
                 default:
                     throw new LocalizedException(__(
                         'Invalid store parameter: %1',
-                        is_object($parameters['store']) ? get_class($parameters['store']) : gettype($parameters['store'])
+                        is_object($parameters['store'])
+                            ? get_class($parameters['store'])
+                            //phpcs:ignore Magento2.Functions.DiscouragedFunction.Discouraged
+                            : gettype($parameters['store'])
                     ));
-                    break;
             }
             $this->setDataUsingMethod('store', $store);
         }
-
         $request = $this->getRequest();
         $request->setData([]);
 
@@ -102,14 +102,12 @@ class Startsession extends ApiActionall
                 $e
             );
         }
-
         $endpoint = $this->buildEndpoint(
             static::ENDPOINT,
             $store,
             $this->_searchHelperConfig->getRestHostname($store)
         );
-        $request
-            ->setResponseModel($this->getResponse())
+        $request->setResponseModel($this->getResponse())
             ->setEndpoint($endpoint)
             ->setMethod(static::METHOD)
             ->setHeader('Authorization', $parameters['api_key']);
@@ -133,13 +131,13 @@ class Startsession extends ApiActionall
     }
 
     /**
-     * @param array|mixed $parameters
+     * @param array $parameters
+     *
      * @return bool|string[]
      */
     protected function validate($parameters)
     {
         $errors = [];
-
         if (empty($parameters['api_key'])) {
             $errors[] = (string)__("Missing API key.");
         }
@@ -151,6 +149,7 @@ class Startsession extends ApiActionall
      * @param string $endpoint
      * @param StoreInterface|null $store
      * @param string $hostname
+     *
      * @return string
      */
     public function buildEndpoint($endpoint, $store = null, $hostname = null)

@@ -511,7 +511,7 @@ class SyncTest extends TestCase
     }
 
     /**
-     * Rolls back product creation scripts because annotations use a relative path
+     * Rolls back klevu product creation scripts because annotations use a relative path
      *  from integration tests root
      */
     public static function loadProductFixturesRollback()
@@ -537,7 +537,7 @@ class SyncTest extends TestCase
     }
 
     /**
-     * Rolls back klevu product sync creation scripts because annotations use a relative path
+     * Rolls back product sync creation scripts because annotations use a relative path
      *  from integration tests root
      */
     public static function loadKlevuProductSyncFixturesRollback()

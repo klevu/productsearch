@@ -29,7 +29,9 @@ $registry->register('isSecureArea', true);
 foreach ($skusToDelete as $skuToDelete) {
     try {
         $product = $productRepository->get($skuToDelete);
-        $productRepository->delete($product);
+        if ($product->getId()) {
+            $productRepository->delete($product);
+        }
     } catch (NoSuchEntityException $e) {
         // This is fine
     }

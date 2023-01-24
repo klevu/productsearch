@@ -8,15 +8,20 @@ use Magento\TestFramework\Helper\Bootstrap;
 
 $objectManager = Bootstrap::getObjectManager();
 
-if (class_exists(\Magento\Elasticsearch\SearchAdapter\ConnectionManager::class)) {
-    try {
-        /** @var \Magento\Elasticsearch\SearchAdapter\ConnectionManager $connectionManager */
-        $connectionManager = $objectManager->get(\Magento\Elasticsearch\SearchAdapter\ConnectionManager::class);
-        $elasticsearchConnection = $connectionManager->getConnection([]);
-        $elasticsearchConnection->deleteIndex('magento2_*');
-    } catch (\RuntimeException $e) {
-        if ('Elasticsearch client is not set.' !== $e->getMessage()) {
-            throw $e;
+if (class_exists(\Magento\Elasticsearch\SearchAdapter\ConnectionManager::class) &&
+    class_exists(\Magento\AdvancedSearch\Model\Client\ClientResolver::class)) {
+    /** @var \Magento\AdvancedSearch\Model\Client\ClientResolver $clientResolver */
+    $clientResolver = $objectManager->get(\Magento\AdvancedSearch\Model\Client\ClientResolver::class);
+    if ('mysql' !== $clientResolver->getCurrentEngine()) {
+        try {
+            /** @var \Magento\Elasticsearch\SearchAdapter\ConnectionManager $connectionManager */
+            $connectionManager = $objectManager->get(\Magento\Elasticsearch\SearchAdapter\ConnectionManager::class);
+            $elasticsearchConnection = $connectionManager->getConnection([]);
+            $elasticsearchConnection->deleteIndex('magento2_*');
+        } catch (\RuntimeException $e) {
+            if ('Elasticsearch client is not set.' !== $e->getMessage()) {
+                throw $e;
+            }
         }
     }
 }

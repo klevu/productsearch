@@ -10,13 +10,23 @@ use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Registry;
 use Magento\Indexer\Model\IndexerFactory;
 use Magento\Store\Model\StoreManagerInterface;
+use Magento\Store\Model\Website;
 use Magento\TestFramework\Helper\Bootstrap;
 
 $objectManager = Bootstrap::getObjectManager();
 
-/** @var StoreManagerInterface $storeManager */
-$storeManager = $objectManager->get(StoreManagerInterface::class);
-$defaultStoreView = $storeManager->getDefaultStoreView();
+/** @var Website $baseWebsite */
+$baseWebsite = $objectManager->create(Website::class);
+$baseWebsite->load('base', 'code');
+
+/** @var Website $website1 */
+$website1 = $objectManager->create(Website::class);
+$website1->load('klevu_test_website_1', 'code');
+
+/** @var Website $website2 */
+$website2 = $objectManager->create(Website::class);
+$website2->load('klevu_test_website_2', 'code');
+
 /** @var ProductRepositoryInterface $productRepository */
 $productRepository = $objectManager->get(ProductRepositoryInterface::class);
 /** @var IndexerProcessor $indexerProcessor */
@@ -55,9 +65,11 @@ $simpleProduct->addData([
     'description' => '[Klevu Test Fixtures] Simple child for assigned grouped product',
     'short_description' => '[Klevu Test Fixtures] Simple child for assigned grouped product',
     'attribute_set_id' => 4,
-    'website_ids' => [
-        $defaultStoreView->getWebsiteId(),
-    ],
+    'website_ids' => array_filter([
+        $baseWebsite->getId(),
+        $website1->getId(),
+        $website2->getId(),
+    ]),
     'price' => 10.00,
     'special_price' => 4.99,
     'weight' => 1,
@@ -85,9 +97,11 @@ $groupedProduct->addData([
     'description' => '[Klevu Test Fixtures] assigned grouped product',
     'short_description' => '[Klevu Test Fixtures] assigned grouped product',
     'attribute_set_id' => 4,
-    'website_ids' => [
-        $defaultStoreView->getWebsiteId(),
-    ],
+    'website_ids' => array_filter([
+        $baseWebsite->getId(),
+        $website1->getId(),
+        $website2->getId(),
+    ]),
     'price' => 100.00,
     'special_price' => 49.99,
     'weight' => 1,
