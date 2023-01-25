@@ -1,5 +1,7 @@
 <?php
 
+// phpcs:disable PSR1.Methods.CamelCapsMethodName.NotCamelCaps
+
 namespace Klevu\Search\Test\Integration\Model\Order;
 
 use Klevu\Search\Api\Service\Sync\GetOrderSelectMaxLimitInterface;
@@ -82,8 +84,16 @@ class SyncTest extends TestCase
         $orderSyncModel->run();
 
         $this->assertCount(2, $this->executeCallsPerApiKey);
-        $this->assertSame(21, $this->executeCallsPerApiKey['klevu-klevu_test_store_1'], 'Execute calls for klevu_test_store_1');
-        $this->assertSame(5, $this->executeCallsPerApiKey['klevu-klevu_test_store_2'], 'Execute calls for klevu_test_store_2');
+        $this->assertSame(
+            21,
+            $this->executeCallsPerApiKey['klevu-klevu_test_store_1'],
+            'Execute calls for klevu_test_store_1'
+        );
+        $this->assertSame(
+            5,
+            $this->executeCallsPerApiKey['klevu-klevu_test_store_2'],
+            'Execute calls for klevu_test_store_2'
+        );
 
         static::loadAllFixturesRollback();
     }
@@ -127,16 +137,24 @@ class SyncTest extends TestCase
         $orderSyncModel->run();
 
         $this->assertCount(2, $this->executeCallsPerApiKey);
-        $this->assertSame(21, $this->executeCallsPerApiKey['klevu-klevu_test_store_1'], 'Execute calls for klevu_test_store_1');
-        $this->assertSame(0, $this->executeCallsPerApiKey['klevu-klevu_test_store_2'], 'Execute calls for klevu_test_store_2');
+        $this->assertSame(
+            21,
+            $this->executeCallsPerApiKey['klevu-klevu_test_store_1'],
+            'Execute calls for klevu_test_store_1'
+        );
+        $this->assertSame(
+            0,
+            $this->executeCallsPerApiKey['klevu-klevu_test_store_2'],
+            'Execute calls for klevu_test_store_2'
+        );
 
         static::loadAllFixturesRollback();
     }
 
     /**
-     * Feature: The maximum number of records sent in a single order synchronisation run can be defined by administrators
+     * Feature: The maximum number of records sent in a single order synchronisation run can be defined by admins
      *
-     * Scenario: Maximum batch size is defined in stores configuration and is lower than the total number of unsent orders
+     * Scenario: Maximum batch size is defined in stores config and is lower than the total number of unsent orders
      *    Given: Order Sync Enabled is set to Yes for all stores
      *      and: Maximum Batch Size is set to 10 for all stores
      *      and: klevu_test_store_1 has 21 unsent orders
@@ -173,8 +191,16 @@ class SyncTest extends TestCase
         $orderSyncModel->run();
 
         $this->assertCount(2, $this->executeCallsPerApiKey);
-        $this->assertSame(10, $this->executeCallsPerApiKey['klevu-klevu_test_store_1'], 'Execute calls for klevu_test_store_1');
-        $this->assertSame(5, $this->executeCallsPerApiKey['klevu-klevu_test_store_2'], 'Execute calls for klevu_test_store_2');
+        $this->assertSame(
+            10,
+            $this->executeCallsPerApiKey['klevu-klevu_test_store_1'],
+            'Execute calls for klevu_test_store_1'
+        );
+        $this->assertSame(
+            5,
+            $this->executeCallsPerApiKey['klevu-klevu_test_store_2'],
+            'Execute calls for klevu_test_store_2'
+        );
 
         static::loadAllFixturesRollback();
     }
@@ -217,8 +243,16 @@ class SyncTest extends TestCase
         $orderSyncModel->run();
 
         $this->assertCount(2, $this->executeCallsPerApiKey);
-        $this->assertSame(21, $this->executeCallsPerApiKey['klevu-klevu_test_store_1'], 'Execute calls for klevu_test_store_1');
-        $this->assertSame(0, $this->executeCallsPerApiKey['klevu-klevu_test_store_2'], 'Execute calls for klevu_test_store_2');
+        $this->assertSame(
+            21,
+            $this->executeCallsPerApiKey['klevu-klevu_test_store_1'],
+            'Execute calls for klevu_test_store_1'
+        );
+        $this->assertSame(
+            0,
+            $this->executeCallsPerApiKey['klevu-klevu_test_store_2'],
+            'Execute calls for klevu_test_store_2'
+        );
 
         static::loadAllFixturesRollback();
     }
@@ -264,8 +298,16 @@ class SyncTest extends TestCase
         $orderSyncModel->run();
 
         $this->assertCount(2, $this->executeCallsPerApiKey);
-        $this->assertSame(0, $this->executeCallsPerApiKey['klevu-klevu_test_store_1'], 'Execute calls for klevu_test_store_1');
-        $this->assertSame(0, $this->executeCallsPerApiKey['klevu-klevu_test_store_2'], 'Execute calls for klevu_test_store_2');
+        $this->assertSame(
+            0,
+            $this->executeCallsPerApiKey['klevu-klevu_test_store_1'],
+            'Execute calls for klevu_test_store_1'
+        );
+        $this->assertSame(
+            0,
+            $this->executeCallsPerApiKey['klevu-klevu_test_store_2'],
+            'Execute calls for klevu_test_store_2'
+        );
 
         static::loadAllFixturesRollback();
     }
@@ -314,8 +356,16 @@ class SyncTest extends TestCase
         $orderSyncModel->run();
 
         $this->assertCount(2, $this->executeCallsPerApiKey);
-        $this->assertSame(21, $this->executeCallsPerApiKey['klevu-klevu_test_store_1'], 'Execute calls for klevu_test_store_1');
-        $this->assertSame(5, $this->executeCallsPerApiKey['klevu-klevu_test_store_2'], 'Execute calls for klevu_test_store_2');
+        $this->assertSame(
+            21,
+            $this->executeCallsPerApiKey['klevu-klevu_test_store_1'],
+            'Execute calls for klevu_test_store_1'
+        );
+        $this->assertSame(
+            5,
+            $this->executeCallsPerApiKey['klevu-klevu_test_store_2'],
+            'Execute calls for klevu_test_store_2'
+        );
 
         static::loadAllFixturesRollback();
     }
@@ -347,6 +397,8 @@ class SyncTest extends TestCase
             'getOrderSelectMaxLimit' => $mockGetOrderSelectMaxLimit
         ]);
         $orderSyncModel->run();
+
+        static::loadAllFixturesRollback();
     }
 
     /**
@@ -394,13 +446,15 @@ class SyncTest extends TestCase
             'klevu_salePrice',
             'klevu_currency',
             'klevu_shopperIP',
-            'Klevu_sessionId',
+            'klevu_sessionId',
             'klevu_orderDate',
             'klevu_emailId',
             'klevu_storeTimezone',
-            'Klevu_clientIp',
+            'klevu_clientIp',
             'klevu_checkoutDate',
             'klevu_productPosition',
+            'klevu_orderId',
+            'klevu_orderLineId',
         ];
         $producttrackingActionMock
             ->method('execute')
@@ -446,18 +500,22 @@ class SyncTest extends TestCase
         $expectedArrayKeys = [
             'klevu_apiKey',
             'klevu_type',
+            'klevu_orderId',
+            'klevu_orderLineId',
             'klevu_productId',
             'klevu_unit',
             'klevu_salePrice',
             'klevu_currency',
             'klevu_shopperIP',
-            'Klevu_sessionId',
+            'klevu_sessionId',
             'klevu_orderDate',
             'klevu_emailId',
             'klevu_storeTimezone',
-            'Klevu_clientIp',
+            'klevu_clientIp',
             'klevu_checkoutDate',
             'klevu_productPosition',
+            'klevu_orderId',
+            'klevu_orderLineId',
         ];
         $producttrackingActionMock
             ->expects($this->any())
@@ -481,7 +539,6 @@ class SyncTest extends TestCase
 
                 return $response;
             });
-
 
         return $producttrackingActionMock;
     }

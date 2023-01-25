@@ -4,11 +4,15 @@ namespace Klevu\Search\Model\Api\Action;
 
 class Updaterecords extends \Klevu\Search\Model\Api\Action\Addrecords
 {
-
     const ENDPOINT = "/rest/service/updateRecords";
     const METHOD   = "POST";
+    const ACTION = "update";
 
-    // mandatory_field_name => allowed_empty
+    /**
+     * mandatory_field_name => allowed_empty
+     *
+     * @var bool[]
+     */
     protected $mandatory_fields = [
         "id" => false
     ];

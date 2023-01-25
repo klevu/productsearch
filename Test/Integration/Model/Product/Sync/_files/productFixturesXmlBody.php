@@ -115,7 +115,7 @@ $fixtures = [
             'is_in_stock'               => 1,
         ],
         'url_key' => 'klevu_virtual_synctest_xmlbody_' . crc32(rand()),
-        'klevu_boolean_attribute' => 1,
+        'klevu_boolean_attribute' => 0,
     ],
     [
         'type_id' => 'downloadable',
@@ -141,7 +141,7 @@ $fixtures = [
             'is_in_stock'               => 0,
         ],
         'url_key' => 'klevu_downloadable_synctest_xmlbody_' . crc32(rand()),
-        'klevu_boolean_attribute' => 1,
+        'klevu_boolean_attribute' => 0,
     ],
 
     [
@@ -257,7 +257,7 @@ $fixtures = [
         'child_skus' => [
             'klevu_groupchild_synctest_xmlbody',
         ],
-        'klevu_boolean_attribute' => 1,
+        'klevu_boolean_attribute' => 0,
     ],
     [
         'type_id' => 'simple',

@@ -35,7 +35,6 @@ foreach ($productSkusToDelete as $productSku) {
     }
 
     $collection = $klevuSyncModelCollectionFactory->create();
-    $collection->addFieldToFilter('product_id', $product->getId());
     $collection->addFieldToFilter('type', 'products');
 
     $collection->load();

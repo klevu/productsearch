@@ -25,7 +25,6 @@ define([
             $.mage.__('Positive Integers only please.')
         );
 
-
         return target;
     };
 });

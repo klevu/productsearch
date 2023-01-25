@@ -2,14 +2,25 @@
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
     <preference for="Klevu\Search\Api\SerializerInterface" type="Klevu\Search\Serializer\Json"/>
 
+    <preference for="Klevu\Search\Api\Provider\Sync\Order\ItemsToSyncProviderInterface" type="Klevu\Search\Provider\Sync\Order\ItemsToSyncProvider"/>
+    <preference for="Klevu\Search\Api\Provider\Sync\Order\Item\DataProviderInterface" type="Klevu\Search\Provider\Sync\Order\Item\DataProvider"/>
+
     <preference for="Klevu\Search\Api\Provider\CommonProviderInterface" type="Klevu\Search\Model\Product\Provider\CommonProvider"/>
     <preference for="Klevu\Search\Api\Service\Catalog\Product\StockServiceInterface" type="Klevu\Search\Service\Catalog\Product\Stock"/>
 
     <preference for="Klevu\Search\Api\KlevuSyncRepositoryInterface" type="Klevu\Search\Repository\KlevuSyncRepository" />
     <preference for="Klevu\Search\Api\MagentoProductSyncRepositoryInterface" type="Klevu\Search\Repository\MagentoProductSyncRepository" />
+    <preference for="Klevu\Search\Api\KlevuProductSyncHistoryRepositoryInterface" type="Klevu\Search\Repository\KlevuProductSyncHistoryRepository" />
     <preference for="Klevu\Search\Api\Service\Sync\GetBatchSizeInterface" type="Klevu\Search\Service\Sync\GetBatchSize" />
     <preference for="Klevu\Search\Api\Service\Sync\GetOrderSelectMaxLimitInterface" type="Klevu\Search\Service\Sync\GetOrderSelectMaxLimit" />
     <preference for="Klevu\Search\Api\Service\Sync\Product\GetRecordsPerPageInterface" type="Klevu\Search\Service\Sync\Product\GetRecordsPerPage" />
+    <preference for="Klevu\Search\Api\Service\Sync\Product\GetStoresWithSyncDisabledInterface" type="Klevu\Search\Service\Sync\Product\GetStoresWithSyncDisabled" />
+    <preference for="Klevu\Search\Api\Service\Sync\Product\GetHistoryLengthInterface" type="Klevu\Search\Service\Sync\Product\GetHistoryLength" />
+    <preference for="Klevu\Search\Api\Service\Sync\Product\GetNextActionsInterface" type="Klevu\Search\Service\Sync\Product\GetNextActions" />
+    <preference for="Klevu\Search\Api\Service\Sync\Product\UpdateInNextCronInterface" type="Klevu\Search\Service\Sync\Product\UpdateInNextCron" />
+    <preference for="Klevu\Search\Api\Service\Sync\Product\DeleteInNextCronInterface" type="Klevu\Search\Service\Sync\Product\DeleteInNextCron" />
+    <preference for="Klevu\Search\Api\Service\Sync\Product\DeleteHistoryInterface" type="Klevu\Search\Service\Sync\Product\DeleteHistory" />
+    <preference for="Klevu\Search\Api\Service\Sync\Product\RecordHistoryInterface" type="Klevu\Search\Service\Sync\Product\RecordHistory" />
 
     <preference for="Klevu\Search\Api\Service\Catalog\Product\GetReviewCountInterface" type="Klevu\Search\Service\Catalog\Product\GetReviewCount" />
     <preference for="Klevu\Search\Api\Service\Catalog\Product\GetRatingStarsInterface" type="Klevu\Search\Service\Catalog\Product\GetRatingStars" />
@@ -42,18 +53,20 @@
     <preference for="Klevu\Search\Api\Provider\Customer\CustomerIdProviderInterface" type="Klevu\Search\Provider\Customer\CustomerIdProvider" />
     <preference for="Klevu\Search\Api\Provider\Customer\SessionIdProviderInterface" type="Klevu\Search\Provider\Customer\SessionIdProvider" />
     <preference for="Klevu\Search\Model\Klevu\Cron\SchedulerInterface" type="Klevu\Search\Model\Klevu\Cron\Scheduler" />
-    <preference for="Klevu\Search\Model\Klevu\Category\CategoryInterface" type="Klevu\Search\Model\Klevu\Category\Category" />
-    <preference for="Klevu\Search\Model\Api\Magento\Request\ProductInterface" type="Klevu\Search\Model\Api\Magento\Request\Product" />
-    <preference for="Klevu\Search\Model\Product\MagentoProductActionsInterface" type="Klevu\Search\Model\Product\MagentoProductActions"/>
-    <preference for="Klevu\Search\Model\Product\LoadAttributeInterface" type="Klevu\Search\Model\Product\LoadAttribute"/>
-    <preference for="Klevu\Search\Model\Product\KlevuProductActionsInterface" type="Klevu\Search\Model\Product\KlevuProductActions"/>
-    <preference for="Klevu\Search\Model\Product\ProductInterface" type="Klevu\Search\Model\Product\Product"/>
-    <preference for="Klevu\Search\Model\Category\MagentoCategoryActionsInterface" type="Klevu\Search\Model\Category\MagentoCategoryActions"/>
-    <preference for="Klevu\Search\Model\Category\LoadAttributeInterface" type="Klevu\Search\Model\Category\LoadAttribute"/>
-    <preference for="Klevu\Search\Model\Category\KlevuCategoryActionsInterface" type="Klevu\Search\Model\Category\KlevuCategoryActions"/>
-    <preference for="Klevu\Search\Model\Product\ProductParentInterface" type="Klevu\Search\Model\Product\ProductParent"/>
-    <preference for="Klevu\Search\Model\Product\ProductIndividualInterface" type="Klevu\Search\Model\Product\ProductIndividual"/>
-    <preference for="Klevu\Search\Model\Product\ProductCommonUpdaterInterface" type="Klevu\Search\Model\Product\ProductCommonUpdater"/>
+	<preference for="Klevu\Search\Model\Klevu\Category\CategoryInterface" type="Klevu\Search\Model\Klevu\Category\Category" />
+	<preference for="Klevu\Search\Model\Api\Magento\Request\ProductInterface" type="Klevu\Search\Model\Api\Magento\Request\Product" />
+	<preference for="Klevu\Search\Model\Product\MagentoProductActionsInterface" type="Klevu\Search\Model\Product\MagentoProductActions"/>
+	<preference for="Klevu\Search\Model\Product\LoadAttributeInterface" type="Klevu\Search\Model\Product\LoadAttribute"/>
+	<preference for="Klevu\Search\Model\Product\KlevuProductActionsInterface" type="Klevu\Search\Model\Product\KlevuProductActions"/>
+	<preference for="Klevu\Search\Model\Product\ProductInterface" type="Klevu\Search\Model\Product\Product"/>
+	<preference for="Klevu\Search\Model\Category\MagentoCategoryActionsInterface" type="Klevu\Search\Model\Category\MagentoCategoryActions"/>
+	<preference for="Klevu\Search\Model\Category\LoadAttributeInterface" type="Klevu\Search\Model\Category\LoadAttribute"/>
+	<preference for="Klevu\Search\Model\Category\KlevuCategoryActionsInterface" type="Klevu\Search\Model\Category\KlevuCategoryActions"/>
+	<preference for="Klevu\Search\Model\Product\ProductParentInterface" type="Klevu\Search\Model\Product\ProductParent"/>
+	<preference for="Klevu\Search\Model\Product\ProductIndividualInterface" type="Klevu\Search\Model\Product\ProductIndividual"/>
+	<preference for="Klevu\Search\Model\Product\ProductCommonUpdaterInterface" type="Klevu\Search\Model\Product\ProductCommonUpdater"/>
+	<preference for="Klevu\Search\Api\Data\HistoryInterface" type="Klevu\Search\Model\Product\Sync\History"/>
+	<preference for="Klevu\Search\Api\KlevuProductSyncHistoryRepositoryInterface" type="Klevu\Search\Repository\KlevuProductSyncHistoryRepository"/>
 
     <type name="Magento\Catalog\Block\Product\ProductList\Toolbar">
         <plugin name="klevu_search_toolbar" type="Klevu\Search\Plugin\Catalog\Block\Toolbar" sortOrder="101"/>
@@ -565,6 +578,101 @@
     <type name="Klevu\Search\Service\Sync\Product\GetRecordsPerPage">
         <arguments>
             <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Ui\DataProvider\Listing\Sync\Product\DataProvider">
+        <arguments>
+            <argument name="getCollection" xsi:type="object">Klevu\Search\Service\Sync\Product\GetCollection</argument>
+            <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Controller\Adminhtml\SyncProduct\Now">
+        <arguments>
+            <argument name="productSync" xsi:type="object">Klevu\Search\Service\Sync\Product\SyncNow</argument>
+            <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Controller\Adminhtml\SyncProduct\MassSync">
+        <arguments>
+            <argument name="productSync" xsi:type="object">Klevu\Search\Service\Sync\Product\SyncNow</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Controller\Adminhtml\SyncProduct\Schedule">
+        <arguments>
+            <argument name="productSync" xsi:type="object">Klevu\Search\Service\Sync\Product\Schedule</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Controller\Adminhtml\SyncProduct\MassSchedule">
+        <arguments>
+            <argument name="productSync" xsi:type="object">Klevu\Search\Service\Sync\Product\Schedule</argument>
+        </arguments>
+    </type>
+    <type name="Klevu\Search\Service\Sync\Product\GetHistoryLength">
+        <arguments>
+            <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Observer\Sync\Product\SyncRecordsAfter">
+        <arguments>
+            <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Observer\Sync\Product\RecordSyncHistoryAfter">
+        <arguments>
+            <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Service\Sync\Product\RecordHistory">
+        <arguments>
+            <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Model\Api\Action\Addrecords">
+        <arguments>
+            <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Provider\Sync\Order\Item\DataProvider">
+        <arguments>
+            <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
+            <argument name="dataProviders" xsi:type="array">
+                <item name="simple" xsi:type="object">Klevu\Search\Provider\Sync\Order\Item\Type\DefaultDataProvider</item>
+                <item name="virtual" xsi:type="object">Klevu\Search\Provider\Sync\Order\Item\Type\DefaultDataProvider</item>
+                <item name="downloadable" xsi:type="object">Klevu\Search\Provider\Sync\Order\Item\Type\DefaultDataProvider</item>
+                <item name="configurable" xsi:type="object">Klevu\Search\Provider\Sync\Order\Item\Type\ConfigurableDataProvider</item>
+                <item name="grouped" xsi:type="object">Klevu\Search\Provider\Sync\Order\Item\Type\GroupedDataProvider</item>
+                <item name="bundle" xsi:type="object">Klevu\Search\Provider\Sync\Order\Item\Type\DefaultDataProvider</item>
+                <item name="giftcard" xsi:type="object">Klevu\Search\Provider\Sync\Order\Item\Type\DefaultDataProvider</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Provider\Sync\Order\Item\Type\ConfigurableDataProvider">
+        <arguments>
+            <argument name="provider" xsi:type="object">Klevu\Search\Provider\Sync\Order\Item\Type\DefaultDataProvider</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Provider\Sync\Order\Item\Type\GroupedDataProvider">
+        <arguments>
+            <argument name="provider" xsi:type="object">Klevu\Search\Provider\Sync\Order\Item\Type\DefaultDataProvider</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Model\Order\Sync">
+        <arguments>
+            <argument name="orderSyncItemDataConvertor" xsi:type="object">Klevu\Search\Service\Convertor\OrderSyncItemDataConvertor</argument>
+            <argument name="fileDriver" xsi:type="object">Magento\Framework\Filesystem\Driver\File</argument>
         </arguments>
     </type>
 </config>

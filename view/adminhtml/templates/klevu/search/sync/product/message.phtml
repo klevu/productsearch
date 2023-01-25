@@ -1,0 +1,30 @@
+<?php /** @var \Klevu\Search\Block\Adminhtml\Sync\Product\Message $block */ ?>
+
+<div class="messages">
+    <?php if ($block->showStoreLevelWarning()): ?>
+        <div class="message message-warning">
+            <?= $block->escapeHtml(
+                __('Select scope to store view level to sync product data.')
+            ) ?>
+        </div>
+        <?= $block->getChildHtml('klevu_search_sync_product_message_generic') ?>
+    <?php elseif (!$block->isStoreIntegrated()): ?>
+        <div class="message message-warning">
+            <?= $block->escapeHtml(
+                __('You need to integrate this store with Klevu to sync products.')
+            ) ?>
+            <?= $block->escapeHtml(
+            // phpcs:ignore Generic.Files.LineLength
+                __('Please navigate to Stores > Configuration > Klevu > Integration, and click on Integrate Now against this store.')
+            ) ?>
+        </div>
+    <?php elseif ($block->hasSyncDisabledForStore()): ?>
+        <div class="message message-warning">
+            <?= $block->escapeHtml(
+                __('Product sync is disabled for this store.')
+            ) ?>
+        </div>
+    <?php else: ?>
+        <?= $block->getChildHtml('klevu_search_sync_product_message_generic') ?>
+    <?php endif; ?>
+</div>

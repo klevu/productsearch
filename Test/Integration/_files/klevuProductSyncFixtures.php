@@ -1,6 +1,7 @@
 <?php
 
 use Klevu\Search\Model\Klevu\KlevuFactory as KlevuModelFactory;
+use Klevu\Search\Model\Klevu\ResourceModel\Klevu\Collection as KlevuModelCollection;
 use Klevu\Search\Model\Klevu\ResourceModel\Klevu\CollectionFactory as KlevuModelCollectionFactory;
 use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\Framework\Registry;
@@ -25,6 +26,9 @@ $klevuSyncModelFactory = $objectManager->get(KlevuModelFactory::class);
 
 // -------------------------------------------------------------------------
 
+include __DIR__ . '/klevuProductSyncFixtures_rollback.php';
+
+// --------------------------------------------------------------------------
 $fixtures = [];
 
 $productSkus = [
@@ -52,6 +56,7 @@ foreach ($productSkus as $productSku) {
 
 // -------------------------------------------------------------------------
 foreach ($fixtures as $fixture) {
+    /** @var KlevuModelCollection $collection */
     $collection = $klevuSyncModelCollectionFactory->create();
     $collection->addFieldToFilter('product_id', $fixture['product_id']);
     $collection->addFieldToFilter('parent_id', $fixture['parent_id']);
