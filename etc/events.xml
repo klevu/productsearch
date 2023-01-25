@@ -60,4 +60,20 @@
     <event name="controller_action_predispatch_adminhtml_system_config_save">
         <observer name="peformFullDataSync" instance="Klevu\Search\Model\Observer\PeformFullDataSync"/>
     </event>
+    <event name="klevu_api_send_add_records_after">
+        <observer name="klevu_search_api_send_addrecords_after"
+                  instance="Klevu\Search\Observer\Sync\Product\SyncRecordsAfter"/>
+    </event>
+    <event name="klevu_api_send_delete_records_after">
+        <observer name="klevu_search_api_send_deleterecords_after"
+                  instance="Klevu\Search\Observer\Sync\Product\SyncRecordsAfter"/>
+    </event>
+    <event name="klevu_api_send_update_records_after">
+        <observer name="klevu_search_api_send_updaterecords_after"
+                  instance="Klevu\Search\Observer\Sync\Product\SyncRecordsAfter"/>
+    </event>
+    <event name="klevu_record_sync_history_after">
+        <observer name="klevu_record_sync_history_after"
+                  instance="Klevu\Search\Observer\Sync\Product\RecordSyncHistoryAfter"/>
+    </event>
 </config>

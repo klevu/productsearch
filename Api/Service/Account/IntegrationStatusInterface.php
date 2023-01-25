@@ -19,7 +19,7 @@ interface IntegrationStatusInterface
     public function setJustIntegrated(StoreInterface $store);
 
     /**
-     * @param StoreInterface $store
+     * @param StoreInterface|null $store
      *
      * @return bool
      */

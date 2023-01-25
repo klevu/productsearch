@@ -4,6 +4,8 @@ namespace Klevu\Search\Test\Integration\Model\Product;
 
 
 use Klevu\Search\Model\Product\ProductCommonUpdaterInterface;
+use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Store\Api\StoreRepositoryInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\TestFramework\Helper\Bootstrap;
 use Magento\TestFramework\ObjectManager;
@@ -70,7 +72,8 @@ class ProductCommonUpdaterTest extends TestCase
     public function testUpdateLastSyncDate_UpdateGroupedParentProductByChildId()
     {
         $this->setupPhp5();
-        $this->storeManager->setCurrentStore(1);
+        $store = $this->getStore('klevu_test_store_1');
+        $this->storeManager->setCurrentStore($store->getId());
 
         //Clear fixtures before starting tests
         self::loadProductFixturesRollback();
@@ -127,7 +130,8 @@ class ProductCommonUpdaterTest extends TestCase
     public function testUpdateLastSyncDate_UpdateChildIdsByGroupParentProduct()
     {
         $this->setupPhp5();
-        $this->storeManager->setCurrentStore(1);
+        $store = $this->getStore('klevu_test_store_1');
+        $this->storeManager->setCurrentStore($store->getId());
 
         //Clear fixtures before starting tests
         self::loadProductFixturesRollback();
@@ -181,7 +185,8 @@ class ProductCommonUpdaterTest extends TestCase
     public function testUpdateLastSyncDate_UpdateBundleParentProductByChildId()
     {
         $this->setupPhp5();
-        $this->storeManager->setCurrentStore(1);
+        $store = $this->getStore('klevu_test_store_1');
+        $this->storeManager->setCurrentStore($store->getId());
 
         //Clear fixtures before starting tests
         self::loadProductFixturesRollback();
@@ -230,6 +235,7 @@ class ProductCommonUpdaterTest extends TestCase
      * @magentoAppIsolation enabled
      * @magentoDbIsolation disabled
      * @magentoCache all disabled
+     * @magentoDataFixture loadWebsiteFixtures
      * @magentoDataFixture loadDataFixtures
      * @return void
      * @throws Zend_Db_Statement_Exception
@@ -237,7 +243,8 @@ class ProductCommonUpdaterTest extends TestCase
     public function testUpdateLastSyncDate_UpdateChildIdsByBundleParentProduct()
     {
         $this->setupPhp5();
-        $this->storeManager->setCurrentStore(1);
+        $store = $this->getStore('klevu_test_store_1');
+        $this->storeManager->setCurrentStore($store->getId());
 
         //Clear fixtures before starting tests
         self::loadProductFixturesRollback();
@@ -271,6 +278,20 @@ class ProductCommonUpdaterTest extends TestCase
         //forcefully rollbacks here as loadProductFixturesRollback not a part of a @magentoDataFixture
         self::loadProductFixturesRollback();
         static::loadDataFixturesRollback();
+    }
+
+    /**
+     * @param string $storeCode
+     *
+     * @return StoreInterface
+     * @throws NoSuchEntityException
+     */
+    private function getStore($storeCode)
+    {
+        /** @var StoreRepositoryInterface $storeRepository */
+        $storeRepository = $this->objectManager->get(StoreRepositoryInterface::class);
+
+        return $storeRepository->get($storeCode);
     }
 
     /**

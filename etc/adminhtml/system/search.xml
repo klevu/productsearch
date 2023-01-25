@@ -296,6 +296,16 @@
                 ]]>
             </comment>
         </field>
+        <field id="history_length" translate="label comment" type="text" sortOrder="1030"
+               showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Product Sync History Length</label>
+            <comment>
+                <![CDATA[
+                    Number of records to keep in sync history. Positive integer.
+                ]]>
+            </comment>
+            <validate>required-entry no-whitespace validate-positive-integer</validate>
+        </field>
     </group>
 
     <group id="attributes" translate="label" sortOrder="104" showInDefault="1" showInWebsite="1" showInStore="1">

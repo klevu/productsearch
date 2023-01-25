@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Backend:etc/menu.xsd">
+    <menu>
+        <add id="Klevu_Search::catalog_sync"
+             title="Klevu Catalog Sync"
+             translate="title"
+             module="Klevu_Search"
+             sortOrder="30"
+             parent="Magento_Catalog::catalog"
+             resource="Klevu_Search::sync"/>
+        <add id="Klevu_Search::catalog_sync_product"
+             title="Sync Products"
+             translate="title"
+             module="Klevu_Search"
+             sortOrder="20"
+             parent="Klevu_Search::catalog_sync"
+             dependsOnModule="Klevu_Search"
+             action="klevu_search/syncproduct/index"
+             resource="Klevu_Search::sync_product_grid"/>
+    </menu>
+</config>

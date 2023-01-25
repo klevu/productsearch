@@ -1,8 +1,4 @@
-<?php
-/**
- * Copyright © 2015 Magento. All rights reserved.
- * See COPYING.txt for license details.
- */
+<?php // phpcs:disable Magento2.Legacy.InstallUpgrade.ObsoleteUpgradeDataScript
 
 namespace Klevu\Search\Setup;
 
@@ -15,14 +11,15 @@ use Magento\Framework\Setup\SchemaSetupInterface;
  */
 class InstallSchema implements InstallSchemaInterface
 {
-    
     /**
-     * {@inheritdoc}
+     * @param SchemaSetupInterface $setup
+     * @param ModuleContextInterface $context
+     *
+     * @return void
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     public function install(SchemaSetupInterface $setup, ModuleContextInterface $context)
     {
-        
         $installer = $setup;
         $installer->startSetup();
         $notifications_table = $installer->getTable('klevu_notification');
@@ -41,7 +38,13 @@ class InstallSchema implements InstallSchemaInterface
         // the notification the next time cron runs
         $installer->getConnection()->insert($notifications_table, [
             "type" => "cron_check",
-            "message" => __('Klevu Search relies on cron for normal operations. Please check that you have Magento cron set up correctly. You can find instructions on how to set up Magento Cron <a target="_blank" href="https://help.klevu.com/support/solutions/articles/5000871452-setup-external-cron-job">here</a>.')
+            "message" => __(
+                'Klevu Search relies on cron for normal operations. ' .
+                'Please check that you have Magento cron set up correctly. ' .
+                'You can find instructions on how to set up Magento Cron ' .
+                '<a target="_blank" ' .
+                'href="https://help.klevu.com/support/solutions/articles/5000871452-setup-external-cron-job">here</a>.'
+            )
         ]);
 
         $now = date_create("now")->format("Y-m-d H:i:00");
@@ -52,18 +55,18 @@ class InstallSchema implements InstallSchemaInterface
         // table before recreating it
         $installer->run("DROP TABLE IF EXISTS `{$product_sync_table}`");
 
-        $installer->run("
-			CREATE TABLE IF NOT EXISTS `{$product_sync_table}` (
+        $installer->run(
+            "CREATE TABLE IF NOT EXISTS `{$product_sync_table}` (
 			  `product_id` int(10) unsigned NOT NULL,
 			  `parent_id` int(10) unsigned NOT NULL DEFAULT '0',
 			  `store_id` smallint(5) unsigned NOT NULL,
 			  `last_synced_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			  `type` varchar(255) NOT NULL DEFAULT 'products'
-			) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-		");
-        $installer->run("
-			ALTER TABLE `{$product_sync_table}` ADD PRIMARY KEY (`product_id`,`parent_id`,`store_id`,`type`);
-		");
+			) ENGINE=InnoDB DEFAULT CHARSET=utf8;"
+        );
+        $installer->run(
+            "ALTER TABLE `{$product_sync_table}` ADD PRIMARY KEY (`product_id`,`parent_id`,`store_id`,`type`);"
+        );
 
         $order_sync_table = $installer->getTable('klevu_order_sync');
 

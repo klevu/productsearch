@@ -26,12 +26,14 @@ $registry = $objectManager->get(Registry::class);
 $registry->unregister('isSecureArea');
 $registry->register('isSecureArea', true);
 
-foreach ($skusToDelete as $skuToDelete) {
+foreach ($skusToDelete as $sku) {
     try {
-        $product = $productRepository->get($skuToDelete);
-        $productRepository->delete($product);
+        $product = $productRepository->get($sku);
+        if ($product->getId()) {
+            $productRepository->delete($product);
+        }
     } catch (NoSuchEntityException $e) {
-        // This is fine
+        // this is fine
     }
 }
 

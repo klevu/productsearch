@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<listing xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Ui:etc/ui_configuration.xsd">
+    <argument name="data" xsi:type="array">
+        <item name="js_config" xsi:type="array">
+            <item name="provider" xsi:type="string">sync_product_listing.sync_product_listing_data_source</item>
+            <item name="deps" xsi:type="string">sync_product_listing.sync_product_listing_data_source</item>
+        </item>
+        <item name="spinner" xsi:type="string">sync_product_listing_columns</item>
+        <item name="acl" xsi:type="string">Klevu_Search::sync_product_grid</item>
+    </argument>
+
+    <dataSource name="sync_product_listing_data_source">
+        <argument name="dataProvider" xsi:type="configurableObject">
+            <argument name="class" xsi:type="string">Klevu\Search\Ui\DataProvider\Listing\Sync\Product\DataProvider</argument>
+            <argument name="name" xsi:type="string">sync_product_listing_data_source</argument>
+            <argument name="primaryFieldName" xsi:type="string">unique_entity_id</argument>
+            <argument name="requestFieldName" xsi:type="string">id</argument>
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="component" xsi:type="string">Magento_Ui/js/grid/provider</item>
+                    <item name="update_url" xsi:type="url" path="mui/index/render"/>
+                    <item name="storageConfig" xsi:type="array">
+                        <item name="indexField" xsi:type="string">unique_entity_id</item>
+                    </item>
+                    <item name="filter_url_params" xsi:type="array">
+                        <item name="store" xsi:type="string">*</item>
+                    </item>
+                </item>
+            </argument>
+        </argument>
+    </dataSource>
+
+    <listingToolbar name="listing_top">
+        <argument name="data" xsi:type="array">
+            <item name="config" xsi:type="array">
+                <item name="sticky" xsi:type="boolean">true</item>
+            </item>
+        </argument>
+        <bookmark name="bookmarks"/>
+        <columnsControls name="columns_controls"/>
+        <filters name="listing_filters" />
+        <paging name="listing_paging"/>
+        <massaction name="listing_massaction">
+            <action name="klevu_product_sync_now" class="Klevu\Search\Ui\Component\Control\SyncAction">
+                <argument name="data" xsi:type="array">
+                    <item name="config" xsi:type="array">
+                        <item name="type" xsi:type="string">klevu_product_sync_now</item>
+                        <item name="label" xsi:type="string" translate="true">Force Sync Now</item>
+                        <item name="url" xsi:type="url" path="klevu_search/syncproduct/masssync"/>
+                        <item name="confirm" xsi:type="array">
+                            <item name="title" xsi:type="string" translate="true">Force Sync Now</item>
+                            <item name="message" xsi:type="string" translate="true">Are you sure you want to force the sync of these items?</item>
+                        </item>
+                    </item>
+                </argument>
+            </action>
+            <action name="klevu_product_sync_schedule" class="Klevu\Search\Ui\Component\Control\SyncAction">
+                <argument name="data" xsi:type="array">
+                    <item name="config" xsi:type="array">
+                        <item name="type" xsi:type="string">klevu_product_sync_schedule</item>
+                        <item name="label" xsi:type="string" translate="true">Add to Next Scheduled Run</item>
+                        <item name="url" xsi:type="url" path="klevu_search/syncproduct/massschedule"/>
+                        <item name="confirm" xsi:type="array">
+                            <item name="title" xsi:type="string" translate="true">Schedule Sync</item>
+                            <item name="message" xsi:type="string" translate="true">Are you sure you want to schedule the sync of these items?</item>
+                        </item>
+                    </item>
+                </argument>
+            </action>
+        </massaction>
+    </listingToolbar>
+
+    <columns name="sync_product_listing_columns">
+        <selectionsColumn name="ids">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="sortOrder" xsi:type="string">1</item>
+                    <item name="component" xsi:type="string">Klevu_Search/js/grid/columns/multiselect</item>
+                    <item name="indexField" xsi:type="string">unique_entity_id</item>
+                </item>
+            </argument>
+        </selectionsColumn>
+        <column name="unique_entity_id">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="label" xsi:type="string" translate="true">ID</item>
+                    <item name="visible" xsi:type="boolean">false</item>
+                    <item name="sortable" xsi:type="boolean">false</item>
+                </item>
+            </argument>
+        </column>
+        <column name="sync_id">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="sortOrder" xsi:type="string">10</item>
+                    <item name="label" xsi:type="string" translate="true">Product ID (Parent ID)</item>
+                    <item name="visible" xsi:type="boolean">true</item>
+                    <item name="sortable" xsi:type="boolean">false</item>
+                </item>
+            </argument>
+        </column>
+        <column name="sku">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="sortOrder" xsi:type="string">20</item>
+                    <item name="label" xsi:type="string" translate="true">SKU</item>
+                    <item name="component" xsi:type="string">Magento_Ui/js/grid/columns/link</item>
+                    <item name="link" xsi:type="string">link</item>
+                    <item name="filter" xsi:type="string">text</item>
+                </item>
+            </argument>
+        </column>
+        <column name="name">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="sortOrder" xsi:type="string">40</item>
+                    <item name="label" xsi:type="string" translate="true">Product Name</item>
+                    <item name="visible" xsi:type="boolean">true</item>
+                    <item name="bodyTmpl" xsi:type="string">ui/grid/cells/text</item>
+                    <item name="filter" xsi:type="string">text</item>
+                </item>
+            </argument>
+        </column>
+        <column name="type_id">
+            <argument name="data" xsi:type="array">
+                <item name="options" xsi:type="object">Magento\Catalog\Model\Product\Type</item>
+                <item name="config" xsi:type="array">
+                    <item name="sortOrder" xsi:type="string">50</item>
+                    <item name="label" xsi:type="string" translate="true">Product Type</item>
+                    <item name="component" xsi:type="string">Magento_Ui/js/grid/columns/select</item>
+                    <item name="filter" xsi:type="string">select</item>
+                    <item name="dataType" xsi:type="string">select</item>
+                    <item name="visible" xsi:type="boolean">true</item>
+                </item>
+            </argument>
+        </column>
+        <column name="visibility">
+            <argument name="data" xsi:type="array">
+                <item name="options" xsi:type="object">Magento\Catalog\Model\Product\Visibility</item>
+                <item name="config" xsi:type="array">
+                    <item name="sortOrder" xsi:type="string">60</item>
+                    <item name="label" xsi:type="string" translate="true">Visibility</item>
+                    <item name="component" xsi:type="string">Magento_Ui/js/grid/columns/select</item>
+                    <item name="filter" xsi:type="string">select</item>
+                    <item name="dataType" xsi:type="string">select</item>
+                    <item name="visible" xsi:type="boolean">true</item>
+                </item>
+            </argument>
+        </column>
+        <column name="status">
+            <argument name="data" xsi:type="array">
+                <item name="options" xsi:type="object">Magento\Catalog\Model\Product\Attribute\Source\Status</item>
+                <item name="config" xsi:type="array">
+                    <item name="sortOrder" xsi:type="string">70</item>
+                    <item name="label" xsi:type="string" translate="true">Product Status</item>
+                    <item name="component" xsi:type="string">Magento_Ui/js/grid/columns/select</item>
+                    <item name="filter" xsi:type="string">select</item>
+                    <item name="dataType" xsi:type="string">select</item>
+                    <item name="visible" xsi:type="boolean">true</item>
+                </item>
+            </argument>
+        </column>
+        <column name="store_id" class="Magento\Store\Ui\Component\Listing\Column\Store">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="sortOrder" xsi:type="string">70</item>
+                    <item name="label" xsi:type="string" translate="true">Store View</item>
+                    <item name="bodyTmpl" xsi:type="string">ui/grid/cells/html</item>
+                    <item name="dataType" xsi:type="string">select</item>
+                    <item name="visible" xsi:type="boolean">true</item>
+                    <item name="sortable" xsi:type="boolean">false</item>
+                </item>
+            </argument>
+        </column>
+        <column name="updated_at" class="Magento\Ui\Component\Listing\Columns\Date">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="sortOrder" xsi:type="string">90</item>
+                    <item name="label" xsi:type="string" translate="true">Last Updated (in Magento)</item>
+                    <item name="component" xsi:type="string">Magento_Ui/js/grid/columns/date</item>
+                    <item name="dataType" xsi:type="string">date</item>
+                    <item name="visible" xsi:type="boolean">true</item>
+                </item>
+            </argument>
+        </column>
+        <column name="last_synced_at" class="Magento\Ui\Component\Listing\Columns\Date">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="sortOrder" xsi:type="string">100</item>
+                    <item name="label" xsi:type="string" translate="true">Last Klevu Sync Requested On</item>
+                    <item name="component" xsi:type="string">Magento_Ui/js/grid/columns/date</item>
+                    <item name="dataType" xsi:type="string">date</item>
+                    <item name="visible" xsi:type="boolean">true</item>
+                </item>
+            </argument>
+        </column>
+        <column name="next_action">
+            <argument name="data" xsi:type="array">
+                <item name="options" xsi:type="object">Klevu\Search\Model\Source\NextAction</item>
+                <item name="config" xsi:type="array">
+                    <item name="sortOrder" xsi:type="string">110</item>
+                    <item name="label" xsi:type="string" translate="true">Action On Next Schedule</item>
+                    <item name="component" xsi:type="string">Magento_Ui/js/grid/columns/select</item>
+                    <item name="dataType" xsi:type="string">select</item>
+                    <item name="visible" xsi:type="boolean">true</item>
+                    <item name="sortable" xsi:type="boolean">false</item>
+                </item>
+            </argument>
+        </column>
+        <actionsColumn name="actions" class="Klevu\Search\Ui\Component\Listing\Columns\SyncActions">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="sortOrder" xsi:type="string">200</item>
+                    <item name="label" xsi:type="string" translate="true">Action</item>
+                    <item name="indexField" xsi:type="string">unique_entity_id</item>
+                </item>
+            </argument>
+        </actionsColumn>
+    </columns>
+
+    <container>
+        <modal name="sync_product_history_modal">
+            <fieldset name="history">
+                <argument name="data" xsi:type="array">
+                    <item name="config" xsi:type="array">
+                        <item name="collapsible" xsi:type="boolean">false</item>
+                        <item name="label" xsi:type="string" translate="true">Klevu Product Sync History</item>
+                        <item name="sortOrder" xsi:type="number">10</item>
+                    </item>
+                </argument>
+                <insertListing name="sync_product_history_listing">
+                    <argument name="data" xsi:type="array">
+                        <item name="config" xsi:type="array">
+                            <item name="component" xsi:type="string">Magento_Ui/js/form/components/insert-listing</item>
+                            <item name="autoRender" xsi:type="boolean">false</item>
+                            <item name="ns" xsi:type="string">sync_product_history_listing</item>
+                            <item name="externalProvider" xsi:type="string">${ $.ns }.sync_product_history_listing_data_source</item>
+                        </item>
+                    </argument>
+                </insertListing>
+            </fieldset>
+        </modal>
+    </container>
+</listing>

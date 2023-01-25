@@ -8,25 +8,28 @@ use Magento\Store\Model\Store;
 interface MagentoProductActionsInterface
 {
     /**
-     * @param StoreInterface $store
+     * @param StoreInterface|null $store
+     * @param array|null $productIdsToUpdate
      *
      * @return mixed
      */
-    public function updateProductCollection($store = null);
+    public function updateProductCollection($store = null, $productIdsToUpdate = []);
 
     /**
-     * @param StoreInterface $store
+     * @param StoreInterface|null $store
+     * @param array|null $productIdsToAdd
      *
      * @return mixed
      */
-    public function addProductCollection($store = null);
+    public function addProductCollection($store = null, $productIdsToAdd = []);
 
     /**
-     * @param StoreInterface $store
+     * @param StoreInterface|null $store
+     * @param array|null $productIdsToDelete
      *
      * @return mixed
      */
-    public function deleteProductCollection($store = null);
+    public function deleteProductCollection($store = null, $productIdsToDelete = []);
 
     /**
      * @param StoreInterface $store
@@ -134,7 +137,7 @@ interface MagentoProductActionsInterface
     /**
      * Update all product ids rating attribute
      *
-     * @param string $store
+     * @param StoreInterface $store
      *
      * @return $this
      */
@@ -159,7 +162,7 @@ interface MagentoProductActionsInterface
     public function markRecordIntoQueue($productIds, $recordType, $stores);
 
     /**
-     * Returns parent relations data by child ids
+     * Returns the parent relations by child id
      *
      * @param array $ids
      * @param int $storeId

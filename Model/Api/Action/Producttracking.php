@@ -2,28 +2,47 @@
 
 namespace Klevu\Search\Model\Api\Action;
 
-class Producttracking extends \Klevu\Search\Model\Api\Actionall
+use Klevu\Search\Helper\Api as ApiHelper;
+use Klevu\Search\Helper\Config as ConfigHelper;
+use Klevu\Search\Model\Api\Actionall;
+use Klevu\Search\Model\Api\Request\Post as PostRequest;
+use Klevu\Search\Model\Api\Response;
+use Klevu\Search\Model\Api\Response\Data as ResponseData;
+use Klevu\Search\Model\Api\Response\Invalid as InvalidResponse;
+use Magento\Store\Api\Data\StoreInterface;
+use Magento\Store\Model\StoreManagerInterface;
+
+class Producttracking extends Actionall
 {
+    const ENDPOINT = "/analytics/productTracking";
+    const METHOD = "POST";
+    const DEFAULT_REQUEST_MODEL = PostRequest::class;
+    const DEFAULT_RESPONSE_MODEL = ResponseData::class;
+
     /**
-     * @var \Klevu\Search\Model\Api\Response\Invalid
+     * @var InvalidResponse
      */
     protected $_apiResponseInvalid;
-
     /**
-     * @var \Klevu\Search\Helper\Api
+     * @var ApiHelper
      */
     protected $_searchHelperApi;
-
     /**
-     * @var \Klevu\Search\Helper\Config
+     * @var ConfigHelper
      */
     protected $_searchHelperConfig;
 
+    /**
+     * @param InvalidResponse $apiResponseInvalid
+     * @param ApiHelper $searchHelperApi
+     * @param StoreManagerInterface $storeModelStoreManagerInterface
+     * @param ConfigHelper $searchHelperConfig
+     */
     public function __construct(
-        \Klevu\Search\Model\Api\Response\Invalid $apiResponseInvalid,
-        \Klevu\Search\Helper\Api $searchHelperApi,
-        \Magento\Store\Model\StoreManagerInterface $storeModelStoreManagerInterface,
-        \Klevu\Search\Helper\Config $searchHelperConfig
+        InvalidResponse $apiResponseInvalid,
+        ApiHelper $searchHelperApi,
+        StoreManagerInterface $storeModelStoreManagerInterface,
+        ConfigHelper $searchHelperConfig
     ) {
         $this->_apiResponseInvalid = $apiResponseInvalid;
         $this->_searchHelperApi = $searchHelperApi;
@@ -31,14 +50,8 @@ class Producttracking extends \Klevu\Search\Model\Api\Actionall
         $this->_storeModelStoreManagerInterface = $storeModelStoreManagerInterface;
     }
 
-    const ENDPOINT = "/analytics/productTracking";
-    const METHOD   = "POST";
-
-    const DEFAULT_REQUEST_MODEL = "Klevu\Search\Model\Api\Request\Post";
-    const DEFAULT_RESPONSE_MODEL = "Klevu\Search\Model\Api\Response\Data";
-
     /**
-     * @param $parameters
+     * @param array $parameters
      *
      * @return array|bool
      */
@@ -72,9 +85,10 @@ class Producttracking extends \Klevu\Search\Model\Api\Actionall
             $errors["klevu_currency"] = "Missing currency.";
         }
 
-        if (count($errors) == 0) {
+        if (count($errors) === 0) {
             return true;
         }
+
         return $errors;
     }
 
@@ -83,7 +97,8 @@ class Producttracking extends \Klevu\Search\Model\Api\Actionall
      *
      * @param array $parameters
      *
-     * @return \Klevu\Search\Model\Api\Response
+     * @return Response
+     * @throws \Exception
      */
     public function execute($parameters = [])
     {
@@ -91,27 +106,33 @@ class Producttracking extends \Klevu\Search\Model\Api\Actionall
         if ($validation_result !== true) {
             return $this->_apiResponseInvalid->setErrors($validation_result);
         }
-
-        $request = $this->getRequest();
-
+        $store = $this->getStore();
         $endpoint = $this->buildEndpoint(
             static::ENDPOINT,
-            $this->getStore(),
-            $this->_searchHelperConfig->getAnalyticsUrl()
+            $store,
+            $this->_searchHelperConfig->getAnalyticsUrl($store)
         );
 
-        $request
-            ->setResponseModel($this->getResponse())
-            ->setEndpoint($endpoint)
-            ->setMethod(static::METHOD)
-            ->setData($parameters);
+        $request = $this->getRequest();
+        $request->setResponseModel($this->getResponse());
+        $request->setEndpoint($endpoint);
+        $request->setMethod(static::METHOD);
+        $request->setData($parameters);
 
         return $request->send();
     }
-    
+
+    /**
+     * @param string $endpoint
+     * @param StoreInterface|string|int|null $store
+     * @param string $hostname
+     *
+     * @return string
+     */
     public function buildEndpoint($endpoint, $store = null, $hostname = null)
     {
-       
-        return static::ENDPOINT_PROTOCOL . (($hostname) ? $hostname : $this->_searchHelperConfig->getHostname($store)) . $endpoint;
+        return static::ENDPOINT_PROTOCOL .
+            ($hostname ?: $this->_searchHelperConfig->getHostname($store)) .
+            $endpoint;
     }
 }

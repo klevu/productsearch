@@ -166,9 +166,9 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
      * @param \Magento\Framework\Model\ResourceModel\AbstractResource $resource
      * @param \Magento\Framework\Data\Collection\AbstractDb $resourceCollection
      * @param array $data
-     * @param KlevuSyncRepositoryInterface $klevuSyncRepository
-     * @param MagentoProductSyncRepositoryInterface $magentoProductRepository
-     * @param UpdateAllRatingsInterface $updateAllRatings
+     * @param KlevuSyncRepositoryInterface|null $klevuSyncRepository
+     * @param MagentoProductSyncRepositoryInterface|null $magentoProductRepository
+     * @param UpdateAllRatingsInterface|null $updateAllRatings
      */
     public function __construct(
         \Magento\Framework\Model\Context $mcontext,
@@ -227,11 +227,12 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
     }
 
     /**
-     * @param StoreInterface $store
+     * @param StoreInterface|null $store
+     * @param array|null $productIdsToUpdate
      *
      * @return array
      */
-    public function updateProductCollection($store = null)
+    public function updateProductCollection($store = null, $productIdsToUpdate = [])
     {
         if (!$store) {
             try {
@@ -253,7 +254,11 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
         $lastEntityId = 0;
         $i = 0;
         while ($lastEntityId < $maxEntityId) {
-            $productsToSync = $this->klevuSyncRepository->getProductIdsForUpdate($store, [], $lastEntityId);
+            $productsToSync = $this->klevuSyncRepository->getProductIdsForUpdate(
+                $store,
+                $productIdsToUpdate,
+                $lastEntityId
+            );
             if (!$productsToSync || ++$i >= static::MAX_ITERATIONS) {
                 break;
             }
@@ -271,11 +276,12 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
     }
 
     /**
-     * @param StoreInterface $store
+     * @param StoreInterface|null $store
+     * @param array|null $productIdsToAdd
      *
      * @return array
      */
-    public function addProductCollection($store = null)
+    public function addProductCollection($store = null, $productIdsToAdd = [])
     {
         if (!$store) {
             try {
@@ -314,10 +320,10 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
         $i = 0;
         while ($lastProductEntityId < $maxEntityId || $lastChildEntityId < $maxEntityId) {
             $productIds = ($lastProductEntityId < $maxEntityId) ?
-                $this->getMagentoProductIds($productCollection, $store, [], $lastProductEntityId) :
+                $this->getMagentoProductIds($productCollection, $store, $productIdsToAdd, $lastProductEntityId) :
                 [];
             $childProductIds = ($lastChildEntityId < $maxEntityId) ?
-                $this->getMagentoProductIds($childProductCollection, $store, [], $lastChildEntityId) :
+                $this->getMagentoProductIds($childProductCollection, $store, $productIdsToAdd, $lastChildEntityId) :
                 [];
 
             if ((!$productIds && !$childProductIds) || ++$i >= static::MAX_ITERATIONS) {
@@ -354,10 +360,11 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
 
     /**
      * @param StoreInterface|null $store
+     * @param array|null $productIdsToDelete
      *
      * @return array
      */
-    public function deleteProductCollection($store = null)
+    public function deleteProductCollection($store = null, $productIdsToDelete = [])
     {
         if (!$store) {
             try {
@@ -386,7 +393,7 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
         $i = 0;
         while ($lastEntityId <  $maxEntityId) {
             // getKlevuProductCollection method has to remain in this class for backwards compatibility
-            $klevuProductIds = $this->getKlevuProductCollection($store, [], $lastEntityId);
+            $klevuProductIds = $this->getKlevuProductCollection($store, $productIdsToDelete, $lastEntityId);
             if (!$klevuProductIds || ++$i >= static::MAX_ITERATIONS) {
                 break;
             }

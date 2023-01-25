@@ -34,7 +34,6 @@ class ReviewCount extends AbstractModifier
         ArrayManager $arrayManager,
         RequestInterface $request,
         ScopeConfigInterface $scopeConfig
-
     ) {
         $this->arrayManager = $arrayManager;
         $this->request = $request;

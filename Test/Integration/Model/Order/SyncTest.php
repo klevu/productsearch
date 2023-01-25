@@ -398,6 +398,8 @@ class SyncTest extends TestCase
             'getOrderSelectMaxLimit' => $mockGetOrderSelectMaxLimit
         ]);
         $orderSyncModel->run();
+
+        static::loadAllFixturesRollback();
     }
 
     /**
@@ -445,13 +447,15 @@ class SyncTest extends TestCase
             'klevu_salePrice',
             'klevu_currency',
             'klevu_shopperIP',
-            'Klevu_sessionId',
+            'klevu_sessionId',
             'klevu_orderDate',
             'klevu_emailId',
             'klevu_storeTimezone',
-            'Klevu_clientIp',
+            'klevu_clientIp',
             'klevu_checkoutDate',
             'klevu_productPosition',
+            'klevu_orderId',
+            'klevu_orderLineId',
         ];
         $producttrackingActionMock
             ->method('execute')
@@ -497,18 +501,22 @@ class SyncTest extends TestCase
         $expectedArrayKeys = [
             'klevu_apiKey',
             'klevu_type',
+            'klevu_orderId',
+            'klevu_orderLineId',
             'klevu_productId',
             'klevu_unit',
             'klevu_salePrice',
             'klevu_currency',
             'klevu_shopperIP',
-            'Klevu_sessionId',
+            'klevu_sessionId',
             'klevu_orderDate',
             'klevu_emailId',
             'klevu_storeTimezone',
-            'Klevu_clientIp',
+            'klevu_clientIp',
             'klevu_checkoutDate',
             'klevu_productPosition',
+            'klevu_orderId',
+            'klevu_orderLineId',
         ];
         $producttrackingActionMock
             ->expects($this->any())

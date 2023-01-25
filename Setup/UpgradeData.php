@@ -1,4 +1,6 @@
-<?php
+<?php // phpcs:disable Magento2.Legacy.InstallUpgrade.ObsoleteUpgradeDataScript
+
+// phpcs:disable Magento2.Legacy.InstallUpgrade.ObsoleteUpgradeDataScript
 
 namespace Klevu\Search\Setup;
 
