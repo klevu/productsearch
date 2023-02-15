@@ -1001,7 +1001,7 @@ class Sync extends AbstractModel
 
     /**
      * @param OrderItemInterface $orderItem
-     * @param array $klevuData
+     * @param string[] $klevuData
      *
      * @return void
      *

@@ -13,6 +13,7 @@ use Klevu\Search\Model\Product\Sync\ResourceModel\History as SyncHistoryResource
 use Klevu\Search\Model\Product\Sync\ResourceModel\History\Collection as SyncHistoryCollection;
 use Klevu\Search\Model\Product\Sync\ResourceModel\History\CollectionFactory as SyncHistoryCollectionFactory;
 use Klevu\Search\Model\Source\NextAction;
+use Magento\Framework\Api\Filter;
 use Magento\Framework\Api\SearchCriteriaInterface;
 use Magento\Framework\Api\SearchResultsFactory;
 use Magento\Framework\Api\SearchResultsInterface;
@@ -213,12 +214,18 @@ class KlevuProductSyncHistoryRepository implements KlevuProductSyncHistoryReposi
 
         foreach ($searchCriteria->getFilterGroups() as $filterGroup) {
             foreach ($filterGroup->getFilters() as $filter) {
+                if (!($filter instanceof Filter)) {
+                    continue;
+                }
                 $conditionType = $filter->getConditionType() ?: 'eq';
                 $collection->addFieldToFilter($filter->getField(), [$conditionType => $filter->getValue()]);
             }
         }
         /** @var SortOrder $sortOrder */
         foreach ((array)$searchCriteria->getSortOrders() as $sortOrder) {
+            if (!($sortOrder instanceof SortOrder)) {
+                continue;
+            }
             $field = $sortOrder->getField();
             $direction = ($sortOrder->getDirection() === SortOrder::SORT_ASC)
                 ? SortOrder::SORT_ASC
