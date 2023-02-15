@@ -1,6 +1,6 @@
 <?php
 
-namespace Klevu\Search\Test\Integration\Model\Config;
+namespace Klevu\Search\Test\Integration\Plugin\Model\Config;
 
 use Klevu\Search\Api\Service\Account\UpdateEndpointsInterface;
 use Klevu\Search\Plugin\Model\Config\UpdateApiEndpointsOnApiKeyChange;
@@ -288,6 +288,49 @@ class UpdateApiEndpointsOnApiKeyChangePluginTest extends TestCase
         }
         $this->assertArrayHasKey(UpdateApiEndpointsOnApiKeyChange::GROUP_AUTHENTICATION_KEYS, $groups);
         $this->assertArrayNotHasKey(UpdateApiEndpointsOnApiKeyChange::GROUP_ENDPOINTS, $groups);
+
+        static::loadWebsiteFixturesRollback();
+    }
+
+    /**
+     * @magentoDbIsolation disabled
+     * @magentoDataFixture loadWebsiteFixtures
+     * @magentoConfigFixture default_store klevu_search/general/js_api_key klevu-js-api-key
+     * @magentoConfigFixture default_store klevu_search/general/rest_api_key klevu-rest-api-key
+     * @magentoConfigFixture klevu_test_store_1_store klevu_search/general/js_api_key klevu-js-api-key
+     * @magentoConfigFixture klevu_test_store_1_store klevu_search/general/rest_api_key klevu-rest-api-key
+     */
+    public function testEndpointsAreNotUpdatedWhenNotInStoreScope()
+    {
+        $this->setupPhp5();
+        $website = $this->getWebsite();
+
+        $configData = [
+            'section' => UpdateApiEndpointsOnApiKeyChange::SECTION_KLEVU_INTEGRATION,
+            'website' => $website->getId(),
+            'store' => null
+        ];
+
+        $configModel = $this->objectManager->create(Config::class, ['data' => $configData]);
+        $configModel->setStore(null);
+
+        $mockAccountDetailsFactory = $this->getMockBuilder(AccountDetailsFactory::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+        $mockAccountDetailsFactory->expects($this->never())
+            ->method('create');
+
+        $mockUpdateEndpoints = $this->getMockBuilder(UpdateEndpointsInterface::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+        $mockUpdateEndpoints->expects($this->never())
+            ->method('execute');
+
+        $plugin = $this->objectManager->create(UpdateApiEndpointsOnApiKeyChange::class, [
+            'updateEndpoints' => $mockUpdateEndpoints,
+            'accountDetailsFactory' => $mockAccountDetailsFactory
+        ]);
+        $plugin->beforeSave($configModel);
 
         static::loadWebsiteFixturesRollback();
     }

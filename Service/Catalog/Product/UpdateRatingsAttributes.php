@@ -2,6 +2,7 @@
 
 namespace Klevu\Search\Service\Catalog\Product;
 
+use Exception;
 use Klevu\Search\Api\Service\Catalog\Product\IsRatingAttributeAvailableInterface;
 use Klevu\Search\Api\Service\Catalog\Product\IsRatingCountAttributeAvailableInterface;
 use Klevu\Search\Api\Service\Catalog\Product\Review\RatingDataMapperInterface;
@@ -99,13 +100,25 @@ class UpdateRatingsAttributes implements UpdateRatingsAttributesInterface
 
             return;
         }
-        $this->updateRatingAttributes($rating);
-        $this->logger->debug(
-            sprintf("Rating is updated for product id %s", $rating[RatingDataMapper::RATING_PRODUCT_ID]),
-            [
-                'rating' => $rating,
-            ]
-        );
+        try {
+            $this->updateRatingAttributes($rating);
+            $this->logger->debug(
+                sprintf("Rating is updated for product id %s", $rating[RatingDataMapper::RATING_PRODUCT_ID]),
+                [
+                    'rating' => $rating,
+                ]
+            );
+        } catch (Exception $exception) {
+            $this->logger->error(
+                sprintf(
+                    'There was an error updating the the rating for product id %s',
+                    $rating[RatingDataMapper::RATING_PRODUCT_ID]
+                ),
+                [
+                    'rating' => $rating,
+                ]
+            );
+        }
     }
 
     /**
@@ -129,6 +142,7 @@ class UpdateRatingsAttributes implements UpdateRatingsAttributesInterface
      * @param array $rating
      *
      * @return void
+     * @throws Exception
      */
     private function updateRatingAttributes(array $rating)
     {

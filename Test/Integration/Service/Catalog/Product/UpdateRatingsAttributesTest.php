@@ -7,6 +7,8 @@ use Klevu\Search\Api\Service\Catalog\Product\UpdateRatingsAttributesInterface;
 use Klevu\Search\Exception\Catalog\Product\Review\InvalidRatingDataMappingKey;
 use Klevu\Search\Service\Catalog\Product\Review\RatingDataMapper;
 use Klevu\Search\Service\Catalog\Product\UpdateRatingsAttributes;
+use Magento\Catalog\Model\Product\Action as ProductAction;
+use Magento\Catalog\Model\Product\ActionFactory;
 use Magento\TestFramework\ObjectManager;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -98,6 +100,43 @@ class UpdateRatingsAttributesTest extends TestCase
         }
 
         $updateRatingsAttributesService = $this->objectManager->create(UpdateRatingsAttributes::class, [
+            'logger' => $this->mockLogger
+        ]);
+        $updateRatingsAttributesService->execute($ratings);
+    }
+
+    public function testErrorIsLoggedIfUpdateRatingThrowsException()
+    {
+        $this->setUpPhp5();
+        $ratings = [
+            [
+                RatingDataMapper::RATING_PRODUCT_ID => 1,
+                RatingDataMapper::RATING_SUM => 240,
+                RatingDataMapper::RATING_COUNT => 3,
+                RatingDataMapper::RATING_AVERAGE => 80.0,
+                RatingDataMapper::RATING_STORE => 1,
+                RatingDataMapper::REVIEW_COUNT => 10,
+            ]
+        ];
+
+        $exception = $this->objectManager->create(\Exception::class, [
+            'phrase' => __('Nope.')
+        ]);
+
+        $mockAction = $this->getMockBuilder(ProductAction::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+        $mockAction->expects($this->once())->method('updateAttributes')->willThrowException($exception);
+
+        $mockActionFactory = $this->getMockBuilder(ActionFactory::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+        $mockActionFactory->expects($this->once())->method('create')->willReturn($mockAction);
+
+        $this->mockLogger->expects($this->once())->method('error');
+
+        $updateRatingsAttributesService = $this->objectManager->create(UpdateRatingsAttributes::class, [
+            'actionFactory' => $mockActionFactory,
             'logger' => $this->mockLogger
         ]);
         $updateRatingsAttributesService->execute($ratings);
