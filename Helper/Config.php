@@ -28,7 +28,9 @@ use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\App\State as AppState;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
-use \Magento\Framework\UrlInterface;
+use Magento\Framework\Image\Adapter\AdapterInterface as ImageAdapterInterface;
+use Magento\Framework\Image\Adapter\Config as ImageAdapterConfig;
+use Magento\Framework\UrlInterface;
 use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\Store;
@@ -1889,5 +1891,18 @@ class Config extends AbstractHelper
             ScopeInterface::SCOPE_STORE,
             $storeId
         );
+    }
+
+    /**
+     * @return string
+     */
+    public function getImageProcessor()
+    {
+        $imageAdapter = $this->_appConfigScopeConfigInterface->getValue(
+            ImageAdapterConfig::XML_PATH_IMAGE_ADAPTER,
+            ScopeConfigInterface::SCOPE_TYPE_DEFAULT
+        );
+
+        return $imageAdapter ?: ImageAdapterInterface::ADAPTER_GD2;
     }
 }

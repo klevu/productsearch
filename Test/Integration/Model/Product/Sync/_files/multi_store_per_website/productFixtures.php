@@ -1,16 +1,20 @@
 <?php
 
-use Magento\TestFramework\Helper\Bootstrap;
 use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\Catalog\Model\Product;
 use Magento\Catalog\Model\Product\Attribute\Source\Status;
 use Magento\Catalog\Model\Product\Visibility;
 use Magento\Indexer\Model\IndexerFactory;
+use Magento\Store\Model\StoreManagerInterface;
 use Magento\Store\Model\Website;
+use Magento\TestFramework\Helper\Bootstrap;
 
-include __DIR__ . '/productFixtures_rollback.php';
+include "productFixtures_rollback.php";
 
 $objectManager = Bootstrap::getObjectManager();
+
+/** @var StoreManagerInterface $storeManager */
+$storeManager = $objectManager->get(StoreManagerInterface::class);
 
 /** @var Website $baseWebsite */
 $baseWebsite = $objectManager->create(Website::class);
@@ -20,40 +24,39 @@ $baseWebsite->load('base', 'code');
 $website1 = $objectManager->create(Website::class);
 $website1->load('klevu_test_website_1', 'code');
 
-/** @var Website $website2 */
-$website2 = $objectManager->create(Website::class);
-$website2->load('klevu_test_website_2', 'code');
+$fixtures = [];
 
-$fixtures = [
-    [
+$stores = $website1->getStores();
+foreach ($stores as $store) {
+    $fixtures[] = [
         'sku' => 'klevu_simple_1',
-        'name' => '[Klevu] Simple Product 1',
+        'name' => 'Name ' . $store->getName(),
+        'description' => 'Description ' . $store->getName(),
+        'short_description' => 'Short Description ' . $store->getName(),
         'type_id' => Product\Type::TYPE_SIMPLE,
-        'description' => '[Klevu Test Fixtures] Simple product 1',
-        'short_description' => '[Klevu Test Fixtures] Simple product 1',
         'attribute_set_id' => 4,
         'website_ids' => array_filter([
             $baseWebsite->getId(),
             $website1->getId(),
-            $website2->getId(),
         ]),
+        'store_id' => $store->getId(),
         'price' => 10.00,
         'special_price' => null,
         'weight' => 1,
         'tax_class_id' => 2,
-        'meta_title' => '[Klevu] Simple Product 1',
-        'meta_description' => '[Klevu Test Fixtures] Simple product 1',
+        'meta_title' => '[Klevu] Simple Product 1 ' . $store->getName(),
+        'meta_description' => '[Klevu Test Fixtures] Simple product 1 ' . $store->getName(),
         'visibility' => Visibility::VISIBILITY_BOTH,
         'status' => Status::STATUS_ENABLED,
         'stock_data' => [
-            'use_config_manage_stock'   => 1,
-            'qty'                       => 100,
-            'is_qty_decimal'            => 0,
-            'is_in_stock'               => 1,
+            'use_config_manage_stock' => 1,
+            'qty' => 100,
+            'is_qty_decimal' => 0,
+            'is_in_stock' => 1,
         ],
-        'url_key' => 'klevu_simple_1_' . crc32(rand()),
-    ]
-];
+        'url_key' => 'klevu_simple_1_' . $store->getCode() . crc32(rand()),
+    ];
+}
 
 /** @var ProductRepositoryInterface $productRepository */
 $productRepository = $objectManager->create(ProductRepositoryInterface::class);
@@ -63,6 +66,9 @@ foreach ($fixtures as $fixture) {
     $product = $objectManager->create(Product::class);
     $product->isObjectNew(true);
     $product->addData($fixture);
+    if (isset($product['store_id'])) {
+        $storeManager->setCurrentStore($product['store_id']);
+    }
 
     $productRepository->save($product);
 }

@@ -196,12 +196,20 @@ class LoadAttribute extends AbstractModel implements LoadAttributeInterface
                     $parent = ((int)$product['parent_id'] !== 0) ? $data->getItemById($product['parent_id']) : null;
                     $this->logLoadByMessage($product, true);
                 } else {
-                    $origItem = $this->productRepository->getById($product['product_id']);
+                    $origItem = $this->productRepository->getById(
+                        $product['product_id'],
+                        false,
+                        $store->getId()
+                    );
                     $item = clone $origItem;
                     $item->setData('customer_group_id', CustomerGroup::NOT_LOGGED_IN_ID);
                     $parent = null;
                     if ((int)$product['parent_id'] !== 0) {
-                        $origParent = $this->productRepository->getById($product['parent_id']);
+                        $origParent = $this->productRepository->getById(
+                            $product['parent_id'],
+                            false,
+                            $store->getId()
+                        );
                         $parent = clone $origParent;
                         $parent->setData('customer_group_id', CustomerGroup::NOT_LOGGED_IN_ID);
                     }
