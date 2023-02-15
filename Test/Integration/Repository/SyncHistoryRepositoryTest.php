@@ -1,4 +1,5 @@
 <?php
+// phpcs:disable PSR1.Methods.CamelCapsMethodName.NotCamelCaps
 
 namespace Klevu\Search\Test\Integration\Repository;
 
@@ -15,6 +16,8 @@ use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\Framework\Api\SearchCriteriaBuilder;
 use Magento\Framework\Api\SearchResultsInterface;
+use Magento\Framework\Api\SortOrder;
+use Magento\Framework\Api\SortOrderBuilder;
 use Magento\Framework\Exception\AlreadyExistsException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Store\Api\Data\StoreInterface;
@@ -493,11 +496,92 @@ class SyncHistoryRepositoryTest extends TestCase
         ];
     }
 
+    /**
+     * @magentoDbIsolation disabled
+     * @magentoDataFixture loadWebsiteFixtures
+     * @magentoDataFixture loadSimpleProductFixtures
+     * @magentoDataFixture loadSyncHistoryFixtures
+     */
+    public function testGetList_IgnoresIncorrectlySet_SortByValues()
+    {
+        $this->setUpPhp5();
+
+        $store = $this->getStore('klevu_test_store_1');
+        $product = $this->getProduct('klevu_simple_1');
+
+        $searchCriteriaBuilder = $this->objectManager->get(SearchCriteriaBuilder::class);
+        $searchCriteriaBuilder->addFilter(History::FIELD_PRODUCT_ID, $product->getId(), 'eq');
+        $searchCriteriaBuilder->addFilter(History::FIELD_STORE_ID, $store->getId(), 'eq');
+        $searchCriteria = $searchCriteriaBuilder->create();
+
+        $searchCriteria->setPageSize(1);
+
+        $sortOrderBuilder = $this->objectManager->get(SortOrderBuilder::class);
+        $sortOrderBuilder->setField(HistoryResourceModel::ENTITY_ID);
+        $sortOrderBuilder->setDirection(SortOrder::SORT_DESC);
+        $sortOrder = $sortOrderBuilder->create();
+        $searchCriteria->setSortOrders([
+            $sortOrder,
+            'string'
+        ]);
+
+        $syncRepository = $this->instantiateHistoryRepository();
+        $result = $syncRepository->getList($searchCriteria);
+
+        $this->assertInstanceOf(SearchResultsInterface::class, $result);
+        $this->assertSame(5, $result->getTotalCount());
+        $this->assertSame($searchCriteria, $result->getSearchCriteria());
+        $items = $result->getItems();
+        $keys = array_keys($items);
+        $this->assertArrayHasKey($keys[0], $items);
+        $item = $items[$keys[0]];
+        $this->assertInstanceOf(HistoryInterface::class, $item);
+        $this->assertSame((int)$product->getId(), (int)$item->getProductId());
+        $this->assertSame((int)$store->getId(), (int)$item->getStoreId());
+        $this->assertSame(0, (int)$item->getParentId());
+    }
+
+    /**
+     * @magentoDbIsolation disabled
+     * @magentoDataFixture loadWebsiteFixtures
+     * @magentoDataFixture loadSimpleProductFixtures
+     * @magentoDataFixture loadSyncHistoryFixtures
+     */
+    public function testGetList_IgnoresIncorrectlySet_Filters()
+    {
+        $this->setUpPhp5();
+
+        $store = $this->getStore('klevu_test_store_1');
+        $product = $this->getProduct('klevu_simple_1');
+
+        $searchCriteriaBuilder = $this->objectManager->get(SearchCriteriaBuilder::class);
+        $searchCriteriaBuilder->addFilter(History::FIELD_PRODUCT_ID, $product->getId(), 'eq');
+        $searchCriteriaBuilder->addFilter(History::FIELD_STORE_ID, $store->getId(), 'eq');
+        $searchCriteriaBuilder->addFilters([
+            'string'
+        ]);
+        $searchCriteria = $searchCriteriaBuilder->create();
+
+        $syncRepository = $this->instantiateHistoryRepository();
+        $result = $syncRepository->getList($searchCriteria);
+
+        $this->assertInstanceOf(SearchResultsInterface::class, $result);
+        $this->assertSame(5, $result->getTotalCount());
+        $this->assertSame($searchCriteria, $result->getSearchCriteria());
+        $items = $result->getItems();
+        $keys = array_keys($items);
+        $this->assertArrayHasKey($keys[0], $items);
+        $item = $items[$keys[0]];
+        $this->assertInstanceOf(HistoryInterface::class, $item);
+        $this->assertSame((int)$product->getId(), (int)$item->getProductId());
+        $this->assertSame((int)$store->getId(), (int)$item->getStoreId());
+        $this->assertSame(0, (int)$item->getParentId());
+    }
+
     /*
      * @return void
      * @todo Move to setUp when PHP 5.x is no longer supported
      */
-
     private function setupPhp5()
     {
         $this->objectManager = ObjectManager::getInstance();

@@ -49,6 +49,13 @@ class UpdateApiEndpointsOnApiKeyChange
      */
     private $accountDetailsFactory;
 
+    /**
+     * @param UpdateEndpointsInterface $updateEndpoints
+     * @param GetAccountDetailsInterface $getAccountDetails
+     * @param StoreManagerInterface $storeManager
+     * @param ScopeConfigInterface $scopeConfig
+     * @param AccountDetailsFactory $accountDetailsFactory
+     */
     public function __construct(
         UpdateEndpointsInterface $updateEndpoints,
         GetAccountDetailsInterface $getAccountDetails,
@@ -74,9 +81,14 @@ class UpdateApiEndpointsOnApiKeyChange
             return [];
         }
         try {
-            $store = $this->storeManager->getStore($subject->getStore());
+            $storeId = $subject->getStore();
+            if (null === $storeId) {
+                return [];
+            }
+            $store = $this->storeManager->getStore($storeId);
         } catch (\Exception $exception) {
             $this->removeApiDataFromSave($subject);
+
             return [];
         }
         if (!$this->haveApiKeysChanged($store, $apiKeys)) {
@@ -106,12 +118,15 @@ class UpdateApiEndpointsOnApiKeyChange
         }
         $groups = $config->getData('groups');
 
-        $formJsApiKey = isset($groups[static::GROUP_AUTHENTICATION_KEYS]['fields'][static::CONFIG_FORM_JS_API_KEY]['value']) ?
-            $groups[static::GROUP_AUTHENTICATION_KEYS]['fields'][static::CONFIG_FORM_JS_API_KEY]['value'] :
-            null;
-        $formRestApiKey = isset($groups[static::GROUP_AUTHENTICATION_KEYS]['fields'][static::CONFIG_FORM_REST_API_KEY]['value']) ?
-            $groups[static::GROUP_AUTHENTICATION_KEYS]['fields'][static::CONFIG_FORM_REST_API_KEY]['value'] :
-            null;
+        // phpcs:ignore Generic.Files.LineLength.TooLong
+        $formJsApiKey = isset($groups[static::GROUP_AUTHENTICATION_KEYS]['fields'][static::CONFIG_FORM_JS_API_KEY]['value'])
+            ? $groups[static::GROUP_AUTHENTICATION_KEYS]['fields'][static::CONFIG_FORM_JS_API_KEY]['value']
+            : null;
+
+        // phpcs:ignore Generic.Files.LineLength.TooLong
+        $formRestApiKey = isset($groups[static::GROUP_AUTHENTICATION_KEYS]['fields'][static::CONFIG_FORM_REST_API_KEY]['value'])
+            ? $groups[static::GROUP_AUTHENTICATION_KEYS]['fields'][static::CONFIG_FORM_REST_API_KEY]['value']
+            : null;
 
         return [
             static::CONFIG_FORM_JS_API_KEY => $formJsApiKey,
@@ -158,8 +173,7 @@ class UpdateApiEndpointsOnApiKeyChange
      */
     private function getAccountDetails(array $apiKeys, StoreInterface $store)
     {
-        if (
-            (!isset($apiKeys[static::CONFIG_FORM_JS_API_KEY]) || $apiKeys[static::CONFIG_FORM_JS_API_KEY] === '') &&
+        if ((!isset($apiKeys[static::CONFIG_FORM_JS_API_KEY]) || $apiKeys[static::CONFIG_FORM_JS_API_KEY] === '') &&
             (!isset($apiKeys[static::CONFIG_FORM_REST_API_KEY]) || $apiKeys[static::CONFIG_FORM_REST_API_KEY] === '')
         ) {
             return $this->accountDetailsFactory->create();
