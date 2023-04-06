@@ -1,18 +1,35 @@
-<?php /** @var \Magento\Framework\View\Element\Template $block */ ?>
-<span data-bind="scope: 'personalData'" style="display:none;">
-    <!-- ko if: personalData().klevuSessionId -->
-    <span id="klevu_sessionId" data-bind="text: personalData().klevuSessionId"></span>
-    <!-- /ko -->
-    <!-- ko if: personalData().klevuLoginCustomerGroup -->
-    <span id="klevu_loginCustomerGroup" data-bind="text: personalData().klevuLoginCustomerGroup"></span>
-    <!-- /ko -->
-    <!-- ko if: personalData().klevuIdCode -->
-    <span id="klevu_loginCustomerEmail" data-bind="text: personalData().klevuIdCode"></span>
-    <!-- /ko -->
-    <!-- ko if: personalData().klevuShopperIP -->
-    <span id="klevu_shopperIP" data-bind="text: personalData().klevuShopperIP"></span>
-    <!-- /ko -->
+<?php /** @var \Klevu\FrontendJs\Block\Html\Head\InitSessionData $block */ ?>
+<span style="display:none;">
+    <span id="klevu_sessionId"></span>
+    <span id="klevu_loginCustomerGroup"></span>
+    <span id="klevu_loginCustomerEmail"></span>
+    <span id="klevu_shopperIP"></span>
 </span>
-<script type="text/x-magento-init">
-{"*": {"Magento_Ui/js/core/app": <?php /* @escapeNotVerified */ echo $block->getJsLayout();?>}}
+
+<script>
+    var updateKlevuSessionDataElementsFromLocalStorage = function() {
+        var klevuLocalStorage = JSON.parse(window.localStorage.getItem(
+            '<?php /** @noEscape */ echo $block->getLocalStorageKey(); ?>'
+        ) || '{}');
+        var klevuLocalStorageCustomerData = klevuLocalStorage.<?php /** @noEscape */ echo $block->getCustomerDataKey(); ?>;
+
+        document.getElementById('klevu_sessionId').innerText = klevuLocalStorageCustomerData.hasOwnProperty('session_id')
+            ? klevuLocalStorageCustomerData.session_id
+            : '';
+        document.getElementById('klevu_loginCustomerGroup').innerText = klevuLocalStorageCustomerData.hasOwnProperty('customer_group_id')
+            ? klevuLocalStorageCustomerData.customer_group_id
+            : '';
+        document.getElementById('klevu_loginCustomerEmail').innerText = klevuLocalStorageCustomerData.hasOwnProperty('id_code')
+            ? klevuLocalStorageCustomerData.id_code
+            : '';
+        document.getElementById('klevu_shopperIP').innerText = klevuLocalStorageCustomerData.hasOwnProperty('shopper_ip')
+            ? klevuLocalStorageCustomerData.shopper_ip
+            : '';
+    }
+    updateKlevuSessionDataElementsFromLocalStorage();
+
+    document.addEventListener(
+        '<?php /** @noEscape */ echo $block->getCustomerDataLoadedEventName(); ?>',
+        updateKlevuSessionDataElementsFromLocalStorage
+    );
 </script>
