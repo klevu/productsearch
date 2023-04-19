@@ -355,7 +355,7 @@ class Addrecords extends Actionall
             if (count($other) !== count($record['other'])) {
                 $this->logger->error(
                     __(
-                        '%s: Multi dimensional array provided for "other" attribute for SKU $s.',
+                        '%1: Multi dimensional array provided for "other" attribute for SKU %2.',
                         __METHOD__,
                         $record['sku']
                     )
@@ -368,7 +368,7 @@ class Addrecords extends Actionall
             $record['other'] = '';
             $this->logger->error(
                 __(
-                    'Unexpected value provided for "other". %s',
+                    'Unexpected value provided for "other". %1',
                     is_object($record['other'])
                         ? get_class($record['other'])
                         // phpcs:ignore Magento2.Functions.DiscouragedFunction.Discouraged
@@ -449,7 +449,7 @@ class Addrecords extends Actionall
             $record['otherAttributeToIndex'] = '';
             $this->logger->error(
                 __(
-                    'Unexpected value provided for "otherAttributeToIndex". %s',
+                    'Unexpected value provided for "otherAttributeToIndex". %1',
                     is_object($record['otherAttributeToIndex'])
                         ? get_class($record['otherAttributeToIndex'])
                         // phpcs:ignore Magento2.Functions.DiscouragedFunction.Discouraged
