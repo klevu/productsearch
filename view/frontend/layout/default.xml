@@ -8,20 +8,10 @@
         <referenceBlock name="before.body.end">
             <block class="Klevu\Search\Block\Search\Index" template="Klevu_Search::klevu/search/form_js.phtml"
                    name="klevu.search.form_js"/>
-            <block class="Magento\Framework\View\Element\Template"
+            <block class="Klevu\FrontendJs\Block\Html\Head\InitSessionData"
                    name="personal_data"
                    before="-"
-                   template="Klevu_Search::personal.phtml">
-                <arguments>
-                    <argument name="jsLayout" xsi:type="array">
-                        <item name="components" xsi:type="array">
-                            <item name="personalData" xsi:type="array">
-                                <item name="component" xsi:type="string">Klevu_Search/js/view/personal-data</item>
-                            </item>
-                        </item>
-                    </argument>
-                </arguments>
-            </block>
+                   template="Klevu_Search::personal.phtml"/>
         </referenceBlock>
     </body>
 </page>

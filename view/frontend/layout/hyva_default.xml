@@ -4,13 +4,6 @@
         <script src="Klevu_Search::js/klevu/ieUrlPolyfill.js" ie_condition="IE 11"/>
     </head>
     <body>
-        <referenceBlock name="before.body.end">
-            <block class="Magento\Framework\View\Element\Template"
-                   name="personal_data"
-                   before="-"
-                   template="Klevu_Search::hyva/personal.phtml">
-            </block>
-        </referenceBlock>
         <referenceBlock name="header-content">
             <block name="header-search" class="Klevu\Search\Block\Hyva\Html\Header\SearchForm"/>
         </referenceBlock>
