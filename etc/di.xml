@@ -103,6 +103,7 @@
     <type name="Klevu\Search\Console\Command\SyncStoreView">
         <arguments>
             <argument name="klevuLoggerFQCN" xsi:type="string">Klevu\Search\Logger\Logger\Search</argument>
+            <argument name="fileDriver" xsi:type="object">Magento\Framework\Filesystem\Driver\File</argument>
         </arguments>
     </type>
 
@@ -238,7 +239,7 @@
             <argument name="options" xsi:type="array">
                 <item name="Hourly" xsi:type="const">Klevu\Search\Model\System\Config\Source\Frequency::CRON_HOURLY</item>
                 <item name="Every 3 hours (from 2am)" xsi:type="string">0 2,5,8,11,14,17,20,23 * * *</item>
-                <item name="Every 6 hours (from 2am)" xsi:type="string">0 2,8,14,20 * * */</item>
+                <item name="Every 6 hours (from 2am)" xsi:type="string">0 2,8,14,20 * * *</item>
                 <item name="Every 12 hours (from 2am)" xsi:type="string">0 2,14 * * *</item>
                 <item name="Daily (at 2am)" xsi:type="string">0 2 * * *</item>
                 <item name="Custom" xsi:type="const">Klevu\Search\Model\System\Config\Source\Frequency::CRON_CUSTOM</item>
@@ -672,6 +673,47 @@
     <type name="Klevu\Search\Model\Order\Sync">
         <arguments>
             <argument name="orderSyncItemDataConvertor" xsi:type="object">Klevu\Search\Service\Convertor\OrderSyncItemDataConvertor</argument>
+            <argument name="fileDriver" xsi:type="object">Magento\Framework\Filesystem\Driver\File</argument>
+        </arguments>
+    </type>
+
+    <type name="Magento\Framework\Mview\View\Subscription">
+        <arguments>
+            <argument name="ignoredUpdateColumnsBySubscription" xsi:type="array">
+                <item name="klevu_product_sync" xsi:type="array">
+                    <item name="cataloginventory_stock_status" xsi:type="array">
+                        <item name="qty" xsi:type="boolean">true</item>
+                    </item>
+                </item>
+            </argument>
+        </arguments>
+    </type>
+
+    <type name="Magento\Framework\Mview\View">
+        <plugin name="Klevu_Search::KlevuSyncSetVersionIdForReindexAll" type="Klevu\Search\Plugin\Mview\View"/>
+    </type>
+
+    <type name="Klevu\Search\Plugin\Mview\View">
+        <arguments>
+            <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Model\Indexer\Sync\ProductSyncIndexer">
+        <arguments>
+            <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
+        </arguments>
+    </type>
+
+
+    <type name="Klevu\Search\Controller\Index\Runexternaly">
+        <arguments>
+            <argument name="fileSystemDriver" xsi:type="object">Magento\Framework\Filesystem\Driver\File</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Model\Observer\CreateThumb">
+        <arguments>
             <argument name="fileDriver" xsi:type="object">Magento\Framework\Filesystem\Driver\File</argument>
         </arguments>
     </type>

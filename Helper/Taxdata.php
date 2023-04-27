@@ -3,23 +3,39 @@
  * Copyright © 2013-2017 Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
+
 namespace Klevu\Search\Helper;
 
-
+use Magento\Catalog\Api\Data\ProductInterface;
+use Magento\Catalog\Model\Template\Filter\Factory;
+use Magento\Customer\Api\Data\AddressInterface;
+use Magento\Customer\Api\Data\AddressInterfaceFactory;
+use Magento\Customer\Api\Data\RegionInterfaceFactory;
+use Magento\Customer\Api\GroupRepositoryInterface;
+use Magento\Customer\Model\Address\AbstractAddress;
+use Magento\Framework\App\Helper\AbstractHelper;
+use Magento\Framework\App\Helper\Context;
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Pricing\PriceCurrencyInterface;
+use Magento\Framework\Registry;
+use Magento\Framework\Stdlib\StringUtils;
+use Magento\Store\Api\Data\StoreInterface;
+use Magento\Store\Model\StoreManagerInterface;
+use Magento\Tax\Api\Data\QuoteDetailsInterfaceFactory;
+use Magento\Tax\Api\Data\QuoteDetailsItemInterfaceFactory;
 use Magento\Tax\Api\Data\TaxClassKeyInterface;
 use Magento\Customer\Model\Session as CustomerSession;
-
+use Magento\Tax\Api\Data\TaxClassKeyInterfaceFactory;
+use Magento\Tax\Api\TaxCalculationInterface;
+use Magento\Tax\Model\Config as TaxConfig;
 
 /**
- * Catalog data helper
  * @SuppressWarnings(PHPMD.TooManyFields)
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
-class Taxdata extends \Magento\Framework\App\Helper\AbstractHelper 
+class Taxdata extends AbstractHelper
 {
-
     /**
      * Currently selected store ID if applicable
      *
@@ -28,57 +44,42 @@ class Taxdata extends \Magento\Framework\App\Helper\AbstractHelper
     protected $_storeId;
 
     /**
-     * Core registry
-     *
-     * @var \Magento\Framework\Registry
+     * @var Registry
      */
     protected $_coreRegistry;
 
-
     /**
-     * @var \Magento\Framework\Stdlib\StringUtils
+     * @var StringUtils
      */
     protected $string;
 
     /**
-     * Store manager
-     *
-     * @var \Magento\Store\Model\StoreManagerInterface
+     * @var StoreManagerInterface
      */
     protected $_storeManager;
 
     /**
-     * Template filter factory
-     *
-     * @var \Magento\Catalog\Model\Template\Filter\Factory
+     * @var Factory
      */
     protected $_templateFilterFactory;
 
     /**
-     * Tax class key factory
-     *
-     * @var \Magento\Tax\Api\Data\TaxClassKeyInterfaceFactory
+     * @var TaxClassKeyInterfaceFactory
      */
     protected $_taxClassKeyFactory;
 
     /**
-     * Tax helper
-     *
      * @var \Magento\Tax\Model\Config
      */
     protected $_taxConfig;
 
     /**
-     * Quote details factory
-     *
-     * @var \Magento\Tax\Api\Data\QuoteDetailsInterfaceFactory
+     * @var QuoteDetailsInterfaceFactory
      */
     protected $_quoteDetailsFactory;
 
     /**
-     * Quote details item factory
-     *
-     * @var \Magento\Tax\Api\Data\QuoteDetailsItemInterfaceFactory
+     * @var QuoteDetailsItemInterfaceFactory
      */
     protected $_quoteDetailsItemFactory;
 
@@ -88,15 +89,11 @@ class Taxdata extends \Magento\Framework\App\Helper\AbstractHelper
     protected $_customerSession;
 
     /**
-     * Tax calculation service interface
-     *
-     * @var \Magento\Tax\Api\TaxCalculationInterface
+     * @var TaxCalculationInterface
      */
     protected $_taxCalculationService;
 
     /**
-     * Price currency
-     *
      * @var PriceCurrencyInterface
      */
     protected $priceCurrency;
@@ -112,57 +109,48 @@ class Taxdata extends \Magento\Framework\App\Helper\AbstractHelper
     protected $categoryRepository;
 
     /**
-     * @var \Magento\Customer\Api\GroupRepositoryInterface
+     * @var GroupRepositoryInterface
      */
     protected $customerGroupRepository;
 
     /**
-     * @var \Magento\Customer\Api\Data\AddressInterfaceFactory
+     * @var AddressInterfaceFactory
      */
     protected $addressFactory;
 
     /**
-     * @var \Magento\Customer\Api\Data\RegionInterfaceFactory
+     * @var RegionInterfaceFactory
      */
     protected $regionFactory;
 
     /**
-     * @param \Magento\Framework\App\Helper\Context $context
-     * @param \Magento\Store\Model\StoreManagerInterface $storeManager
-     * @param \Magento\Catalog\Model\Session $catalogSession
-     * @param \Magento\Framework\Stdlib\StringUtils $string
-     * @param Category $catalogCategory
-     * @param Product $catalogProduct
-     * @param \Magento\Framework\Registry $coreRegistry
-     * @param \Magento\Catalog\Model\Template\Filter\Factory $templateFilterFactory
-     
-     * @param \Magento\Tax\Api\Data\TaxClassKeyInterfaceFactory $taxClassKeyFactory
-     * @param Config $taxConfig
-     * @param \Magento\Tax\Api\Data\QuoteDetailsInterfaceFactory $quoteDetailsFactory
-     * @param \Magento\Tax\Api\Data\QuoteDetailsItemInterfaceFactory $quoteDetailsItemFactory
-     * @param \Magento\Tax\Api\TaxCalculationInterface $taxCalculationService
+     * @param Context $context
+     * @param StoreManagerInterface $storeManager
+     * @param Registry $coreRegistry
+     * @param TaxClassKeyInterfaceFactory $taxClassKeyFactory
+     * @param TaxConfig $taxConfig
+     * @param QuoteDetailsInterfaceFactory $quoteDetailsFactory
+     * @param QuoteDetailsItemInterfaceFactory $quoteDetailsItemFactory
+     * @param TaxCalculationInterface $taxCalculationService
      * @param CustomerSession $customerSession
-     * @param PriceCurrencyInterface $priceCurrency
-     * @param ProductRepositoryInterface $productRepository
-     * @param CategoryRepositoryInterface $categoryRepository
-     * @param \Magento\Customer\Api\GroupRepositoryInterface $customerGroupRepository
-     * @param \Magento\Customer\Api\Data\AddressInterfaceFactory $addressFactory
-     * @param \Magento\Customer\Api\Data\RegionInterfaceFactory $regionFactory
+     * @param GroupRepositoryInterface $customerGroupRepository
+     * @param AddressInterfaceFactory $addressFactory
+     * @param RegionInterfaceFactory $regionFactory
      * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
     public function __construct(
-        \Magento\Framework\App\Helper\Context $context,
-		\Magento\Store\Model\StoreManagerInterface $storeManager,
-        \Magento\Framework\Registry $coreRegistry,
-        \Magento\Tax\Api\Data\TaxClassKeyInterfaceFactory $taxClassKeyFactory,
-        \Magento\Tax\Model\Config $taxConfig,
-        \Magento\Tax\Api\Data\QuoteDetailsInterfaceFactory $quoteDetailsFactory,
-        \Magento\Tax\Api\Data\QuoteDetailsItemInterfaceFactory $quoteDetailsItemFactory,
-        \Magento\Tax\Api\TaxCalculationInterface $taxCalculationService,
+        Context $context,
+        StoreManagerInterface $storeManager,
+        Registry $coreRegistry,
+        TaxClassKeyInterfaceFactory $taxClassKeyFactory,
+        TaxConfig $taxConfig,
+        QuoteDetailsInterfaceFactory $quoteDetailsFactory,
+        QuoteDetailsItemInterfaceFactory $quoteDetailsItemFactory,
+        TaxCalculationInterface $taxCalculationService,
         CustomerSession $customerSession,
-        \Magento\Customer\Api\GroupRepositoryInterface $customerGroupRepository,
-        \Magento\Customer\Api\Data\AddressInterfaceFactory $addressFactory,
-        \Magento\Customer\Api\Data\RegionInterfaceFactory $regionFactory
+        GroupRepositoryInterface $customerGroupRepository,
+        AddressInterfaceFactory $addressFactory,
+        RegionInterfaceFactory $regionFactory
     ) {
         $this->_storeManager = $storeManager;
         $this->_taxClassKeyFactory = $taxClassKeyFactory;
@@ -181,26 +169,27 @@ class Taxdata extends \Magento\Framework\App\Helper\AbstractHelper
      * Set a specified store ID value
      *
      * @param int $store
+     *
      * @return $this
      */
     public function setStoreId($store)
     {
         $this->_storeId = $store;
+
         return $this;
     }
 
-
-
     /**
      * @param array $taxAddress
-     * @return \Magento\Customer\Api\Data\AddressInterface|null
+     *
+     * @return AddressInterface|null
      */
     private function convertDefaultTaxAddress(array $taxAddress = null)
     {
         if (empty($taxAddress)) {
             return null;
         }
-        /** @var \Magento\Customer\Api\Data\AddressInterface $addressDataObject */
+        /** @var AddressInterface $addressDataObject */
         $addressDataObject = $this->addressFactory->create()
             ->setCountryId($taxAddress['country_id'])
             ->setPostcode($taxAddress['postcode']);
@@ -208,163 +197,161 @@ class Taxdata extends \Magento\Framework\App\Helper\AbstractHelper
         if (isset($taxAddress['region_id'])) {
             $addressDataObject->setRegion($this->regionFactory->create()->setRegionId($taxAddress['region_id']));
         }
+
         return $addressDataObject;
     }
 
     /**
-     * Get product price with all tax settings processing
+     * @param ProductInterface $product
+     * @param float $price
+     * @param StoreInterface|string|int|null $store
      *
-     * @param   \Magento\Catalog\Model\Product $product
-     * @param   float $price inputted product price
-     * @param   bool $includingTax return price include tax flag
+     * @return array|float
+     * @throws LocalizedException
+     * @throws NoSuchEntityException
      */
-    public function getTaxPrice(
-        $product,
-        $price,
-        $store
-    ) {
+    public function getTaxPrice(ProductInterface $product, $price, $store)
+    {
         if (!$price) {
             return $price;
         }
 
         $store = $this->_storeManager->getStore($store);
-			$shippingAddress = null;
-            $shippingAddressDataObject = null;
-            if ($shippingAddress === null) {
-                $shippingAddressDataObject =
-                    $this->convertDefaultTaxAddress($this->_customerSession->getDefaultTaxShippingAddress());
-            } elseif ($shippingAddress instanceof \Magento\Customer\Model\Address\AbstractAddress) {
-                $shippingAddressDataObject = $shippingAddress->getDataModel();
-            }
-			$billingAddress = null;
-            $billingAddressDataObject = null;
-            if ($billingAddress === null) {
-                $billingAddressDataObject =
-                    $this->convertDefaultTaxAddress($this->_customerSession->getDefaultTaxBillingAddress());
-            } elseif ($billingAddress instanceof \Magento\Customer\Model\Address\AbstractAddress) {
-                $billingAddressDataObject = $billingAddress->getDataModel();
-            }
+        $shippingAddress = null;
+        $shippingAddressDataObject = null;
+        if ($shippingAddress === null) {
+            $shippingAddressDataObject =
+                $this->convertDefaultTaxAddress($this->_customerSession->getDefaultTaxShippingAddress());
+        } elseif ($shippingAddress instanceof AbstractAddress) {
+            $shippingAddressDataObject = $shippingAddress->getDataModel();
+        }
+        $billingAddress = null;
+        $billingAddressDataObject = null;
+        if ($billingAddress === null) {
+            $billingAddressDataObject =
+                $this->convertDefaultTaxAddress($this->_customerSession->getDefaultTaxBillingAddress());
+        } elseif ($billingAddress instanceof AbstractAddress) {
+            $billingAddressDataObject = $billingAddress->getDataModel();
+        }
 
-            $taxClassKey = $this->_taxClassKeyFactory->create();
-            $taxClassKey->setType(TaxClassKeyInterface::TYPE_ID)
-                ->setValue($product->getTaxClassId());
-			$ctc = null;
-            if ($ctc === null && $this->_customerSession->getCustomerGroupId() != null) {
-                $ctc = $this->customerGroupRepository->getById($this->_customerSession->getCustomerGroupId())
-                    ->getTaxClassId();
-            }
+        $taxClassKey = $this->_taxClassKeyFactory->create();
+        $taxClassKey->setType(TaxClassKeyInterface::TYPE_ID)
+            ->setValue($product->getTaxClassId());
+        $ctc = null;
+        if ($ctc === null && $this->_customerSession->getCustomerGroupId() != null) {
+            $ctc = $this->customerGroupRepository->getById($this->_customerSession->getCustomerGroupId())
+                ->getTaxClassId();
+        }
 
-            $customerTaxClassKey = $this->_taxClassKeyFactory->create();
-            $customerTaxClassKey->setType(TaxClassKeyInterface::TYPE_ID)
-                ->setValue($ctc);
+        $customerTaxClassKey = $this->_taxClassKeyFactory->create();
+        $customerTaxClassKey->setType(TaxClassKeyInterface::TYPE_ID)
+            ->setValue($ctc);
 
-            $item = $this->_quoteDetailsItemFactory->create();
-            $item->setQuantity(1)
-                ->setCode($product->getSku())
-                ->setShortDescription($product->getShortDescription())
-                ->setTaxClassKey($taxClassKey)
-                ->setIsTaxIncluded(false)
-                ->setType('product')
-                ->setUnitPrice($price);
-			
+        $item = $this->_quoteDetailsItemFactory->create();
+        $item->setQuantity(1)
+            ->setCode($product->getSku())
+            ->setShortDescription($product->getShortDescription())
+            ->setTaxClassKey($taxClassKey)
+            ->setIsTaxIncluded(false)
+            ->setType('product')
+            ->setUnitPrice($price);
 
-            $quoteDetails = $this->_quoteDetailsFactory->create();
-            $quoteDetails->setShippingAddress($shippingAddressDataObject)
-                ->setBillingAddress($billingAddressDataObject)
-                ->setCustomerTaxClassKey($customerTaxClassKey)
-                ->setItems([$item])
-                ->setCustomerId($this->_customerSession->getCustomerId());
+        $quoteDetails = $this->_quoteDetailsFactory->create();
+        $quoteDetails->setShippingAddress($shippingAddressDataObject)
+            ->setBillingAddress($billingAddressDataObject)
+            ->setCustomerTaxClassKey($customerTaxClassKey)
+            ->setItems([$item])
+            ->setCustomerId($this->_customerSession->getCustomerId());
 
-            $storeId = null;
-            if ($store) {
-                $storeId = $store->getId();
-            }
-            $taxDetails = $this->_taxCalculationService->calculateTax($quoteDetails, $storeId,false);
-            $items = $taxDetails->getItems();
-            $taxDetailsItem = array_shift($items);
-			$product_price_data['include_tax'] = $taxDetailsItem->getPriceInclTax();
-			$product_price_data['exclude_tax'] = $taxDetailsItem->getPrice();
-			return $product_price_data;
+        $storeId = null;
+        if ($store) {
+            $storeId = $store->getId();
+        }
+        $taxDetails = $this->_taxCalculationService->calculateTax($quoteDetails, $storeId, false);
+        $items = $taxDetails->getItems();
+        $taxDetailsItem = array_shift($items);
+        $product_price_data['include_tax'] = $taxDetailsItem->getPriceInclTax();
+        $product_price_data['exclude_tax'] = $taxDetailsItem->getPrice();
+
+        return $product_price_data;
     }
-	
-	/**
-     * Get product price with all tax settings processing
+
+    /**
+     * @param ProductInterface $product
+     * @param float $price
+     * @param StoreInterface|string|int|null $store
      *
-     * @param   \Magento\Catalog\Model\Product $product
-     * @param   float $price inputted product price
-     * @param   bool $includingTax return price include tax flag
+     * @return array|float
+     * @throws LocalizedException
+     * @throws NoSuchEntityException
      */
-    public function getTaxPriceForCollection(
-        $product,
-        $price,
-        $store
-    ) {
-		
+    public function getTaxPriceForCollection(ProductInterface $product, $price, $store)
+    {
         if (!$price) {
             return $price;
         }
-		$priceIncludesTax = null;
-		if ($priceIncludesTax === null) {
-                $priceIncludesTax = $this->_taxConfig->priceIncludesTax($store);
+        $priceIncludesTax = null;
+        if ($priceIncludesTax === null) {
+            $priceIncludesTax = $this->_taxConfig->priceIncludesTax($store);
         }
-		
+
         $store = $this->_storeManager->getStore($store);
-			$shippingAddress = null;
-            $shippingAddressDataObject = null;
-            if ($shippingAddress === null) {
-                $shippingAddressDataObject =
-                    $this->convertDefaultTaxAddress($this->_customerSession->getDefaultTaxShippingAddress());
-            } elseif ($shippingAddress instanceof \Magento\Customer\Model\Address\AbstractAddress) {
-                $shippingAddressDataObject = $shippingAddress->getDataModel();
-            }
-			$billingAddress = null;
-            $billingAddressDataObject = null;
-            if ($billingAddress === null) {
-                $billingAddressDataObject =
-                    $this->convertDefaultTaxAddress($this->_customerSession->getDefaultTaxBillingAddress());
-            } elseif ($billingAddress instanceof \Magento\Customer\Model\Address\AbstractAddress) {
-                $billingAddressDataObject = $billingAddress->getDataModel();
-            }
+        $shippingAddress = null;
+        $shippingAddressDataObject = null;
+        if ($shippingAddress === null) {
+            $shippingAddressDataObject =
+                $this->convertDefaultTaxAddress($this->_customerSession->getDefaultTaxShippingAddress());
+        } elseif ($shippingAddress instanceof AbstractAddress) {
+            $shippingAddressDataObject = $shippingAddress->getDataModel();
+        }
+        $billingAddress = null;
+        $billingAddressDataObject = null;
+        if ($billingAddress === null) {
+            $billingAddressDataObject =
+                $this->convertDefaultTaxAddress($this->_customerSession->getDefaultTaxBillingAddress());
+        } elseif ($billingAddress instanceof AbstractAddress) {
+            $billingAddressDataObject = $billingAddress->getDataModel();
+        }
 
-            $taxClassKey = $this->_taxClassKeyFactory->create();
-            $taxClassKey->setType(TaxClassKeyInterface::TYPE_ID)
-                ->setValue($product->getTaxClassId());
-			$ctc = null;
-            if ($ctc === null && $this->_customerSession->getCustomerGroupId() != null) {
-                $ctc = $this->customerGroupRepository->getById($this->_customerSession->getCustomerGroupId())
-                    ->getTaxClassId();
-            }
+        $taxClassKey = $this->_taxClassKeyFactory->create();
+        $taxClassKey->setType(TaxClassKeyInterface::TYPE_ID)
+            ->setValue($product->getTaxClassId());
+        $ctc = null;
+        if ($ctc === null && $this->_customerSession->getCustomerGroupId() != null) {
+            $ctc = $this->customerGroupRepository->getById($this->_customerSession->getCustomerGroupId())
+                ->getTaxClassId();
+        }
 
-            $customerTaxClassKey = $this->_taxClassKeyFactory->create();
-            $customerTaxClassKey->setType(TaxClassKeyInterface::TYPE_ID)
-                ->setValue($ctc);
+        $customerTaxClassKey = $this->_taxClassKeyFactory->create();
+        $customerTaxClassKey->setType(TaxClassKeyInterface::TYPE_ID)
+            ->setValue($ctc);
 
-            $item = $this->_quoteDetailsItemFactory->create();
-            $item->setQuantity(1)
-                ->setCode($product->getSku())
-                ->setShortDescription($product->getShortDescription())
-                ->setTaxClassKey($taxClassKey)
-                ->setIsTaxIncluded($priceIncludesTax)
-                ->setType('product')
-                ->setUnitPrice($price);
-			
+        $item = $this->_quoteDetailsItemFactory->create();
+        $item->setQuantity(1)
+            ->setCode($product->getSku())
+            ->setShortDescription($product->getShortDescription())
+            ->setTaxClassKey($taxClassKey)
+            ->setIsTaxIncluded($priceIncludesTax)
+            ->setType('product')
+            ->setUnitPrice($price);
 
-            $quoteDetails = $this->_quoteDetailsFactory->create();
-            $quoteDetails->setShippingAddress($shippingAddressDataObject)
-                ->setBillingAddress($billingAddressDataObject)
-                ->setCustomerTaxClassKey($customerTaxClassKey)
-                ->setItems([$item])
-                ->setCustomerId($this->_customerSession->getCustomerId());
+        $quoteDetails = $this->_quoteDetailsFactory->create();
+        $quoteDetails->setShippingAddress($shippingAddressDataObject)
+            ->setBillingAddress($billingAddressDataObject)
+            ->setCustomerTaxClassKey($customerTaxClassKey)
+            ->setItems([$item])
+            ->setCustomerId($this->_customerSession->getCustomerId());
 
-            $storeId = null;
-            if ($store) {
-                $storeId = $store->getId();
-            }
-            $taxDetails = $this->_taxCalculationService->calculateTax($quoteDetails, $storeId,false);
-            $items = $taxDetails->getItems();
-            $taxDetailsItem = array_shift($items);
-			$product_price_data['include_tax'] = $taxDetailsItem->getPriceInclTax();
-			$product_price_data['exclude_tax'] = $taxDetailsItem->getPrice();
-			return $product_price_data;
+        $storeId = null;
+        if ($store) {
+            $storeId = $store->getId();
+        }
+        $taxDetails = $this->_taxCalculationService->calculateTax($quoteDetails, $storeId, false);
+        $items = $taxDetails->getItems();
+        $taxDetailsItem = array_shift($items);
+        $product_price_data['include_tax'] = $taxDetailsItem->getPriceInclTax();
+        $product_price_data['exclude_tax'] = $taxDetailsItem->getPrice();
+
+        return $product_price_data;
     }
 }

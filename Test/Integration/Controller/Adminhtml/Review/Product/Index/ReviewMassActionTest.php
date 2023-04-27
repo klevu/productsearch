@@ -1,4 +1,6 @@
 <?php
+// phpcs:disable PSR1.Methods.CamelCapsMethodName.NotCamelCaps
+// phpcs:disable Generic.Files.LineLength.TooLong
 
 namespace Klevu\Search\Test\Integration\Controller\Adminhtml\Review\Product\Index;
 
@@ -20,6 +22,11 @@ class ReviewMassActionTest extends AbstractBackendControllerTestCase
      * @var ProductRepositoryInterface
      */
     private $productRepository;
+
+    /**
+     * @var array
+     */
+    private $storeIds = [];
 
     /**
      * @magentoAppIsolation enabled

@@ -6,18 +6,31 @@ use Magento\Backend\App\Action;
 use Magento\Backend\App\Action\Context as ActionContext;
 use Klevu\Search\Model\Product\Sync as Klevu_ProductSync;
 use Klevu\Search\Model\Session as Klevu_Session;
+use Magento\Framework\App\ResponseInterface;
+use Magento\Framework\Controller\ResultInterface;
+use Magento\Framework\Event\ManagerInterface as EventManagerInterface;
 
 class Sync extends Action
 {
-
+    /**
+     * @var EventManagerInterface
+     */
     protected $_eventManager;
+    /**
+     * @var Klevu_ProductSync
+     */
+    protected $_klevuProductSync;
+    /**
+     * @var Klevu_Session
+     */
+    protected $_klevuSession;
 
     /**
      * Construct
      *
-     * @param \Magento\Backend\App\Action\Context $context
-     * @param \Klevu\Search\Model\Product\Sync $klevuProductSync
-     * @param \Klevu\Search\Model\Session $klevuSession
+     * @param ActionContext $context
+     * @param Klevu_ProductSync $klevuProductSync
+     * @param Klevu_Session $klevuSession
      */
     public function __construct(
         ActionContext $context,
@@ -30,14 +43,14 @@ class Sync extends Action
         parent::__construct($context);
     }
 
+    /**
+     * @return ResponseInterface|ResultInterface
+     */
     public function execute()
     {
-        //\Magento\Framework\App\ObjectManager::getInstance()->get('Klevu\Search\Model\Product\Sync')->runManually();
         $this->_klevuProductSync->runManually();
         /* Use event For other content sync */
-         //\Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Framework\Event\ManagerInterface')->dispatch('content_data_to_sync', []);
         $this->_eventManager->dispatch('content_data_to_sync', []);
-        // \Magento\Framework\App\ObjectManager::getInstance()->get('Klevu\Search\Model\Session')->unsFirstSync();
         $this->_klevuSession->unsFirstSync();
         return $this->_redirect($this->_redirect->getRefererUrl());
     }

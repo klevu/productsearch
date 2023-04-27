@@ -16,10 +16,6 @@ use Magento\Framework\Controller\ResultInterface;
 use Magento\Framework\Filesystem;
 use Magento\Framework\View\Result\PageFactory;
 
-/**
- * Class Syncstore
- * @package Klevu\Search\Controller\Index
- */
 class Syncstore extends Action
 {
     /**
@@ -72,19 +68,17 @@ class Syncstore extends Action
      * @param Data $searchHelperData
      */
     public function __construct(
-        Context           $context,
+        Context $context,
         TypeListInterface $cacheTypeList,
-        StateInterface    $cacheState,
-        Pool              $cacheFrontendPool,
-        PageFactory       $resultPageFactory,
-        Sync              $modelProductSync,
-        Filesystem        $magentoFrameworkFilesystem,
-        Debuginfo         $apiActionDebuginfo,
-        Session           $frameworkModelSession,
-        Data              $searchHelperData
-    )
-    {
-
+        StateInterface $cacheState,
+        Pool $cacheFrontendPool,
+        PageFactory $resultPageFactory,
+        Sync $modelProductSync,
+        Filesystem $magentoFrameworkFilesystem,
+        Debuginfo $apiActionDebuginfo,
+        Session $frameworkModelSession,
+        Data $searchHelperData
+    ) {
         parent::__construct($context);
         $this->_cacheTypeList = $cacheTypeList;
         $this->_cacheState = $cacheState;
@@ -107,4 +101,3 @@ class Syncstore extends Action
         $this->_view->renderLayout();
     }
 }
-

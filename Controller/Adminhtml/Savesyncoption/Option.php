@@ -2,22 +2,32 @@
 
 namespace Klevu\Search\Controller\Adminhtml\Savesyncoption;
 
-use Klevu\Search\Helper\Config;
+use Klevu\Search\Helper\Config as ConfigHelper;
+use Magento\Backend\App\Action;
+use Magento\Backend\App\Action\Context;
+use Magento\Framework\App\ResponseInterface;
+use Magento\Framework\Controller\ResultInterface;
 
-class Option extends \Magento\Backend\App\Action
+class Option extends Action
 {
     /**
-     * @var \Klevu\Search\Helper\Config
+     * @var ConfigHelper
      */
     protected $_searchHelperConfig;
 
-    public function __construct(\Magento\Backend\App\Action\Context $context, \Klevu\Search\Helper\Config $searchHelperConfig)
+    /**
+     * @param Context $context
+     * @param ConfigHelper $searchHelperConfig
+     */
+    public function __construct(Context $context, ConfigHelper $searchHelperConfig)
     {
         $this->_searchHelperConfig = $searchHelperConfig;
-
         parent::__construct($context);
     }
 
+    /**
+     * @return ResponseInterface|ResultInterface|void
+     */
     public function execute()
     {
         $sync_options = $this->getRequest()->getParam("sync_options");

@@ -3,39 +3,45 @@
 namespace Klevu\Search\Plugin\Admin;
 
 use Klevu\Search\Model\Product\MagentoProductActionsInterface;
+use Magento\Catalog\Controller\Adminhtml\Product\Action\Attribute\Save as AttributeSave;
+use Magento\Catalog\Helper\Product\Edit\Action\Attribute as AttributeHelper;
+use Magento\Framework\Controller\Result\Redirect;
 
 /**
  * Class BulkProductAttributeSavePlugin responsible for marking products for next sync
- * @package Klevu\Search\Plugin\Admin
  */
 class BulkProductAttributeSavePlugin
 {
+    /**
+     * @var AttributeHelper
+     */
+    protected $attributeHelper;
+    /**
+     * @var MagentoProductActionsInterface
+     */
+    protected $magentoProductActions;
 
     /**
      * BulkProductAttributeSavePlugin constructor.
-     * @param \Magento\Catalog\Helper\Product\Edit\Action\Attribute $attributeHelper
+     *
+     * @param AttributeHelper $attributeHelper
      * @param MagentoProductActionsInterface $magentoProductActions
-     * @param \Klevu\Search\Helper\Log $searchHelper
      */
     public function __construct(
-        \Magento\Catalog\Helper\Product\Edit\Action\Attribute $attributeHelper,
+        AttributeHelper $attributeHelper,
         MagentoProductActionsInterface $magentoProductActions
-    )
-    {
+    ) {
         $this->attributeHelper = $attributeHelper;
         $this->magentoProductActions = $magentoProductActions;
     }
 
     /**
-     * @param \Magento\Catalog\Controller\Adminhtml\Product\Action\Attribute\Save $subject
-     * @param $result
+     * @param AttributeSave $subject
+     * @param Redirect $result
      *
-     * @return mixed
+     * @return Redirect
      */
-    public function afterExecute(
-        \Magento\Catalog\Controller\Adminhtml\Product\Action\Attribute\Save $subject,
-        $result
-    )
+    public function afterExecute(AttributeSave $subject, $result)
     {
         try {
             $productIds = $this->attributeHelper->getProductIds();
@@ -52,7 +58,7 @@ class BulkProductAttributeSavePlugin
         } catch (\Exception $e) {
             return $result;
         }
+
         return $result;
     }
 }
-
