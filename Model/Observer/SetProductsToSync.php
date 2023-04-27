@@ -1,43 +1,44 @@
 <?php
 
-/**
- * Class \Klevu\Search\Model\Observer
- *
- * @method setIsProductSyncScheduled($flag)
- * @method bool getIsProductSyncScheduled()
- */
-
 namespace Klevu\Search\Model\Observer;
 
 use Klevu\Logger\Constants as LoggerConstants;
+use Klevu\Search\Helper\Data as SearchHelper;
 use Klevu\Search\Model\Product\MagentoProductActionsInterface;
+use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
 
-/**
- * Class SetProductsToSync
- * @package Klevu\Search\Model\Observer
- */
 class SetProductsToSync implements ObserverInterface
 {
     /**
+     * @var MagentoProductActionsInterface
+     */
+    protected $magentoProductActions;
+    /**
+     * @var SearchHelper
+     */
+    protected $_searchHelperData;
+
+    /**
      * SetProductsToSync constructor.
+     *
      * @param MagentoProductActionsInterface $magentoProductActions
-     * @param \Klevu\Search\Helper\Data $searchHelperData
+     * @param SearchHelper $searchHelperData
      */
     public function __construct(
         MagentoProductActionsInterface $magentoProductActions,
-        \Klevu\Search\Helper\Data $searchHelperData
-    )
-    {
+        SearchHelper $searchHelperData
+    ) {
         $this->magentoProductActions = $magentoProductActions;
         $this->_searchHelperData = $searchHelperData;
     }
 
     /**
      * When products are updated in bulk, update products so that they will be synced.
-     * @param \Magento\Framework\Event\Observer $observer
+     *
+     * @param Observer $observer
      */
-    public function execute(\Magento\Framework\Event\Observer $observer)
+    public function execute(Observer $observer)
     {
         try {
             //returns the product_ids array
@@ -47,8 +48,10 @@ class SetProductsToSync implements ObserverInterface
             }
             $this->magentoProductActions->markRecordIntoQueue($product_ids, 'products');
         } catch (\Exception $e) {
-            $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_DEBUG, sprintf("Marking products sync error:: SetProductsToSync :: %s", $e->getMessage()));
+            $this->_searchHelperData->log(
+                LoggerConstants::ZEND_LOG_DEBUG,
+                sprintf("Marking products sync error:: SetProductsToSync :: %s", $e->getMessage())
+            );
         }
     }
 }
-

@@ -2,9 +2,16 @@
 
 namespace Klevu\Search\Setup;
 
+use Klevu\Search\Helper\Config as ConfigHelper;
+use Klevu\Search\Model\Indexer\Sync\ProductSyncIndexer;
 use Klevu\Search\Model\Product\Sync\History as SyncHistory;
 use Klevu\Search\Model\Product\Sync\ResourceModel\History as SyncHistoryResourceModel;
+use Klevu\Search\Model\Trigger as KlevuDbTrigger;
+use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\App\Config\Storage\WriterInterface as ConfigWriterInterface;
+use Magento\Framework\App\ObjectManager;
 use Magento\Framework\DB\Ddl\Table;
+use Magento\Framework\Indexer\IndexerRegistry;
 use Magento\Framework\Setup\UpgradeSchemaInterface;
 use Magento\Framework\Setup\ModuleContextInterface;
 use Magento\Framework\Setup\SchemaSetupInterface;
@@ -14,6 +21,38 @@ use Magento\Framework\Setup\SchemaSetupInterface;
  */
 class UpgradeSchema implements UpgradeSchemaInterface
 {
+    /**
+     * @var ConfigWriterInterface
+     */
+    private $configWriter;
+    /**
+     * @var KlevuDbTrigger
+     */
+    private $trigger;
+    /**
+     * @var IndexerRegistry
+     */
+    private $indexerRegistry;
+
+    /**
+     * @param ConfigWriterInterface|null $configWriter
+     * @param KlevuDbTrigger|null $trigger
+     * @param IndexerRegistry|null $indexerRegistry
+     */
+    public function __construct(
+        ConfigWriterInterface $configWriter = null,
+        KlevuDbTrigger $trigger = null,
+        IndexerRegistry $indexerRegistry = null
+    ) {
+        $objectManager = ObjectManager::getInstance();
+        $this->configWriter = $configWriter
+            ?: $objectManager->get(ConfigWriterInterface::class);
+        $this->trigger = $trigger
+            ?: $objectManager->get(KlevuDbTrigger::class);
+        $this->indexerRegistry = $indexerRegistry
+            ?: $objectManager->get(IndexerRegistry::class);
+    }
+
     /**
      * @param SchemaSetupInterface $setup
      * @param ModuleContextInterface $context
@@ -31,8 +70,10 @@ class UpgradeSchema implements UpgradeSchemaInterface
             //code to upgrade to 2.0.2
             $order_sync_table = $installer->getTable('klevu_order_sync');
             $installer->run(
-                "ALTER TABLE `{$order_sync_table}` ADD `klevu_session_id` VARCHAR(255) NOT NULL, 
-                    ADD `ip_address` VARCHAR(255) NOT NULL , ADD `date` DATETIME NOT NULL"
+                "ALTER TABLE `{$order_sync_table}` " .
+                "ADD `klevu_session_id` VARCHAR(255) NOT NULL , " .
+                "ADD `ip_address` VARCHAR(255) NOT NULL , " .
+                "ADD `date` DATETIME NOT NULL"
             );
         }
 
@@ -54,9 +95,9 @@ class UpgradeSchema implements UpgradeSchemaInterface
             }
 
             $setup->run(
-                "ALTER TABLE `{$installer->getTable('klevu_product_sync')}` 
-                ADD KEY `KLEVU_PRODUCT_SYNC_PARENT_PRODUCT_ID` (`parent_id`,`product_id`), 
-			    ADD KEY `KLEVU_PRODUCT_SYNC_STORE_ID` (`store_id`)"
+                "ALTER TABLE `{$installer->getTable('klevu_product_sync')}` " .
+                "ADD KEY `KLEVU_PRODUCT_SYNC_PARENT_PRODUCT_ID` (`parent_id`,`product_id`), " .
+                "ADD KEY `KLEVU_PRODUCT_SYNC_STORE_ID` (`store_id`)"
             );
 
             $order_sync_table = $installer->getTable('klevu_order_sync');
@@ -70,18 +111,20 @@ class UpgradeSchema implements UpgradeSchemaInterface
                 "ALTER TABLE `{$installer->getTable('klevu_product_sync')}` DROP PRIMARY KEY"
             );
             $setup->run(
-                "ALTER TABLE `{$installer->getTable('klevu_product_sync')}` 
-                ADD `row_id` INT NOT NULL AUTO_INCREMENT FIRST, ADD PRIMARY KEY (`row_id`)"
+                "ALTER TABLE `{$installer->getTable('klevu_product_sync')}` " .
+                "ADD `row_id` INT NOT NULL AUTO_INCREMENT FIRST, " .
+                "ADD PRIMARY KEY (`row_id`)"
             );
             $setup->run(
-                "ALTER TABLE `{$installer->getTable('klevu_product_sync')}` 
-                    ADD UNIQUE KEY `KLEVU_GROUP_ID` (`product_id`,`parent_id`,`store_id`,`type`)"
+                "ALTER TABLE `{$installer->getTable('klevu_product_sync')}` " .
+                "ADD UNIQUE KEY `KLEVU_GROUP_ID` (`product_id`,`parent_id`,`store_id`,`type`)"
             );
             $order_sync_table = $installer->getTable('klevu_order_sync');
             $installer->run(
                 "ALTER TABLE `{$order_sync_table}` ADD `checkoutdate` VARCHAR(255) NOT NULL AFTER `idcode`"
             );
         }
+
         if (version_compare($context->getVersion(), '2.2.12') < 0) {
             $order_sync_table = $installer->getTable('klevu_order_sync');
             $installer->run(
@@ -180,6 +223,17 @@ class UpgradeSchema implements UpgradeSchemaInterface
                 );
                 $connection->createTable($table);
             }
+        }
+
+        if (version_compare($context->getVersion(), '2.10.3', '<=')) {
+            $this->trigger->dropTriggerIfFoundExist();
+            $indexer = $this->indexerRegistry->get(ProductSyncIndexer::INDEXER_ID);
+            $indexer->setScheduled(true);
+            $this->configWriter->save(
+                ConfigHelper::XML_PATH_TRIGGER_OPTIONS,
+                0,
+                ScopeConfigInterface::SCOPE_TYPE_DEFAULT
+            );
         }
 
         $installer->endSetup();

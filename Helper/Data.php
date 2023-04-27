@@ -2,9 +2,7 @@
 
 namespace Klevu\Search\Helper;
 
-use InvalidArgumentException;
 use Klevu\Logger\Api\ConvertLogLevelServiceInterface;
-use Klevu\Logger\Logger\Logger;
 use Klevu\Search\Helper\Config as ConfigHelper;
 use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Catalog\Helper\Data as CatalogHelper;

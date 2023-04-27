@@ -1,7 +1,5 @@
 <?php // phpcs:disable Magento2.Legacy.InstallUpgrade.ObsoleteUpgradeDataScript
 
-// phpcs:disable Magento2.Legacy.InstallUpgrade.ObsoleteUpgradeDataScript
-
 namespace Klevu\Search\Setup;
 
 use Klevu\Search\Helper\Config as ConfigHelper;
@@ -39,8 +37,8 @@ class UpgradeData implements UpgradeDataInterface
 
     /**
      * @param EavSetupFactory $eavSetupFactory
-     * @param ScopeConfigInterface|null $scopeConfig
-     * @param ConfigWriterInterface|null $configWriter
+     * @param ScopeConfigInterface $scopeConfig
+     * @param ConfigWriterInterface $configWriter
      */
     public function __construct(
         EavSetupFactory $eavSetupFactory,

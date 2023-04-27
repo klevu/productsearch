@@ -73,7 +73,7 @@ class MassSyncTest extends AbstractBackendControllerTestCase
 
         $this->_objectManager->get(Builder::class)
             ->getAcl()
-            ->deny(null, $this->resource);
+            ->deny($this->_auth->getUser()->getRoles(), $this->resource);
 
         $this->dispatch($this->getAdminFrontName() . $this->uri);
 
