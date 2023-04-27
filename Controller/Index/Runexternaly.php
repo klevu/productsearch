@@ -2,29 +2,115 @@
 
 namespace Klevu\Search\Controller\Index;
 
+use Klevu\Search\Helper\Config as ConfigHelper;
+use Klevu\Search\Model\Api\Action\Debuginfo as ApiActionDebuginfo;
+use Klevu\Search\Model\Product\Sync as ProductSync;
+use Klevu\Search\Model\Session;
+use Magento\Framework\App\Action\Context;
+use Magento\Framework\App\Cache\Frontend\Pool as CacheFrontendPool;
+use Magento\Framework\App\Cache\StateInterface as CacheStateInterface;
+use Magento\Framework\App\Cache\TypeListInterface as CacheTypeListInterface;
+use Magento\Framework\App\Filesystem\DirectoryList;
+use Magento\Framework\App\ObjectManager;
+use Magento\Framework\App\ResponseInterface;
+use Magento\Framework\Controller\ResultInterface;
+use Magento\Framework\Exception\FileSystemException;
+use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Framework\Filesystem;
+use Magento\Framework\Filesystem\Driver\File as FileDriver;
+use Magento\Framework\Filesystem\DriverInterface as FileSystemDriverInterface;
+use Magento\Framework\View\Result\PageFactory;
+use Magento\Indexer\Model\Indexer\CollectionFactory as IndexerCollectionFactory;
+use Magento\Indexer\Model\IndexerFactory;
+
 class Runexternaly extends \Magento\Framework\App\Action\Action
 {
-
+    /**
+     * @var IndexerFactory
+     */
     protected $_indexerFactory;
-
+    /**
+     * @var IndexerCollectionFactory
+     */
     protected $_indexerCollectionFactory;
+    /**
+     * @var CacheTypeListInterface
+     */
+    protected $_cacheTypeList;
+    /**
+     * @var CacheStateInterface
+     */
+    protected $_cacheState;
+    /**
+     * @var CacheFrontendPool
+     */
+    protected $_cacheFrontendPool;
+    /**
+     * @var PageFactory
+     */
+    protected $resultPageFactory;
+    /**
+     * @var ProductSync
+     */
+    protected $_modelProductSync;
+    /**
+     * @var Filesystem
+     */
+    protected $_magentoFrameworkFilesystem;
+    /**
+     * @var ApiActionDebuginfo
+     */
+    protected $_apiActionDebuginfo;
+    /**
+     * @var Session
+     */
+    protected $_frameworkModelSession;
+    /**
+     * @var ConfigHelper
+     */
+    protected $_searchHelperConfig;
+    /**
+     * @var DirectoryList
+     */
+    protected $_directoryList;
+    /**
+     * @var FileSystemDriverInterface|null
+     */
+    private $fileSystemDriver;
 
+    /**
+     * @param Context $context
+     * @param CacheTypeListInterface $cacheTypeList
+     * @param CacheStateInterface $cacheState
+     * @param CacheFrontendPool $cacheFrontendPool
+     * @param PageFactory $resultPageFactory
+     * @param ProductSync $modelProductSync
+     * @param Filesystem $magentoFrameworkFilesystem
+     * @param ApiActionDebuginfo $apiActionDebuginfo
+     * @param Session $frameworkModelSession
+     * @param ConfigHelper $searchHelperConfig
+     * @param DirectoryList $directoryList
+     * @param IndexerFactory $indexerFactory
+     * @param IndexerCollectionFactory $indexerCollectionFactory
+     * @param FileSystemDriverInterface|null $fileSystemDriver
+     */
     public function __construct(
-        \Magento\Framework\App\Action\Context $context,
-        \Magento\Framework\App\Cache\TypeListInterface $cacheTypeList,
-        \Magento\Framework\App\Cache\StateInterface $cacheState,
-        \Magento\Framework\App\Cache\Frontend\Pool $cacheFrontendPool,
-        \Magento\Framework\View\Result\PageFactory $resultPageFactory,
-        \Klevu\Search\Model\Product\Sync $modelProductSync,
-        \Magento\Framework\Filesystem $magentoFrameworkFilesystem,
-        \Klevu\Search\Model\Api\Action\Debuginfo $apiActionDebuginfo,
-        \Klevu\Search\Model\Session $frameworkModelSession,
-        \Klevu\Search\Helper\Config $searchHelperConfig,
-        \Magento\Framework\App\Filesystem\DirectoryList $directoryList,
-        \Magento\Indexer\Model\IndexerFactory $indexerFactory,
-        \Magento\Indexer\Model\Indexer\CollectionFactory $indexerCollectionFactory
+        Context $context,
+        CacheTypeListInterface $cacheTypeList,
+        CacheStateInterface $cacheState,
+        CacheFrontendPool $cacheFrontendPool,
+        PageFactory $resultPageFactory,
+        ProductSync $modelProductSync,
+        Filesystem $magentoFrameworkFilesystem,
+        ApiActionDebuginfo $apiActionDebuginfo,
+        Session $frameworkModelSession,
+        ConfigHelper $searchHelperConfig,
+        DirectoryList $directoryList,
+        IndexerFactory $indexerFactory,
+        IndexerCollectionFactory $indexerCollectionFactory,
+        FileSystemDriverInterface $fileSystemDriver = null
     ) {
-
         parent::__construct($context);
         $this->_cacheTypeList = $cacheTypeList;
         $this->_cacheState = $cacheState;
@@ -38,11 +124,14 @@ class Runexternaly extends \Magento\Framework\App\Action\Action
         $this->_directoryList = $directoryList;
         $this->_indexerFactory = $indexerFactory;
         $this->_indexerCollectionFactory = $indexerCollectionFactory;
+        $this->fileSystemDriver = $fileSystemDriver ?: ObjectManager::getInstance()->get(FileDriver::class);
     }
 
     /**
-     * @return \Magento\Framework\App\ResponseInterface|\Magento\Framework\Controller\ResultInterface|void
-     * @throws \Magento\Framework\Exception\FileSystemException
+     * @return ResponseInterface|ResultInterface|void
+     * @throws FileSystemException
+     * @throws LocalizedException
+     * @throws NoSuchEntityException
      */
     public function execute()
     {
@@ -51,23 +140,23 @@ class Runexternaly extends \Magento\Framework\App\Action\Action
         $line = 100;
 
         // send last few lines of klevu log files
-        //$dir = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Framework\App\Filesystem\DirectoryList');
         $logdir = $this->_directoryList->getPath('log');
-        $path = $logdir."/Klevu_Search.log";
+        $path = $logdir . "/Klevu_Search.log";
         if ($this->getRequest()->getParam('lines')) {
             $line = $this->getRequest()->getParam('lines');
-        } else if ($this->getRequest()->getParam('sync')) {
-		      if($this->getRequest()->getParam('sync') == 1) {
-		      		$this->_modelProductSync->run();
-					$this->getResponse()->setBody("Data has been sent to klevu server");
-					return;
-			  }
-		} else {
+        } elseif ($this->getRequest()->getParam('sync')) {
+            if ($this->getRequest()->getParam('sync') == 1) {
+                $this->_modelProductSync->run();
+                $this->getResponse()->setBody("Data has been sent to klevu server");
+
+                return;
+            }
+        } else {
             $line = 100;
         }
         $content = "";
-        $content.= $this->getLastlines($path, $line, true);
-        $content.= "</br>";
+        $content .= $this->getLastlines($path, $line, true);
+        $content .= "</br>";
         // Get the all indexing status
         $indexer = $this->_indexerFactory->create();
         $indexerCollection = $this->_indexerCollectionFactory->create();
@@ -75,61 +164,75 @@ class Runexternaly extends \Magento\Framework\App\Action\Action
         $ids = $indexerCollection->getAllIds();
         foreach ($ids as $id) {
             $idx = $indexer->load($id);
-            $content.= "</br>".$idx->getTitle().":".$idx->getStatus();
+            $content .= "</br>" . $idx->getTitle() . ":" . $idx->getStatus();
         }
 
-        $response = $this->_apiActionDebuginfo->debugKlevu(['apiKey'=>$restAPI,'klevuLog'=>$content,'type'=>'index']);
+        $response = $this->_apiActionDebuginfo->debugKlevu([
+            'apiKey' => $restAPI,
+            'klevuLog' => $content,
+            'type' => 'index',
+        ]);
 
         $this->_view->loadLayout();
         $this->_view->getLayout()->initMessages();
         $this->_view->renderLayout();
     }
 
+    /**
+     * @param string $filepath
+     * @param int $lines
+     * @param bool $adaptive
+     *
+     * @return false|string
+     * @throws FileSystemException
+     */
     public function getLastlines($filepath, $lines, $adaptive = true)
     {
         // Open file
-        $f = @fopen($filepath, "rb");
-
-        if ($f === false) {
+        try {
+            $f = $this->fileSystemDriver->fileOpen($filepath, "rb");
+        } catch (FileSystemException $e) {
             return false;
         }
         // Sets buffer size
         if (!$adaptive) {
             $buffer = 4096;
         } else {
-            $buffer = ($lines < 2 ? 64 : ($lines < 10 ? 512 : 4096));
+            $bigBuffer = $lines < 10 ? 512 : 4096;
+            $buffer = $lines < 2 ? 64 : $bigBuffer;
         }
         // Jump to last character
-        fseek($f, -1, SEEK_END);
+        $this->fileSystemDriver->fileSeek($f, -1, SEEK_END);
         // Read it and adjust line number if necessary
         // (Otherwise the result would be wrong if file doesn't end with a blank line)
-        if (fread($f, 1) != "\n") {
-            $lines -= 1;
+        if ($this->fileSystemDriver->fileRead($f, 1) !== "\n") {
+            --$lines;
         }
         // Start reading
         $output = '';
         $chunk = '';
         // While we would like more
-        while (ftell($f) > 0 && $lines >= 0) {
-        // Figure out how far back we should jump
-            $seek = min(ftell($f), $buffer);
-        // Do the jump (backwards, relative to where we are)
-            fseek($f, -$seek, SEEK_CUR);
-        // Read a chunk and prepend it to our output
-            $output = ($chunk = fread($f, $seek)) . $output;
-        // Jump back to where we started reading
-            fseek($f, -mb_strlen((string)$chunk, '8bit'), SEEK_CUR);
-        // Decrease our line counter
+        while ($this->fileSystemDriver->fileTell($f) > 0 && $lines >= 0) {
+            // Figure out how far back we should jump
+            $seek = min($this->fileSystemDriver->fileTell($f), $buffer);
+            // Do the jump (backwards, relative to where we are)
+            $this->fileSystemDriver->fileSeek($f, -$seek, SEEK_CUR);
+            // Read a chunk and prepend it to our output
+            $output = ($chunk = $this->fileSystemDriver->fileRead($f, $seek)) . $output;
+            // Jump back to where we started reading
+            $this->fileSystemDriver->fileSeek($f, -mb_strlen((string)$chunk, '8bit'), SEEK_CUR);
+            // Decrease our line counter
             $lines -= substr_count($chunk, "\n");
         }
         // While we have too many lines
         // (Because of buffer size we might have read too many)
         while ($lines++ < 0) {
-        // Find first newline and remove all text before that
+            // Find first newline and remove all text before that
             $output = substr($output, strpos($output, "\n") + 1);
         }
         // Close file and return
-        fclose($f);
+        $this->fileSystemDriver->fileClose($f);
+
         return trim($output);
     }
 }

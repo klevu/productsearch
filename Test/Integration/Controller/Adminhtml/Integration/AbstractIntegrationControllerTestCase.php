@@ -75,7 +75,7 @@ abstract class AbstractIntegrationControllerTestCase extends AbstractBackendCont
         }
         $this->_objectManager->get(Builder::class)
             ->getAcl()
-            ->deny(null, $this->resource);
+            ->deny($this->_auth->getUser()->getRoles(), $this->resource);
 
         $this->createRequest();
 

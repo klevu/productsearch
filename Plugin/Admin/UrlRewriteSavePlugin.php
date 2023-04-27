@@ -1,41 +1,46 @@
 <?php
 
-
 namespace Klevu\Search\Plugin\Admin;
 
-
 use Klevu\Search\Model\Product\MagentoProductActionsInterface;
+use Magento\Framework\App\RequestInterface;
+use Magento\UrlRewrite\Controller\Adminhtml\Url\Rewrite\Save as UrlRewriteSave;
 
 /**
  * Class UrlRewriteSavePlugin responsible for marking product for next sync
- * @package Klevu\Search\Plugin\Admin
  */
 class UrlRewriteSavePlugin
 {
     /**
+     * @var RequestInterface
+     */
+    protected $request;
+    /**
+     * @var MagentoProductActionsInterface
+     */
+    protected $magentoProductActions;
+
+    /**
      * UrlRewriteSavePlugin constructor.
-     * @param \Magento\Framework\App\RequestInterface $request
+     *
+     * @param RequestInterface $request
      * @param MagentoProductActionsInterface $magentoProductActions
      */
     public function __construct(
-        \Magento\Framework\App\RequestInterface $request,
+        RequestInterface $request,
         MagentoProductActionsInterface $magentoProductActions
-    )
-    {
+    ) {
         $this->request = $request;
         $this->magentoProductActions = $magentoProductActions;
     }
 
     /**
-     * @param \Magento\UrlRewrite\Controller\Adminhtml\Url\Rewrite\Save $subject
-     * @param $result
+     * @param UrlRewriteSave $subject
+     * @param void $result
      *
-     * @return mixed
+     * @return void
      */
-    public function afterExecute(
-        \Magento\UrlRewrite\Controller\Adminhtml\Url\Rewrite\Save $subject,
-        $result
-    )
+    public function afterExecute(UrlRewriteSave $subject, $result)
     {
         try {
             $productId = (int)$this->request->getParam('product', 0);
@@ -46,7 +51,7 @@ class UrlRewriteSavePlugin
         } catch (\Exception $e) {
             return $result;
         }
+
         return $result;
     }
 }
-

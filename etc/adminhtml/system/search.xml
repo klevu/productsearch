@@ -529,10 +529,16 @@
 
         <field id="trigger_options_info" translate="label comment" sortOrder="420" type="select" showInDefault="1">
             <label>Using an ERP OR 3rd party tool for product updates</label>
+            <frontend_model>Klevu\Search\Block\Adminhtml\System\Config\Form\Field\Disable</frontend_model>
             <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
             <backend_model>Klevu\Search\Model\Config\Backend\Trigger</backend_model>
             <comment>
-                <![CDATA[If store is integrated with an ERP OR 3rd party tool for product updates (i.e stock or price data),set this value to 'Yes'.]]>
+                <![CDATA[
+                DEPRECATED: This setting is no longer used and will be disabled during <code>setup:upgrade</code>.
+                The setting has been replaced with an indexer via <code>etc/mview.xml</code>.
+                The indexer will be enabled and set to "Update By Schedule" during <code>setup:upgrade</code>.
+                <a href="" target="_blank">Price and Stock Updates</a>
+                ]]>
             </comment>
         </field>
         <field id="theme_version" type="select" translate="label comment" sortOrder="500" showInDefault="1"

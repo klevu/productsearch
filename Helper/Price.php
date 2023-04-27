@@ -65,9 +65,14 @@ class Price extends AbstractHelper
     protected $_stockHelper;
 
     /**
+     * @var KlevuSearchHelper
+     */
+    protected $_searchHelperData;
+
+    /**
      * @param TimezoneInterface $localeDate
      * @param Config $searchHelperConfig
-     * @param Data $searchHelperData
+     * @param KlevuSearchHelper $searchHelperData
      * @param RulePricesStorage $rulePricesStorage
      * @param MagentoCatalogHelper $catalogTaxHelper
      * @param PriceCurrencyInterface $priceCurrency
@@ -105,9 +110,10 @@ class Price extends AbstractHelper
     /**
      * Get the secure and unsecure media url
      *
-     * @param array $parent
-     * @param array $item
+     * @param ProductInterface|null $parent
+     * @param ProductInterface $item
      * @param StoreInterface|string|int|null $store
+     *
      * @return array
      */
     public function getKlevuSalePrice($parent, $item, $store)
@@ -147,6 +153,7 @@ class Price extends AbstractHelper
                 $productPrice['toPrice'] = $maximalPrice;
             }
         }
+
         return $productPrice;
     }
 
@@ -156,6 +163,7 @@ class Price extends AbstractHelper
      * @param array $parent
      * @param array $item
      * @param StoreInterface|string|int|null $store
+     *
      * @return array
      */
     public function getKlevuPrice($parent, $item, $store)
@@ -188,8 +196,8 @@ class Price extends AbstractHelper
                 $processed_price = $this->processPrice($price, 'regular_price', $item, $store);
                 $productPrice['price'] = $processed_price;
             }
-
         }
+
         return $productPrice;
     }
 
@@ -214,6 +222,7 @@ class Price extends AbstractHelper
      * @param string $price_code
      * @param ProductInterface $pro
      * @param StoreInterface|string|int|null $store
+     *
      * @return int|float
      */
     public function processPrice($price, $price_code, $pro, $store)
@@ -230,6 +239,7 @@ class Price extends AbstractHelper
             } else {
                 $price = $this->_catalogTaxHelper->getTaxPrice($pro, $price);
             }
+
             return $price;
         } else {
             if ($this->_searchHelperConfig->getPriceDisplaySettings($store) == TaxConfig::DISPLAY_TYPE_BOTH) {
@@ -251,6 +261,7 @@ class Price extends AbstractHelper
      * @param int $gId
      * @param int $pId
      * @param StoreInterface|string|int|null $store
+     *
      * @return float|null
      */
     public function calculateFinalPriceFront($item, $gId, $pId, $store)
@@ -274,6 +285,7 @@ class Price extends AbstractHelper
      *
      * @param ProductInterface $proData
      * @param StoreInterface $store
+     *
      * @return array
      *
      */
@@ -319,6 +331,7 @@ class Price extends AbstractHelper
     /**
      * @param ProductInterface $product
      * @param StoreInterface|string|int|null $store
+     *
      * @return void
      */
     public function getGroupProductOriginalPrice($product, $store)
@@ -371,6 +384,7 @@ class Price extends AbstractHelper
      *
      * @param ProductInterface $product
      * @param StoreInterface $store
+     *
      * @return float|int|null
      */
     public function getGroupProductMinPrice($product, $store)
@@ -411,12 +425,14 @@ class Price extends AbstractHelper
         }
 
         asort($groupPrices);
+
         return array_shift($groupPrices);
     }
 
     /**
      * @param ProductInterface $item
      * @param StoreInterface $store
+     *
      * @return float|array
      */
     public function getBundleProductPrices($item, $store)
@@ -435,7 +451,6 @@ class Price extends AbstractHelper
                     return $item->getPriceModel()->getTotalPrices($item, null, true, false);
                 }
             }
-
         } else {
             //including
             if ($priceDisplaySetting == TaxConfig::DISPLAY_TYPE_INCLUDING_TAX) {
@@ -454,6 +469,7 @@ class Price extends AbstractHelper
 
     /**
      * @param float|int $price
+     *
      * @return float
      */
     public function roundPrice($price)

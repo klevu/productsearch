@@ -1,45 +1,50 @@
 <?php
 
-/**
- * Class \Klevu\Search\Model\Observer
- *
- */
-
 namespace Klevu\Search\Model\Observer;
 
+use Klevu\Search\Helper\Config as ConfigHelper;
+use Klevu\Search\Helper\Data as SearchHelper;
+use Klevu\Search\Model\Product\Sync as ProductSync;
+use Magento\Catalog\Model\Product\Action as ProductAction;
+use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
+use Magento\Framework\Filesystem;
 
 class ScheduleProductSync implements ObserverInterface
 {
-
     /**
-     * @var \Klevu\Search\Model\Product\Sync
+     * @var ProductSync
      */
     protected $_modelProductSync;
-
     /**
-     * @var \Magento\Framework\Filesystem
+     * @var Filesystem
      */
     protected $_magentoFrameworkFilesystem;
-
     /**
-     * @var \Klevu\Search\Helper\Data
+     * @var SearchHelper
      */
     protected $_searchHelperData;
-
     /**
-     * @var \Magento\Catalog\Model\Product\Action
+     * @var ProductAction
      */
     protected $_modelProductAction;
+    /**
+     * @var ConfigHelper
+     */
+    protected $_searchHelperConfig;
 
+    /**
+     * @param ProductSync $modelProductSync
+     * @param Filesystem $magentoFrameworkFilesystem
+     * @param SearchHelper $searchHelperData
+     * @param ConfigHelper $searchHelperConfig
+     */
     public function __construct(
-        \Klevu\Search\Model\Product\Sync $modelProductSync,
-        \Magento\Framework\Filesystem $magentoFrameworkFilesystem,
-        \Klevu\Search\Helper\Data $searchHelperData,
-        \Klevu\Search\Helper\Config $searchHelperConfig
-    )
-    {
-
+        ProductSync $modelProductSync,
+        Filesystem $magentoFrameworkFilesystem,
+        SearchHelper $searchHelperData,
+        ConfigHelper $searchHelperConfig
+    ) {
         $this->_modelProductSync = $modelProductSync;
         $this->_magentoFrameworkFilesystem = $magentoFrameworkFilesystem;
         $this->_searchHelperData = $searchHelperData;
@@ -49,9 +54,9 @@ class ScheduleProductSync implements ObserverInterface
     /**
      * Schedule a Product Sync to run immediately.
      *
-     * @param \Magento\Framework\Event\Observer $observer
+     * @param Observer $observer
      */
-    public function execute(\Magento\Framework\Event\Observer $observer)
+    public function execute(Observer $observer)
     {
         if ($this->_searchHelperConfig->isExternalCronEnabled()) {
             $this->_modelProductSync->schedule();

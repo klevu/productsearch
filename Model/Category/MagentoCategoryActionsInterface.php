@@ -8,17 +8,19 @@
 
 namespace Klevu\Search\Model\Category;
 
+use Magento\Store\Api\Data\StoreInterface;
+
 interface MagentoCategoryActionsInterface
 {
-	/**
+    /**
      * Returns category pages array based on store and action or error message will shown if it failed.
      *
-     * @param object instance $store Store 
-     * @param string $action delete|update|add
+     * @param StoreInterface $store
+     * @param string $action
      *
-     * @return array| A list with category pages
+     * @return array
      */
-    public function getCategorySyncDataActions($store, $action);
+    public function getCategorySyncDataActions(StoreInterface $store, $action);
 
     /**
      * Update the given categories on Klevu Search. Returns true if the operation was successful,
@@ -59,9 +61,9 @@ interface MagentoCategoryActionsInterface
     /**
      * Return the URL rewrite data for the given products for the current store.
      *
-     * @param array $product_ids A list of product IDs.
+     * @param array $categoryIds A list of product IDs.
      *
      * @return array A list with product IDs as keys and request paths as values.
      */
-    public function getCategoryUrlRewriteData($category_ids);
+    public function getCategoryUrlRewriteData($categoryIds);
 }
