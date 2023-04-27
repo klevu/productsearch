@@ -1151,8 +1151,7 @@ class Config extends AbstractHelper
     /**
      * Return the configuration flag for sync options.
      *
-     *
-     * @return int
+     * @return string
      */
     public function getSyncOptionsFlag()
     {

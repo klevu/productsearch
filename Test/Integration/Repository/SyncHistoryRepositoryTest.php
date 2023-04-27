@@ -655,7 +655,7 @@ class SyncHistoryRepositoryTest extends TestCase
      */
     public static function loadConfigurableProductFixturesRollback()
     {
-        include __DIR__ . '/../_files/productFixtures_configurableProduct.php';
+        include __DIR__ . '/../_files/productFixtures_configurableProduct_rollback.php';
     }
 
     /**

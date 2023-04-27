@@ -7,11 +7,28 @@ use Magento\Framework\Acl\Builder as AclBuilder;
 use Magento\Framework\App\AreaList;
 use Magento\Framework\App\Request\Http\Proxy as RequestProxy;
 use Magento\Framework\App\ResourceConnection;
+use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\TestFramework\Helper\Bootstrap;
+use Magento\TestFramework\ObjectManager;
 use Magento\TestFramework\TestCase\AbstractBackendController as AbstractBackendControllerTestCase;
 
 class IntegrationAclTest extends AbstractBackendControllerTestCase
 {
+    /**
+     * @var ObjectManager
+     */
+    private $objectManager;
+
+    /**
+     * @var ResourceConnection
+     */
+    private $resourceConnection;
+
+    /**
+     * @var AdapterInterface
+     */
+    private $connection;
+
     /**
      * @var string
      */
@@ -60,7 +77,7 @@ class IntegrationAclTest extends AbstractBackendControllerTestCase
 
         $aclBuilder = $this->objectManager->get(AclBuilder::class);
         $acl = $aclBuilder->getAcl();
-        $acl->deny(null, $this->resource);
+        $acl->deny($this->_auth->getUser()->getRoles(), $this->resource);
 
         $this->dispatch($this->getAdminFrontName() . '/admin/system_config/edit');
         $this->assertSame($this->expectedNoAccessResponseCode, $this->getResponse()->getHttpResponseCode());

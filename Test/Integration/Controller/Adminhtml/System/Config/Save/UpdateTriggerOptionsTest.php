@@ -47,222 +47,6 @@ class UpdateTriggerOptionsTest extends AbstractBackendControllerTestCase
     /**
      * Feature: Database triggers can be enabled / disabled through stores config
      *
-     * Scenario: Admin users can enable database triggers by changing a config value and submitting the page
-     *    Given: "Using an ERP OR 3rd party tool for product updates" is set to No
-     *      and: Database triggers do not already exist
-     *     When: The "Using an ERP OR 3rd party tool for product updates" is set to Yes
-     *      and: The stores configuration admin form is submitted
-     *     Then: The database triggers should be created
-     *
-     * @magentoConfigFixture default/klevu_search/developer/trigger_options_info 0
-     * @throws \Zend_Db_Statement_Exception
-     */
-    public function testEnableTriggersWhenNotEnabledConfigChanged()
-    {
-        $this->setupPhp5();
-
-        $fixtures = [
-            'update_klevuproductsync_for_cpip',
-            'update_klevuproductsync_for_lsa',
-            'update_klevuproductsync_for_cpp',
-        ];
-        $this->removeTriggers($fixtures);
-
-        /** @var RequestProxy $request */
-        $request = $this->getRequest();
-        $request->setParam('section', 'klevu_search');
-        $request->setMethod('POST');
-        $request->setPostValue([
-            'groups' => [
-                'developer' => [
-                    'fields' => [
-                        'trigger_options_info' => [
-                            'value' => 1,
-                        ],
-                    ],
-                ],
-            ],
-        ]);
-
-        $this->dispatch($this->getAdminFrontName() . '/admin/system_config/save');
-        $response = $this->getResponse();
-
-        $this->assertTrue($response->isRedirect(), 'Response is redirect');
-
-        $existingTriggerNames = $this->getExistingTriggerNames();
-        foreach ($fixtures as $fixtureTriggerName) {
-            $this->assertTrue(
-                in_array($fixtureTriggerName, $existingTriggerNames, true),
-                sprintf('Assert trigger "%s" exists', $fixtureTriggerName)
-            );
-        }
-    }
-
-    /**
-     * Feature: Database triggers can be enabled / disabled through stores config
-     *
-     * Scenario: Admin users can enable database triggers by changing a config value and submitting the page
-     *    Given: "Using an ERP OR 3rd party tool for product updates" is set to Yes
-     *      and: Database triggers do not already exist
-     *     When: The "Using an ERP OR 3rd party tool for product updates" is set to Yes
-     *      and: The stores configuration admin form is submitted
-     *     Then: The database triggers should not be created
-     *
-     * @magentoConfigFixture default/klevu_search/developer/trigger_options_info 1
-     * @throws \Zend_Db_Statement_Exception
-     */
-    public function testEnableTriggersWhenNotEnabledConfigNotChanged()
-    {
-        $this->setupPhp5();
-
-        $fixtures = [
-            'update_klevuproductsync_for_cpip',
-            'update_klevuproductsync_for_lsa',
-            'update_klevuproductsync_for_cpp',
-        ];
-        $this->removeTriggers($fixtures);
-
-        /** @var RequestProxy $request */
-        $request = $this->getRequest();
-        $request->setParam('section', 'klevu_search');
-        $request->setMethod('POST');
-        $request->setPostValue([
-            'groups' => [
-                'developer' => [
-                    'fields' => [
-                        'trigger_options_info' => [
-                            'value' => 1,
-                        ],
-                    ],
-                ],
-            ],
-        ]);
-
-        $this->dispatch($this->getAdminFrontName() . '/admin/system_config/save');
-        $response = $this->getResponse();
-
-        $this->assertTrue($response->isRedirect(), 'Response is redirect');
-
-        $existingTriggerNames = $this->getExistingTriggerNames();
-        foreach ($fixtures as $fixtureTriggerName) {
-            $this->assertFalse(
-                in_array($fixtureTriggerName, $existingTriggerNames, true),
-                sprintf('Assert fixture "%s" does not exist', $fixtureTriggerName)
-            );
-        }
-    }
-
-    /**
-     * Feature: Database triggers can be enabled / disabled through stores config
-     *
-     * Scenario: Admin users can enable database triggers by changing a config value and submitting the page
-     *    Given: "Using an ERP OR 3rd party tool for product updates" is set to No
-     *      and: Database triggers already exist
-     *     When: The "Using an ERP OR 3rd party tool for product updates" is set to Yes
-     *      and: The stores configuration admin form is submitted
-     *     Then: Existing database triggers are not modified or removed
-     *
-     * @magentoConfigFixture default/klevu_search/developer/trigger_options_info 0
-     * @throws \Zend_Db_Statement_Exception
-     */
-    public function testEnableTriggersWhenEnabledConfigChanged()
-    {
-        $this->setupPhp5();
-
-        $fixtures = [
-            'update_klevuproductsync_for_cpip',
-            'update_klevuproductsync_for_lsa',
-            'update_klevuproductsync_for_cpp',
-        ];
-        $this->createTriggers($fixtures);
-
-        /** @var RequestProxy $request */
-        $request = $this->getRequest();
-        $request->setParam('section', 'klevu_search');
-        $request->setMethod('POST');
-        $request->setPostValue([
-            'groups' => [
-                'developer' => [
-                    'fields' => [
-                        'trigger_options_info' => [
-                            'value' => 1,
-                        ],
-                    ],
-                ],
-            ],
-        ]);
-
-        $this->dispatch($this->getAdminFrontName() . '/admin/system_config/save');
-        $response = $this->getResponse();
-
-        $this->assertTrue($response->isRedirect());
-
-        $existingTriggerNames = $this->getExistingTriggerNames();
-        foreach ($fixtures as $fixtureTriggerName) {
-            $this->assertTrue(
-                in_array($fixtureTriggerName, $existingTriggerNames, true),
-                sprintf('Assert trigger "%s" exists', $fixtureTriggerName)
-            );
-        }
-    }
-
-    /**
-     * Feature: Database triggers can be enabled / disabled through stores config
-     *
-     * Scenario: Admin users can enable database triggers by changing a config value and submitting the page
-     *    Given: "Using an ERP OR 3rd party tool for product updates" is set to Yes
-     *      and: Database triggers already exist
-     *     When: The "Using an ERP OR 3rd party tool for product updates" is set to Yes (ie unchanged)
-     *      and: The stores configuration admin form is submitted
-     *     Then: Existing database triggers are not modified or removed
-     *
-     * @magentoConfigFixture default/klevu_search/developer/trigger_options_info 1
-     * @throws \Zend_Db_Statement_Exception
-     */
-    public function testEnableTriggersWhenEnabledConfigNotChanged()
-    {
-        $this->setupPhp5();
-
-        $fixtures = [
-            'update_klevuproductsync_for_cpip',
-            'update_klevuproductsync_for_lsa',
-            'update_klevuproductsync_for_cpp',
-        ];
-        $this->createTriggers($fixtures);
-
-        /** @var RequestProxy $request */
-        $request = $this->getRequest();
-        $request->setParam('section', 'klevu_search');
-        $request->setMethod('POST');
-        $request->setPostValue([
-            'groups' => [
-                'developer' => [
-                    'fields' => [
-                        'trigger_options_info' => [
-                            'value' => 1,
-                        ],
-                    ],
-                ],
-            ],
-        ]);
-
-        $this->dispatch($this->getAdminFrontName() . '/admin/system_config/save');
-        $response = $this->getResponse();
-
-        $this->assertTrue($response->isRedirect(), 'Response is redirect');
-
-        $existingTriggerNames = $this->getExistingTriggerNames();
-        foreach ($fixtures as $fixtureTriggerName) {
-            $this->assertTrue(
-                in_array($fixtureTriggerName, $existingTriggerNames, true),
-                sprintf('Assert trigger "%s" exists', $fixtureTriggerName)
-            );
-        }
-    }
-
-    /**
-     * Feature: Database triggers can be enabled / disabled through stores config
-     *
      * Scenario: Admin users can disable database triggers by changing a config value and submitting the page
      *    Given: "Using an ERP OR 3rd party tool for product updates" is set to Yes
      *      and: Database triggers do not already exist
@@ -444,7 +228,6 @@ class UpdateTriggerOptionsTest extends AbstractBackendControllerTestCase
             'update_klevuproductsync_for_lsa',
             'update_klevuproductsync_for_cpp',
         ];
-        $this->createTriggers($fixtures);
 
         /** @var RequestProxy $request */
         $request = $this->getRequest();
@@ -469,7 +252,7 @@ class UpdateTriggerOptionsTest extends AbstractBackendControllerTestCase
 
         $existingTriggerNames = $this->getExistingTriggerNames();
         foreach ($fixtures as $fixtureTriggerName) {
-            $this->assertTrue(
+            $this->assertFalse(
                 in_array($fixtureTriggerName, $existingTriggerNames, true),
                 sprintf('Assert trigger "%s" exists', $fixtureTriggerName)
             );
@@ -519,7 +302,7 @@ class UpdateTriggerOptionsTest extends AbstractBackendControllerTestCase
 
         $aclBuilder = $this->objectManager->get(AclBuilder::class);
         $acl = $aclBuilder->getAcl();
-        $acl->deny(null, $this->resource);
+        $acl->deny($this->_auth->getUser()->getRoles(), $this->resource);
 
         $this->dispatch($this->getAdminFrontName() . '/admin/system_config/save');
         $this->assertSame($this->expectedNoAccessResponseCode, $this->getResponse()->getHttpResponseCode());

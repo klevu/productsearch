@@ -1,4 +1,6 @@
 <?php
+// Suppressing warning for old code during unrelated change
+// phpcs:disable Generic.Metrics.NestingLevel.TooHigh
 
 namespace Klevu\Search\Console\Command;
 
@@ -8,6 +10,8 @@ use Magento\Framework\App\Filesystem\DirectoryList as DirectoryList;
 use Magento\Framework\App\ObjectManager;
 use Magento\Framework\App\State as AppState;
 use Magento\Framework\Console\Cli;
+use Magento\Framework\Filesystem\Driver\File as FileDriver;
+use Magento\Framework\Filesystem\DriverInterface as FilesystemDriverInterface;
 use Magento\Store\Model\StoreManagerInterface as StoreManagerInterface;
 use Psr\Log\LoggerInterface as LoggerInterface;
 use Symfony\Component\Console\Command\Command;
@@ -16,10 +20,6 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Klevu\Content\Model\ContentInterface as KlevuContent;
 
-/**
- * Class SyncStoreView
- * @package Klevu\Search\Console\Command
- */
 class SyncStoreView extends Command
 {
     const LOCK_FILE = 'klevu_running_index.lock';
@@ -61,24 +61,34 @@ class SyncStoreView extends Command
     private $klevuLoggerFQCN;
 
     /**
-     * @var DirectoryList
+     * @var FilesystemDriverInterface
+     */
+    private $fileDriver;
+
+    /**
+     * @var Sync
      */
     protected $sync;
 
     /**
-     * @var array
+     * @var KlevuContent
      */
-    protected $websiteList = array();
+    protected $cmsSync;
 
     /**
      * @var array
      */
-    protected $allStoreList = array();
+    protected $websiteList = [];
 
     /**
      * @var array
      */
-    protected $runStoreList = array();
+    protected $allStoreList = [];
+
+    /**
+     * @var array
+     */
+    protected $runStoreList = [];
 
     /**
      * @param AppState $appState
@@ -87,6 +97,7 @@ class SyncStoreView extends Command
      * @param LoggerInterface $logger
      * @param StoreScopeResolverInterface|null $storeScopeResolver
      * @param string|null $klevuLoggerFQCN
+     * @param FilesystemDriverInterface|null $fileDriver
      */
     public function __construct(
         AppState $appState,
@@ -94,7 +105,8 @@ class SyncStoreView extends Command
         DirectoryList $directoryList,
         LoggerInterface $logger,
         StoreScopeResolverInterface $storeScopeResolver = null,
-        $klevuLoggerFQCN = null
+        $klevuLoggerFQCN = null,
+        FilesystemDriverInterface $fileDriver = null
     ) {
         $this->appState = $appState;
         $this->storeInterface = $storeInterface;
@@ -104,6 +116,7 @@ class SyncStoreView extends Command
         if (is_string($klevuLoggerFQCN)) {
             $this->klevuLoggerFQCN = $klevuLoggerFQCN;
         }
+        $this->fileDriver = $fileDriver ?: ObjectManager::getInstance()->get(FileDriver::class);
 
         parent::__construct();
     }
@@ -113,7 +126,9 @@ class SyncStoreView extends Command
      */
     protected function configure()
     {
-        $description = 'Sync recent changes to Product, Category and CMS data with Klevu for a particular store view or store views. When specifying mulitple stores, please use a comma to separate them and ensure all stores are within the same website.';
+        $description = 'Sync recent changes to Product, Category and CMS data with Klevu for a particular store view '
+            . 'or store views. When specifying mulitple stores, please use a comma to separate them and ensure all '
+            . 'stores are within the same website.';
         $this->setName('klevu:syncstore:storecode')
             ->setDescription($description)
             ->setDefinition([
@@ -141,7 +156,10 @@ HELP
     }
 
     /**
-     * {@inheritdoc}
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     * @return int
+     * @throws \Exception
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
@@ -153,26 +171,31 @@ HELP
         $logDir = $this->directoryList->getPath(DirectoryList::VAR_DIR);
         $areacodeFile = $logDir . "/" . self::AREA_CODE_LOCK_FILE;
         try {
-            if (file_exists($areacodeFile)) {
-                unlink($areacodeFile);
+            if ($this->fileDriver->isExists($areacodeFile)) {
+                $this->fileDriver->deleteFile($areacodeFile);
             }
             $this->appState->setAreaCode('frontend');
         } catch (\Exception $e) {
-            fopen($areacodeFile, 'w');
+            $this->fileDriver->fileOpen($areacodeFile, 'w');
             $this->logger->error($e->getMessage());
 
             throw $e;
         }
         $storeList = $this->storeInterface->getStores();
-        $syncFailed = $syncSuccess = array();
+        $syncFailed = $syncSuccess = [];
         $this->sync = ObjectManager::getInstance()->get(Sync::class);
 
         foreach ($storeList as $store) {
-            if (!isset($this->websiteList[$store->getWebsiteId()])) {
-                $this->websiteList[$store->getWebsiteId()] = array();
+            $storeWebsiteId = $store->getWebsiteId();
+            if (!isset($this->websiteList[$storeWebsiteId])) {
+                $this->websiteList[$storeWebsiteId] = [];
             }
-            $this->websiteList[$store->getWebsiteId()] = array_unique(array_merge($this->websiteList[$store->getWebsiteId()], array($store->getCode())));
-            $this->allStoreList[$store->getCode()] = $store->getWebsiteId();
+
+            $storeCode = $store->getCode();
+            if (!in_array($storeCode, $this->websiteList[$storeWebsiteId], true)) {
+                $this->websiteList[$storeWebsiteId][] = $storeCode;
+            }
+            $this->allStoreList[$storeCode] = $storeWebsiteId;
         }
 
         $storeCode = $input->getArgument(self::STORE_ARGUMENT);
@@ -181,10 +204,16 @@ HELP
             $output->writeln("=== Available stores grouped by website ===");
             $output->writeln('');
             foreach ($this->websiteList as $websiteId => $websiteStores) {
-                $output->writeln("<info>Website ID " . $websiteId . " having store code(s): " . implode(",", $websiteStores) . " </info>");
+                $output->writeln(
+                    sprintf(
+                        '<info>Website ID %s having store code(s): %s </info>',
+                        $websiteId,
+                        implode(',', $websiteStores)
+                    )
+                );
                 $output->writeln('');
             }
-            $nonConfiguredStores = $configuredStores = array();
+            $nonConfiguredStores = $configuredStores = [];
             foreach ($storeList as $store) {
                 $flag = $this->sync->isExtensionConfigured($store->getId());
                 if ($flag) {
@@ -193,9 +222,14 @@ HELP
                     $nonConfiguredStores[] = $store->getCode();
                 }
             }
-            $output->writeln("<info>Klevu configured store code(s): " . implode(",", $configuredStores) . "</info>");
-            $output->writeln("<info>Other(non-configured) store code(s): " . implode(",", $nonConfiguredStores) . "</info>");
-
+            $output->writeln(sprintf(
+                '<info>Klevu configured store code(s): %s</info>',
+                implode(",", $configuredStores)
+            ));
+            $output->writeln(sprintf(
+                '<info>Other(non-configured) store code(s): %s</info>',
+                implode(",", $nonConfiguredStores)
+            ));
         } else {
             $output->writeln("=== Starting storewise data sync ===");
             $output->writeln('');
@@ -209,7 +243,11 @@ HELP
 
                 $rejectedSites = $this->validateStoreCodes($array_store);
                 if (!empty($rejectedSites)) {
-                    $storeCodeError = "Error: Sync did not run for store code(s): " . implode(",", $rejectedSites) . ". Please ensure all store codes belong to the same website.";
+                    $storeCodeError = sprintf(
+                        'Error: Sync did not run for store code(s): %s. '
+                        . 'Please ensure all store codes belong to the same website.',
+                        implode(",", $rejectedSites)
+                    );
 
                     foreach ($rejectedSites as $rejectedStoreCode) {
                         $this->storeScopeResolver->setCurrentStoreByCode($rejectedStoreCode);
@@ -230,23 +268,28 @@ HELP
                         $this->sync = ObjectManager::getInstance()->get(Sync::class);
                         $this->cmsSync = ObjectManager::getInstance()->get(KlevuContent::class);
 
-                        if (file_exists($file)) {
-                            $lockFileError = "Klevu index process cannot start because a lock file exists for store code: ' . $value . ', skipping this store.";
+                        if ($this->fileDriver->isExists($file)) {
+                            $lockFileError = sprintf(
+                                'Klevu index process cannot start because a lock file exists for store code: %s'
+                                . ', skipping this store.',
+                                $value
+                            );
                             $this->logger->info($lockFileError);
                             $output->writeln('<error>'.$lockFileError.'</error>');
                             $output->writeln("");
                             $syncFailed[] = $value;
                             continue;
                         }
-                        fopen($file, 'w');
 
                         try {
+                            $this->fileDriver->fileOpen($file, 'w');
+
                             $oneStore = $this->storeInterface->getStore($value);
                             //Sync Data
                             if (is_object($oneStore)) {
                                 if (!$this->sync->setupSession($oneStore)) {
-                                    if (file_exists($file)) {
-                                        unlink($file);
+                                    if ($this->fileDriver->isExists($file)) {
+                                        $this->fileDriver->deleteFile($file);
                                     }
                                     continue;
                                 }
@@ -280,12 +323,20 @@ HELP
                             $output->writeln("<info>".$syncComplete."</info>");
                             $output->writeln("<info>********************************</info>");
                         } catch (\Exception $e) {
-                            $this->logger->error(sprintf("Error thrown in Storewise sync %s for STORE %s:",$e->getMessage(),$value));
-                            $output->writeln('<error>Error thrown in Storewise sync ' . $e->getMessage() ." for STORE => ".$value. '</error>');
+                            $this->logger->error(sprintf(
+                                "Error thrown in Storewise sync %s for STORE %s:",
+                                $e->getMessage(),
+                                $value
+                            ));
+                            $output->writeln(sprintf(
+                                '<error>Error thrown in Storewise sync %s for STORE => %s</error>',
+                                $e->getMessage(),
+                                $value
+                            ));
                         }
 
-                        if (file_exists($file)) {
-                            unlink($file);
+                        if ($this->fileDriver->isExists($file)) {
+                            $this->fileDriver->deleteFile($file);
                         }
                     }
 
@@ -294,8 +345,8 @@ HELP
             } catch (\Exception $e) {
                 $this->logger->error(sprintf("Error thrown in Storewise sync store %s:", $e->getMessage()));
                 $output->writeln('<error>Error thrown in Storewise sync: ' . $e->getMessage() . '</error>');
-                if (isset($file) && file_exists($file)) {
-                    unlink($file);
+                if (isset($file) && $this->fileDriver->isExists($file)) {
+                    $this->fileDriver->deleteFile($file);
                 }
 
                 $this->storeScopeResolver->setCurrentStoreById(0);
@@ -316,7 +367,10 @@ HELP
                 }
                 $this->storeScopeResolver->setCurrentStore($originalStore);
 
-                $output->writeln('<info>Sync successfully completed for store code(s): ' . implode(",", $syncSuccess) . '</info>');
+                $output->writeln(sprintf(
+                    '<info>Sync successfully completed for store code(s): %s</info>',
+                    implode(",", $syncSuccess)
+                ));
             }
 
             if ($syncFailed) {
@@ -325,12 +379,15 @@ HELP
                     $this->storeScopeResolver->setCurrentStoreByCode($failedStoreCode);
                     $this->logger->info(sprintf(
                         "Sync did not complete for store code(s) %s:",
-                        implode(",", $syncFailed)
+                        implode(',', $syncFailed)
                     ));
                 }
                 $this->storeScopeResolver->setCurrentStore($originalStore);
 
-                $output->writeln('<error>Sync did not complete for store code(s): ' . implode(",", $syncFailed) . '</error>');
+                $output->writeln(sprintf(
+                    '<error>Sync did not complete for store code(s): %s</error>',
+                    implode(',', $syncFailed)
+                ));
             }
         }
 
@@ -338,19 +395,21 @@ HELP
     }
 
     /**
-     * @param $storeList
+     * @param string[] $storeList
      * @return array
      */
     private function validateStoreCodes($storeList)
     {
         $firstWebsite = null;
-        $rejectedStores = array();
-        if (!is_array($storeList)) return $storeList;
+        $rejectedStores = [];
+        if (!is_array($storeList)) {
+            return $storeList;
+        }
         foreach ($storeList as $storeCode) {
             //check if store code is valid
             if (isset($this->allStoreList[$storeCode])) {
                 //if it is the first website
-                if (is_null($firstWebsite)) {
+                if (null === $firstWebsite) {
                     $firstWebsite = $this->allStoreList[$storeCode];
                     $this->runStoreList[] = $storeCode;
                 } else {
@@ -398,7 +457,8 @@ HELP
      *
      * For the same reasons as initLogger is required, we can't inject a class from a new
      *  module into a CLI command. Unlike initLogger, however, this is a new property so
-     *  the usual $this->>storeScopeResolver = $storeScopeResolver ?: ObjectManager::getInstance()->get(StoreScopeResolverInterface::class)
+     *  the usual $this->storeScopeResolver =
+     *      $storeScopeResolver ?: ObjectManager::getInstance()->get(StoreScopeResolverInterface::class)
      *  logic can effectively be used without checking for a class mismatch
      *
      * @return void

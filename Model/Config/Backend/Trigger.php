@@ -3,64 +3,70 @@
 namespace Klevu\Search\Model\Config\Backend;
 
 use Klevu\Logger\Constants as LoggerConstants;
+use Klevu\Search\Helper\Data as SearchHelper;
+use Klevu\Search\Model\Trigger as KlevuModelTrigger;
+use Magento\Framework\App\Cache\TypeListInterface;
+use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\App\Config\Value;
+use Magento\Framework\Data\Collection\AbstractDb;
+use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Model\Context;
+use Magento\Framework\Model\ResourceModel\AbstractResource;
+use Magento\Framework\Registry;
 
-/**
- * Class Trigger
- * @package Klevu\Search\Model\Config\Backend
- */
-class Trigger extends \Magento\Framework\App\Config\Value
+class Trigger extends Value
 {
-
     /**
-     * @var searchHelperData
+     * @var searchHelper
      */
     private $searchHelperData;
-
     /**
-     * @var klevuModelTrigger
+     * @var KlevuModelTrigger
      */
     private $klevuModelTrigger;
 
     /**
      * Trigger constructor.
-     * @param \Magento\Framework\Model\Context $context
-     * @param \Magento\Framework\Registry $registry
-     * @param \Magento\Framework\App\Config\ScopeConfigInterface $config
-     * @param \Magento\Framework\App\Cache\TypeListInterface $cacheTypeList
-     * @param \Klevu\Search\Helper\Data $searchHelperData
-     * @param \Klevu\Search\Model\Trigger $klevuModelTrigger
-     * @param \Magento\Framework\Model\ResourceModel\AbstractResource|null $resource
-     * @param \Magento\Framework\Data\Collection\AbstractDb|null $resourceCollection
+     *
+     * @param Context $context
+     * @param Registry $registry
+     * @param ScopeConfigInterface $config
+     * @param TypeListInterface $cacheTypeList
+     * @param SearchHelper $searchHelperData
+     * @param KlevuModelTrigger $klevuModelTrigger
+     * @param AbstractResource|null $resource
+     * @param AbstractDb|null $resourceCollection
      * @param array $data
      */
     public function __construct(
-        \Magento\Framework\Model\Context $context,
-        \Magento\Framework\Registry $registry,
-        \Magento\Framework\App\Config\ScopeConfigInterface $config,
-        \Magento\Framework\App\Cache\TypeListInterface $cacheTypeList,
-        \Klevu\Search\Helper\Data $searchHelperData,
-        \Klevu\Search\Model\Trigger $klevuModelTrigger,
-        \Magento\Framework\Model\ResourceModel\AbstractResource $resource = null,
-        \Magento\Framework\Data\Collection\AbstractDb $resourceCollection = null,
+        Context $context,
+        Registry $registry,
+        ScopeConfigInterface $config,
+        TypeListInterface $cacheTypeList,
+        SearchHelper $searchHelperData,
+        KlevuModelTrigger $klevuModelTrigger,
+        AbstractResource $resource = null,
+        AbstractDb $resourceCollection = null,
         array $data = []
-    )
-    {
-
+    ) {
         parent::__construct($context, $registry, $config, $cacheTypeList, $resource, $resourceCollection, $data);
         $this->searchHelperData = $searchHelperData;
         $this->klevuModelTrigger = $klevuModelTrigger;
     }
 
-
     /**
      * Set after commit callback
      *
      * @return Trigger
-     * @throws \Magento\Framework\Exception\LocalizedException
+     * @throws LocalizedException
+     *
+     * @deprecated triggers added via mview
+     * @see /etc/mview.xml & /etc/indexer.xml
      */
     public function afterSave()
     {
         $this->_getResource()->addCommitCallback([$this, 'processValue']);
+
         return parent::afterSave();
     }
 
@@ -68,22 +74,31 @@ class Trigger extends \Magento\Framework\App\Config\Value
      * Process towards activate or drop trigger
      *
      * @return void
+     * @deprecated triggers added via mview
+     * @see /etc/mview.xml & /etc/indexer.xml
+     *
      */
     public function processValue()
     {
         try {
-            if ((bool)$this->getValue() != (bool)$this->getOldValue()) {
+            if ((bool)$this->getValue() !== (bool)$this->getOldValue()) {
                 if ((bool)$this->getValue()) {
-                    /** @var \Klevu\Search\Model\Trigger */
+                    /** @var KlevuModelTrigger */
                     $this->klevuModelTrigger->activateTrigger();
                 } else {
                     $this->klevuModelTrigger->dropTriggerIfFoundExist();
                 }
             }
         } catch (\Exception $e) {
-            $this->searchHelperData->log(LoggerConstants::ZEND_LOG_CRIT, sprintf("Exception thrown while SQL trigger: %s::%s - %s", __CLASS__, __METHOD__, $e->getMessage()));
+            $this->searchHelperData->log(
+                LoggerConstants::ZEND_LOG_CRIT,
+                sprintf(
+                    "Exception thrown while SQL trigger: %s::%s - %s",
+                    __CLASS__,
+                    __METHOD__,
+                    $e->getMessage()
+                )
+            );
         }
     }
 }
-
-

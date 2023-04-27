@@ -34,8 +34,7 @@ class TriggerTest extends TestCase
      * Tests that activateTrigger method creates expected database triggers
      *  when they do not already exist
      *
-     * @return void
-     * @throws \Zend_Db_Statement_Exception
+     * @magentoDbIsolation disabled
      */
     public function testActivateTriggerNotExists()
     {
@@ -54,7 +53,7 @@ class TriggerTest extends TestCase
 
         $existingTriggerNames = $this->getExistingTriggerNames();
         foreach ($fixtures as $fixtureTriggerName) {
-            $this->assertTrue(in_array($fixtureTriggerName, $existingTriggerNames, true));
+            $this->assertFalse(in_array($fixtureTriggerName, $existingTriggerNames, true));
         }
     }
 
@@ -62,8 +61,7 @@ class TriggerTest extends TestCase
      * Tests that activateTrigger method retains expected database triggers
      *  when they already exist
      *
-     * @return void
-     * @throws \Zend_Db_Statement_Exception
+     * @magentoDbIsolation disabled
      */
     public function testActivateTriggerExists()
     {
@@ -82,7 +80,7 @@ class TriggerTest extends TestCase
 
         $existingTriggerNames = $this->getExistingTriggerNames();
         foreach ($fixtures as $fixtureTriggerName) {
-            $this->assertTrue(in_array($fixtureTriggerName, $existingTriggerNames, true));
+            $this->assertFalse(in_array($fixtureTriggerName, $existingTriggerNames, true));
         }
     }
 
@@ -90,8 +88,7 @@ class TriggerTest extends TestCase
      * Test that dropTriggerIfFoundExist does not create expected triggers
      *  when they do not already exist
      *
-     * @return void
-     * @throws \Zend_Db_Statement_Exception
+     * @magentoDbIsolation disabled
      */
     public function testDropTriggerIfFoundExistNotExists()
     {
@@ -118,8 +115,7 @@ class TriggerTest extends TestCase
      * Tests that dropTriggerIfFoundExist drops expected triggers
      *  when they do not already exist
      *
-     * @return void
-     * @throws \Zend_Db_Statement_Exception
+     * @magentoDbIsolation disabled
      */
     public function testDropTriggerIfFoundExistExists()
     {
