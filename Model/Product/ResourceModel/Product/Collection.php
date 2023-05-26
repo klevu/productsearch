@@ -13,6 +13,7 @@ use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Data\Collection as MagentoCollection;
 use Magento\Framework\DB\Select as DbSelect;
 use Magento\Store\Api\Data\StoreInterface;
+use Psr\Log\LoggerInterface;
 
 class Collection
 {
@@ -28,21 +29,30 @@ class Collection
      * @var StockStatusFactory
      */
     private $stockStatusFactory;
+    /**
+     * @var LoggerInterface
+     */
+    private $logger;
 
     /**
      * @param ProductCollectionFactory $productCollectionFactory
      * @param GetBatchSize $getBatchSize
      * @param StockStatusFactory|null $stockStatusFactory
+     * @param LoggerInterface|null $logger
      */
     public function __construct(
         ProductCollectionFactory $productCollectionFactory,
         GetBatchSize $getBatchSize,
-        StockStatusFactory $stockStatusFactory = null
+        StockStatusFactory $stockStatusFactory = null,
+        LoggerInterface $logger = null
     ) {
         $this->productCollectionFactory = $productCollectionFactory;
         $this->getBatchSize = $getBatchSize;
+        $objectManager = ObjectManager::getInstance();
         $this->stockStatusFactory = $stockStatusFactory
-            ?: ObjectManager::getInstance()->get(StockStatusFactory::class);
+            ?: $objectManager->get(StockStatusFactory::class);
+        $this->logger = $logger
+            ?: $objectManager->get(LoggerInterface::class);
     }
 
     /**
@@ -79,6 +89,14 @@ class Collection
         $stockStatusResource->addStockDataToCollection($productCollection, !$includeOosProducts);
         $productCollection->setFlag('has_stock_status_filter', true);
 
+        $this->logger->debug(
+            sprintf(
+                'Product Collection Select: %s : %s',
+                __METHOD__,
+                $productCollection->getSelect()->__toString()
+            )
+        );
+
         return $productCollection;
     }
 
@@ -105,7 +123,22 @@ class Collection
 
         $connection = $productCollection->getConnection();
         $maxProductId = $connection->fetchOne($select);
+        $return = $maxProductId ? (int)$maxProductId : 0;
+        $this->logger->debug(
+            sprintf(
+                'Max Product ID Select: %s : %s',
+                __METHOD__,
+                $productCollection->getSelect()->__toString()
+            )
+        );
+        $this->logger->debug(
+            sprintf(
+                'Max Product ID: %s : %s',
+                __METHOD__,
+                $return
+            )
+        );
 
-        return $maxProductId ? (int)$maxProductId : 0;
+        return $return;
     }
 }

@@ -117,6 +117,7 @@ $orderData = [
     'base_grand_total' => $orderTotal,
     'order_currency_code' => $orderCurrency,
     'store_currency_code' => $orderCurrency,
+    'base_currency_code' => $baseCurrency,
     'global_currency_code' => $baseCurrency,
     'shipping_description' => 'Flat Rate - Fixed',
     'customer_is_guest' => true,

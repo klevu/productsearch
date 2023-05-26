@@ -14,6 +14,7 @@ use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Model\Store;
+use Psr\Log\LoggerInterface;
 
 class Product
 {
@@ -41,6 +42,10 @@ class Product
      * @var JoinParentVisibilityToSelectInterface
      */
     private $joinParentVisibilityToSelectService;
+    /**
+     * @var LoggerInterface
+     */
+    private $logger;
 
     /**
      * @param ProductResourceModel $productResourceModel
@@ -48,22 +53,24 @@ class Product
      * @param GetBatchSize $getBatchSize
      * @param ResourceConnection|null $resourceConnection
      * @param JoinParentVisibilityToSelectInterface|null $joinParentVisibilityToSelectService
+     * @param LoggerInterface|null $logger
      */
     public function __construct(
         ProductResourceModel $productResourceModel,
         OptionProvider $optionProvider,
         GetBatchSize $getBatchSize,
         ResourceConnection $resourceConnection = null,
-        JoinParentVisibilityToSelectInterface $joinParentVisibilityToSelectService = null
+        JoinParentVisibilityToSelectInterface $joinParentVisibilityToSelectService = null,
+        LoggerInterface $logger = null
     ) {
         $this->productResourceModel = $productResourceModel;
         $this->optionProvider = $optionProvider;
         $this->getBatchSize = $getBatchSize;
-
         $objectManager = ObjectManager::getInstance();
         $this->resourceConnection = $resourceConnection ?: $objectManager->get(ResourceConnection::class);
         $this->joinParentVisibilityToSelectService = $joinParentVisibilityToSelectService
             ?: $objectManager->get(JoinParentVisibilityToSelectInterface::class);
+        $this->logger = $logger ?: $objectManager->get(LoggerInterface::class);
     }
 
     /**
@@ -92,7 +99,9 @@ class Product
             $select->limit($batchSize);
         }
         $products = $connection->fetchAll($select);
-
+        $this->logger->debug(
+            sprintf('Batch Product Collection Select: %s', $select->__toString())
+        );
         unset($connection, $select);
 
         return array_unique(
@@ -161,7 +170,9 @@ class Product
         ]);
 
         $relations = $connection->fetchAll($select);
-
+        $this->logger->debug(
+            sprintf('Product Parent Relation Select: %s', $select->__toString())
+        );
         unset($connection, $select);
 
         return $relations;
