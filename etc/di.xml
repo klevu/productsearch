@@ -333,6 +333,30 @@
         </arguments>
     </type>
 
+    <type name="Klevu\Search\Model\Klevu\ResourceModel\Klevu">
+        <arguments>
+            <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Model\Klevu\ResourceModel\Klevu\Collection">
+        <arguments>
+            <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Model\Product\ResourceModel\Product">
+        <arguments>
+            <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Model\Product\ResourceModel\Product\Collection">
+        <arguments>
+            <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
+        </arguments>
+    </type>
+
     <type name="Klevu\Search\Service\Catalog\Product\GetReviewCount">
         <arguments>
             <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
@@ -705,7 +729,6 @@
         </arguments>
     </type>
 
-
     <type name="Klevu\Search\Controller\Index\Runexternaly">
         <arguments>
             <argument name="fileSystemDriver" xsi:type="object">Magento\Framework\Filesystem\Driver\File</argument>
@@ -715,6 +738,12 @@
     <type name="Klevu\Search\Model\Observer\CreateThumb">
         <arguments>
             <argument name="fileDriver" xsi:type="object">Magento\Framework\Filesystem\Driver\File</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Provider\Sync\Order\Item\Type\DefaultDataProvider">
+        <arguments>
+            <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
         </arguments>
     </type>
 </config>

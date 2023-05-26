@@ -12,6 +12,7 @@ use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Model\ResourceModel\Db\AbstractDb;
 use Magento\Framework\Model\ResourceModel\Db\Context;
 use Magento\Store\Api\Data\StoreInterface;
+use Psr\Log\LoggerInterface;
 
 class Klevu extends AbstractDb
 {
@@ -20,6 +21,10 @@ class Klevu extends AbstractDb
      * @var GetBatchSizeInterface
      */
     private $getBatchSize;
+    /**
+     * @var LoggerInterface
+     */
+    private $logger;
 
     /**
      * Define main table
@@ -33,14 +38,18 @@ class Klevu extends AbstractDb
      * @param Context $context
      * @param string|null $connectionName
      * @param GetBatchSizeInterface|null $getBatchSize
+     * @param LoggerInterface|null $logger
      */
     public function __construct(
         Context $context,
         $connectionName = null,
-        GetBatchSizeInterface $getBatchSize = null
+        GetBatchSizeInterface $getBatchSize = null,
+        LoggerInterface $logger = null
     ) {
         parent::__construct($context, $connectionName);
-        $this->getBatchSize = $getBatchSize ?: ObjectManager::getInstance()->create(GetBatchSizeInterface::class);
+        $objectManager = ObjectManager::getInstance();
+        $this->getBatchSize = $getBatchSize ?: $objectManager->create(GetBatchSizeInterface::class);
+        $this->logger = $logger ?: $objectManager->get(LoggerInterface::class);
     }
 
     /**
@@ -71,7 +80,9 @@ class Klevu extends AbstractDb
         $select->order('main_table.' . KlevuSync::FIELD_ENTITY_ID . ' ASC');
 
         $return = $connection->fetchAll($select, $filter);
-
+        $this->logger->debug(
+            sprintf('Batch Klevu Data Sync Collection Select: %s', $select->__toString())
+        );
         unset($connection, $select);
 
         return $return;

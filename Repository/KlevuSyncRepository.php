@@ -225,8 +225,16 @@ class KlevuSyncRepository implements KlevuSyncRepositoryInterface
         $klevuCollection->setPageSize(1);
 
         $firstItem = $klevuCollection->getFirstItem();
+        $return = $firstItem ? (int)$firstItem->getId() : 0;
+        $this->logger->debug(
+            sprintf(
+                'Max Sync ID: %s : %s',
+                __METHOD__,
+                $return
+            )
+        );
 
-        return $firstItem ? (int)$firstItem->getId() : 0;
+        return $return;
     }
 
     /**
