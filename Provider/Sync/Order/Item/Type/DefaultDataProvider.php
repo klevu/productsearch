@@ -4,10 +4,15 @@ namespace Klevu\Search\Provider\Sync\Order\Item\Type;
 
 use Klevu\Search\Api\Provider\Sync\Order\Item\DataProviderInterface as OrderItemDataProviderInterface;
 use Klevu\Search\Helper\Data as SearchHelper;
+use Magento\Framework\App\ObjectManager;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Pricing\PriceCurrencyInterface;
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Api\Data\OrderItemExtension;
 use Magento\Sales\Api\Data\OrderItemInterface;
+use Magento\Store\Api\Data\StoreInterface;
+use Magento\Store\Model\StoreManagerInterface;
+use Psr\Log\LoggerInterface;
 
 class DefaultDataProvider implements OrderItemDataProviderInterface
 {
@@ -43,17 +48,34 @@ class DefaultDataProvider implements OrderItemDataProviderInterface
      * @var SearchHelper
      */
     private $searchHelper;
+    /**
+     * @var StoreManagerInterface
+     */
+    private $storeManager;
+    /**
+     * @var LoggerInterface|null
+     */
+    private $logger;
 
     /**
      * @param PriceCurrencyInterface $priceCurrency
      * @param SearchHelper $searchHelper
+     * @param StoreManagerInterface|null $storeManager
+     * @param LoggerInterface|null $logger
      */
     public function __construct(
         PriceCurrencyInterface $priceCurrency,
-        SearchHelper $searchHelper
+        SearchHelper $searchHelper,
+        StoreManagerInterface $storeManager = null,
+        LoggerInterface $logger = null
     ) {
         $this->priceCurrency = $priceCurrency;
         $this->searchHelper = $searchHelper;
+        $objectManager = ObjectManager::getInstance();
+        $this->storeManager = $storeManager
+            ?: $objectManager->get(StoreManagerInterface::class);
+        $this->logger = $logger
+            ?: $objectManager->get(LoggerInterface::class);
     }
 
     /**
@@ -65,13 +87,15 @@ class DefaultDataProvider implements OrderItemDataProviderInterface
     {
         /** @var OrderItemExtension $extensionAttributes */
         $extensionAttributes = $orderItem->getExtensionAttributes();
-        $klevuSyncData = $extensionAttributes ? $extensionAttributes->getKlevuOrderSync() : [];
+        $klevuSyncData = $extensionAttributes
+            ? $extensionAttributes->getKlevuOrderSync()
+            : [];
 
         /** @var OrderInterface $order */
         $order = $orderItem->getOrder();
         $unitPrice = method_exists($this->priceCurrency, 'roundPrice')
-            ? $this->priceCurrency->roundPrice($orderItem->getPriceInclTax())
-            : $this->priceCurrency->round($orderItem->getPriceInclTax());
+            ? $this->priceCurrency->roundPrice($orderItem->getBasePriceInclTax())
+            : $this->priceCurrency->round($orderItem->getBasePriceInclTax());
 
         $orderDate = !empty($klevuSyncData[self::FIELD_ORDER_DATE])
             ? date_format(date_create($klevuSyncData[self::FIELD_ORDER_DATE]), "Y-m-d")
@@ -100,13 +124,54 @@ class DefaultDataProvider implements OrderItemDataProviderInterface
             static::PRODUCT_VARIANT_ID => $orderItem->getProductId(),
             static::UNIT => $orderItem->getQtyOrdered(),
             static::UNIT_PRICE => $unitPrice,
-            static::CURRENCY => $order->getOrderCurrencyCode(),
+            static::CURRENCY => $this->getCurrencyCode($order),
             static::STORE_TIMEZONE => $this->searchHelper->getStoreTimeZone($orderItem->getStoreId()),
             static::ORDER_DATE => $orderDate,
             static::CHECKOUT_DATE => $checkoutDate,
             static::SESSION_ID => $sessionId,
             static::EMAIL_ID => $emailId,
-            static::CLIENT_IP => $clientIp
+            static::CLIENT_IP => $clientIp,
         ];
+    }
+
+    /**
+     * @param OrderInterface $order
+     *
+     * @return string
+     */
+    private function getCurrencyCode(OrderInterface $order)
+    {
+        $baseCurrency = $order->getBaseCurrencyCode();
+        if ($baseCurrency) {
+            return $baseCurrency;
+        }
+        $store = $this->getStore($order);
+
+        return $store
+            ? $store->getBaseCurrencyCode()
+            : '';
+    }
+
+    /**
+     * @param OrderInterface $order
+     *
+     * @return StoreInterface|null
+     */
+    private function getStore(OrderInterface $order)
+    {
+        $store = method_exists($order, 'getStore')
+            ? $order->getStore()
+            : null;
+        if (null === $store) {
+            try {
+                $store = $this->storeManager->getStore($order->getStoreId());
+            } catch (NoSuchEntityException $exception) {
+                $this->logger->error(
+                    sprintf('Method: %s - Error: %s', __METHOD__, $exception->getMessage())
+                );
+            }
+        }
+
+        return $store;
     }
 }

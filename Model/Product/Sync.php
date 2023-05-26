@@ -502,9 +502,6 @@ class Sync extends AbstractModel
                 return;
             }
             $productIds = $this->getProductsIds($action, $store, $filterProductIds);
-            if (!count($productIds)) {
-                continue;
-            }
             $this->syncProductsForAction($productIds, $action, $store);
             if ($isProductFilterApplied) {
                 $trackProductIds[$action] = $productIds;
@@ -639,13 +636,16 @@ class Sync extends AbstractModel
      */
     private function syncProductsForAction(array $productIds, $action, $store)
     {
-        $method = $action . "Products";
-        $products = array_values($productIds); //resetting key index
         $total = count($productIds);
         $this->_searchHelperData->log(
             LoggerConstants::ZEND_LOG_INFO,
             sprintf("Found %d products to %s.", $total, $action)
         );
+        if (!$total) {
+            return;
+        }
+        $method = $action . "Products";
+        $products = array_values($productIds); //resetting key index
         $recordsPerPage = $this->getRecordsPerPage($store);
         $pages = ceil($total / $recordsPerPage);
         for ($page = 1; $page <= $pages; $page++) {
