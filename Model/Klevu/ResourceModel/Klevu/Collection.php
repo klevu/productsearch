@@ -41,6 +41,16 @@ class Collection extends AbstractCollection
         $this->_init(KlevuSync::class, KlevuSyncResourceModel::class);
     }
 
+    /**
+     * @param EntityFactoryInterface $entityFactory
+     * @param LoggerInterface $logger
+     * @param FetchStrategyInterface $fetchStrategy
+     * @param ManagerInterface $eventManager
+     * @param AdapterInterface|null $connection
+     * @param AbstractDb|null $resource
+     * @param KlevuSync|null $klevuSync
+     * @param GetBatchSizeInterface|null $getBatchSize
+     */
     public function __construct(
         EntityFactoryInterface $entityFactory,
         LoggerInterface $logger,
@@ -79,6 +89,13 @@ class Collection extends AbstractCollection
         $this->addFieldToFilter(KlevuSync::FIELD_STORE_ID, $store->getId());
         $this->setOrder(KlevuSync::FIELD_ENTITY_ID, MagentoCollection::SORT_ORDER_ASC);
         $this->setPageSize($batchSize);
+        $this->_logger->debug(
+            sprintf(
+                'Klevu Data Sync Select: %s : %s',
+                __METHOD__,
+                $this->getSelect()->__toString()
+            )
+        );
 
         return $this;
     }
@@ -95,6 +112,13 @@ class Collection extends AbstractCollection
                 "main_table." . KlevuSync::FIELD_LAST_SYNCED_AT . " < product." . ProductInterface::UPDATED_AT
             ]),
             ''
+        );
+        $this->_logger->debug(
+            sprintf(
+                'Products to Update Select: %s : %s',
+                __METHOD__,
+                $this->getSelect()->__toString()
+            )
         );
 
         return $this;

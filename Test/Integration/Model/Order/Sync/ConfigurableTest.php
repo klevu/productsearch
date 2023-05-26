@@ -70,13 +70,13 @@ class ConfigurableTest extends TestCase
                 $this->assertSame('klevu-klevu_test_store_1', $parameters['klevu_apiKey']);
 
                 $this->assertArrayHasKey('klevu_currency', $parameters);
-                $this->assertSame('GBP', $parameters['klevu_currency']);
+                $this->assertSame('USD', $parameters['klevu_currency']);
 
                 $this->assertArrayHasKey('klevu_unit', $parameters);
                 $this->assertSame('1.0000', $parameters['klevu_unit']);
 
                 $this->assertArrayHasKey('klevu_salePrice', $parameters);
-                $this->assertSame(30.0000, $parameters['klevu_salePrice']);
+                $this->assertSame(20.0000, $parameters['klevu_salePrice']);
 
                 $this->assertArrayHasKey('klevu_productId', $parameters);
                 $this->assertSame(
