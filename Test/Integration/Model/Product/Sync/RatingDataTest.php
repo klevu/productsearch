@@ -35,7 +35,7 @@ class RatingDataTest extends TestCase
      * @magentoDbIsolation disabled
      * @magentoCache all disabled
      * @magentoConfigFixture default/klevu_search/attributes/other sku,rating,review_count
-     * @magentoConfigFixture klevu_test_store_1_store klevu_search/attributes/other sku,rating,review_count
+     * @magentoConfigFixture klevu_test_store_1_store klevu_search/attributes/other meta_title,sku,rating,review_count
      * @magentoConfigFixture default/klevu_search/product_sync/enabled 1
      * @magentoConfigFixture klevu_test_store_1_store klevu_search/product_sync/enabled 1
      * @magentoConfigFixture default/klevu_search/general/rating_flag 1
@@ -115,8 +115,11 @@ class RatingDataTest extends TestCase
                     } else {
                         $this->assertTrue(is_array($record['otherAttributeToIndex']), $record['sku'] . ': otherAttributeToIndex is array');
                     }
-                    $this->assertArrayHasKey('sku', $record['otherAttributeToIndex'], $record['sku'] . ': other');
-                    $this->assertSame($record['sku'], $record['otherAttributeToIndex']['sku'], $record['sku'] . ': other');
+
+                    $productRepository = $this->objectManager->create(ProductRepositoryInterface::class);
+                    $product = $productRepository->get($record['sku']);
+                    $this->assertArrayHasKey('meta_title', $record['otherAttributeToIndex'], $record['sku'] . ': other');
+                    $this->assertSame($product->getData('meta_title'), $record['otherAttributeToIndex']['meta_title'], $record['sku'] . ': other');
                     $this->assertArrayNotHasKey('rating', $record['otherAttributeToIndex'], $record['sku'] . ': otherAttributeToIndex');
                     $this->assertArrayNotHasKey('rating_count', $record['otherAttributeToIndex'], $record['sku'] . ': otherAttributeToIndex');
                     $this->assertArrayNotHasKey('review_count', $record['otherAttributeToIndex'], $record['sku'] . ': otherAttributeToIndex');

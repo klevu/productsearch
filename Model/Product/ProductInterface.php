@@ -200,10 +200,11 @@ interface ProductInterface
 
     /**
      * @param MagentoProductInterface $item
+     * @param StoreInterface|null $store
      *
      * @return array|null
      */
-    public function getGroupPricesData($item);
+    public function getGroupPricesData($item, $store = null);
 
     /**
      * @param MagentoProductInterface|null $parent

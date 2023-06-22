@@ -3,24 +3,32 @@
 namespace Klevu\Search\Helper;
 
 use Klevu\Logger\Constants as LoggerConstants;
+use Klevu\Logger\Logger\Logger;
 use Klevu\Search\Helper\Config as KlevuConfig;
 use Klevu\Search\Helper\Data as KlevuSearchHelper;
 use Klevu\Search\Helper\Stock as KlevuStockHelper;
 use Klevu\Search\Service\Catalog\Product\Stock as KlevuStockService;
+use Magento\Bundle\Model\Product\Price as BundlePrice;
 use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Catalog\Helper\Data as MagentoCatalogHelper;
 use Magento\Catalog\Model\Product as ProductModel;
+use Magento\Catalog\Model\Product\Type as ProductType;
+use Magento\Catalog\Pricing\Price\FinalPrice;
+use Magento\Catalog\Pricing\Price\RegularPrice;
 use Magento\CatalogRule\Model\ResourceModel\RuleFactory;
 use Magento\CatalogRule\Observer\RulePricesStorage;
 use Magento\ConfigurableProduct\Model\Product\Type\Configurable as ConfigurableType;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\ObjectManager;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Pricing\PriceCurrencyInterface;
 use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
+use Magento\GroupedProduct\Model\Product\Type\Grouped as GroupedProductType;
 use Magento\GroupedProduct\Pricing\Price\FinalPrice as GroupProductFinalPrice;
 use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Tax\Model\Config as TaxConfig;
+use Psr\Log\LoggerInterface;
 
 class Price extends AbstractHelper
 {
@@ -68,6 +76,22 @@ class Price extends AbstractHelper
      * @var KlevuSearchHelper
      */
     protected $_searchHelperData;
+    /**
+     * @var array<float|null>
+     */
+    private $klevuSalePrice = [];
+    /**
+     * @var StoreManagerInterface
+     */
+    private $storeManager;
+    /**
+     * @var LoggerInterface|null
+     */
+    private $logger;
+    /**
+     * @var array
+     */
+    private $minProductPriceCache = [];
 
     /**
      * @param TimezoneInterface $localeDate
@@ -78,6 +102,8 @@ class Price extends AbstractHelper
      * @param PriceCurrencyInterface $priceCurrency
      * @param RuleFactory $resourceRuleFactory
      * @param Stock $stockHelper
+     * @param StoreManagerInterface|null $storeManager
+     * @param LoggerInterface|null $logger
      */
     public function __construct(
         TimezoneInterface $localeDate,
@@ -87,7 +113,9 @@ class Price extends AbstractHelper
         MagentoCatalogHelper $catalogTaxHelper,
         PriceCurrencyInterface $priceCurrency,
         RuleFactory $resourceRuleFactory,
-        KlevuStockHelper $stockHelper
+        KlevuStockHelper $stockHelper,
+        StoreManagerInterface $storeManager = null,
+        LoggerInterface $logger = null
     ) {
         $this->_searchHelperConfig = $searchHelperConfig;
         $this->_searchHelperData = $searchHelperData;
@@ -97,6 +125,11 @@ class Price extends AbstractHelper
         $this->_catalogTaxHelper = $catalogTaxHelper;
         $this->priceCurrency = $priceCurrency;
         $this->_stockHelper = $stockHelper;
+        $objectManager = ObjectManager::getInstance();
+        $this->storeManager = $storeManager
+            ?: $objectManager->get(StoreManagerInterface::class);
+        $this->logger = $logger
+            ?: $objectManager->get(LoggerInterface::class);
     }
 
     /**
@@ -114,91 +147,119 @@ class Price extends AbstractHelper
      * @param ProductInterface $item
      * @param StoreInterface|string|int|null $store
      *
-     * @return array
+     * @return array<float|null>
      */
     public function getKlevuSalePrice($parent, $item, $store)
     {
-        // Default to 0 if price can't be determined
-        $productPrice['salePrice'] = 0;
-        if ($parent && $parent->getData("type_id") == $this->getParentType()) {
-            $final_price = $parent->getPriceInfo()
-                ->getPrice('final_price')
-                ->getAmount()
-                ->getValue();
-            $processed_final_price = $this->processPrice($final_price, 'final_price', $parent, $store);
-            $productPrice['salePrice'] = $processed_final_price;
-            $productPrice['startPrice'] = $processed_final_price;
-        } else {
-            $final_price = null;
-            $priceInfo = $item->getPriceInfo();
-            $price = $priceInfo->getPrice('final_price');
-            if ($price && (!($price instanceof GroupProductFinalPrice) || $price->getMinProduct())) {
-                $amount = $price->getAmount();
-                if ($amount) {
-                    $final_price = $amount->getValue();
+        $cacheKey = $this->getCacheKey($item, $parent, $store);
+        if (!isset($this->klevuSalePrice[$cacheKey])) {
+            $salePrice = null;
+            $toPrice = null;
+            if ($parent && $parent->getData("type_id") === $this->getParentType()) {
+                $item = $parent;
+            }
+            try {
+                $maxPrice = null;
+                switch ($item->getTypeId()) {
+                    case GroupedProductType::TYPE_CODE:
+                        // Would remove this and get the price from the item returned from getGroupProductMinProduct,
+                        // but it's a public method and merchant may have extended it.
+                        $price = $this->getGroupProductMinPrice($item);
+                        // Grouped products don't have a tax class,
+                        // switch item to use simple child product with the lowest price instead
+                        $item = $this->getGroupProductMinProduct($item);
+                        break;
+                    case ProductType::TYPE_BUNDLE:
+                        list($price, $maxPrice) = $this->getBundleProductPrices(
+                            $item,
+                            $store
+                        );
+                        break;
+                    default:
+                        $priceInfo = $item->getPriceInfo();
+                        $finalPrice = $priceInfo->getPrice(FinalPrice::PRICE_CODE);
+                        $price = $finalPrice->getValue();
+                        break;
                 }
+                $salePrice = (null !== $price && null !== $item)
+                    ? $this->processPrice($price, '', $item, $store)
+                    : null;
+                $toPrice = (null !== $maxPrice && null !== $item)
+                    ? $this->processPrice($maxPrice, '', $item, $store)
+                    : null;
+            } catch (\InvalidArgumentException $exception) {
+                $this->logger->error(
+                    sprintf(
+                        'Method: %s - Error: %s',
+                        __METHOD__,
+                        $exception->getMessage()
+                    )
+                );
             }
-            $processed_final_price = $this->processPrice($final_price, 'final_price', $item, $store);
-            $productPrice['salePrice'] = $processed_final_price;
-            $productPrice['startPrice'] = $processed_final_price;
-            if ($item->getData('type_id') == "grouped") {
-                $gprice = $this->getGroupProductMinPrice($item, $store);
-                $productPrice['startPrice'] = $gprice;
-                $productPrice["salePrice"] = $gprice;
-            } elseif ($item->getData('type_id') == \Magento\Catalog\Model\Product\Type::TYPE_BUNDLE) {
-                list($minimalPrice, $maximalPrice) = $this->getBundleProductPrices($item, $store);
-
-                $productPrice["salePrice"] = $minimalPrice;
-                $productPrice['startPrice'] = $minimalPrice;
-                $productPrice['toPrice'] = $maximalPrice;
-            }
+            $this->klevuSalePrice[$cacheKey] = [
+                'salePrice' => $salePrice,
+                'startPrice' => $salePrice,
+                'toPrice' => $toPrice,
+            ];
         }
 
-        return $productPrice;
+        return $this->klevuSalePrice[$cacheKey];
     }
 
     /**
      * Get the secure and unsecure media url
      *
-     * @param array $parent
-     * @param array $item
+     * @param ProductInterface|null $parent
+     * @param ProductInterface $item
      * @param StoreInterface|string|int|null $store
      *
-     * @return array
+     * @return array<float|null>
      */
     public function getKlevuPrice($parent, $item, $store)
     {
-        /* getPrice */
-        if ($parent && $parent->getData("type_id") == $this->getParentType()) {
-            $price = $parent->getPriceInfo()
-                ->getPrice('regular_price')
-                ->getAmount()
-                ->getValue();
-            $processed_price = $this->processPrice($price, 'regular_price', $parent, $store);
-            $productPrice['price'] = $processed_price;
-        } else {
-            if ($item->getData('type_id') == "grouped") {
-                // Get the group product original price
-                $sPrice = $this->getGroupProductMinPrice($item, $store);
-                //$sPrice = $item->getPrice();
-                $productPrice["price"] = $sPrice;
-            } elseif ($item->getData('type_id') == \Magento\Catalog\Model\Product\Type::TYPE_BUNDLE) {
-                // Product detail page always shows final price as price so we also take
-                // final price as original price only for bundle product
-                list($minimalPrice, $maximalPrice) = $this->getBundleProductPrices($item, $store);
-
-                $productPrice["price"] = $minimalPrice;
-            } else {
-                $price = $item->getPriceInfo()
-                    ->getPrice('regular_price')
-                    ->getAmount()
-                    ->getValue();
-                $processed_price = $this->processPrice($price, 'regular_price', $item, $store);
-                $productPrice['price'] = $processed_price;
+        $klevuPrice = null;
+        if ($parent && $parent->getData("type_id") === $this->getParentType()) {
+            $item = $parent;
+        }
+        try {
+            switch ($item->getTypeId()) {
+                case GroupedProductType::TYPE_CODE:
+                    // Product detail page always shows final price as price,
+                    // so we also take final price as original price for grouped product.
+                    // Would remove this and get the price from the item returned from getGroupProductMinProduct,
+                    // but it's a public method and merchant may have extended it.
+                    $price = $this->getGroupProductMinPrice($item);
+                    // Grouped products don't have a tax class,
+                    // switch item to use simple child product with the lowest price instead
+                    $item = $this->getGroupProductMinProduct($item);
+                    break;
+                case ProductType::TYPE_BUNDLE:
+                    // Product detail page always shows final price as price,
+                    // so we also take final price as original price for bundle product
+                    $price = $this->getBundleProductPrices($item, $store, 'min');
+                    break;
+                default:
+                    $priceInfo = $item->getPriceInfo();
+                    $regularPrice = $priceInfo->getPrice(RegularPrice::PRICE_CODE);
+                    $price = $regularPrice->getValue();
+                    break;
             }
+            $klevuPrice = (null !== $price && null !== $item)
+                ? $this->processPrice($price, '', $item, $store)
+                : null;
+        } catch (\InvalidArgumentException $exception) {
+            $this->logger->error(
+                sprintf(
+                    'Method: %s - Error: %s',
+                    __METHOD__,
+                    $exception->getMessage()
+                )
+            );
         }
 
-        return $productPrice;
+        return [
+            'price' => $klevuPrice
+        ];
     }
 
     /**
@@ -219,39 +280,111 @@ class Price extends AbstractHelper
      * Applies tax, if needed, and converts to the currency of the current store.
      *
      * @param int|float $price
-     * @param string $price_code
+     * @param string $price_code // no longer used
      * @param ProductInterface $pro
      * @param StoreInterface|string|int|null $store
      *
-     * @return int|float
+     * @return float
+     * @throws \InvalidArgumentException
+     * @deprecared replaced by calculateTaxPrice
+     * @see calculateTaxPrice
      */
     public function processPrice($price, $price_code, $pro, $store)
     {
-        if ($price < 0) {
-            $price = 0;
+        /** @var ProductModel $pro */
+        if (!($pro instanceof ProductInterface)) {
+            throw new \InvalidArgumentException(
+                sprintf(
+                    'Product argument is not a valid product model. Expected instance of %s; Received %s',
+                    ProductInterface::class,
+                    is_object($pro)
+                        ? get_class($pro)
+                        : gettype($pro) // phpcs:ignore Magento2.Functions.DiscouragedFunction
+                )
+            );
         }
 
-        if ($this->_searchHelperConfig->getPriceIncludesTax($store) == 1) {
-            if ($this->_searchHelperConfig->getPriceDisplaySettings($store) == TaxConfig::DISPLAY_TYPE_BOTH) {
-                if ($this->_searchHelperConfig->isTaxCalRequired($store)) {
-                    $price = $this->_catalogTaxHelper->getTaxPrice($pro, $price, true);
-                }
-            } else {
-                $price = $this->_catalogTaxHelper->getTaxPrice($pro, $price);
-            }
+        return $this->calculateTaxPrice($pro, $price, $store);
+    }
+
+    /**
+     * Price passed here should be whatever is in the database.
+     * Price should not have tax calculation before this point.
+     *
+     * @param ProductInterface $product
+     * @param float $price
+     * @param StoreInterface|string|int|null $requestedStore
+     *
+     * @return float
+     */
+    public function calculateTaxPrice(ProductInterface $product, $price, $requestedStore = null)
+    {
+        /** @var ProductModel $product */
+        if (!is_numeric($price)) {
+            throw new \InvalidArgumentException(
+                __(
+                    'Price supplied must be numeric, %1 provided: ',
+                    is_object($price)
+                        ? get_class($price)
+                        : gettype($price) // phpcs:ignore Magento2.Functions.DiscouragedFunction
+                )
+            );
+        }
+        if ($price < 0) {
+            return 0.0;
+        }
+        try {
+            $store = $this->storeManager->getStore($requestedStore);
+        } catch (NoSuchEntityException $exception) {
+            $this->logger->error(
+                sprintf(
+                    'Could not load current store. Original price returned. Method: %s - Exception: %s',
+                    __METHOD__,
+                    $exception->getMessage()
+                )
+            );
 
             return $price;
-        } else {
-            if ($this->_searchHelperConfig->getPriceDisplaySettings($store) == TaxConfig::DISPLAY_TYPE_BOTH) {
-                if (!$this->_searchHelperConfig->isTaxCalRequired($store)) {
-                    $price = $pro->getPriceInfo()
-                        ->getPrice($price_code)
-                        ->getAmount()->getValue(\Magento\Tax\Pricing\Adjustment::ADJUSTMENT_CODE);
-                }
-            }
+        }
+        $returnPriceWithTax = $this->isTaxIncludedInReturnPrice($store);
+        $dbPriceIncludesTax = $this->_searchHelperConfig->getPriceIncludesTax($store);
+
+        $taxPrice = $this->_catalogTaxHelper->getTaxPrice(
+            $product,
+            $price,
+            $returnPriceWithTax,
+            null,
+            null,
+            null,
+            $store,
+            $dbPriceIncludesTax
+        );
+
+        return $this->priceCurrency->round($taxPrice);
+    }
+
+    /**
+     * @param StoreInterface|string|int|null $store
+     *
+     * @return bool
+     */
+    private function isTaxIncludedInReturnPrice($store)
+    {
+        switch ((int)$this->_searchHelperConfig->getPriceDisplaySettings($store)) {
+            case TaxConfig::DISPLAY_TYPE_BOTH:
+                $return = $this->_searchHelperConfig->isTaxCalRequired($store); // method name is awful
+                break;
+            case TaxConfig::DISPLAY_TYPE_EXCLUDING_TAX:
+                $return = false;
+                break;
+            case TaxConfig::DISPLAY_TYPE_INCLUDING_TAX:
+                $return = true;
+                break;
+            default:
+                $return = false;
         }
 
-        return $this->priceCurrency->round($price);
+        return $return;
     }
 
     /**
@@ -287,7 +420,8 @@ class Price extends AbstractHelper
      * @param StoreInterface $store
      *
      * @return array
-     *
+     * @deprecated not called anywhere, method includes none existent class property _customerModelGroup
+     * @see \Klevu\Search\Model\Product\Product::getGroupPricesData
      */
     public function getGroupPrices($proData, $store)
     {
@@ -322,17 +456,12 @@ class Price extends AbstractHelper
     }
 
     /**
-     * Get Original price for group product.
-     *
-     * @param object $product .
-     *
-     * @return
-     */
-    /**
      * @param ProductInterface $product
      * @param StoreInterface|string|int|null $store
      *
      * @return void
+     * @deprecated Not required, only show min price in PLP & SRLP
+     * @see getGroupProductMinPrice or getGroupProductMinProduct
      */
     public function getGroupProductOriginalPrice($product, $store)
     {
@@ -380,91 +509,115 @@ class Price extends AbstractHelper
     }
 
     /**
-     * Get Min price for group product.
+     * Get Minimum price for group product.
      *
      * @param ProductInterface $product
-     * @param StoreInterface $store
+     * @param StoreInterface $store // no longer required
      *
-     * @return float|int|null
+     * @return float
+     * @throws \InvalidArgumentException
      */
-    public function getGroupProductMinPrice($product, $store)
+    public function getGroupProductMinPrice($product, $store = null)
     {
-        $typeInstance = $product->getTypeInstance();
-        $groupProductIds = $typeInstance->getChildrenIds($product->getId());
-        $groupPrices = [];
-
-        foreach ($groupProductIds as $ids) {
-            if (!is_array($ids)) {
-                continue;
-            }
-            foreach ($ids as $id) {
-                if ((int)$id === (int)$product->getId()) {
-                    continue;
-                }
-
-                $groupProduct = ObjectManager::getInstance()->create(ProductModel::class)->load($id);
-                if ($groupProduct->getStatus() != 1) {
-                    continue;
-                }
-
-                if (!$this->_searchHelperConfig->displayOutofstock()) {
-                    $stockStatus = $this->_stockHelper->getKlevuStockStatus(
-                        null,
-                        $groupProduct,
-                        $store->getWebsiteId()
-                    );
-                    if ($stockStatus === KlevuStockService::KLEVU_IN_STOCK) {
-                        $gPrice = $this->getKlevuSalePrice(null, $groupProduct, $store);
-                        $groupPrices[] = $gPrice['salePrice'];
-                    }
-                } else {
-                    $gPrice = $this->getKlevuSalePrice(null, $groupProduct, $store);
-                    $groupPrices[] = $gPrice['salePrice'];
-                }
-            }
+        if (!($product instanceof ProductInterface)) {
+            throw new \InvalidArgumentException(
+                sprintf(
+                    'Product argument is not a valid product model. Expected instance of %s; Received %s',
+                    ProductInterface::class,
+                    is_object($product)
+                        ? get_class($product)
+                        : gettype($product) // phpcs:ignore Magento2.Functions.DiscouragedFunction
+                )
+            );
+        }
+        if ($product->getTypeId() !== GroupedProductType::TYPE_CODE) {
+            throw new \InvalidArgumentException(
+                __(
+                    'Incorrect product type provided: Expected %1: %2 Provided',
+                    GroupedProductType::TYPE_CODE,
+                    $product->getTypeId()
+                )
+            );
+        }
+        if (!isset($this->minProductPriceCache[$product->getId()])) {
+            $priceInfo = $product->getPriceInfo();
+            $finalPrice = $priceInfo->getPrice(FinalPrice::PRICE_CODE);
+            $this->minProductPriceCache[$product->getId()] = max(0, $finalPrice->getValue());
         }
 
-        asort($groupPrices);
+        return $this->minProductPriceCache[$product->getId()];
+    }
 
-        return array_shift($groupPrices);
+    /**
+     * @param ProductInterface $product
+     *
+     * @return ProductInterface
+     */
+    public function getGroupProductMinProduct(ProductInterface $product)
+    {
+        if ($product->getTypeId() !== GroupedProductType::TYPE_CODE) {
+            throw new \InvalidArgumentException(
+                __(
+                    'Incorrect product type provided: Expected %1: %2 Provided',
+                    GroupedProductType::TYPE_CODE,
+                    $product->getTypeId()
+                )
+            );
+        }
+        $priceInfo = $product->getPriceInfo();
+        /** @var GroupProductFinalPrice $price */
+        $price = $priceInfo->getPrice(FinalPrice::PRICE_CODE);
+
+        return $price->getMinProduct();
     }
 
     /**
      * @param ProductInterface $item
      * @param StoreInterface $store
+     * @param string|null $which // null|min|max - null returns array containing min and max
      *
      * @return float|array
+     * @throws \InvalidArgumentException
      */
-    public function getBundleProductPrices($item, $store)
+    public function getBundleProductPrices($item, $store, $which = null)
     {
-        $priceDisplaySetting = $this->_searchHelperConfig->getPriceDisplaySettings($store);
-        if ($this->_searchHelperConfig->getPriceIncludesTax($store)) {
-            //exluding
-            if ($priceDisplaySetting == TaxConfig::DISPLAY_TYPE_EXCLUDING_TAX) {
-                return $item->getPriceModel()->getTotalPrices($item, null, false, false);
-            } elseif ($priceDisplaySetting == TaxConfig::DISPLAY_TYPE_INCLUDING_TAX) {
-                return $item->getPriceModel()->getTotalPrices($item, null, true, false);
-            } elseif ($priceDisplaySetting == TaxConfig::DISPLAY_TYPE_BOTH) {
-                if (!$this->_searchHelperConfig->isTaxCalRequired($store)) {
-                    return $item->getPriceModel()->getTotalPrices($item, null, false, false);
-                } else {
-                    return $item->getPriceModel()->getTotalPrices($item, null, true, false);
-                }
-            }
-        } else {
-            //including
-            if ($priceDisplaySetting == TaxConfig::DISPLAY_TYPE_INCLUDING_TAX) {
-                return $item->getPriceModel()->getTotalPrices($item, null, true, false);
-            } elseif ($priceDisplaySetting == TaxConfig::DISPLAY_TYPE_EXCLUDING_TAX) {
-                return $item->getPriceModel()->getTotalPrices($item, null, false, false);
-            } elseif ($priceDisplaySetting == TaxConfig::DISPLAY_TYPE_BOTH) {
-                if (!$this->_searchHelperConfig->isTaxCalRequired($store)) {
-                    return $item->getPriceModel()->getTotalPrices($item, null, false, false);
-                } else {
-                    return $item->getPriceModel()->getTotalPrices($item, null, true, false);
-                }
-            }
+        /** @var ProductModel $item */
+        if (!($item instanceof ProductInterface)) {
+            throw new \InvalidArgumentException(
+                sprintf(
+                    'Item argument is not a valid product model. Expected instance of %s; Received %s',
+                    ProductInterface::class,
+                    is_object($item)
+                        ? get_class($item)
+                        : gettype($item) // phpcs:ignore Magento2.Functions.DiscouragedFunction
+                )
+            );
         }
+        if ($item->getTypeId() !== ProductType::TYPE_BUNDLE) {
+            throw new \InvalidArgumentException(
+                __(
+                    'Provided Product must a Bundle %1 provided',
+                    $item->getTypeId()
+                )
+            );
+        }
+        /** @var BundlePrice $priceModel */
+        $priceModel = $item->getPriceModel();
+        if (!($priceModel instanceof BundlePrice)) {
+            throw new \InvalidArgumentException(
+                __(
+                    'Price Model is not an instance of %1:, %2 provided',
+                    BundlePrice::class,
+                    is_object($priceModel)
+                        ? get_class($priceModel)
+                        : gettype($priceModel) // phpcs:ignore Magento2.Functions.DiscouragedFunction
+                )
+            );
+        }
+        // return whatever is in the database, we process tax later in self::processPrice()
+        $returnPriceWithTax = $this->_searchHelperConfig->getPriceIncludesTax($store);
+
+        return $priceModel->getTotalPrices($item, $which, $returnPriceWithTax, false);
     }
 
     /**
@@ -475,5 +628,20 @@ class Price extends AbstractHelper
     public function roundPrice($price)
     {
         return $this->priceCurrency->round($price);
+    }
+
+    /**
+     * @param ProductInterface $product
+     * @param ProductInterface|null $parent
+     * @param StoreInterface|string|int|null $store
+     *
+     * @return string
+     */
+    private function getCacheKey(ProductInterface $product, $parent, $store)
+    {
+        $parentId = $parent ? $parent->getId() : '0';
+        $storeId = ($store instanceof StoreInterface) ? $store->getId() : $store;
+
+        return $product->getId() . '::' . $parentId . '::' . $storeId;
     }
 }
