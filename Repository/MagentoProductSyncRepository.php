@@ -5,16 +5,17 @@ namespace Klevu\Search\Repository;
 use Klevu\Search\Api\MagentoProductSyncRepositoryInterface;
 use Klevu\Search\Api\Service\Catalog\Product\JoinParentStatusToSelectInterface;
 use Klevu\Search\Api\Service\Catalog\Product\JoinParentVisibilityToSelectInterface;
+use Klevu\Search\Api\Service\Catalog\Product\AddParentProductStockToCollectionInterface;
 use Klevu\Search\Model\Product\ProductIndividualInterface;
 use Klevu\Search\Model\Product\ProductParentInterface;
 use Klevu\Search\Model\Product\ResourceModel\Product as KlevuProductResourceModel;
 use Klevu\Search\Model\Product\ResourceModel\Product\Collection as KlevuProductCollection;
 use Magento\Catalog\Model\Product\Visibility;
 use Magento\Catalog\Model\ResourceModel\Product\Collection as ProductCollection;
-use Magento\CatalogInventory\Model\Stock\Status as StockStatus;
 use Magento\ConfigurableProduct\Model\ResourceModel\Attribute\OptionProvider;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\ObjectManager;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\Store;
@@ -65,6 +66,10 @@ class MagentoProductSyncRepository implements MagentoProductSyncRepositoryInterf
      * @var array
      */
     private $visibility = [];
+    /**
+     * @var AddParentProductStockToCollectionInterface|null
+     */
+    private $addParentProductStockToCollection;
 
     /**
      * @param ProductIndividualInterface $klevuProductIndividual
@@ -75,6 +80,7 @@ class MagentoProductSyncRepository implements MagentoProductSyncRepositoryInterf
      * @param OptionProvider|null $optionProvider
      * @param JoinParentVisibilityToSelectInterface|null $joinParentVisibilityToSelectService
      * @param JoinParentStatusToSelectInterface|null $joinParentStatusToSelectService
+     * @param AddParentProductStockToCollectionInterface|null $addParentProductStockToCollection
      */
     public function __construct(
         ProductIndividualInterface $klevuProductIndividual,
@@ -84,7 +90,8 @@ class MagentoProductSyncRepository implements MagentoProductSyncRepositoryInterf
         KlevuProductCollection $productCollection,
         OptionProvider $optionProvider = null,
         JoinParentVisibilityToSelectInterface $joinParentVisibilityToSelectService = null,
-        JoinParentStatusToSelectInterface $joinParentStatusToSelectService = null
+        JoinParentStatusToSelectInterface $joinParentStatusToSelectService = null,
+        AddParentProductStockToCollectionInterface $addParentProductStockToCollection = null
     ) {
         $this->klevuProductIndividual = $klevuProductIndividual;
         $this->klevuProductParent = $klevuProductParent;
@@ -101,6 +108,8 @@ class MagentoProductSyncRepository implements MagentoProductSyncRepositoryInterf
         $this->joinParentStatusToSelectService = $joinParentStatusToSelectService
             ?: $objectManager->get('\Klevu\Search\Service\Catalog\Product\JoinParentStatusToSelect\Enabled');
         // phpcs:enable Magento2.PHP.LiteralNamespaces.LiteralClassUsage
+        $this->addParentProductStockToCollection = $addParentProductStockToCollection
+            ?: $objectManager->get(AddParentProductStockToCollectionInterface::class);
     }
 
     /**
@@ -144,7 +153,6 @@ class MagentoProductSyncRepository implements MagentoProductSyncRepositoryInterf
 
         $select = $return->getSelect();
         $resource = $return->getResource();
-        $connection = $select->getConnection();
         $select->distinct();
         $select->joinInner(
             [self::CATALOG_PRODUCT_SUPER_LINK_ALIAS => $resource->getTable('catalog_product_super_link')],
@@ -155,7 +163,6 @@ class MagentoProductSyncRepository implements MagentoProductSyncRepositoryInterf
             ),
             []
         );
-
         $storeId = (int)$store->getId();
 
         $this->joinParentStatusToSelectService->setTableAlias(
@@ -177,34 +184,9 @@ class MagentoProductSyncRepository implements MagentoProductSyncRepositoryInterf
                 'parent_catalog_product_entity',
                 self::PARENT_CATALOG_PRODUCT_ENTITY_ALIAS
             );
-            $select = $this->joinParentVisibilityToSelectService->execute($select, $storeId);
+            $this->joinParentVisibilityToSelectService->execute($select, $storeId);
         }
-
-        if (!$includeOosProducts) {
-            $select->joinInner(
-                [self::PARENT_CATALOG_PRODUCT_ENTITY_ALIAS => $resource->getTable('catalog_product_entity')],
-                sprintf(
-                    '%s.%s = %s.parent_id',
-                    self::PARENT_CATALOG_PRODUCT_ENTITY_ALIAS,
-                    $connection->quoteIdentifier($this->optionProvider->getProductEntityLinkField()),
-                    self::CATALOG_PRODUCT_SUPER_LINK_ALIAS
-                ),
-                []
-            );
-            $select->joinInner(
-                [self::PARENT_STOCK_STATUS_ALIAS => $resource->getTable('cataloginventory_stock_status')],
-                sprintf(
-                    '%s.product_id = %s.entity_id',
-                    self::PARENT_STOCK_STATUS_ALIAS,
-                    self::PARENT_CATALOG_PRODUCT_ENTITY_ALIAS
-                ),
-                []
-            );
-            $select->where(
-                self::PARENT_STOCK_STATUS_ALIAS . '.stock_status = ?',
-                StockStatus::STATUS_IN_STOCK
-            );
-        }
+        $this->addParentProductStockToCollection->execute($return, $store, $includeOosProducts);
 
         return $return;
     }
@@ -221,26 +203,9 @@ class MagentoProductSyncRepository implements MagentoProductSyncRepositoryInterf
         $productCollection = $this->getInitCollectionByType(
             $store,
             $parentProductTypeArray,
-            static::NOT_VISIBLE_EXCLUDED
+            static::NOT_VISIBLE_EXCLUDED,
+            $includeOosProducts
         );
-
-        if (!$includeOosProducts) {
-            $select = $productCollection->getSelect();
-            $resource = $productCollection->getResource();
-            $select->joinInner(
-                [self::STOCK_STATUS_ALIAS => $resource->getTable('cataloginventory_stock_status')],
-                sprintf(
-                    '%s.product_id = %s.entity_id',
-                    self::STOCK_STATUS_ALIAS,
-                    self::CATALOG_PRODUCT_ENTITY_ALIAS
-                ),
-                []
-            );
-            $select->where(
-                self::STOCK_STATUS_ALIAS . '.stock_status = ?',
-                StockStatus::STATUS_IN_STOCK
-            );
-        }
 
         $enabledParentIds = [];
         $lastEntityId = 0;
@@ -280,6 +245,7 @@ class MagentoProductSyncRepository implements MagentoProductSyncRepositoryInterf
      * @param bool $includeOosParents
      *
      * @return array[]
+     * @throws NoSuchEntityException
      */
     public function getParentProductRelations(
         $productIds,

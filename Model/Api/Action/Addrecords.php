@@ -3,10 +3,13 @@
 namespace Klevu\Search\Model\Api\Action;
 
 use Exception;
+use Klevu\Logger\Constants as LoggerConstants;
 use Klevu\Search\Helper\Api as ApiHelper;
 use Klevu\Search\Helper\Config as ConfigHelper;
 use Klevu\Search\Helper\Data as SearchHelper;
 use Klevu\Search\Model\Api\Actionall;
+use Klevu\Search\Model\Api\Request\Xml as RequestXml;
+use Klevu\Search\Model\Api\Response\Message as ResponseMessage;
 use Klevu\Search\Model\Api\Response;
 use Klevu\Search\Model\Api\Response\Invalid as InvalidResponse;
 use Klevu\Search\Model\Api\Response\Rempty;
@@ -15,8 +18,6 @@ use Magento\Framework\Event\ManagerInterface as EventManager;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Model\StoreManagerInterface;
-use Klevu\Search\Model\Api\Request\Xml as RequestXml;
-use Klevu\Search\Model\Api\Response\Message as ResponseMessage;
 use Psr\Log\LoggerInterface;
 
 class Addrecords extends Actionall
@@ -299,19 +300,17 @@ class Addrecords extends Actionall
      */
     protected function prepareOtherParameters(&$record)
     {
-        foreach ($record['other'] as $key => &$value) {
-            $key = $this->sanitiseOtherAttribute($key);
+        foreach ($record['other'] as $unSanitizedKey => &$value) {
+            $key = $this->sanitiseOtherAttribute($unSanitizedKey);
             if (is_array($value)) {
-                if (isset($value['label'])) {
-                    $label = $this->sanitiseOtherAttribute($value['label']);
-                }
+                $label = isset($value['label'])
+                    ? $this->sanitiseOtherAttribute($value['label'])
+                    : null;
                 if (isset($value['values'])) {
                     $value = $this->sanitiseOtherAttribute($value['values']);
                 }
             } else {
-                if (isset($key)) {
-                    $label = $this->sanitiseOtherAttribute($key);
-                }
+                $label = $key;
                 if (isset($value)) {
                     $value = $this->sanitiseOtherAttribute($value);
                 }
@@ -319,7 +318,23 @@ class Addrecords extends Actionall
 
             if (!empty($value)) {
                 if (is_array($value)) {
-                    $value = implode(",", $value);
+                    $filteredValue = array_filter($value, static function ($item) {
+                        return !is_array($item) && !is_object($item);
+                    });
+                    if (count($filteredValue) !== count($value)) {
+                        $this->_searchHelperData->log(
+                            LoggerConstants::ZEND_LOG_ERR,
+                            __(
+                                '%1: Multi dimensional array provided for "other" for SKU %2 : attribute %3.',
+                                __METHOD__,
+                                $record['sku'],
+                                $key
+                            )
+                        );
+                        $value = '';
+                    } else {
+                        $value = implode(",", $value);
+                    }
                 }
             }
 
@@ -332,18 +347,20 @@ class Addrecords extends Actionall
             }
         }
         if (is_array($record['other'])) {
-            $other = array_filter($record['other'], static function ($item) {
-                return !is_array($item) && !is_object($item);
-            });
-            if (count($other) !== count($record['other'])) {
-                $this->logger->error(
-                    __(
-                        '%1: Multi dimensional array provided for "other" attribute for SKU %2.',
-                        __METHOD__,
-                        $record['sku']
-                    )
-                );
-            }
+            $other = array_filter($record['other'], function ($otherValue, $attribute) {
+                if (is_array($otherValue) || is_object($otherValue)) {
+                    $this->logger->warning(
+                        __(
+                            '%1: Multi dimensional array or object provided in "other" for attribute %2. ' .
+                            'Removed from data.',
+                            __METHOD__,
+                            $attribute
+                        )
+                    );
+                }
+                return !is_array($otherValue) && !is_object($otherValue);
+            }, ARRAY_FILTER_USE_BOTH);
+
             $record['other'] = implode(";", $other);
         } elseif (is_scalar($record['other'])) {
             $record['other'] = (string)$record['other'];
@@ -368,46 +385,60 @@ class Addrecords extends Actionall
      */
     protected function prepareOtherAttributeToIndexParameters(&$record)
     {
-        foreach ($record['otherAttributeToIndex'] as $key => &$value) {
-            if ($key === 'created_at') {
+        foreach ($record['otherAttributeToIndex'] as $unSanitizedKey => &$value) {
+            if ($unSanitizedKey === 'created_at') {
                 $value = date('Y-m-d', strtotime($value));
             }
-            $key = $this->sanitiseOtherAttribute($key);
+            $key = $this->sanitiseOtherAttribute($unSanitizedKey);
 
             if (is_array($value)) {
-                if (isset($value['label'])) {
-                    $label = $this->sanitiseOtherAttribute($value['label']);
-                }
+                $label = isset($value['label'])
+                    ? $this->sanitiseOtherAttribute($value['label'])
+                    : null;
                 if (isset($value['values'])) {
                     $value = $this->sanitiseOtherAttribute($value['values']);
                 }
             } else {
-                if ($key) {
-                    $label = $this->sanitiseOtherAttribute($key);
-                }
+                $label = $key;
                 if ($value) {
                     $value = $this->sanitiseOtherAttribute($value);
                 }
             }
-            if (!empty($value)) {
-                if (is_array($value)) {
-                    $value = implode(",", $value);
 
+            if ($this->isValueValid($value)) {
+                if (is_array($value)) {
+                    $filteredValue = array_filter($value, static function ($item) {
+                        return !is_array($item) && !is_object($item);
+                    });
+                    if (count($filteredValue) !== count($value)) {
+                        $this->_searchHelperData->log(
+                            LoggerConstants::ZEND_LOG_ERR,
+                            __(
+                                '%1: Multi dimensional array provided for "otherAttributeToIndex" for SKU %2:'
+                                . ' attribute %3.',
+                                __METHOD__,
+                                $record['sku'],
+                                $key
+                            )
+                        );
+                        $value = '';
+                    } else {
+                        $value = implode(",", $value);
+                    }
                 }
-            }
-            if (!empty($value) && !empty($label)) {
-                $value = sprintf("%s:%s:%s", $key, $label, $value);
+                if ($this->isLabelValid($label)) {
+                    $value = sprintf("%s:%s:%s", $key, $label, $value);
+                }
             }
         }
         $recordOtherAttributeToIndex = $record['otherAttributeToIndex'];
         if (count($recordOtherAttributeToIndex) > 0) {
-            foreach ($recordOtherAttributeToIndex as $key => $element) {
+            foreach ($recordOtherAttributeToIndex as $recordKey => $element) {
                 if (is_array($element) || is_object($element)) {
-                    unset($recordOtherAttributeToIndex[$key]);
+                    unset($recordOtherAttributeToIndex[$recordKey]);
                 }
             }
         }
-
         if (is_array($recordOtherAttributeToIndex)) {
             $record['otherAttributeToIndex'] = implode(";", $recordOtherAttributeToIndex);
         } elseif (is_scalar($recordOtherAttributeToIndex)) {
@@ -424,6 +455,57 @@ class Addrecords extends Actionall
                 )
             );
         }
+    }
+
+    /**
+     * @param mixed $value
+     *
+     * @return bool
+     */
+    private function isValueValid($value)
+    {
+        switch (true) {
+            case is_numeric($value):
+                $return = true;
+                break;
+            case is_string($value):
+                $value = trim($value);
+                $return = (bool)strlen($value);
+                break;
+            case is_array($value):
+                $return = (bool)count($value);
+                break;
+            case null === $value:
+            default:
+                $return = !empty($value);
+                break;
+        }
+
+        return $return;
+    }
+
+    /**
+     * @param mixed $value
+     *
+     * @return bool
+     */
+    private function isLabelValid($value)
+    {
+        switch (true) {
+            case is_numeric($value):
+                $return = true;
+                break;
+            case is_string($value):
+                $value = trim($value);
+                $return = (bool)strlen($value);
+                break;
+            case null === $value:
+            default:
+                $return = false;
+                break;
+        }
+
+        return $return;
     }
 
     /**

@@ -63,4 +63,74 @@ class ReservedAttributeCodesProviderTest extends TestCase
     {
         $this->assertContains('rating_count', $attributeCodesReturn);
     }
+
+    /**
+     * @param string[] $attributeCodesReturn
+     *
+     * @depends testExecuteReturnsValidArray
+     */
+    public function testNameReturned(array $attributeCodesReturn)
+    {
+        $this->assertContains('name', $attributeCodesReturn);
+    }
+
+    /**
+     * @param string[] $attributeCodesReturn
+     *
+     * @depends testExecuteReturnsValidArray
+     */
+    public function testSkuReturned(array $attributeCodesReturn)
+    {
+        $this->assertContains('sku', $attributeCodesReturn);
+    }
+
+    /**
+     * @param string[] $attributeCodesReturn
+     *
+     * @depends testExecuteReturnsValidArray
+     */
+    public function testDescriptionReturned(array $attributeCodesReturn)
+    {
+        $this->assertContains('description', $attributeCodesReturn);
+    }
+
+    /**
+     * @param string[] $attributeCodesReturn
+     *
+     * @depends testExecuteReturnsValidArray
+     */
+    public function testShortDescriptionReturned(array $attributeCodesReturn)
+    {
+        $this->assertContains('short_description', $attributeCodesReturn);
+    }
+
+    /**
+     * @param string[] $attributeCodesReturn
+     *
+     * @depends testExecuteReturnsValidArray
+     */
+    public function testPriceReturned(array $attributeCodesReturn)
+    {
+        $this->assertContains('price', $attributeCodesReturn);
+    }
+
+    /**
+     * @param string[] $attributeCodesReturn
+     *
+     * @depends testExecuteReturnsValidArray
+     */
+    public function testTierPriceReturned(array $attributeCodesReturn)
+    {
+        $this->assertContains('tier_price', $attributeCodesReturn);
+    }
+
+    /**
+     * @param string[] $attributeCodesReturn
+     *
+     * @depends testExecuteReturnsValidArray
+     */
+    public function testMediaGalleryReturned(array $attributeCodesReturn)
+    {
+        $this->assertContains('media_gallery', $attributeCodesReturn);
+    }
 }

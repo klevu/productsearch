@@ -909,10 +909,10 @@ class RenderPluginTest extends AbstractBackendControllerTestCase
             $this->assertContains('disabled', $boostingField);
         }
         if (method_exists($this, 'assertMatchesRegularExpression')) {
-            $this->assertMatchesRegularExpression('#<option[^>]+value="description".*?>\s*description\s*</option>#s', $boostingField);
+            $this->assertMatchesRegularExpression('#<option[^>]+value="description".*?>\s*description - Description\s*</option>#s', $boostingField);
             $this->assertMatchesRegularExpression('#<option[^>]+value=""[^>]+selected.*?>[^<]*</option>#s', $boostingField);
         } else {
-            $this->assertRegExp('#<option[^>]+value="description".*?>\s*description\s*</option>#s', $boostingField);
+            $this->assertRegExp('#<option[^>]+value="description".*?>\s*description - Description\s*</option>#s', $boostingField);
             $this->assertRegExp('#<option[^>]+value=""[^>]+selected.*?>[^<]*</option>#s', $boostingField);
         }
     }
@@ -1002,10 +1002,10 @@ class RenderPluginTest extends AbstractBackendControllerTestCase
             $this->assertNotContains('disabled', $boostingField);
         }
         if (method_exists($this, 'assertMatchesRegularExpression')) {
-            $this->assertMatchesRegularExpression('#<option[^>]+value="description"[^>]+selected.*?>\s*description\s*</option>#s', $boostingField);
+            $this->assertMatchesRegularExpression('#<option[^>]+value="description"[^>]+selected.*?>\s*description - Description\s*</option>#s', $boostingField);
             $this->assertMatchesRegularExpression('#<option[^>]+value="".*?>[^<]*</option>#s', $boostingField);
         } else {
-            $this->assertRegExp('#<option[^>]+value="description"[^>]+selected.*?>\s*description\s*</option>#s', $boostingField);
+            $this->assertRegExp('#<option[^>]+value="description"[^>]+selected.*?>\s*description - Description\s*</option>#s', $boostingField);
             $this->assertRegExp('#<option[^>]+value="".*?>[^<]*</option>#s', $boostingField);
         }
     }
@@ -1104,10 +1104,10 @@ class RenderPluginTest extends AbstractBackendControllerTestCase
             $this->assertContains('disabled', $boostingField);
         }
         if (method_exists($this, 'assertMatchesRegularExpression')) {
-            $this->assertMatchesRegularExpression('#<option[^>]+value="description".*?>\s*description\s*</option>#s', $boostingField);
+            $this->assertMatchesRegularExpression('#<option[^>]+value="description".*?>\s*description - Description\s*</option>#s', $boostingField);
             $this->assertMatchesRegularExpression('#<option[^>]+value=""[^>]+selected.*?>[^<]*</option>#s', $boostingField);
         } else {
-            $this->assertRegExp('#<option[^>]+value="description".*?>\s*description\s*</option>#s', $boostingField);
+            $this->assertRegExp('#<option[^>]+value="description".*?>\s*description - Description\s*</option>#s', $boostingField);
             $this->assertRegExp('#<option[^>]+value=""[^>]+selected.*?>[^<]*</option>#s', $boostingField);
         }
     }

@@ -1,12 +1,14 @@
 define([
-  'jquery',
-  'Magento_Search/form-mini'
-], function($){
+    'jquery',
+    'Magento_Search/form-mini'
+], function ($) {
 
-  $.widget('klevu.quickSearch', $.mage.quickSearch, {
-		_init: function () {
-			this.options.minSearchLength = 200;
-		},
+    $.widget('klevu.quickSearch', $.mage.quickSearch, {
+        _init: function () {
+            if (typeof klevu_current_version !== "undefined") {
+                this.options.minSearchLength = 200;
+            }
+        },
 
         _onKeyDown: function (e) {
             var keyCode = e.keyCode || e.which;
@@ -28,7 +30,7 @@ define([
                 this.submitBtn.disabled = false;
             }
         }
-  });
+    });
 
-  return $.klevu.quickSearch;
+    return $.klevu.quickSearch;
 });

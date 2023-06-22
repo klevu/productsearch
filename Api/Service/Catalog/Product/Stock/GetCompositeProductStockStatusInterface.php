@@ -9,7 +9,8 @@ interface GetCompositeProductStockStatusInterface
     /**
      * @param ProductInterface $product
      * @param array $bundleOptions
-     * @param int $stockId
+     * @param int|null $stockId
+     *
      * @return bool
      */
     public function execute(ProductInterface $product, array $bundleOptions, $stockId);
