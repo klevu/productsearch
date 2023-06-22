@@ -20,7 +20,7 @@ use Magento\Catalog\Model\ResourceModel\Product as ProductResource;
 use Magento\ConfigurableProduct\Helper\Product\Options\Factory as ConfigurableOptionsFactory;
 use Magento\Eav\Model\Config as EavConfig;
 
-include __DIR__ . '/productFixturesIncludeOos_rollback.php';
+include __DIR__ . '/productFixturesXmlBody_rollback.php';
 require __DIR__ . '/productAttributeFixtures.php';
 
 $objectManager = Bootstrap::getObjectManager();
@@ -77,8 +77,9 @@ $fixtures = [
         'special_price' => 0.00,
         'weight' => 1,
         'tax_class_id' => 2,
-        'meta_title' => '[Klevu]',
+        'meta_title' => 'false',
         'meta_description' => '[Klevu Test Fixtures]',
+        'meta_keyword' => '0',
         'visibility' => Visibility::VISIBILITY_BOTH,
         'status' => Status::STATUS_ENABLED,
         'klevu_test_configurable' => $configurableAttributeOptions[1]->getValue(),
@@ -107,6 +108,7 @@ $fixtures = [
         'tax_class_id' => 2,
         'meta_title' => '[Klevu]',
         'meta_description' => '[Klevu Test Fixtures]',
+        'meta_keyword' => '     ',
         'visibility' => Visibility::VISIBILITY_IN_SEARCH,
         'status' => Status::STATUS_ENABLED,
         'klevu_test_configurable' => $configurableAttributeOptions[2]->getValue(),
@@ -133,6 +135,7 @@ $fixtures = [
         'tax_class_id' => 2,
         'meta_title' => '[Klevu]',
         'meta_description' => '[Klevu Test Fixtures]',
+        'meta_keyword' => 0,
         'visibility' => Visibility::VISIBILITY_IN_CATALOG,
         'status' => Status::STATUS_ENABLED,
         'klevu_test_configurable' => $configurableAttributeOptions[3]->getValue(),
@@ -161,6 +164,7 @@ $fixtures = [
         'tax_class_id' => 2,
         'meta_title' => '[Klevu]',
         'meta_description' => '[Klevu Test Fixtures]',
+        'meta_keyword' => '1',
         'visibility' => Visibility::VISIBILITY_NOT_VISIBLE,
         'status' => Status::STATUS_ENABLED,
         'stock_data' => [
@@ -187,6 +191,7 @@ $fixtures = [
         'tax_class_id' => 2,
         'meta_title' => '[Klevu]',
         'meta_description' => '[Klevu Test Fixtures]',
+        'meta_keyword' => '1',
         'visibility' => Visibility::VISIBILITY_BOTH,
         'status' => Status::STATUS_ENABLED,
         'stock_data' => [
@@ -217,6 +222,7 @@ $fixtures = [
         'tax_class_id' => 2,
         'meta_title' => '[Klevu]',
         'meta_description' => '[Klevu Test Fixtures]',
+        'meta_keyword' => '0',
         'visibility' => Visibility::VISIBILITY_NOT_VISIBLE,
         'status' => Status::STATUS_ENABLED,
         'stock_data' => [
@@ -245,6 +251,7 @@ $fixtures = [
         'tax_class_id' => 2,
         'meta_title' => '[Klevu]',
         'meta_description' => '[Klevu Test Fixtures]',
+        'meta_keyword' => '0',
         'visibility' => Visibility::VISIBILITY_BOTH,
         'status' => Status::STATUS_ENABLED,
         'stock_data' => [
@@ -276,6 +283,7 @@ $fixtures = [
         'tax_class_id' => 2,
         'meta_title' => '[Klevu]',
         'meta_description' => '[Klevu Test Fixtures]',
+        'meta_keyword' => '0',
         'visibility' => Visibility::VISIBILITY_NOT_VISIBLE,
         'status' => Status::STATUS_ENABLED,
         'stock_data' => [
@@ -302,6 +310,7 @@ $fixtures = [
         'tax_class_id' => 2,
         'meta_title' => '[Klevu]',
         'meta_description' => '[Klevu Test Fixtures]',
+        'meta_keyword' => '0',
         'visibility' => Visibility::VISIBILITY_BOTH,
         'status' => Status::STATUS_ENABLED,
         'stock_data' => [
@@ -335,6 +344,7 @@ $fixtures = [
         'tax_class_id' => 2,
         'meta_title' => '[Klevu]',
         'meta_description' => '[Klevu Test Fixtures]',
+        'meta_keyword' => '0',
         'giftcard_type' => 1,
         'allow_open_amount' => 1,
         'giftcard_amounts' => [
@@ -408,7 +418,7 @@ foreach ($fixtures as $fixture) {
             ]);
         }
         $product->setStoreId(0);
-        $product->setData('allow_open_amount', 0);
+        $product->setData('allow_open_amount', 1);
         $product->setData(
             $giftcardAmountAttribute->getAttributeCode(),
             $giftcardAmountResource->loadProductData($product, $giftcardAmountAttribute)

@@ -2,6 +2,7 @@
 
 namespace Klevu\Search\Service\Catalog\Product;
 
+use Klevu\Search\Api\Service\Catalog\Product\GetStockIdForWebsiteInterface;
 use Klevu\Search\Api\Service\Catalog\Product\GetStockStatusByIdInterface;
 use Klevu\Search\Api\Service\Catalog\Product\Stock\GetCompositeProductStockStatusInterface;
 use Klevu\Search\Api\Service\Catalog\Product\StockServiceInterface;
@@ -54,6 +55,10 @@ class Stock implements StockServiceInterface
      * @var string[]
      */
     private $cachedKlevuStockStatus = [];
+    /**
+     * @var GetStockIdForWebsiteInterface|null
+     */
+    private $getStockIdForWebsite;
 
     /**
      * @param StockRegistryInterface $stockRegistryInterface
@@ -62,6 +67,7 @@ class Stock implements StockServiceInterface
      * @param GetStockStatusByIdInterface|null $getStockStatusById
      * @param MagentoStockHelper|null $magentoStockHelper
      * @param GetCompositeProductStockStatusInterface|null $getCompositeProductStockStatus
+     * @param GetStockIdForWebsiteInterface|null $getStockIdForWebsite
      */
     public function __construct(
         StockRegistryInterface $stockRegistryInterface,
@@ -69,7 +75,8 @@ class Stock implements StockServiceInterface
         StockItemRepositoryInterface $stockItemRepository,
         GetStockStatusByIdInterface $getStockStatusById = null,
         MagentoStockHelper $magentoStockHelper = null,
-        GetCompositeProductStockStatusInterface $getCompositeProductStockStatus = null
+        GetCompositeProductStockStatusInterface $getCompositeProductStockStatus = null,
+        GetStockIdForWebsiteInterface $getStockIdForWebsite = null
     ) {
         $this->_stockRegistryInterface = $stockRegistryInterface;
         $this->stockItemCriteriaInterfaceFactory = $stockItemCriteriaInterfaceFactory;
@@ -81,6 +88,8 @@ class Stock implements StockServiceInterface
             ?: $objectManager->get(MagentoStockHelper::class);
         $this->getCompositeProductStockStatus = $getCompositeProductStockStatus
             ?: $objectManager->get(GetCompositeProductStockStatusInterface::class);
+        $this->getStockIdForWebsite = $getStockIdForWebsite
+            ?: $objectManager->get(GetStockIdForWebsiteInterface::class);
     }
 
     /**
@@ -176,9 +185,9 @@ class Stock implements StockServiceInterface
         if ($isCacheable && isset($this->cache[$cacheId][$product->getId()])) {
             return $this->cache[$cacheId][$product->getId()];
         }
-
         if (in_array($product->getTypeId(), [BundleType::TYPE_CODE, ConfigurableType::TYPE_CODE], true)) {
-            $stockStatus = $this->getCompositeProductStockStatus->execute($product, [], null);
+            $stockId = $this->getStockIdForWebsite->execute((int)$websiteId);
+            $stockStatus = $this->getCompositeProductStockStatus->execute($product, [], $stockId);
         } else {
             $this->magentoStockHelper->assignStatusToProduct($product);
             $product->unsetData('salable');
@@ -187,6 +196,7 @@ class Stock implements StockServiceInterface
                 ? $product->isSaleable()
                 : true;
             $store = $product->getStore();
+
             $stockStatusInterface = $this->_stockRegistryInterface->getStockStatus(
                 $product->getId(),
                 $store->getWebsiteId()

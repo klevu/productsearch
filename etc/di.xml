@@ -4,9 +4,21 @@
 
     <preference for="Klevu\Search\Api\Provider\Sync\Order\ItemsToSyncProviderInterface" type="Klevu\Search\Provider\Sync\Order\ItemsToSyncProvider"/>
     <preference for="Klevu\Search\Api\Provider\Sync\Order\Item\DataProviderInterface" type="Klevu\Search\Provider\Sync\Order\Item\DataProvider"/>
+    <preference for="Klevu\Search\Api\Provider\Eav\Attribute\ProductAttributeCollectionProviderInterface"
+                type="Klevu\Search\Provider\Eav\Attribute\ProductAttributeCollectionProvider"/>
 
     <preference for="Klevu\Search\Api\Provider\CommonProviderInterface" type="Klevu\Search\Model\Product\Provider\CommonProvider"/>
     <preference for="Klevu\Search\Api\Service\Catalog\Product\StockServiceInterface" type="Klevu\Search\Service\Catalog\Product\Stock"/>
+    <preference for="Klevu\Search\Api\Service\Catalog\Product\AddParentProductStockToCollectionInterface"
+                type="Klevu\Search\Service\Catalog\Product\AddParentProductStockToCollection"/>
+    <preference for="Klevu\Search\Api\Service\Catalog\Product\JoinSuperLinkToSelectInterface"
+                type="Klevu\Search\Service\Catalog\Product\JoinSuperLinkToSelect"/>
+    <preference for="Klevu\Search\Api\Service\Catalog\Product\JoinParentEntityToSelectInterface"
+                type="Klevu\Search\Service\Catalog\Product\JoinParentEntityToSelect"/>
+    <preference for="Klevu\Search\Api\Service\Catalog\Product\JoinParentStockToSelectInterface"
+                type="Klevu\Search\Service\Catalog\Product\JoinParentStockToSelect"/>
+    <preference for="Klevu\Search\Api\Service\Catalog\Product\GetStockIdForWebsiteInterface"
+                type="Klevu\Search\Service\Catalog\Product\GetStockIdForWebsite"/>
 
     <preference for="Klevu\Search\Api\KlevuSyncRepositoryInterface" type="Klevu\Search\Repository\KlevuSyncRepository" />
     <preference for="Klevu\Search\Api\MagentoProductSyncRepositoryInterface" type="Klevu\Search\Repository\MagentoProductSyncRepository" />
@@ -742,6 +754,12 @@
     </type>
 
     <type name="Klevu\Search\Provider\Sync\Order\Item\Type\DefaultDataProvider">
+        <arguments>
+            <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Search\Helper\Price">
         <arguments>
             <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
         </arguments>

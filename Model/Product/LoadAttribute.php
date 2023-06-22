@@ -250,12 +250,12 @@ class LoadAttribute extends AbstractModel implements LoadAttributeInterface
                 $product['product_type'] = $this->_productData->getProductType($parent, $item);
                 $product['isCustomOptionsAvailable'] = $this->_productData->isCustomOptionsAvailable($parent, $item);
                 $product['currency'] = $currency;
-                $product['otherPrices'] = $this->_productData->getOtherPrices($item, $currency);
+                $product['otherPrices'] = $this->_productData->getOtherPrices($item, $currency, $store);
                 $product['category'] = $this->_productData->getCategory($parent, $item);
                 $product['listCategory'] = $this->_productData->getListCategory($parent, $item);
                 $product['categoryIds'] = $this->_productData->getAllCategoryId($parent, $item);
                 $product['categoryPaths'] = $this->_productData->getAllCategoryPaths($parent, $item);
-                $product['groupPrices'] = $this->_productData->getGroupPricesData($item);
+                $product['groupPrices'] = $this->_productData->getGroupPricesData($item, $store);
                 $product['url'] = $this->_productData->getProductUrlData(
                     $parent,
                     $item,
@@ -689,7 +689,7 @@ class LoadAttribute extends AbstractModel implements LoadAttributeInterface
             if (null !== $value) {
                 // If not values are set on attribute_data for the attribute, return just the value passed.
                 // (attributes like: name, description etc)
-                if (empty($attributeData[$code]['values'])) {
+                if (!$this->isAttributeValueValid($attributeData[$code]['values'])) {
                     return $value;
                 }
 
@@ -809,9 +809,24 @@ class LoadAttribute extends AbstractModel implements LoadAttributeInterface
      */
     private function isAttributeValueValid($value)
     {
-        // Allow values of '0' and 0, but not empty strings '' or null
-        return !empty($value)
-            || (is_numeric($value) && (int)$value == $value); // intentionally used weak comparison here
+        switch (true) {
+            case is_numeric($value):
+                $return = true;
+                break;
+            case is_string($value):
+                $value = trim($value);
+                $return = (bool)strlen($value);
+                break;
+            case is_array($value):
+                $return = (bool)count($value);
+                break;
+            case null === $value:
+            default:
+                $return = !empty($value);
+                break;
+        }
+
+        return $return;
     }
 
     /**

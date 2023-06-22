@@ -11,8 +11,10 @@
         var klevuLocalStorage = JSON.parse(window.localStorage.getItem(
             '<?php /** @noEscape */ echo $block->getLocalStorageKey(); ?>'
         ) || '{}');
-        var klevuLocalStorageCustomerData = klevuLocalStorage.<?php /** @noEscape */ echo $block->getCustomerDataKey(); ?>;
-
+        var klevuMagentoCustomerDataKey = '<?php /** @noEscape */ echo $block->getCustomerDataKey(); ?>';
+        var klevuLocalStorageCustomerData = klevuLocalStorage.hasOwnProperty(klevuMagentoCustomerDataKey)
+            ? klevuLocalStorage[klevuMagentoCustomerDataKey]
+            : {};
         document.getElementById('klevu_sessionId').innerText = klevuLocalStorageCustomerData.hasOwnProperty('session_id')
             ? klevuLocalStorageCustomerData.session_id
             : '';

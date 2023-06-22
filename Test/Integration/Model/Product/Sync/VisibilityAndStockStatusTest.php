@@ -5396,7 +5396,11 @@ class VisibilityAndStockStatusTest extends TestCase
 
                     foreach ($expectedData[$record['sku']] as $expectedField => $expectedValue) {
                         $this->assertArrayHasKey($expectedField, $record);
-                        $this->assertSame($expectedValue, $record[$expectedField]);
+                        $this->assertSame(
+                            $expectedValue,
+                            $record[$expectedField],
+                            '[' . $record['sku'] . '] ' . $expectedField
+                        );
                     }
                 }
 

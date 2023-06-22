@@ -84,7 +84,7 @@ class XmlBodyTest extends TestCase
      * @magentoConfigFixture klevu_test_store_1_store cataloginventory/options/show_out_of_stock 0
      * @magentoConfigFixture default/klevu_search/product_sync/catalogvisibility 0
      * @magentoConfigFixture klevu_test_store_1_store klevu_search/product_sync/catalogvisibility 0
-     * @magentoConfigFixture klevu_test_store_1_store klevu_search/attributes/other klevu_boolean_attribute,meta_keyword
+     * @magentoConfigFixture klevu_test_store_1_store klevu_search/attributes/other klevu_boolean_attribute,meta_keyword,meta_title
      * @magentoDataFixture loadWebsiteFixtures
      * @magentoDataFixture loadBooleanAttributeFixtures
      * @magentoDataFixture loadProductFixtures
@@ -120,7 +120,7 @@ class XmlBodyTest extends TestCase
             // Fixture is freshly created so should always return today's date (no time)
             '<key>dateAdded</key><value>' . date('Y-m-d') . '</value>',
             '<key>other</key><value>klevu_boolean_attribute:Klevu Boolean Attribute:Yes</value>',
-            '<key>otherAttributeToIndex</key><value>klevu_boolean_attribute:Klevu Boolean Attribute:Yes</value>',
+            '<key>otherAttributeToIndex</key><value>klevu_boolean_attribute:Klevu Boolean Attribute:Yes;meta_keyword:meta_keyword:0;meta_title:meta_title:false</value>',
             '<key>product_type</key><value>simple</value>',
             '<key>isCustomOptionsAvailable</key><value>no</value>',
             '<key>currency</key><value>USD</value>',
@@ -280,7 +280,7 @@ class XmlBodyTest extends TestCase
             // Fixture is freshly created so should always return today's date (no time)
             '<key>dateAdded</key><value>' . date('Y-m-d') . '</value>',
             '<key>other</key><value>klevu_boolean_attribute:Klevu Boolean Attribute:No</value>',
-            '<key>otherAttributeToIndex</key><value>klevu_boolean_attribute:Klevu Boolean Attribute:No</value>',
+            '<key>otherAttributeToIndex</key><value>klevu_boolean_attribute:Klevu Boolean Attribute:No;meta_keyword:meta_keyword:0</value>',
             '<key>product_type</key><value>downloadable</value>',
             '<key>isCustomOptionsAvailable</key><value>yes</value>',
             '<key>currency</key><value>USD</value>',
@@ -364,7 +364,7 @@ class XmlBodyTest extends TestCase
             // Fixture is freshly created so should always return today's date (no time)
             '<key>dateAdded</key><value>' . date('Y-m-d') . '</value>',
             '<key>other</key><value>klevu_boolean_attribute:Klevu Boolean Attribute:Yes</value>',
-            '<key>otherAttributeToIndex</key><value>klevu_boolean_attribute:Klevu Boolean Attribute:Yes</value>',
+            '<key>otherAttributeToIndex</key><value>klevu_boolean_attribute:Klevu Boolean Attribute:Yes;meta_keyword:meta_keyword:1</value>',
             '<key>product_type</key><value>configurable</value>',
             '<key>isCustomOptionsAvailable</key><value>yes</value>',
             '<key>currency</key><value>USD</value>',
@@ -452,7 +452,7 @@ class XmlBodyTest extends TestCase
             // Fixture is freshly created so should always return today's date (no time)
             '<key>dateAdded</key><value>' . date('Y-m-d') . '</value>',
             '<key>other</key><value>klevu_boolean_attribute:Klevu Boolean Attribute:No</value>',
-            '<key>otherAttributeToIndex</key><value>klevu_boolean_attribute:Klevu Boolean Attribute:No</value>',
+            '<key>otherAttributeToIndex</key><value>klevu_boolean_attribute:Klevu Boolean Attribute:No;meta_keyword:meta_keyword:0</value>',
             '<key>product_type</key><value>grouped</value>',
             '<key>isCustomOptionsAvailable</key><value>yes</value>',
             '<key>currency</key><value>USD</value>',
@@ -536,7 +536,7 @@ class XmlBodyTest extends TestCase
             // Fixture is freshly created so should always return today's date (no time)
             '<key>dateAdded</key><value>' . date('Y-m-d') . '</value>',
             '<key>other</key><value>klevu_boolean_attribute:Klevu Boolean Attribute:Yes</value>',
-            '<key>otherAttributeToIndex</key><value>klevu_boolean_attribute:Klevu Boolean Attribute:Yes</value>',
+            '<key>otherAttributeToIndex</key><value>klevu_boolean_attribute:Klevu Boolean Attribute:Yes;meta_keyword:meta_keyword:0</value>',
             '<key>product_type</key><value>bundle</value>',
             '<key>isCustomOptionsAvailable</key><value>yes</value>',
             '<key>currency</key><value>USD</value>',
@@ -602,9 +602,9 @@ class XmlBodyTest extends TestCase
         $expectedPairs = [
             '<key>name</key><value>[Klevu] Sync Test: Giftcard Product</value>',
             '<key>sku</key><value>klevu_giftcard_synctest_xmlbody</value>',
-            '<pair><key>image</key><value/></pair>',
-            '<pair><key>small_image</key><value>no_selection</value></pair>',
-            '<pair><key>media_gallery</key><value><images/><values/></value></pair>',
+            '<key>image</key><value/>',
+            '<key>small_image</key><value>no_selection</value>',
+            '<key>media_gallery</key><value><images/><values/></value>',
             '<key>status</key><value><label>Enable Product</label><values>Enabled</values></value>',
             '<key>desc</key><value><![CDATA[[Klevu Test Fixtures]]]></value>',
             '<key>shortDesc</key><value><![CDATA[[Klevu Test Fixtures]]]></value>',
@@ -622,7 +622,7 @@ class XmlBodyTest extends TestCase
             // Fixture is freshly created so should always return today's date (no time)
             '<key>dateAdded</key><value>' . date('Y-m-d') . '</value>',
             '<key>other</key><value>klevu_boolean_attribute:Klevu Boolean Attribute:Yes</value>',
-            '<key>otherAttributeToIndex</key><value>klevu_boolean_attribute:Klevu Boolean Attribute:Yes</value>',
+            '<key>otherAttributeToIndex</key><value>klevu_boolean_attribute:Klevu Boolean Attribute:Yes;meta_keyword:meta_keyword:0</value>',
             '<key>product_type</key><value>giftcard</value>',
             '<key>isCustomOptionsAvailable</key><value>yes</value>',
             '<key>currency</key><value>USD</value>',
@@ -789,7 +789,7 @@ class XmlBodyTest extends TestCase
     {
         include __DIR__ . '/_files/productFixturesXmlBody_rollback.php';
     }
-
+    
     /**
      * @param string $needle
      * @param string $haystack
