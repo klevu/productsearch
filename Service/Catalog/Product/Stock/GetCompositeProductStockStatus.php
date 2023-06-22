@@ -5,6 +5,7 @@ namespace Klevu\Search\Service\Catalog\Product\Stock;
 use Klevu\Search\Api\Service\Catalog\Product\Stock\GetCompositeProductStockStatusInterface;
 use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\CatalogInventory\Api\Data\StockItemInterface;
+use Magento\CatalogInventory\Api\StockItemCriteriaInterface;
 use Magento\CatalogInventory\Api\StockItemCriteriaInterfaceFactory;
 use Magento\CatalogInventory\Api\StockItemRepositoryInterface;
 use Magento\CatalogInventory\Model\Stock;
@@ -49,17 +50,18 @@ class GetCompositeProductStockStatus implements GetCompositeProductStockStatusIn
      */
     public function execute(ProductInterface $product, array $bundleOptions, $stockId = null)
     {
+        // We can not use stockRegistry->getStockStatus here
+        // as it always returns true for configurable and bundle products.
         if (!$product->getId()) {
             return false;
         }
         $product->unsetData('salable');
         $product->unsetData('is_salable');
-        if (!$product->isAvailable()) {
-            return false;
+        if (!$product->isAvailable()) { // isAvailable returns false if no child products are available
+             return false;
         }
-
+        /** @var StockItemCriteriaInterface $searchCriteria */
         $searchCriteria = $this->stockItemCriteriaFactory->create();
-
         try {
             $searchCriteria->addFilter(
                 StockItemInterface::PRODUCT_ID,

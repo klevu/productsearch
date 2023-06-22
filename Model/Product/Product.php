@@ -15,6 +15,7 @@ use Klevu\Search\Model\Context;
 use Magento\Catalog\Api\Data\ProductInterface as MagentoProductInterface;
 use Magento\Catalog\Model\Product as MagentoProduct;
 use Magento\Catalog\Model\ResourceModel\Category\CollectionFactory as ProductCollectionFactory;
+use Magento\Catalog\Pricing\Price\TierPrice;
 use Magento\Customer\Model\Group as CustomerGroup;
 use Magento\Framework\DataObject;
 use Magento\Framework\Exception\LocalizedException;
@@ -95,12 +96,14 @@ class Product extends DataObject implements ProductInterface
         $this->_searchHelperCompat = $context->getHelperManager()->getCompatHelper();
         $this->_customerModelGroup = $context->getKlevuCustomerGroup();
         $objectManager = ObjectManager::getInstance();
-        $this->getRatingsCount = $getRatingsCount ?: $objectManager->get(GetReviewCountInterface::class);
-        $this->getAverageRating = $getAverageRating ?: $objectManager->get(GetAverageRatingInterface::class);
-        $this->convertRatingToStars = $convertRatingToStars ?:
-            $objectManager->get(ConvertRatingToStarsInterface::class);
-        $this->productCollectionFactory = $productCollectionFactory ?:
-            $objectManager->get(ProductCollectionFactory::class);
+        $this->getRatingsCount = $getRatingsCount
+            ?: $objectManager->get(GetReviewCountInterface::class);
+        $this->getAverageRating = $getAverageRating
+            ?: $objectManager->get(GetAverageRatingInterface::class);
+        $this->convertRatingToStars = $convertRatingToStars
+            ?: $objectManager->get(ConvertRatingToStarsInterface::class);
+        $this->productCollectionFactory = $productCollectionFactory
+            ?: $objectManager->get(ProductCollectionFactory::class);
         parent::__construct($data);
     }
 
@@ -348,90 +351,71 @@ class Product extends DataObject implements ProductInterface
     }
 
     /**
-     * @param MagentoProductInterface|null $parent
+     * @param MagentoProductInterface|null $parent // is never used
      * @param MagentoProductInterface $item
-     * @param array $product
+     * @param array $product // is never used
      * @param StoreInterface $store
      *
      * @return float
      */
     public function getSalePriceData($parent, $item, $product, $store)
     {
-        // Default to 0 if price can't be determined
-        $product['salePrice'] = 0.0;
-        $salePrice = $this->_priceHelper->getKlevuSalePrice($parent, $item, $store);
-        if ($parent) {
-            $childSalePrice = $this->_priceHelper->getKlevuSalePrice(null, $item, $store);
-            // also send sale price for sorting and filters for klevu
-            $product['salePrice'] = (float)$childSalePrice['salePrice'];
-        } else {
-            $product['salePrice'] = (float)$salePrice['salePrice'];
-        }
+        $klevuSalePrice = $this->_priceHelper->getKlevuSalePrice(null, $item, $store);
 
-        return $product['salePrice'];
+        return isset($klevuSalePrice['salePrice'])
+            ? (float)$klevuSalePrice['salePrice']
+            : 0.0;
     }
 
     /**
      * @param MagentoProductInterface|null $parent
      * @param MagentoProductInterface $item
-     * @param array $product
+     * @param array $product // is never used
      * @param StoreInterface $store
      *
      * @return float|null
      */
     public function getToPriceData($parent, $item, $product, $store)
     {
-        $salePrice = $this->_priceHelper->getKlevuSalePrice($parent, $item, $store);
+        $klevuSalePrice = $this->_priceHelper->getKlevuSalePrice($parent, $item, $store);
 
-        $product['toPrice'] = isset($salePrice['toPrice'])
-            ? (float)$salePrice['toPrice']
+        return isset($klevuSalePrice['toPrice']) && $klevuSalePrice['toPrice']
+            ? (float)$klevuSalePrice['toPrice']
             : null;
-
-        return $product['toPrice'] ?: null;
     }
 
     /**
      * @param MagentoProductInterface|null $parent
      * @param MagentoProductInterface $item
-     * @param array $product
+     * @param array $product // is never used
      * @param StoreInterface $store
      *
      * @return float|null
      */
     public function getStartPriceData($parent, $item, $product, $store)
     {
-        $salePrice = $this->_priceHelper->getKlevuSalePrice($parent, $item, $store);
-        if ($parent) {
-            $childSalePrice = $this->_priceHelper->getKlevuSalePrice(null, $item, $store);
-            // show low price for config products
-            $product['startPrice'] = (float)$salePrice['salePrice'];
-        } else {
-            $product['startPrice'] = (float)$salePrice['salePrice'];
-        }
+        $klevuSalePrice = $this->_priceHelper->getKlevuSalePrice($parent, $item, $store);
 
-        return $product['startPrice'] ?: null;
+        return isset($klevuSalePrice['startPrice']) && $klevuSalePrice['startPrice']
+            ? (float)$klevuSalePrice['startPrice']
+            : null;
     }
 
     /**
-     * @param MagentoProductInterface|null $parent
+     * @param MagentoProductInterface|null $parent // is never used
      * @param MagentoProductInterface $item
-     * @param array $product
+     * @param array $product // is never used
      * @param StoreInterface $store
      *
      * @return float
      */
     public function getPriceData($parent, $item, $product, $store)
     {
-        $product['price'] = 0.0;
-        if ($parent) {
-            $childSalePrice = $this->_priceHelper->getKlevuPrice($item, $item, $store);
-            $product['price'] = (float)$childSalePrice['price'];
-        } else {
-            $price = $this->_priceHelper->getKlevuPrice($parent, $item, $store);
-            $product['price'] = (float)$price['price'];
-        }
+        $klevuPrice = $this->_priceHelper->getKlevuPrice(null, $item, $store);
 
-        return $product['price'];
+        return isset($klevuPrice['price'])
+            ? (float)$klevuPrice['price']
+            : 0.0;
     }
 
     /**
@@ -634,18 +618,15 @@ class Product extends DataObject implements ProductInterface
 
     /**
      * @param MagentoProductInterface $item
+     * @param StoreInterface|null $store
      *
-     * @return array|null
+     * @return array|string
      */
-    public function getGroupPricesData($item)
+    public function getGroupPricesData($item, $store = null)
     {
-        if ($item) {
-            $product['groupPrices'] = $this->getGroupPrices($item);
-        } else {
-            $product['groupPrices'] = "";
-        }
-
-        return $product['groupPrices'];
+        return $item
+            ? $this->getGroupPrices($item, $store)
+            : '';
     }
 
     /**
@@ -997,25 +978,27 @@ class Product extends DataObject implements ProductInterface
      * Get the list of prices based on customer group
      *
      * @param MagentoProductInterface $proData
+     * @param StoreInterface|null $store
      *
      * @return array|null
      */
-    protected function getGroupPrices($proData)
+    protected function getGroupPrices($proData, $store = null)
     {
-        $websiteId = null;
-        try {
-            $store = $this->_storeModelStoreManagerInterface->getStore();
-            $websiteId = (int)$store->getWebsiteId();
-        } catch (NoSuchEntityException $e) {
-            $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_ERR, $e->getMessage());
+        if (!$store) {
+            try {
+                $store = $this->_storeModelStoreManagerInterface->getStore();
+            } catch (NoSuchEntityException $e) {
+                $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_ERR, $e->getMessage());
+            }
         }
-        $groupPrices = $proData->getData('tier_price');
+        $websiteId = $store ? (int)$store->getWebsiteId() : 0;
+        $groupPrices = $proData->getData(TierPrice::PRICE_CODE);
         if (null === $groupPrices) {
             $resource = $proData->getResource();
-            $attribute = $resource->getAttribute('tier_price');
+            $attribute = $resource->getAttribute(TierPrice::PRICE_CODE);
             if ($attribute) {
                 $attribute->getBackend()->afterLoad($proData);
-                $groupPrices = $proData->getData('tier_price');
+                $groupPrices = $proData->getData(TierPrice::PRICE_CODE);
             }
         }
 
@@ -1023,6 +1006,7 @@ class Product extends DataObject implements ProductInterface
             return null;
         }
         $priceGroupData = [];
+        // @TODO load all customer grouped to avoid load in loop
         foreach ($groupPrices as $groupPrice) {
             $groupWebsiteId = (int)$groupPrice['website_id'];
             if (($groupWebsiteId === 0 || $websiteId === $groupWebsiteId) &&
@@ -1032,7 +1016,11 @@ class Product extends DataObject implements ProductInterface
                 $customerGroup = $this->_customerModelGroup->load($groupPrice['cust_group']);
                 $groupName = $customerGroup->getCustomerGroupCode();
                 $result['label'] = $groupName;
-                $result['values'] = $groupPrice['website_price'];
+                $result['values'] = $this->_priceHelper->calculateTaxPrice(
+                    $proData,
+                    $groupPrice['website_price'],
+                    $store
+                );
                 $priceGroupData[$groupPriceKey] = $result;
             }
         }
@@ -1045,22 +1033,23 @@ class Product extends DataObject implements ProductInterface
      *
      * @param MagentoProduct $proData
      * @param string $currency
+     * @param StoreInterface|null $store
      *
      * @return string
      * @todo Replace with centralised service for retrieving / formatting price data
      */
-    public function getOtherPrices($proData, $currency)
+    public function getOtherPrices($proData, $currency, $store = null)
     {
-        $otherPrices = $proData->getData('tier_price');
+        $otherPrices = $proData->getData(TierPrice::PRICE_CODE);
         if (null === $otherPrices) {
             /** @var \Magento\Catalog\Model\ResourceModel\Product $productResource */
             $productResource = $proData->getResource();
             try {
-                $attribute = $productResource->getAttribute('tier_price');
+                $attribute = $productResource->getAttribute(TierPrice::PRICE_CODE);
                 if ($attribute) {
                     $attributeBackend = $attribute->getBackend();
                     $attributeBackend->afterLoad($proData);
-                    $otherPrices = $proData->getData('tier_price');
+                    $otherPrices = $proData->getData(TierPrice::PRICE_CODE);
                 }
             } catch (LocalizedException $e) {
                 $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_ERR, $e->getMessage());
@@ -1071,19 +1060,19 @@ class Product extends DataObject implements ProductInterface
         if (!$otherPrices || !is_array($otherPrices)) {
             return '';
         }
-
-        try {
-            $store = $this->_storeModelStoreManagerInterface->getStore();
-            $websiteId = (int)$store->getWebsiteId();
-        } catch (NoSuchEntityException $e) {
-            $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_ERR, $e->getMessage());
-            $websiteId = 0;
+        if (!$store) {
+            try {
+                $store = $this->_storeModelStoreManagerInterface->getStore();
+            } catch (NoSuchEntityException $e) {
+                $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_ERR, $e->getMessage());
+            }
         }
+        $websiteId = $store ? (int)$store->getWebsiteId() : 0;
         if (!$websiteId) {
             return '';
         }
 
-        $result = array_filter(array_map(function (array $otherPrice) use ($currency, $websiteId) {
+        $result = array_filter(array_map(function (array $otherPrice) use ($currency, $proData, $store) {
             $otherPrice = array_merge([
                 'website_id' => 0,
                 'price_qty' => 0,
@@ -1100,7 +1089,6 @@ class Product extends DataObject implements ProductInterface
                     );
                     $return = null;
                     break;
-                // Intentional cascade
                 case (int)$otherPrice['price_qty'] !== 1:
                     $return = null;
                     break;
@@ -1109,7 +1097,11 @@ class Product extends DataObject implements ProductInterface
                         'salePrice_%s-%s:%s',
                         $currency,
                         $otherPrice['cust_group'],
-                        $otherPrice['website_price']
+                        $this->_priceHelper->calculateTaxPrice(
+                            $proData,
+                            $otherPrice['website_price'],
+                            $store
+                        )
                     );
                     break;
             }

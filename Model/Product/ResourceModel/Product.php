@@ -2,11 +2,12 @@
 
 namespace Klevu\Search\Model\Product\ResourceModel;
 
+use Klevu\Search\Api\Service\Catalog\Product\JoinParentStockToSelectInterface;
 use Klevu\Search\Api\Service\Catalog\Product\JoinParentVisibilityToSelectInterface;
+use Klevu\Search\Repository\MagentoProductSyncRepository;
 use Klevu\Search\Service\Sync\GetBatchSize;
 use Magento\Catalog\Model\ResourceModel\Product as ProductResourceModel;
 use Magento\Catalog\Model\ResourceModel\Product\Collection as ProductCollection;
-use Magento\CatalogInventory\Model\Stock\Status as StockStatus;
 use Magento\ConfigurableProduct\Model\ResourceModel\Attribute\OptionProvider;
 use Magento\Eav\Model\Entity;
 use Magento\Framework\App\ObjectManager;
@@ -18,9 +19,21 @@ use Psr\Log\LoggerInterface;
 
 class Product
 {
-    const CATALOG_PRODUCT_ENTITY_ALIAS = 'e';
-    const CATALOG_PRODUCT_SUPER_LINK_ALIAS = 'l';
-    const PARENT_STOCK_STATUS_ALIAS = 'parent_stock_status';
+    /**
+     * @deprecated duplicate
+     * @see MagentoProductSyncRepository::CATALOG_PRODUCT_ENTITY_ALIAS
+     */
+    const CATALOG_PRODUCT_ENTITY_ALIAS = MagentoProductSyncRepository::CATALOG_PRODUCT_ENTITY_ALIAS;
+    /**
+     * @deprecated duplicate
+     * @see MagentoProductSyncRepository::CATALOG_PRODUCT_SUPER_LINK_ALIAS
+     */
+    const CATALOG_PRODUCT_SUPER_LINK_ALIAS = MagentoProductSyncRepository::CATALOG_PRODUCT_SUPER_LINK_ALIAS;
+    /**
+     * @deprecated duplicate
+     * @see MagentoProductSyncRepository::PARENT_STOCK_STATUS_ALIAS
+     */
+    const PARENT_STOCK_STATUS_ALIAS = MagentoProductSyncRepository::PARENT_STOCK_STATUS_ALIAS;
 
     /**
      * @var ProductResourceModel
@@ -46,6 +59,10 @@ class Product
      * @var LoggerInterface
      */
     private $logger;
+    /**
+     * @var JoinParentStockToSelectInterface
+     */
+    private $joinParentStockToSelect;
 
     /**
      * @param ProductResourceModel $productResourceModel
@@ -54,6 +71,7 @@ class Product
      * @param ResourceConnection|null $resourceConnection
      * @param JoinParentVisibilityToSelectInterface|null $joinParentVisibilityToSelectService
      * @param LoggerInterface|null $logger
+     * @param JoinParentStockToSelectInterface|null $joinParentStockToSelect
      */
     public function __construct(
         ProductResourceModel $productResourceModel,
@@ -61,7 +79,8 @@ class Product
         GetBatchSize $getBatchSize,
         ResourceConnection $resourceConnection = null,
         JoinParentVisibilityToSelectInterface $joinParentVisibilityToSelectService = null,
-        LoggerInterface $logger = null
+        LoggerInterface $logger = null,
+        JoinParentStockToSelectInterface $joinParentStockToSelect = null
     ) {
         $this->productResourceModel = $productResourceModel;
         $this->optionProvider = $optionProvider;
@@ -70,7 +89,10 @@ class Product
         $this->resourceConnection = $resourceConnection ?: $objectManager->get(ResourceConnection::class);
         $this->joinParentVisibilityToSelectService = $joinParentVisibilityToSelectService
             ?: $objectManager->get(JoinParentVisibilityToSelectInterface::class);
-        $this->logger = $logger ?: $objectManager->get(LoggerInterface::class);
+        $this->logger = $logger
+            ?: $objectManager->get(LoggerInterface::class);
+        $this->joinParentStockToSelect = $joinParentStockToSelect
+            ?: $objectManager->get(JoinParentStockToSelectInterface::class);
     }
 
     /**
@@ -124,49 +146,46 @@ class Product
     ) {
         $connection = $this->productResourceModel->getConnection();
         $select = $connection->select();
+        $productLinkTable = $this->resourceConnection->getTableName('catalog_product_super_link');
+        $productEntityTable = $this->resourceConnection->getTableName('catalog_product_entity');
         $select->from(
-            [self::CATALOG_PRODUCT_SUPER_LINK_ALIAS => $this->resourceConnection->getTableName('catalog_product_super_link')], // phpcs:ignore Generic.Files.LineLength.TooLong
+            [MagentoProductSyncRepository::CATALOG_PRODUCT_SUPER_LINK_ALIAS => $productLinkTable],
             []
         );
         $select->join(
-            [self::CATALOG_PRODUCT_ENTITY_ALIAS => $this->resourceConnection->getTableName('catalog_product_entity')],
+            [MagentoProductSyncRepository::PARENT_CATALOG_PRODUCT_ENTITY_ALIAS => $productEntityTable],
             sprintf(
                 '%s.%s = %s.parent_id',
-                self::CATALOG_PRODUCT_ENTITY_ALIAS,
+                MagentoProductSyncRepository::PARENT_CATALOG_PRODUCT_ENTITY_ALIAS,
                 $connection->quoteIdentifier($this->optionProvider->getProductEntityLinkField()),
-                self::CATALOG_PRODUCT_SUPER_LINK_ALIAS
+                MagentoProductSyncRepository::CATALOG_PRODUCT_SUPER_LINK_ALIAS
             ),
-            [self::CATALOG_PRODUCT_ENTITY_ALIAS . '.' . Entity::DEFAULT_ENTITY_ID_FIELD]
+            [MagentoProductSyncRepository::PARENT_CATALOG_PRODUCT_ENTITY_ALIAS . '.' . Entity::DEFAULT_ENTITY_ID_FIELD]
         );
-        $select->where(self::CATALOG_PRODUCT_SUPER_LINK_ALIAS . '.product_id IN (?)', $productIds);
+        $select->where(
+            MagentoProductSyncRepository::CATALOG_PRODUCT_SUPER_LINK_ALIAS . '.product_id IN (?)',
+            $productIds
+        );
 
         $this->joinParentVisibilityToSelectService->setTableAlias(
             'catalog_product_super_link',
-            self::CATALOG_PRODUCT_SUPER_LINK_ALIAS
+            MagentoProductSyncRepository::CATALOG_PRODUCT_SUPER_LINK_ALIAS
         );
         $select = $this->joinParentVisibilityToSelectService->execute($select, $storeId);
 
-        if (!$includeOosParents) {
-            $select->joinInner(
-                [self::PARENT_STOCK_STATUS_ALIAS => $this->resourceConnection->getTableName('cataloginventory_stock_status')], // phpcs:ignore Generic.Files.LineLength.TooLong
-                sprintf(
-                    '%s.product_id = %s.entity_id',
-                    self::PARENT_STOCK_STATUS_ALIAS,
-                    self::CATALOG_PRODUCT_ENTITY_ALIAS
-                ),
-                []
-            );
-            $select->where(
-                self::PARENT_STOCK_STATUS_ALIAS . '.stock_status = ?',
-                StockStatus::STATUS_IN_STOCK
-            );
-        }
+        $this->joinParentStockToSelect->execute(
+            $select,
+            (int)$storeId,
+            $includeOosParents,
+            false,
+            false
+        );
 
         $select->reset('columns');
         $select->columns([
-            self::CATALOG_PRODUCT_ENTITY_ALIAS . '.' . Entity::DEFAULT_ENTITY_ID_FIELD,
-            self::CATALOG_PRODUCT_SUPER_LINK_ALIAS . '.product_id',
-            self::CATALOG_PRODUCT_SUPER_LINK_ALIAS . '.parent_id',
+            MagentoProductSyncRepository::PARENT_CATALOG_PRODUCT_ENTITY_ALIAS . '.' . Entity::DEFAULT_ENTITY_ID_FIELD,
+            MagentoProductSyncRepository::CATALOG_PRODUCT_SUPER_LINK_ALIAS . '.product_id',
+            MagentoProductSyncRepository::CATALOG_PRODUCT_SUPER_LINK_ALIAS . '.parent_id',
         ]);
 
         $relations = $connection->fetchAll($select);

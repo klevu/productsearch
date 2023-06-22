@@ -2,106 +2,126 @@
 
 namespace Klevu\Search\Model\System\Config\Source\Boosting;
 
-class Attribute extends \Magento\Backend\Helper\Data
+use Klevu\Search\Api\Provider\Eav\Attribute\ProductAttributeCollectionProviderInterface;
+use Magento\Backend\Helper\Data as BackendHelper;
+use Magento\Backend\Model\Session;
+use Magento\Catalog\Model\ResourceModel\Product\Collection as ProductCollection;
+use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory as ProductCollectionFactory;
+use Magento\Eav\Api\Data\AttributeInterface;
+use Magento\Eav\Model\Config as EavConfig;
+use Magento\Eav\Model\ResourceModel\Entity\Attribute\Collection as EntityAttributeCollection;
+use Magento\Framework\App\ObjectManager;
+use Magento\Framework\DB\Select;
+use Magento\Store\Model\StoreManagerInterface;
+
+/**
+ * class should not extend BackendHelper.
+ * remains in place for backward compatibility
+ */
+class Attribute extends BackendHelper
 {
-   /**
-    * Selected products for mass-update
-    *
-    * @var \Magento\Catalog\Model\ResourceModel\Product\Collection
-    */
+    /**
+     * @deprecated is never used, protected so can not be removed
+     * @see // no replacement
+     * @var ProductCollection
+     */
     protected $_products;
-
     /**
-     * Array of same attributes for selected products
-     *
-     * @var \Magento\Eav\Model\ResourceModel\Entity\Attribute\Collection
-     */
-    protected $_attributes;
-
-    /**
-     * Excluded from batch update attribute codes
-     *
-     * @var string[]
-     */
-    protected $_excludedAttributes = ['url_key'];
-
-    /**
-     * @var \Magento\Catalog\Model\ResourceModel\Product\CollectionFactory
+     * @deprecated is never used, protected so can not be removed
+     * @see // no replacement
+     * @var ProductCollectionFactory
      */
     protected $_productsFactory;
-
     /**
-     * @var \Magento\Backend\Model\Session
+     * @deprecated is never used, protected so can not be removed
+     * @see // no replacement
+     * @var Session
      */
     protected $_session;
-
     /**
-     * @var \Magento\Eav\Model\Config
+     * @deprecated is never used, protected so can not be removed
+     * @see // no replacement
+     * @var EavConfig
      */
     protected $_eavConfig;
-
     /**
-     * @var \Magento\Store\Model\StoreManagerInterface
+     * @deprecated is never used, protected so can not be removed
+     * @see // no replacement
+     * @var StoreManagerInterface
      */
     protected $_storeManager;
 
     /**
-     * @param \Magento\Framework\App\Helper\Context $context
-     * @param \Magento\Framework\App\Route\Config $routeConfig
-     * @param \Magento\Framework\Locale\ResolverInterface $locale
-     * @param \Magento\Backend\Model\UrlInterface $backendUrl
-     * @param \Magento\Backend\Model\Auth $auth
-     * @param \Magento\Backend\App\Area\FrontNameResolver $frontNameResolver
-     * @param \Magento\Framework\Math\Random $mathRandom
-     * @param \Magento\Eav\Model\Config $eavConfig
-     * @param \Magento\Backend\Model\Session $session
-     * @param \Magento\Catalog\Model\ResourceModel\Product\CollectionFactory $productsFactory
-     * @param \Magento\Store\Model\StoreManagerInterface $storeManager
-     * @SuppressWarnings(PHPMD.ExcessiveParameterList)
+     * @var EntityAttributeCollection
+     */
+    protected $_attributes;
+    /**
+     * @var string[]
+     */
+    protected $_excludedAttributes = ['url_key'];
+    /**
+     * @var ProductAttributeCollectionProviderInterface
+     */
+    private $productAttributeCollectionProvider;
+
+    /**
+     * @param EavConfig $eavConfig
+     * @param ProductAttributeCollectionProviderInterface|null $productAttributeCollectionProvider
      */
     public function __construct(
-        \Magento\Eav\Model\Config $eavConfig
+        EavConfig $eavConfig, // never used, left in place for backward compatibility
+        ProductAttributeCollectionProviderInterface $productAttributeCollectionProvider = null
     ) {
+        // __construct should call parent, however we are extending the wrong class.
+        // Not calling parent construct is fine in this case.
         $this->_eavConfig = $eavConfig;
+        $objectManager = ObjectManager::getInstance();
+        $this->productAttributeCollectionProvider = $productAttributeCollectionProvider
+            ?: $objectManager->create(ProductAttributeCollectionProviderInterface::class);
     }
 
     /**
-     * Return collection of same attributes for selected products without unique
-     *
-     * @return \Magento\Eav\Model\ResourceModel\Entity\Attribute\Collection
+     * @return string[][]
      */
     public function toOptionArray()
     {
-    
-        $boost_option = [
-            'value' => null,
-            'label' => ''
-        ];
         $options = [
             [
                 'value' => null,
-                'label' => '--- No Attribute Selected ---'
+                'label' => '--- No Attribute Selected ---',
             ],
-            $boost_option
         ];
-        if ($this->_attributes === null) {
-            $this->_attributes = $this->_eavConfig->getEntityType(
-                \Magento\Catalog\Model\Product::ENTITY
-            )->getAttributeCollection();
-
-            if ($this->_excludedAttributes) {
-                $this->_attributes->addFieldToFilter('attribute_code', ['nin' => $this->_excludedAttributes]);
-            }
-
-            foreach ($this->_attributes as $attribute) {
-                $options[] =
-                [
-                    'value' => $attribute->getAttributeCode(),
-                    'label' => $attribute->getAttributeCode()
-                ];
-            }
+        $attributeCollection = $this->getAttributeCollection();
+        foreach ($attributeCollection->getItems() as $attribute) {
+            /** @var AttributeInterface $attribute */
+            $frontendLabel = $attribute->getDefaultFrontendLabel();
+            $appendLabel = $frontendLabel
+                ? ' - ' . $frontendLabel
+                : '';
+            $options[] = [
+                'value' => $attribute->getAttributeCode(),
+                'label' => $attribute->getAttributeCode() . $appendLabel,
+            ];
         }
 
         return $options;
+    }
+
+    /**
+     * @return EntityAttributeCollection
+     */
+    private function getAttributeCollection()
+    {
+        if ($this->_attributes === null) {
+            $attributeCollection = $this->productAttributeCollectionProvider->getCollection();
+            if ($this->_excludedAttributes) {
+                $attributeCollection->addFieldToFilter('attribute_code', ['nin' => $this->_excludedAttributes]);
+            }
+            $attributeCollection->setOrder('attribute_code', Select::SQL_ASC);
+
+            $this->_attributes = $attributeCollection;
+        }
+
+        return $this->_attributes;
     }
 }

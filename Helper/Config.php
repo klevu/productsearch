@@ -35,6 +35,7 @@ use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\Store;
 use Magento\Store\Model\StoreManagerInterface;
+use Magento\Tax\Model\Config as MagentoTaxConfig;
 use Zend\Http\Client\Exception\RuntimeException;
 
 class Config extends AbstractHelper
@@ -1447,7 +1448,7 @@ class Config extends AbstractHelper
             $store
         );
 
-        return $taxDisplay === \Magento\Tax\Model\Config::DISPLAY_TYPE_INCLUDING_TAX;
+        return $taxDisplay && (int)$taxDisplay === MagentoTaxConfig::DISPLAY_TYPE_INCLUDING_TAX;
     }
 
     /**

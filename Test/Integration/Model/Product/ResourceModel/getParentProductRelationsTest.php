@@ -8,7 +8,7 @@ use Magento\Eav\Model\Entity;
 use Magento\TestFramework\ObjectManager;
 use PHPUnit\Framework\TestCase;
 
-class getParentProductRelationsTest extends TestCase
+class GetParentProductRelationsTest extends TestCase
 {
     /**
      * @var \Magento\Framework\App\ObjectManager

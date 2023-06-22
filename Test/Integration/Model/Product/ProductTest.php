@@ -691,34 +691,34 @@ class ProductTest extends TestCase
             'all_groups' => '0',
             'cust_group' => '0',
             'percentage_value' => null,
-            'price' => '11.000000',
+            'price' => 11.0,
             'price_id' => '1',
             'price_qty' => '1.0000',
             'product_id' => '1',
             'website_id' => '0',
-            'website_price' => '11.000000'
+            'website_price' => 11.0
         ];
         $tierPrice2 = [
             'all_groups' => '0',
             'cust_group' => '1',
             'percentage_value' => null,
-            'price' => '10.000000',
+            'price' => 10.0,
             'price_id' => '2',
             'price_qty' => '1.0000',
             'product_id' => '1',
             'website_id' => '0',
-            'website_price' => '10.000000'
+            'website_price' => 10.0
         ];
         $tierPrice3 = [
             'all_groups' => '0',
             'cust_group' => '2',
             'percentage_value' => null,
-            'price' => '9.000000',
+            'price' => 9.0,
             'price_id' => '3',
             'price_qty' => '1.0000',
             'product_id' => '1',
             'website_id' => '0',
-            'website_price' => '9.000000'
+            'website_price' => 9.0
         ];
 
         /** @var StoreManagerInterface $storeManager */
