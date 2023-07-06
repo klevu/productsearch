@@ -6,7 +6,6 @@ use Magento\CatalogRule\Model\Rule\Condition\Combine as ConditionCombine;
 use Magento\CatalogRule\Model\Rule\Condition\Product as ConditionProduct;
 use Magento\CatalogRule\Model\Rule\Job as CatalogRuleJob;
 use Magento\CatalogRule\Model\RuleFactory as CatalogRuleFactory;
-use Magento\Framework\DataObject;
 use Magento\Store\Model\Website;
 use Magento\TestFramework\Helper\Bootstrap;
 
@@ -23,7 +22,6 @@ $website1->load('klevu_test_website_1', 'code');
 /** @var Website $website2 */
 $website2 = $objectManager->create(Website::class);
 $website2->load('klevu_test_website_2', 'code');
-
 
 $catalogRuleFactory = $objectManager->get(CatalogRuleFactory::class);
 /** @var CatalogRuleInterface $catalogRule */
@@ -56,32 +54,19 @@ $conditions["1"] = [
     "type" => ConditionCombine::class,
     "aggregator" => "all",
     "value" => 1,
-    "new_child" => ""
+    "new_child" => "",
 ];
 $conditions["1--1"] = [
     "type" => ConditionProduct::class,
     "attribute" => "sku",
     "operator" => "==",
-    "value" => "klevu-simple-1"
+    "value" => "klevu-simple-1",
 ];
-$catalogRule->setData('conditions',$conditions);
+$catalogRule->setData('conditions', $conditions);
 
-// Validating rule data before Saving
-$validateResult = $catalogRule->validateData(new DataObject($catalogRule->getData()));
-if ($validateResult !== true) {
-    foreach ($validateResult as $errorMessage) {
-        echo $errorMessage;
-    }
-    return;
-}
+$catalogRule->loadPost($catalogRule->getData());
+$catalogRuleRepository = $objectManager->get(CatalogRuleRepositoryInterface::class);
+$catalogRuleRepository->save($catalogRule);
 
-try {
-    $catalogRule->loadPost($catalogRule->getData());
-    $catalogRuleRepository = $objectManager->get(CatalogRuleRepositoryInterface::class);
-    $catalogRuleRepository->save($catalogRule);
-    
-    $ruleJob = $objectManager->get(CatalogRuleJob::class);
-    $ruleJob->applyAll();
-} catch (Exception $e) {
-    echo $e->getMessage();
-}
+$ruleJob = $objectManager->get(CatalogRuleJob::class);
+$ruleJob->applyAll();
