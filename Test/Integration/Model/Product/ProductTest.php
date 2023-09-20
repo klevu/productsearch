@@ -252,6 +252,46 @@ class ProductTest extends TestCase
     }
 
     /**
+     * @magentoAppIsolation disabled
+     * @magentoDbIsolation disabled
+     * @magentoCache all enabled
+     * @magentoDataFixture loadCategoriesForCategoryPathsFixtures
+     * @return void
+     */
+    public function testGetCategoryPaths_TopLevel_Enabled_Is_Exclude()
+    {
+        $this->setupPhp5();
+        /** @var ProductModel $productModel */
+        $productModel = $this->objectManager->create(ProductModel::class);
+
+        $actualResult = $productModel->getCategoryPaths();
+        $expectedResults = [];
+        $notExpectedResults = [
+            [
+                '[Klevu][Product Test] Category Paths: Is Exclude Cat',
+            ]
+        ];
+
+        if (method_exists($this, 'assertIsArray')) {
+            $this->assertIsArray($actualResult);
+        } else {
+            $this->assertTrue(is_array($actualResult), 'Is Array');
+        }
+        foreach ($expectedResults as $expectedResult) {
+            $this->assertTrue(
+                in_array($expectedResult, $actualResult, true),
+                sprintf('Expected result: %s', json_encode($expectedResult))
+            );
+        }
+        foreach ($notExpectedResults as $notExpectedResult) {
+            $this->assertFalse(
+                in_array($notExpectedResult, $actualResult, true),
+                sprintf('Not Expected result: %s', json_encode($notExpectedResult))
+            );
+        }
+    }
+
+    /**
      * @magentoAppIsolation enabled
      * @magentoDbIsolation disabled
      * @magentoCache all disabled

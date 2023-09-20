@@ -9,10 +9,10 @@ use Magento\Framework\Mview\View\ChangelogInterface;
 use Magento\Framework\Mview\View\StateInterface;
 use Psr\Log\LoggerInterface;
 
-class ProductSyncIndexer implements IndexerActionInterface, MviewActionInterface
+class ProductStockSyncIndexer implements IndexerActionInterface, MviewActionInterface
 {
     const RECORD_TYPE_PRODUCTS = 'products';
-    const INDEXER_ID = 'klevu_product_sync';
+    const INDEXER_ID = 'klevu_product_sync_stock';
 
     /**
      * @var MagentoProductActionsInterface

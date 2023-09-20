@@ -14,6 +14,7 @@ $skusToDelete = [
     'klevu-category-paths-test-child-no-categories',
     'klevu-category-paths-test-child-with-categories',
     'klevu-category-paths-test-standalone',
+    'klevu-category-paths-test-standalone-is-exclude-cat',
 ];
 
 $objectManager = Bootstrap::getObjectManager();

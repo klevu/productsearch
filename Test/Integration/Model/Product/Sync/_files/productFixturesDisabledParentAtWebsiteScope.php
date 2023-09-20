@@ -10,6 +10,8 @@ use Magento\Catalog\Model\Product\Attribute\Source\Status;
 use Magento\Catalog\Model\Product\Visibility;
 use Magento\Framework\Registry;
 use Magento\Indexer\Model\IndexerFactory;
+use Magento\Store\Model\Store;
+use Magento\Store\Model\StoreManagerInterface;
 use Magento\Store\Model\Website;
 use Magento\TestFramework\Helper\Bootstrap;
 
@@ -18,7 +20,7 @@ use Magento\Catalog\Model\ResourceModel\Product as ProductResource;
 use Magento\ConfigurableProduct\Helper\Product\Options\Factory as ConfigurableOptionsFactory;
 use Magento\Eav\Model\Config as EavConfig;
 
-include __DIR__ . '/productFixturesDisabledParent_rollback.php';
+include __DIR__ . '/productFixturesDisabledParentAtWebsiteScope_rollback.php';
 require __DIR__ . '/productAttributeFixtures.php';
 
 $objectManager = Bootstrap::getObjectManager();
@@ -37,6 +39,13 @@ $website1->load('klevu_test_website_1', 'code');
 /** @var Website $website2 */
 $website2 = $objectManager->create(Website::class);
 $website2->load('klevu_test_website_2', 'code');
+
+/** @var Store $store1 */
+$store1 = $objectManager->create(Store::class);
+$store1->load('klevu_test_store_1', 'code');
+
+/** @var StoreManagerInterface $storeManager */
+$storeManager = $objectManager->get(StoreManagerInterface::class);
 
 /** @var EavConfig $eavConfig */
 $eavConfig = $objectManager->get(EavConfig::class);
@@ -83,7 +92,8 @@ $fixtures = [
         ],
         'url_key' => 'klevu_simple_synctest_child_instock_1_' . crc32(rand()),
         'klevu_test_configurable' => $configurableAttributeOptions[1]->getValue(),
-    ], [
+    ],
+    [
         'type_id' => 'simple',
         'sku' => 'klevu_simple_synctest_child_instock_2',
         'name' => '[Klevu] Sync Test: Child Product: In Stock 2',
@@ -110,7 +120,8 @@ $fixtures = [
         ],
         'url_key' => 'klevu_simple_synctest_child_instock_2_' . crc32(rand()),
         'klevu_test_configurable' => $configurableAttributeOptions[2]->getValue(),
-    ], [
+    ],
+    [
         'type_id' => 'simple',
         'sku' => 'klevu_simple_synctest_child_oos',
         'name' => '[Klevu] Sync Test: Child Product: Out of Stock',
@@ -142,7 +153,7 @@ $fixtures = [
     // Configurable
     [
         'type_id' => 'configurable',
-        'sku' => 'klevu_configurable_synctest_instock_disabled_cinstock',
+        'sku' => 'klevu_configurable_synctest_instock_cinstock_disweb1',
         'name' => '[Klevu] Sync Test: Configurable: In Stock; Children In Stock',
         'description' => '[Klevu Test Fixtures]',
         'short_description' => '[Klevu Test Fixtures]',
@@ -155,21 +166,26 @@ $fixtures = [
         'meta_title' => '[Klevu]',
         'meta_description' => '[Klevu Test Fixtures]',
         'visibility' => Visibility::VISIBILITY_BOTH,
-        'status' => Status::STATUS_DISABLED,
+        'status' => Status::STATUS_ENABLED,
         'stock_data' => [
             'use_config_manage_stock'   => 1,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu_configurable_synctest_instock_disabled_cinstock_' . crc32(rand()),
+        'url_key' => 'klevu_configurable_synctest_instock_cinstock_disweb1_' . crc32(rand()),
         'child_skus' => [
             'klevu_simple_synctest_child_instock_1',
             'klevu_simple_synctest_child_oos',
             'klevu_simple_synctest_child_instock_2',
         ],
+        'store_scope' => [
+            $store1->getId() => [
+                'status' => Status::STATUS_DISABLED,
+            ],
+        ],
     ],
     [
         'type_id' => 'configurable',
-        'sku' => 'klevu_configurable_synctest_instock_disabled_childrenoos',
+        'sku' => 'klevu_configurable_synctest_instock_childrenoos_disweb1',
         'name' => '[Klevu] Sync Test: Configurable: In Stock; Children Out of Stock',
         'description' => '[Klevu Test Fixtures]',
         'short_description' => '[Klevu Test Fixtures]',
@@ -182,19 +198,24 @@ $fixtures = [
         'meta_title' => '[Klevu]',
         'meta_description' => '[Klevu Test Fixtures]',
         'visibility' => Visibility::VISIBILITY_BOTH,
-        'status' => Status::STATUS_DISABLED,
+        'status' => Status::STATUS_ENABLED,
         'stock_data' => [
             'use_config_manage_stock'   => 1,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu_configurable_synctest_instock_disabled_childrenoos_' . crc32(rand()),
+        'url_key' => 'klevu_configurable_synctest_instock_childrenoos_disweb1_' . crc32(rand()),
         'child_skus' => [
             'klevu_simple_synctest_child_oos',
+        ],
+        'store_scope' => [
+            $store1->getId() => [
+                'status' => Status::STATUS_DISABLED,
+            ],
         ],
     ],
     [
         'type_id' => 'configurable',
-        'sku' => 'klevu_configurable_synctest_oos_disabled_cinstock',
+        'sku' => 'klevu_configurable_synctest_oos_cinstock_disweb1',
         'name' => '[Klevu] Sync Test: Configurable: Out of Stock; Children In Stock',
         'description' => '[Klevu Test Fixtures]',
         'short_description' => '[Klevu Test Fixtures]',
@@ -207,20 +228,25 @@ $fixtures = [
         'meta_title' => '[Klevu]',
         'meta_description' => '[Klevu Test Fixtures]',
         'visibility' => Visibility::VISIBILITY_BOTH,
-        'status' => Status::STATUS_DISABLED,
+        'status' => Status::STATUS_ENABLED,
         'stock_data' => [
             'use_config_manage_stock'   => 1,
             'is_in_stock'               => 0,
         ],
-        'url_key' => 'klevu_configurable_synctest_oos_disabled_cinstock_' . crc32(rand()),
+        'url_key' => 'klevu_configurable_synctest_oos_cinstock_disweb1_' . crc32(rand()),
         'child_skus' => [
             'klevu_simple_synctest_child_instock_1',
             'klevu_simple_synctest_child_instock_2',
         ],
+        'store_scope' => [
+            $store1->getId() => [
+                'status' => Status::STATUS_DISABLED,
+            ],
+        ],
     ],
     [
         'type_id' => 'configurable',
-        'sku' => 'klevu_configurable_synctest_instock_notvisible_disabled_cinstock',
+        'sku' => 'klevu_configurable_synctest_instock_notvisible_cinstock_disweb1',
         'name' => '[Klevu] Sync Test: Configurable: In Stock; Not Visible; Children In Stock',
         'description' => '[Klevu Test Fixtures]',
         'short_description' => '[Klevu Test Fixtures]',
@@ -233,20 +259,25 @@ $fixtures = [
         'meta_title' => '[Klevu]',
         'meta_description' => '[Klevu Test Fixtures]',
         'visibility' => Visibility::VISIBILITY_NOT_VISIBLE,
-        'status' => Status::STATUS_DISABLED,
+        'status' => Status::STATUS_ENABLED,
         'stock_data' => [
             'use_config_manage_stock'   => 1,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu_configurable_synctest_instock_notvisible_disabled_cinstock_' . crc32(rand()),
+        'url_key' => 'klevu_configurable_synctest_instock_notvisible_cinstock_disweb1_' . crc32(rand()),
         'child_skus' => [
             'klevu_simple_synctest_child_instock_1',
             'klevu_simple_synctest_child_instock_2',
         ],
+        'store_scope' => [
+            $store1->getId() => [
+                'status' => Status::STATUS_DISABLED,
+            ],
+        ],
     ],
     [
         'type_id' => 'configurable',
-        'sku' => 'klevu_configurable_synctest_instock_vissearch_disabled_cinstock',
+        'sku' => 'klevu_configurable_synctest_instock_vissearch_cinstock_disweb1',
         'name' => '[Klevu] Sync Test: Configurable: In Stock; Visibility: Search; Children In Stock',
         'description' => '[Klevu Test Fixtures]',
         'short_description' => '[Klevu Test Fixtures]',
@@ -259,20 +290,25 @@ $fixtures = [
         'meta_title' => '[Klevu]',
         'meta_description' => '[Klevu Test Fixtures]',
         'visibility' => Visibility::VISIBILITY_IN_SEARCH,
-        'status' => Status::STATUS_DISABLED,
+        'status' => Status::STATUS_ENABLED,
         'stock_data' => [
             'use_config_manage_stock'   => 1,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu_configurable_synctest_instock_vissearch_disabled_cinstock_' . crc32(rand()),
+        'url_key' => 'klevu_configurable_synctest_instock_vissearch_cinstock_disweb1' . crc32(rand()),
         'child_skus' => [
             'klevu_simple_synctest_child_instock_1',
             'klevu_simple_synctest_child_instock_2',
         ],
+        'store_scope' => [
+            $store1->getId() => [
+                'status' => Status::STATUS_DISABLED,
+            ],
+        ],
     ],
     [
         'type_id' => 'configurable',
-        'sku' => 'klevu_configurable_synctest_instock_viscatalog_disabled_cinstock',
+        'sku' => 'klevu_configurable_synctest_instock_viscatalog_cinstock_disweb1',
         'name' => '[Klevu] Sync Test: Configurable: In Stock; Visibility: Catalog; Children In Stock',
         'description' => '[Klevu Test Fixtures]',
         'short_description' => '[Klevu Test Fixtures]',
@@ -285,12 +321,43 @@ $fixtures = [
         'meta_title' => '[Klevu]',
         'meta_description' => '[Klevu Test Fixtures]',
         'visibility' => Visibility::VISIBILITY_IN_CATALOG,
-        'status' => Status::STATUS_DISABLED,
+        'status' => Status::STATUS_ENABLED,
         'stock_data' => [
             'use_config_manage_stock'   => 1,
             'is_in_stock'               => 1,
         ],
-        'url_key' => 'klevu_configurable_synctest_instock_viscatalog_disabled_cinstock_' . crc32(rand()),
+        'url_key' => 'klevu_configurable_synctest_instock_viscatalog_cinstock_disweb1' . crc32(rand()),
+        'child_skus' => [
+            'klevu_simple_synctest_child_instock_1',
+            'klevu_simple_synctest_child_instock_2',
+        ],
+        'store_scope' => [
+            $store1->getId() => [
+                'status' => Status::STATUS_DISABLED,
+            ],
+        ],
+    ],
+    [
+        'type_id' => 'configurable',
+        'sku' => 'klevu_configurable_synctest_instock_visboth_cinstock',
+        'name' => '[Klevu] Sync Test: Configurable: In Stock; Visibility: Both; Children In Stock',
+        'description' => '[Klevu Test Fixtures]',
+        'short_description' => '[Klevu Test Fixtures]',
+        'attribute_set_id' => 4,
+        'website_ids' => [
+            $website1->getId(),
+            $website2->getId(),
+        ],
+        'tax_class_id' => 2,
+        'meta_title' => '[Klevu]',
+        'meta_description' => '[Klevu Test Fixtures]',
+        'visibility' => Visibility::VISIBILITY_BOTH,
+        'status' => Status::STATUS_ENABLED,
+        'stock_data' => [
+            'use_config_manage_stock'   => 1,
+            'is_in_stock'               => 1,
+        ],
+        'url_key' => 'klevu_configurable_synctest_instock_visboth_cinstock_' . crc32(rand()),
         'child_skus' => [
             'klevu_simple_synctest_child_instock_1',
             'klevu_simple_synctest_child_instock_2',
@@ -343,6 +410,17 @@ foreach ($fixtures as $fixture) {
             'value_index' => $fixture['klevu_test_configurable'],
         ];
         $productSkuToId[$product->getSku()] = $product->getId();
+
+        if (isset($fixture['store_scope'])) {
+            foreach ($fixture['store_scope'] as $storeId => $attributeData) {
+                $storeManager->setCurrentStore($storeId);
+                $product->setData('store_id', $storeId);
+                foreach ($attributeData as $attribute => $value) {
+                    $product->setData($attribute, $value);
+                }
+                $productRepository->save($product);
+            }
+        }
     }
 }
 
@@ -392,6 +470,17 @@ foreach ($fixtures as $fixture) {
     $productRepository->cleanCache();
     $product = $productRepository->save($product);
     $productIds[] = $product->getId();
+
+    if (isset($fixture['store_scope'])) {
+        foreach ($fixture['store_scope'] as $storeId => $attributeData) {
+            $storeManager->setCurrentStore($storeId);
+            $product->setData('store_id', $storeId);
+            foreach ($attributeData as $attribute => $value) {
+                $product->setData($attribute, $value);
+            }
+            $productRepository->save($product);
+        }
+    }
 }
 
 // Grouped Setup
@@ -430,6 +519,17 @@ foreach ($fixtures as $fixture) {
     $product = $productRepository->save($product);
     $productRepository->cleanCache();
     $productIds[] = $product->getId();
+
+    if (isset($fixture['store_scope'])) {
+        foreach ($fixture['store_scope'] as $storeId => $attributeData) {
+            $storeManager->setCurrentStore($storeId);
+            $product->setData('store_id', $storeId);
+            foreach ($attributeData as $attribute => $value) {
+                $product->setData($attribute, $value);
+            }
+            $productRepository->save($product);
+        }
+    }
 }
 
 // Bundle Setup
@@ -526,6 +626,17 @@ foreach ($fixtures as $fixture) {
     $product = $productRepository->save($product);
     $productIds[] = $product->getId();
     $productRepository->cleanCache();
+
+    if (isset($fixture['store_scope'])) {
+        foreach ($fixture['store_scope'] as $storeId => $attributeData) {
+            $storeManager->setCurrentStore($storeId);
+            $product->setData('store_id', $storeId);
+            foreach ($attributeData as $attribute => $value) {
+                $product->setData($attribute, $value);
+            }
+            $productRepository->save($product);
+        }
+    }
 }
 
 $indexerFactory = $objectManager->get(IndexerFactory::class);
