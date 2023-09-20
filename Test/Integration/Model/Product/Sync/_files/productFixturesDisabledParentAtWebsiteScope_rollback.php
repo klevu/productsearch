@@ -1,6 +1,4 @@
 <?php
-/** @noinspection PhpDeprecationInspection */
-/** @noinspection PhpUnhandledExceptionInspection */
 
 use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\Framework\Exception\NoSuchEntityException;
@@ -9,9 +7,16 @@ use Magento\Store\Model\StoreManagerInterface;
 use Magento\TestFramework\Helper\Bootstrap;
 
 $skusToDelete = [
-    'klevu_configurable_1',
-    'klevu_simple_1',
-    'klevu_simple_2'
+    'klevu_simple_synctest_child_instock_1',
+    'klevu_simple_synctest_child_instock_2',
+    'klevu_simple_synctest_child_oos',
+    'klevu_configurable_synctest_instock_cinstock_disweb1',
+    'klevu_configurable_synctest_instock_childrenoos_disweb1',
+    'klevu_configurable_synctest_oos_cinstock_disweb1',
+    'klevu_configurable_synctest_instock_notvisible_cinstock_disweb1',
+    'klevu_configurable_synctest_instock_vissearch_cinstock_disweb1',
+    'klevu_configurable_synctest_instock_viscatalog_cinstock_disweb1',
+    'klevu_configurable_synctest_instock_visboth_cinstock',
 ];
 
 $objectManager = Bootstrap::getObjectManager();
@@ -39,3 +44,5 @@ foreach ($skusToDelete as $skuToDelete) {
 
 $registry->unregister('isSecureArea');
 $registry->register('isSecureArea', false);
+
+require __DIR__ . '/productAttributeFixtures_rollback.php';

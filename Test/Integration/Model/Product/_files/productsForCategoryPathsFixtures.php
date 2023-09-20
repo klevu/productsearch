@@ -133,6 +133,29 @@ $fixtures = [
             'is_in_stock'               => 1,
         ],
         'url_key' => 'klevu-product-test-category-paths-test-standalone',
+    ],[
+        'sku' => 'klevu-category-paths-test-standalone-is-exclude-cat',
+        'name' => '[Klevu][Product Test] Category Paths: Is Exclude Cat',
+        'description' => '',
+        'short_description' => '',
+        'attribute_set_id' => 4,
+        'website_ids' => [
+            $baseWebsite->getId(),
+        ],
+        'price' => 20,
+        'weight' => 1,
+        'tax_class_id' => 2,
+        'meta_title' => '',
+        'meta_description' => '',
+        'visibility' => Visibility::VISIBILITY_BOTH,
+        'status' => Status::STATUS_ENABLED,
+        'stock_data' => [
+            'use_config_manage_stock'   => 1,
+            'qty'                       => 100,
+            'is_qty_decimal'            => 0,
+            'is_in_stock'               => 1,
+        ],
+        'url_key' => 'klevu-product-test-category-paths-is-exclude-cat',
     ],
 ];
 
@@ -283,6 +306,10 @@ $categoryLinkManagement->assignProductToCategories(
 );
 $categoryLinkManagement->assignProductToCategories(
     'klevu-category-paths-test-standalone',
+    $categoryCollection->getColumnValues('entity_id')
+);
+$categoryLinkManagement->assignProductToCategories(
+    'klevu-category-paths-test-standalone-is-exclude-cat',
     $categoryCollection->getColumnValues('entity_id')
 );
 

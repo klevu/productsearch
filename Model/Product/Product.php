@@ -901,7 +901,7 @@ class Product extends DataObject implements ProductInterface
 
         $categoryAnchors = [];
         foreach ($collection as $category) {
-            if ($category->getIsExcludedCat() || !(int)$category->getIsActive()) {
+            if ($category->getIsExcludeCat() || !(int)$category->getIsActive()) {
                 continue;
             }
             if ($category->getIsAnchor()) {

@@ -18,9 +18,9 @@ use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
 /**
- * Ref: KS-14825
+ * Ref: KS-18224
  */
-class DisabledParentProductTest extends TestCase
+class DisabledParentProductAtWebsiteScopeTest extends TestCase
 {
     /**
      * @var ObjectManager
@@ -100,31 +100,49 @@ class DisabledParentProductTest extends TestCase
 
         $expectedDeletedSkus = [
             [
-                'parent' => 'klevu_configurable_synctest_instock_disabled_cinstock',
+                'parent' => 'klevu_configurable_synctest_instock_cinstock_disweb1',
                 'product' => 'klevu_simple_synctest_child_instock_1',
             ], [
-                'parent' => 'klevu_configurable_synctest_instock_disabled_cinstock',
+                'parent' => 'klevu_configurable_synctest_instock_cinstock_disweb1',
                 'product' => 'klevu_simple_synctest_child_oos',
             ],
             [
-                'parent' => 'klevu_configurable_synctest_instock_disabled_childrenoos',
+                'parent' => 'klevu_configurable_synctest_instock_childrenoos_disweb1',
                 'product' => 'klevu_simple_synctest_child_oos',
             ],
             [
-                'parent' => 'klevu_configurable_synctest_oos_disabled_cinstock',
+                'parent' => 'klevu_configurable_synctest_oos_cinstock_disweb1',
                 'product' => 'klevu_simple_synctest_child_instock_1',
             ],
             [
-                'parent' => 'klevu_configurable_synctest_instock_notvisible_disabled_cinstock',
+                'parent' => 'klevu_configurable_synctest_instock_notvisible_cinstock_disweb1',
                 'product' => 'klevu_simple_synctest_child_instock_1',
             ],
             [
-                'parent' => 'klevu_configurable_synctest_instock_vissearch_disabled_cinstock',
+                'parent' => 'klevu_configurable_synctest_instock_vissearch_cinstock_disweb1',
                 'product' => 'klevu_simple_synctest_child_instock_1',
             ],
             [
-                'parent' => 'klevu_configurable_synctest_instock_viscatalog_disabled_cinstock',
+                'parent' => 'klevu_configurable_synctest_instock_viscatalog_cinstock_disweb1',
                 'product' => 'klevu_simple_synctest_child_instock_1',
+            ],
+        ];
+        $expectedUpdate = [
+            'klevu_configurable_synctest_instock_visboth_cinstock;;;;klevu_simple_synctest_child_instock_1' => [
+                'price' => 20.0,
+                'salePrice' => 20.0,
+                'startPrice' => 7.99,
+                'toPrice' => null,
+                'visibility' => 'catalog-search',
+                'inStock' => 'yes',
+            ],
+            'klevu_configurable_synctest_instock_visboth_cinstock;;;;klevu_simple_synctest_child_instock_2' => [
+                'price' => 30.0,
+                'salePrice' => 7.99,
+                'startPrice' => 7.99,
+                'toPrice' => null,
+                'visibility' => 'catalog-search',
+                'inStock' => 'yes',
             ],
         ];
         $this->objectManager->addSharedInstance(
@@ -132,7 +150,7 @@ class DisabledParentProductTest extends TestCase
             Deleterecords::class
         );
         $this->objectManager->addSharedInstance(
-            $this->getUpdaterecordsMock(true, []),
+            $this->getUpdaterecordsMock(true, $expectedUpdate),
             Updaterecords::class
         );
         $this->objectManager->addSharedInstance(
@@ -160,8 +178,8 @@ class DisabledParentProductTest extends TestCase
 
         $store = $this->storeManager->getStore('klevu_test_store_1');
 
-        $produtSync = $this->objectManager->get(ProductSync::class);
-        $produtSync->syncData($store);
+        $productSync = $this->objectManager->get(ProductSync::class);
+        $productSync->syncData($store);
     }
 
     /**
@@ -194,31 +212,49 @@ class DisabledParentProductTest extends TestCase
 
         $expectedDeletedSkus = [
             [
-                'parent' => 'klevu_configurable_synctest_instock_disabled_cinstock',
+                'parent' => 'klevu_configurable_synctest_instock_cinstock_disweb1',
                 'product' => 'klevu_simple_synctest_child_instock_1',
             ], [
-                'parent' => 'klevu_configurable_synctest_instock_disabled_cinstock',
+                'parent' => 'klevu_configurable_synctest_instock_cinstock_disweb1',
                 'product' => 'klevu_simple_synctest_child_oos',
             ],
             [
-                'parent' => 'klevu_configurable_synctest_instock_disabled_childrenoos',
+                'parent' => 'klevu_configurable_synctest_instock_childrenoos_disweb1',
                 'product' => 'klevu_simple_synctest_child_oos',
             ],
             [
-                'parent' => 'klevu_configurable_synctest_oos_disabled_cinstock',
+                'parent' => 'klevu_configurable_synctest_oos_cinstock_disweb1',
                 'product' => 'klevu_simple_synctest_child_instock_1',
             ],
             [
-                'parent' => 'klevu_configurable_synctest_instock_notvisible_disabled_cinstock',
+                'parent' => 'klevu_configurable_synctest_instock_notvisible_cinstock_disweb1',
                 'product' => 'klevu_simple_synctest_child_instock_1',
             ],
             [
-                'parent' => 'klevu_configurable_synctest_instock_vissearch_disabled_cinstock',
+                'parent' => 'klevu_configurable_synctest_instock_vissearch_cinstock_disweb1',
                 'product' => 'klevu_simple_synctest_child_instock_1',
             ],
             [
-                'parent' => 'klevu_configurable_synctest_instock_viscatalog_disabled_cinstock',
+                'parent' => 'klevu_configurable_synctest_instock_viscatalog_cinstock_disweb1',
                 'product' => 'klevu_simple_synctest_child_instock_1',
+            ],
+        ];
+        $expectedUpdate = [
+            'klevu_configurable_synctest_instock_visboth_cinstock;;;;klevu_simple_synctest_child_instock_1' => [
+                'price' => 20.0,
+                'salePrice' => 20.0,
+                'startPrice' => 7.99,
+                'toPrice' => null,
+                'visibility' => 'catalog-search',
+                'inStock' => 'yes',
+            ],
+            'klevu_configurable_synctest_instock_visboth_cinstock;;;;klevu_simple_synctest_child_instock_2' => [
+                'price' => 30.0,
+                'salePrice' => 7.99,
+                'startPrice' => 7.99,
+                'toPrice' => null,
+                'visibility' => 'catalog-search',
+                'inStock' => 'yes',
             ],
         ];
         $this->objectManager->addSharedInstance(
@@ -226,7 +262,7 @@ class DisabledParentProductTest extends TestCase
             Deleterecords::class
         );
         $this->objectManager->addSharedInstance(
-            $this->getUpdaterecordsMock(true, []),
+            $this->getUpdaterecordsMock(true, $expectedUpdate),
             Updaterecords::class
         );
         $this->objectManager->addSharedInstance(
@@ -254,8 +290,8 @@ class DisabledParentProductTest extends TestCase
 
         $store = $this->storeManager->getStore('klevu_test_store_1');
 
-        $produtSync = $this->objectManager->get(ProductSync::class);
-        $produtSync->syncData($store);
+        $productSync = $this->objectManager->get(ProductSync::class);
+        $productSync->syncData($store);
     }
 
     /**
@@ -288,31 +324,49 @@ class DisabledParentProductTest extends TestCase
 
         $expectedDeletedSkus = [
             [
-                'parent' => 'klevu_configurable_synctest_instock_disabled_cinstock',
+                'parent' => 'klevu_configurable_synctest_instock_cinstock_disweb1',
                 'product' => 'klevu_simple_synctest_child_instock_1',
             ], [
-                'parent' => 'klevu_configurable_synctest_instock_disabled_cinstock',
+                'parent' => 'klevu_configurable_synctest_instock_cinstock_disweb1',
                 'product' => 'klevu_simple_synctest_child_oos',
             ],
             [
-                'parent' => 'klevu_configurable_synctest_instock_disabled_childrenoos',
+                'parent' => 'klevu_configurable_synctest_instock_childrenoos_disweb1',
                 'product' => 'klevu_simple_synctest_child_oos',
             ],
             [
-                'parent' => 'klevu_configurable_synctest_oos_disabled_cinstock',
+                'parent' => 'klevu_configurable_synctest_oos_cinstock_disweb1',
                 'product' => 'klevu_simple_synctest_child_instock_1',
             ],
             [
-                'parent' => 'klevu_configurable_synctest_instock_notvisible_disabled_cinstock',
+                'parent' => 'klevu_configurable_synctest_instock_notvisible_cinstock_disweb1',
                 'product' => 'klevu_simple_synctest_child_instock_1',
             ],
             [
-                'parent' => 'klevu_configurable_synctest_instock_vissearch_disabled_cinstock',
+                'parent' => 'klevu_configurable_synctest_instock_vissearch_cinstock_disweb1',
                 'product' => 'klevu_simple_synctest_child_instock_1',
             ],
             [
-                'parent' => 'klevu_configurable_synctest_instock_viscatalog_disabled_cinstock',
+                'parent' => 'klevu_configurable_synctest_instock_viscatalog_cinstock_disweb1',
                 'product' => 'klevu_simple_synctest_child_instock_1',
+            ],
+        ];
+        $expectedUpdate = [
+            'klevu_configurable_synctest_instock_visboth_cinstock;;;;klevu_simple_synctest_child_instock_1' => [
+                'price' => 20.0,
+                'salePrice' => 20.0,
+                'startPrice' => 7.99,
+                'toPrice' => null,
+                'visibility' => 'catalog-search',
+                'inStock' => 'yes',
+            ],
+            'klevu_configurable_synctest_instock_visboth_cinstock;;;;klevu_simple_synctest_child_instock_2' => [
+                'price' => 30.0,
+                'salePrice' => 7.99,
+                'startPrice' => 7.99,
+                'toPrice' => null,
+                'visibility' => 'catalog-search',
+                'inStock' => 'yes',
             ],
         ];
         $this->objectManager->addSharedInstance(
@@ -320,7 +374,7 @@ class DisabledParentProductTest extends TestCase
             Deleterecords::class
         );
         $this->objectManager->addSharedInstance(
-            $this->getUpdaterecordsMock(true, []),
+            $this->getUpdaterecordsMock(true, $expectedUpdate),
             Updaterecords::class
         );
         $this->objectManager->addSharedInstance(
@@ -348,8 +402,8 @@ class DisabledParentProductTest extends TestCase
 
         $store = $this->storeManager->getStore('klevu_test_store_1');
 
-        $produtSync = $this->objectManager->get(ProductSync::class);
-        $produtSync->syncData($store);
+        $productSync = $this->objectManager->get(ProductSync::class);
+        $productSync->syncData($store);
     }
 
     /**
@@ -382,31 +436,49 @@ class DisabledParentProductTest extends TestCase
 
         $expectedDeletedSkus = [
             [
-                'parent' => 'klevu_configurable_synctest_instock_disabled_cinstock',
+                'parent' => 'klevu_configurable_synctest_instock_cinstock_disweb1',
                 'product' => 'klevu_simple_synctest_child_instock_1',
             ], [
-                'parent' => 'klevu_configurable_synctest_instock_disabled_cinstock',
+                'parent' => 'klevu_configurable_synctest_instock_cinstock_disweb1',
                 'product' => 'klevu_simple_synctest_child_oos',
             ],
             [
-                'parent' => 'klevu_configurable_synctest_instock_disabled_childrenoos',
+                'parent' => 'klevu_configurable_synctest_instock_childrenoos_disweb1',
                 'product' => 'klevu_simple_synctest_child_oos',
             ],
             [
-                'parent' => 'klevu_configurable_synctest_oos_disabled_cinstock',
+                'parent' => 'klevu_configurable_synctest_oos_cinstock_disweb1',
                 'product' => 'klevu_simple_synctest_child_instock_1',
             ],
             [
-                'parent' => 'klevu_configurable_synctest_instock_notvisible_disabled_cinstock',
+                'parent' => 'klevu_configurable_synctest_instock_notvisible_cinstock_disweb1',
                 'product' => 'klevu_simple_synctest_child_instock_1',
             ],
             [
-                'parent' => 'klevu_configurable_synctest_instock_vissearch_disabled_cinstock',
+                'parent' => 'klevu_configurable_synctest_instock_vissearch_cinstock_disweb1',
                 'product' => 'klevu_simple_synctest_child_instock_1',
             ],
             [
-                'parent' => 'klevu_configurable_synctest_instock_viscatalog_disabled_cinstock',
+                'parent' => 'klevu_configurable_synctest_instock_viscatalog_cinstock_disweb1',
                 'product' => 'klevu_simple_synctest_child_instock_1',
+            ],
+        ];
+        $expectedUpdate = [
+            'klevu_configurable_synctest_instock_visboth_cinstock;;;;klevu_simple_synctest_child_instock_1' => [
+                'price' => 20.0,
+                'salePrice' => 20.0,
+                'startPrice' => 7.99,
+                'toPrice' => null,
+                'visibility' => 'catalog-search',
+                'inStock' => 'yes',
+            ],
+            'klevu_configurable_synctest_instock_visboth_cinstock;;;;klevu_simple_synctest_child_instock_2' => [
+                'price' => 30.0,
+                'salePrice' => 7.99,
+                'startPrice' => 7.99,
+                'toPrice' => null,
+                'visibility' => 'catalog-search',
+                'inStock' => 'yes',
             ],
         ];
         $this->objectManager->addSharedInstance(
@@ -414,7 +486,7 @@ class DisabledParentProductTest extends TestCase
             Deleterecords::class
         );
         $this->objectManager->addSharedInstance(
-            $this->getUpdaterecordsMock(true, []),
+            $this->getUpdaterecordsMock(true, $expectedUpdate),
             Updaterecords::class
         );
         $this->objectManager->addSharedInstance(
@@ -442,8 +514,8 @@ class DisabledParentProductTest extends TestCase
 
         $store = $this->storeManager->getStore('klevu_test_store_1');
 
-        $produtSync = $this->objectManager->get(ProductSync::class);
-        $produtSync->syncData($store);
+        $productSync = $this->objectManager->get(ProductSync::class);
+        $productSync->syncData($store);
     }
 
     /**
@@ -684,7 +756,7 @@ class DisabledParentProductTest extends TestCase
      */
     public static function loadProductFixturesActual()
     {
-        include __DIR__ . '/_files/productFixturesDisabledParent.php';
+        include __DIR__ . '/_files/productFixturesDisabledParentAtWebsiteScope.php';
     }
 
     /**
@@ -701,7 +773,7 @@ class DisabledParentProductTest extends TestCase
      */
     public static function loadProductFixturesRollback()
     {
-        include __DIR__ . '/_files/productFixturesDisabledParent_rollback.php';
+        include __DIR__ . '/_files/productFixturesDisabledParentAtWebsiteScope_rollback.php';
     }
 
     /**
@@ -710,7 +782,7 @@ class DisabledParentProductTest extends TestCase
      */
     public static function loadKlevuProductSyncFixturesActual()
     {
-        include __DIR__ . '/_files/klevuProductSyncFixturesDisabledParent.php';
+        include __DIR__ . '/_files/klevuProductSyncFixturesDisabledParentAtWebsiteScope.php';
     }
 
     /**
@@ -727,6 +799,6 @@ class DisabledParentProductTest extends TestCase
      */
     public static function loadKlevuProductSyncFixturesRollback()
     {
-        include __DIR__ . '/_files/klevuProductSyncFixturesDisabledParent_rollback.php';
+        include __DIR__ . '/_files/klevuProductSyncFixturesDisabledParentAtWebsiteScope_rollback.php';
     }
 }
