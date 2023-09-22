@@ -136,3 +136,20 @@ $category->addData([
     'url_key' => 'klevu-product-test-5-nested-child-disabled',
 ]);
 $categoryRepository->save($category);
+
+/** @var Category $category */
+$category = $objectManager->create(Category::class);
+$category->isObjectNew(true);
+$category->addData([
+    'name' => '[Klevu][Product Test 6]: Is Exclude Cat',
+    'description' => '[Klevu Test Fixtures]',
+    'parent_id' => 2,
+    'level' => 2,
+    'is_exclude_cat' => true,
+    'available_sort_by' => 'name',
+    'default_sort_by' => 'name',
+    'is_active' => true,
+    'position' => 1061,
+    'url_key' => 'klevu-product-test-6-is-exclude-cat',
+]);
+$categoryRepository->save($category);

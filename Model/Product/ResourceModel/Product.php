@@ -2,6 +2,7 @@
 
 namespace Klevu\Search\Model\Product\ResourceModel;
 
+use Klevu\Search\Api\Service\Catalog\Product\JoinParentStatusToSelectInterface;
 use Klevu\Search\Api\Service\Catalog\Product\JoinParentStockToSelectInterface;
 use Klevu\Search\Api\Service\Catalog\Product\JoinParentVisibilityToSelectInterface;
 use Klevu\Search\Repository\MagentoProductSyncRepository;
@@ -63,6 +64,10 @@ class Product
      * @var JoinParentStockToSelectInterface
      */
     private $joinParentStockToSelect;
+    /**
+     * @var JoinParentStatusToSelectInterface
+     */
+    private $joinParentStatusToSelect;
 
     /**
      * @param ProductResourceModel $productResourceModel
@@ -72,6 +77,7 @@ class Product
      * @param JoinParentVisibilityToSelectInterface|null $joinParentVisibilityToSelectService
      * @param LoggerInterface|null $logger
      * @param JoinParentStockToSelectInterface|null $joinParentStockToSelect
+     * @param JoinParentStatusToSelectInterface|null $joinParentStatusToSelect
      */
     public function __construct(
         ProductResourceModel $productResourceModel,
@@ -80,7 +86,8 @@ class Product
         ResourceConnection $resourceConnection = null,
         JoinParentVisibilityToSelectInterface $joinParentVisibilityToSelectService = null,
         LoggerInterface $logger = null,
-        JoinParentStockToSelectInterface $joinParentStockToSelect = null
+        JoinParentStockToSelectInterface $joinParentStockToSelect = null,
+        JoinParentStatusToSelectInterface $joinParentStatusToSelect = null
     ) {
         $this->productResourceModel = $productResourceModel;
         $this->optionProvider = $optionProvider;
@@ -93,6 +100,8 @@ class Product
             ?: $objectManager->get(LoggerInterface::class);
         $this->joinParentStockToSelect = $joinParentStockToSelect
             ?: $objectManager->get(JoinParentStockToSelectInterface::class);
+        $this->joinParentStatusToSelect = $joinParentStatusToSelect
+            ?: $objectManager->get(JoinParentStatusToSelectInterface::class);
     }
 
     /**
@@ -166,6 +175,8 @@ class Product
             MagentoProductSyncRepository::CATALOG_PRODUCT_SUPER_LINK_ALIAS . '.product_id IN (?)',
             $productIds
         );
+
+        $select = $this->joinParentStatusToSelect->execute($select, $storeId);
 
         $this->joinParentVisibilityToSelectService->setTableAlias(
             'catalog_product_super_link',

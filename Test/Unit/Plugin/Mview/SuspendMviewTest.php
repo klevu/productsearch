@@ -2,6 +2,7 @@
 
 namespace Klevu\Search\Test\Unit\Plugin\Mview;
 
+use Klevu\Search\Model\Indexer\Sync\ProductStockSyncIndexer;
 use Klevu\Search\Model\Indexer\Sync\ProductSyncIndexer;
 use Klevu\Search\Plugin\Mview\View as MviewViewPlugin;
 use Magento\Catalog\Model\Indexer\Product\Price\Processor as PriceIndexerProcessor;
@@ -47,7 +48,12 @@ class SuspendMviewTest extends TestCase
         $proceed = static function () {
         };
 
-        $plugin = new MviewViewPlugin($this->mockLogger);
+        $indexers = [
+            ProductSyncIndexer::INDEXER_ID,
+            ProductStockSyncIndexer::INDEXER_ID
+        ];
+
+        $plugin = new MviewViewPlugin($this->mockLogger, $indexers);
         $plugin->aroundSuspend($this->mockView, $proceed);
     }
 
@@ -70,7 +76,13 @@ class SuspendMviewTest extends TestCase
         $proceed = static function () {
         };
 
-        $plugin = new MviewViewPlugin($this->mockLogger);
+        $indexers = [
+            ProductSyncIndexer::INDEXER_ID,
+            ProductStockSyncIndexer::INDEXER_ID
+        ];
+
+
+        $plugin = new MviewViewPlugin($this->mockLogger, $indexers);
         $plugin->aroundSuspend($this->mockView, $proceed);
     }
 
@@ -102,7 +114,12 @@ class SuspendMviewTest extends TestCase
         $proceed = static function () {
         };
 
-        $plugin = new MviewViewPlugin($this->mockLogger);
+        $indexers = [
+            ProductSyncIndexer::INDEXER_ID,
+            ProductStockSyncIndexer::INDEXER_ID
+        ];
+
+        $plugin = new MviewViewPlugin($this->mockLogger, $indexers);
         $plugin->aroundSuspend($this->mockView, $proceed);
     }
 

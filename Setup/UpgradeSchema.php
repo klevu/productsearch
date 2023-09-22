@@ -3,6 +3,7 @@
 namespace Klevu\Search\Setup;
 
 use Klevu\Search\Helper\Config as ConfigHelper;
+use Klevu\Search\Model\Indexer\Sync\ProductStockSyncIndexer;
 use Klevu\Search\Model\Indexer\Sync\ProductSyncIndexer;
 use Klevu\Search\Model\Product\Sync\History as SyncHistory;
 use Klevu\Search\Model\Product\Sync\ResourceModel\History as SyncHistoryResourceModel;
@@ -33,6 +34,10 @@ class UpgradeSchema implements UpgradeSchemaInterface
      * @var IndexerRegistry
      */
     private $indexerRegistry;
+    /**
+     * @var ModuleContextInterface
+     */
+    private $context;
 
     /**
      * @param ConfigWriterInterface|null $configWriter
@@ -63,6 +68,7 @@ class UpgradeSchema implements UpgradeSchemaInterface
      */
     public function upgrade(SchemaSetupInterface $setup, ModuleContextInterface $context)
     {
+        $this->context = $context;
         $installer = $setup;
         $installer->startSetup();
 
@@ -236,6 +242,20 @@ class UpgradeSchema implements UpgradeSchemaInterface
             );
         }
 
+        $this->update_2_11_3();
+
         $installer->endSetup();
+    }
+
+    /**
+     * @return void
+     */
+    private function update_2_11_3() // phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
+    {
+        if (version_compare($this->context->getVersion(), '2.11.3', '>=')) {
+            return;
+        }
+        $indexer = $this->indexerRegistry->get(ProductStockSyncIndexer::INDEXER_ID);
+        $indexer->setScheduled(true);
     }
 }
