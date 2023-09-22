@@ -15,14 +15,21 @@ class View
      * @var LoggerInterface
      */
     private $logger;
+    /**
+     * @var string[]
+     */
+    private $indexers;
 
     /**
      * @param LoggerInterface $logger
+     * @param string[] $indexers
      */
     public function __construct(
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        array $indexers = []
     ) {
         $this->logger = $logger;
+        $this->indexers = $indexers;
     }
 
     /**
@@ -38,7 +45,7 @@ class View
         $result = $proceed();
         $state = $subject->getState();
         if ($state->getMode() === StateInterface::MODE_ENABLED &&
-            $state->getViewId() === ProductSyncIndexer::INDEXER_ID
+            in_array($state->getViewId(), $this->indexers, true)
         ) {
             try {
                 $state->setVersionId($originalVersion);

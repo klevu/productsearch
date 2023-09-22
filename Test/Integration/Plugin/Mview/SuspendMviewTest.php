@@ -4,6 +4,7 @@ namespace Klevu\Search\Test\Integration\Plugin\Mview;
 
 use Exception;
 use InvalidArgumentException;
+use Klevu\Search\Model\Indexer\Sync\ProductStockSyncIndexer;
 use Klevu\Search\Model\Indexer\Sync\ProductSyncIndexer;
 use Klevu\Search\Model\Klevu\Klevu as KlevuModel;
 use Klevu\Search\Model\Klevu\Klevu as KlevuSync;
@@ -12,14 +13,13 @@ use Klevu\Search\Model\Klevu\ResourceModel\Klevu\Collection as ProductSyncCollec
 use Klevu\Search\Plugin\Mview\View as MviewViewPlugin;
 use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Catalog\Api\ProductRepositoryInterface;
+use Magento\CatalogInventory\Model\Adminhtml\Stock\Item as StockItem;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Indexer\IndexerRegistry;
 use Magento\Framework\Mview\View as MviewView;
 use Magento\Framework\Mview\View\Changelog;
-use Magento\Framework\Mview\View\ChangelogInterface;
-use Magento\Framework\Mview\View\StateInterface as MviewStateInterface;
 use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Api\StoreRepositoryInterface;
 use Magento\TestFramework\Interception\PluginList;
@@ -66,7 +66,7 @@ class SuspendMviewTest extends TestCase
      * @magentoDataFixture loadWebsiteFixtures
      * @magentoDataFixture loadProductFixtures
      */
-    public function testSetVersionIdIsCalledOnStateForKlevuProductSyncIndexer()
+    public function testSetVersionId_IsCalledOnState_ForKlevuProductSyncIndexer()
     {
         $this->setupPhp5();
 
@@ -82,6 +82,54 @@ class SuspendMviewTest extends TestCase
 
         $product->setPrice('1234.56');
         $this->productRepository->save($product);
+
+        $view = $this->objectManager->get(MviewView::class);
+        $view->load($indexer);
+
+        $changeLog = $view->getChangelog();
+        $changeLogVersionId = $changeLog->getVersion();
+
+        $state = $view->getState();
+        $stateVersionId = (int)$state->getVersionId();
+
+        $this->assertNotSame($changeLogVersionId, $stateVersionId);
+
+        $view->suspend();
+
+        $updatedStateVersionId = (int)$state->getVersionId();
+
+        $this->assertSame($stateVersionId, $updatedStateVersionId);
+        $this->assertNotSame($changeLogVersionId, $updatedStateVersionId);
+
+        $this->rollbackKlevuProductSyncEntity($store);
+        $this->truncateChangeLogTable($indexer);
+        $this->setIndexesToUpdateOnSave($indexer);
+    }
+
+    /**
+     * @magentoAppIsolation enabled
+     * @magentoDataFixture loadWebsiteFixtures
+     * @magentoDataFixture loadProductFixtures
+     */
+    public function testSetVersionId_IsCalledOnState_ForKlevuProductStockSyncIndexer()
+    {
+        $this->setupPhp5();
+
+        $store = $this->getStore('klevu_test_store_1');
+        $product = $this->getProduct('klevu_simple_1');
+
+        $indexer = ProductStockSyncIndexer::INDEXER_ID;
+        $this->setIndexesToUpdateOnSave($indexer);
+        $this->setIndexesToScheduled($indexer);
+        $this->truncateChangeLogTable($indexer);
+
+        $extensionAttributes = $product->getExtensionAttributes();
+        /** @var StockItem $stockItem */
+        $stockItem = $extensionAttributes->getStockItem();
+        $stockItem->setData('is_in_stock', 0);
+        $this->productRepository->save($product);
+
+        $this->createKlevuProductSyncEntity($store, $product, null);
 
         $view = $this->objectManager->get(MviewView::class);
         $view->load($indexer);

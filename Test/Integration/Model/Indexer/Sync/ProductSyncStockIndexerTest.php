@@ -4,23 +4,20 @@ namespace Klevu\Search\Test\Integration\Model\Indexer\Sync;
 
 use Exception;
 use InvalidArgumentException;
-use Klevu\Search\Model\Indexer\Sync\ProductSyncIndexer;
+use Klevu\Search\Model\Indexer\Sync\ProductStockSyncIndexer;
 use Klevu\Search\Model\Klevu\Klevu as KlevuModel;
-use Klevu\Search\Model\Klevu\Klevu as KlevuSync;
 use Klevu\Search\Model\Klevu\ResourceModel\Klevu as KlevuResourceModel;
 use Klevu\Search\Model\Klevu\ResourceModel\Klevu\Collection as ProductSyncCollection;
 use Magento\Catalog\Api\Data\ProductExtensionInterface;
 use Magento\Catalog\Api\Data\ProductInterface;
-use Magento\Catalog\Api\Data\ProductTierPriceInterface;
 use Magento\Catalog\Api\ProductRepositoryInterface;
-use Magento\Catalog\Model\Indexer\Product\Price\Processor as IndexerPriceProcessor;
 use Magento\Catalog\Model\Product\Attribute\Source\Status;
-use Magento\Catalog\Model\Product\TierPriceFactory;
-use Magento\Customer\Model\Group;
+use Magento\CatalogInventory\Model\Adminhtml\Stock\Item as StockItem;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Indexer\IndexerRegistry;
+use Magento\Framework\Indexer\StateInterface;
 use Magento\Indexer\Model\Indexer;
 use Magento\Indexer\Model\Indexer\Collection as IndexerCollection;
 use Magento\Indexer\Model\Indexer\CollectionFactory;
@@ -30,8 +27,10 @@ use Magento\Store\Api\StoreRepositoryInterface;
 use Magento\TestFramework\ObjectManager;
 use PHPUnit\Framework\TestCase;
 
-class ProductSyncIndexerConfigTest extends TestCase
+class ProductSyncStockIndexerTest extends TestCase
 {
+    const KLEVU_PRODUCT_SYNC_STOCK_CL_TABLE = 'klevu_product_sync_stock_cl';
+
     /**
      * @var ObjectManager
      */
@@ -83,17 +82,19 @@ class ProductSyncIndexerConfigTest extends TestCase
      * @magentoDataFixture loadWebsiteFixtures
      * @magentoDataFixture loadProductFixtures
      */
-    public function testChangeLogTableIsPopulated_WhenPriceUpdated()
+    public function testChangeLogTableIsPopulated_WhenStockUpdated()
     {
-        // testing changes in subscription to table catalog_product_entity_decimal
+        // testing changes in subscription to table cataloginventory_stock_item
         $this->setupPhp5();
 
         $product = $this->getProduct('klevu_simple_1');
-        $product->setPrice('1000');
+        $extensionAttributes = $product->getExtensionAttributes();
+        /** @var StockItem $stockItem */
+        $stockItem = $extensionAttributes->getStockItem();
+        $stockItem->setData('is_in_stock', 0);
+
         $productRepository = $this->objectManager->get(ProductRepositoryInterface::class);
         $productRepository->save($product);
-
-        $this->reindexList([IndexerPriceProcessor::INDEXER_ID], [$product->getId()]);
 
         $this->assertTriggersExist();
 
@@ -135,115 +136,7 @@ class ProductSyncIndexerConfigTest extends TestCase
      * @magentoDataFixture loadWebsiteFixtures
      * @magentoDataFixture loadProductFixtures
      */
-    public function testChangeLogTableIsPopulated_WhenSkuChanged()
-    {
-        // testing changes in subscription to table catalog_product_entity
-        $this->setupPhp5();
-
-        $product = $this->getProduct('klevu_simple_1');
-        $product->setSku('SomeSku123');
-        $productRepository = $this->objectManager->get(ProductRepositoryInterface::class);
-        $productRepository->save($product);
-
-        $this->assertTriggersExist();
-
-        $changeLog = $this->getChangeLogData((int)$product->getId());
-        $this->assertNotCount(0, $changeLog);
-
-        $this->tearDownPhp5();
-    }
-
-    /**
-     * @magentoAppArea adminhtml
-     * @magentoAppIsolation enabled
-     * @magentoDbIsolation disabled
-     * @magentoDataFixture loadWebsiteFixtures
-     * @magentoDataFixture loadProductFixtures
-     */
-    public function testChangeLogTableIsPopulated_WhenProductIsRemovedFromWebsite()
-    {
-        // testing changes in subscription to table catalog_product_website
-        $this->setupPhp5();
-
-        $product = $this->getProduct('klevu_simple_1');
-        $websiteIds = $product->getWebsiteIds();
-        array_shift($websiteIds);
-        $product->setWebsiteIds($websiteIds);
-        $productRepository = $this->objectManager->get(ProductRepositoryInterface::class);
-        $productRepository->save($product);
-
-        $this->assertTriggersExist();
-
-        $changeLog = $this->getChangeLogData((int)$product->getId());
-        $this->assertNotCount(0, $changeLog);
-
-        $this->tearDownPhp5();
-    }
-
-    /**
-     * @magentoAppArea adminhtml
-     * @magentoAppIsolation enabled
-     * @magentoDbIsolation disabled
-     * @magentoDataFixture loadWebsiteFixtures
-     * @magentoDataFixture loadProductFixtures
-     */
-    public function testChangeLogTableIsPopulated_WhenTierPricesChanged()
-    {
-        // testing changes in subscription to table catalog_product_entity_tier_price
-        $this->setupPhp5();
-        $product = $this->getProduct('klevu_simple_1');
-
-        $tierPriceFactory = $this->objectManager->get(TierPriceFactory::class);
-        /** @var ProductTierPriceInterface $tierPrice */
-        $tierPrice = $tierPriceFactory->create();
-        $tierPrice->setQty(1);
-        $tierPrice->setValue(10);
-        $tierPrice->setCustomerGroupId(Group::NOT_LOGGED_IN_ID);
-        $product->setTierPrices([$tierPrice]);
-
-        $productRepository = $this->objectManager->get(ProductRepositoryInterface::class);
-        $productRepository->save($product);
-
-        $this->assertTriggersExist();
-
-        $changeLog = $this->getChangeLogData((int)$product->getId());
-        $this->assertNotCount(0, $changeLog);
-
-        $this->tearDownPhp5();
-    }
-
-    /**
-     * @magentoAppArea adminhtml
-     * @magentoAppIsolation enabled
-     * @magentoDbIsolation disabled
-     * @magentoDataFixture loadWebsiteFixtures
-     * @magentoDataFixture loadProductFixtures
-     */
-    public function testChangeLogTableIsPopulated_WhenSpecialPriceToDateChanges()
-    {
-        // testing changes in subscription to table catalog_product_entity_datetime
-        $this->setupPhp5();
-        $product = $this->getProduct('klevu_simple_1');
-        $product->setData('special_to_date', date('Y-m-d'));
-        $productRepository = $this->objectManager->get(ProductRepositoryInterface::class);
-        $productRepository->save($product);
-
-        $this->assertTriggersExist();
-
-        $changeLog = $this->getChangeLogData((int)$product->getId());
-        $this->assertNotCount(0, $changeLog);
-
-        $this->tearDownPhp5();
-    }
-
-    /**
-     * @magentoAppArea adminhtml
-     * @magentoAppIsolation enabled
-     * @magentoDbIsolation disabled
-     * @magentoDataFixture loadWebsiteFixtures
-     * @magentoDataFixture loadProductFixtures
-     */
-    public function testLastUpdatedTimeIsSetToZero_WhenPriceIndexRuns()
+    public function testLastUpdatedTimeIsSetToZero_WhenKlevuStockIndexRuns()
     {
         $this->setupPhp5();
 
@@ -252,18 +145,16 @@ class ProductSyncIndexerConfigTest extends TestCase
 
         $this->createKlevuProductSyncEntity($store, $product, null);
 
-        $productsToSync = $this->getProductsToSync($product);
+        $productsToSync = $this->getProductsToSync($product, $store);
         foreach ($productsToSync as $productToSync) {
             $this->assertNotSame(
                 '0000-00-00 00:00:00',
                 $productToSync->getData(KlevuModel::FIELD_LAST_SYNCED_AT)
             );
         }
+        $this->reindexList([ProductStockSyncIndexer::INDEXER_ID], [$product->getId()]);
 
-        $this->reindexList([IndexerPriceProcessor::INDEXER_ID], [$product->getId()]);
-        $this->reindexList([ProductSyncIndexer::INDEXER_ID], [$product->getId()]);
-
-        $productsToSync = $this->getProductsToSync($product);
+        $productsToSync = $this->getProductsToSync($product, $store);
         foreach ($productsToSync as $productToSync) {
             $this->assertSame(
                 '0000-00-00 00:00:00',
@@ -282,46 +173,7 @@ class ProductSyncIndexerConfigTest extends TestCase
      * @magentoDataFixture loadWebsiteFixtures
      * @magentoDataFixture loadProductFixtures
      */
-    public function testLastUpdatedTimeIsSetToZero_WhenPriceIndexRunsForParentProducts()
-    {
-        $this->setupPhp5();
-
-        $store = $this->getStore('klevu_test_store_1');
-        $parent = $this->getProduct('klevu_simple_1');
-        $product = $this->objectManager->get(ProductInterface::class);
-
-        $this->createKlevuProductSyncEntity($store, $product, $parent);
-
-        $productsToSync = $this->getProductsToSync($parent);
-        foreach ($productsToSync as $productToSync) {
-            $this->assertNotSame(
-                '0000-00-00 00:00:00',
-                $productToSync->getData(KlevuModel::FIELD_LAST_SYNCED_AT)
-            );
-        }
-
-        $this->reindexList([ProductSyncIndexer::INDEXER_ID], [$parent->getId()]);
-
-        $productsToSync = $this->getProductsToSync($parent);
-        foreach ($productsToSync as $productToSync) {
-            $this->assertSame(
-                '0000-00-00 00:00:00',
-                $productToSync->getData(KlevuModel::FIELD_LAST_SYNCED_AT)
-            );
-        }
-
-        $this->rollbackKlevuProductSyncEntity($store);
-        $this->tearDownPhp5();
-    }
-
-    /**
-     * @magentoAppArea adminhtml
-     * @magentoAppIsolation enabled
-     * @magentoDbIsolation disabled
-     * @magentoDataFixture loadWebsiteFixtures
-     * @magentoDataFixture loadProductFixtures
-     */
-    public function testLastUpdatedTimeIsSetToZero_OnFullReindexOnlyForEntitiesInChangeLog()
+    public function testLastUpdatedTimeIsSetToZero_OnFullReindex_OnlyForEntitiesInChangeLog()
     {
         $this->setupPhp5();
 
@@ -329,13 +181,16 @@ class ProductSyncIndexerConfigTest extends TestCase
         $product1 = $this->getProduct('klevu_simple_1');
         $product2 = $this->getProduct('klevu_simple_2');
 
-        $product1->setPrice('1234.56');
+        $extensionAttributes = $product1->getExtensionAttributes();
+        /** @var StockItem $stockItem */
+        $stockItem = $extensionAttributes->getStockItem();
+        $stockItem->setData('is_in_stock', 0);
         $this->productRepository->save($product1);
 
         $this->createKlevuProductSyncEntity($store, $product1, null);
         $this->createKlevuProductSyncEntity($store, $product2, null);
 
-        $productsToSync = $this->getProductsToSync($product1);
+        $productsToSync = $this->getProductsToSync($product1, $store);
         foreach ($productsToSync as $productToSync) {
             $this->assertNotSame(
                 '0000-00-00 00:00:00',
@@ -344,9 +199,9 @@ class ProductSyncIndexerConfigTest extends TestCase
             );
         }
 
-        $this->reindexAll([ProductSyncIndexer::INDEXER_ID]);
+        $this->reindexAll([ProductStockSyncIndexer::INDEXER_ID]);
 
-        $productsToSync = $this->getProductsToSync($product1);
+        $productsToSync = $this->getProductsToSync($product1, $store);
         foreach ($productsToSync as $productToSync) {
             $this->assertSame(
                 '0000-00-00 00:00:00',
@@ -355,7 +210,7 @@ class ProductSyncIndexerConfigTest extends TestCase
             );
         }
 
-        $productsToSync = $this->getProductsToSync($product2);
+        $productsToSync = $this->getProductsToSync($product2, $store);
         foreach ($productsToSync as $productToSync) {
             $this->assertNotSame(
                 '0000-00-00 00:00:00',
@@ -377,12 +232,8 @@ class ProductSyncIndexerConfigTest extends TestCase
         $existingTriggerNames = $this->getExistingTriggerNames();
 
         $subscriptions = [
-            'catalog_product_entity',
-            'catalog_product_entity_datetime',
-            'catalog_product_entity_decimal',
+            'cataloginventory_stock_item',
             'catalog_product_entity_int',
-            'catalog_product_entity_tier_price',
-            'catalog_product_website',
         ];
         $triggerActions = ['insert', 'update', 'delete'];
         $found = [];
@@ -454,7 +305,7 @@ class ProductSyncIndexerConfigTest extends TestCase
     private function getChangeLogData($productId)
     {
         $connection = $this->objectManager->get(ResourceConnection::class);
-        $table = $connection->getTableName('klevu_product_sync_cl');
+        $table = $connection->getTableName(self::KLEVU_PRODUCT_SYNC_STOCK_CL_TABLE);
         $select = $this->connection->select();
         $select->from($table);
         $select->where('entity_id', ['eq' => $productId]);
@@ -469,7 +320,7 @@ class ProductSyncIndexerConfigTest extends TestCase
     {
         $connection = $this->objectManager->get(ResourceConnection::class);
         try {
-            $table = $connection->getTableName('klevu_product_sync_cl');
+            $table = $connection->getTableName(self::KLEVU_PRODUCT_SYNC_STOCK_CL_TABLE);
             $this->connection->delete($table);
         } catch (Exception $e) {
             // table does not exist yet, this is fine
@@ -483,7 +334,7 @@ class ProductSyncIndexerConfigTest extends TestCase
     {
         try {
             $indexerRegistry = $this->objectManager->get(IndexerRegistry::class);
-            $indexer = $indexerRegistry->get(ProductSyncIndexer::INDEXER_ID);
+            $indexer = $indexerRegistry->get(ProductStockSyncIndexer::INDEXER_ID);
             $indexer->setScheduled(true);
         } catch (InvalidArgumentException $exception) {
             $this->fail($exception->getMessage());
@@ -497,7 +348,7 @@ class ProductSyncIndexerConfigTest extends TestCase
     {
         try {
             $indexerRegistry = $this->objectManager->get(IndexerRegistry::class);
-            $indexer = $indexerRegistry->get(ProductSyncIndexer::INDEXER_ID);
+            $indexer = $indexerRegistry->get(ProductStockSyncIndexer::INDEXER_ID);
             $indexer->setScheduled(false);
         } catch (InvalidArgumentException $exception) {
             $this->fail($exception->getMessage());
@@ -537,6 +388,9 @@ class ProductSyncIndexerConfigTest extends TestCase
             foreach ($indexerIds as $indexerId) {
                 $indexer = $indexerFactory->create();
                 $indexer->load($indexerId);
+                $state = $indexer->getState();
+                $state->setStatus(StateInterface::STATUS_VALID);
+                $state->save();
                 $indexer->reindexAll();
             }
         } catch (Exception $exception) {
@@ -584,7 +438,7 @@ class ProductSyncIndexerConfigTest extends TestCase
     {
         $resourceModel = $this->objectManager->get(KlevuResourceModel::class);
         $collection = $this->objectManager->get(ProductSyncCollection::class);
-        $collection->addFieldToFilter(KlevuSync::FIELD_STORE_ID, ['eq' => $store->getId()]);
+        $collection->addFieldToFilter(KlevuModel::FIELD_STORE_ID, ['eq' => $store->getId()]);
         $items = $collection->getItems();
         foreach ($items as $item) {
             try {
@@ -597,21 +451,25 @@ class ProductSyncIndexerConfigTest extends TestCase
 
     /**
      * @param ProductInterface $product
+     * @param StoreInterface $store
      *
      * @return KlevuModel[]
      */
-    private function getProductsToSync(ProductInterface $product)
+    private function getProductsToSync(ProductInterface $product, StoreInterface $store)
     {
         $collection = $this->objectManager->create(ProductSyncCollection::class);
         $collection->addFieldToFilter(
             [
-                KlevuSync::FIELD_PRODUCT_ID,
-                KlevuSync::FIELD_PARENT_ID
+                KlevuModel::FIELD_PRODUCT_ID,
+                KlevuModel::FIELD_PARENT_ID
             ],
             [
                 ['eq' => $product->getId()],
                 ['eq' => $product->getId()]
             ]
+        );
+        $collection->addFieldToFilter(
+            KlevuModel::FIELD_STORE_ID, ['eq' => $store->getId()]
         );
 
         return $collection->getItems();
@@ -640,24 +498,6 @@ class ProductSyncIndexerConfigTest extends TestCase
         $storeRepository = $this->objectManager->create(StoreRepositoryInterface::class);
 
         return $storeRepository->get($storeCode);
-    }
-
-    /**
-     * Loads catalog rule creation scripts because annotations use a relative path
-     *  from integration tests root
-     */
-    public static function loadCatalogRuleFixtures()
-    {
-        include __DIR__ . '/_files/catalogRuleFixtures.php';
-    }
-
-    /**
-     * Rolls back catalog rule creation scripts because annotations use a relative path
-     *  from integration tests root
-     */
-    public static function loadCatalogRuleFixturesRollback()
-    {
-        include __DIR__ . '/_files/catalogRuleFixtures_rollback.php';
     }
 
     /**

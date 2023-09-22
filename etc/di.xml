@@ -20,6 +20,9 @@
     <preference for="Klevu\Search\Api\Service\Catalog\Product\GetStockIdForWebsiteInterface"
                 type="Klevu\Search\Service\Catalog\Product\GetStockIdForWebsite"/>
 
+    <preference for="Klevu\Search\Api\Provider\CatalogRule\GetProductIdsProviderInterface"
+                type="Klevu\Search\Provider\CatalogRule\GetProductIdsProvider"/>
+
     <preference for="Klevu\Search\Api\KlevuSyncRepositoryInterface" type="Klevu\Search\Repository\KlevuSyncRepository" />
     <preference for="Klevu\Search\Api\MagentoProductSyncRepositoryInterface" type="Klevu\Search\Repository\MagentoProductSyncRepository" />
     <preference for="Klevu\Search\Api\KlevuProductSyncHistoryRepositoryInterface" type="Klevu\Search\Repository\KlevuProductSyncHistoryRepository" />
@@ -357,8 +360,21 @@
         </arguments>
     </type>
 
+    <virtualType name="Klevu\Search\Service\Catalog\Product\JoinParentStatusToSelect\Enabled\AliasSuperLinkTableAsL"
+                 type="Klevu\Search\Service\Catalog\Product\JoinParentStatusToSelect">
+        <arguments>
+            <argument name="status"
+                      xsi:type="const">Magento\Catalog\Model\Product\Attribute\Source\Status::STATUS_ENABLED</argument>
+            <argument name="tableAliases" xsi:type="array">
+                <item name="catalog_product_super_link" xsi:type="string">l</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
     <type name="Klevu\Search\Model\Product\ResourceModel\Product">
         <arguments>
+            <argument name="joinParentStatusToSelect"
+                      xsi:type="object">Klevu\Search\Service\Catalog\Product\JoinParentStatusToSelect\Enabled\AliasSuperLinkTableAsL</argument>
             <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
         </arguments>
     </type>
@@ -713,18 +729,6 @@
         </arguments>
     </type>
 
-    <type name="Magento\Framework\Mview\View\Subscription">
-        <arguments>
-            <argument name="ignoredUpdateColumnsBySubscription" xsi:type="array">
-                <item name="klevu_product_sync" xsi:type="array">
-                    <item name="cataloginventory_stock_status" xsi:type="array">
-                        <item name="qty" xsi:type="boolean">true</item>
-                    </item>
-                </item>
-            </argument>
-        </arguments>
-    </type>
-
     <type name="Magento\Framework\Mview\View">
         <plugin name="Klevu_Search::KlevuSyncSetVersionIdForReindexAll" type="Klevu\Search\Plugin\Mview\View"/>
     </type>
@@ -732,6 +736,12 @@
     <type name="Klevu\Search\Plugin\Mview\View">
         <arguments>
             <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
+            <argument name="indexers" xsi:type="array">
+                <item name="klevu_product_sync"
+                      xsi:type="const">Klevu\Search\Model\Indexer\Sync\ProductSyncIndexer::INDEXER_ID</item>
+                <item name="klevu_product_sync_stock"
+                      xsi:type="const">Klevu\Search\Model\Indexer\Sync\ProductStockSyncIndexer::INDEXER_ID</item>
+            </argument>
         </arguments>
     </type>
 
@@ -763,5 +773,12 @@
         <arguments>
             <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
         </arguments>
+    </type>
+
+    <type name="Magento\CatalogRule\Model\Indexer\IndexBuilder">
+        <plugin name="Klevu_Search::CatalogRuleReindexByIds"
+                type="Klevu\Search\Plugin\CatalogRule\Model\Indexer\IndexBuilder\ReindexByIdsPlugin" />
+        <plugin name="Klevu_Search::CatalogRuleFullReindex"
+                type="Klevu\Search\Plugin\CatalogRule\Model\Indexer\IndexBuilder\FullReindexPlugin" />
     </type>
 </config>

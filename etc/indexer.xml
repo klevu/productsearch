@@ -3,7 +3,28 @@
         xsi:noNamespaceSchemaLocation="urn:magento:framework:Indexer/etc/indexer.xsd">
     <indexer id="klevu_product_sync" view_id="klevu_product_sync"
              class="Klevu\Search\Model\Indexer\Sync\ProductSyncIndexer">
-        <title translate="true">Klevu Product Sync Indexer</title>
-        <description translate="true">Update products which require an Update on the Klevu servers. Ensure this is set to UPDATE BY SCHEDULE</description>
+        <title translate="true">Klevu Product Sync Price Indexer</title>
+        <description translate="true"><![CDATA[
+            Update products in Klevu when prices change.
+            Ensure this is set to UPDATE BY SCHEDULE.
+        ]]>
+        </description>
+        <dependencies>
+            <indexer id="catalog_product_price"/>
+        </dependencies>
+    </indexer>
+    <indexer id="klevu_product_sync_stock" view_id="klevu_product_sync_stock"
+             class="Klevu\Search\Model\Indexer\Sync\ProductStockSyncIndexer">
+        <title translate="true">Klevu Product Sync Stock Indexer</title>
+        <description translate="true"><![CDATA[
+            Update products in Klevu when stock levels change.
+            Ensure this is set to UPDATE BY SCHEDULE.
+            This indexer looks at global (non-MSI) stock only.
+            Please ensure you have the Klevu MSI module installed if you are using Magento MSI.
+        ]]>
+        </description>
+        <dependencies>
+            <indexer id="cataloginventory_stock"/>
+        </dependencies>
     </indexer>
 </config>
