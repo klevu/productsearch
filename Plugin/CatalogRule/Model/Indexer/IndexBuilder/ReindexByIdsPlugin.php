@@ -26,11 +26,12 @@ class ReindexByIdsPlugin
 
     /**
      * @param IndexBuilder $subject
+     * @param void $result
      * @param array $productIds
      *
      * @return array
      */
-    public function afterReindexByIds(IndexBuilder $subject, array $productIds)
+    public function afterReindexByIds(IndexBuilder $subject, $result, array $productIds)
     {
         $this->markProductsForUpdate($productIds);
 
@@ -39,11 +40,12 @@ class ReindexByIdsPlugin
 
     /**
      * @param IndexBuilder $subject
+     * @param void $result
      * @param int $productId
      *
      * @return int
      */
-    public function afterReindexById(IndexBuilder $subject, $productId)
+    public function afterReindexById(IndexBuilder $subject, $result, $productId)
     {
         $this->markProductsForUpdate([$productId]);
 

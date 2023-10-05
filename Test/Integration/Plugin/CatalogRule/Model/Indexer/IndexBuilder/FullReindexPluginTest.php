@@ -4,6 +4,8 @@
  * Copyright © Klevu Oy. All rights reserved. See LICENSE.txt for license details.
  */
 
+// phpcs:disable PSR1.Methods.CamelCapsMethodName.NotCamelCaps
+
 namespace Klevu\Search\Test\Integration\Plugin\CatalogRule\Model\Indexer\IndexBuilder;
 
 use Klevu\Search\Model\Klevu\Klevu as KlevuModel;
@@ -13,8 +15,11 @@ use Klevu\Search\Plugin\CatalogRule\Model\Indexer\IndexBuilder\FullReindexPlugin
 use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\CatalogRule\Model\Indexer\IndexBuilder;
+use Magento\CatalogRule\Model\Indexer\Product\ProductRuleProcessor;
 use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Framework\Indexer\IndexerRegistry;
 use Magento\Framework\ObjectManagerInterface;
+use Magento\Indexer\Model\IndexerFactory;
 use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Api\StoreRepositoryInterface;
 use Magento\TestFramework\Helper\Bootstrap;
@@ -68,14 +73,14 @@ class FullReindexPluginTest extends TestCase
     {
         $this->setupPhp5();
 
+        $this->setIndexerToUpdateBySchedule();
+
         $store = $this->getStore('default');
 
         $productRepository = $this->objectManager->get(ProductRepositoryInterface::class);
         $product1 = $this->getProduct('klevu_simple_1'); // in catalog rule
         $product1->setData('klevu_test_attribute', 'test_attribute_value')->save();
         $product1 = $productRepository->save($product1);
-        $indexerBuilder = Bootstrap::getObjectManager()->get(IndexBuilder::class);
-        $indexerBuilder->reindexById((int)$product1->getId());
 
         $product2 = $this->getProduct('klevu_simple_2'); // not in catalog rule
 
@@ -94,8 +99,9 @@ class FullReindexPluginTest extends TestCase
             );
         }
 
-        $indexBuilder = $this->objectManager->get(IndexBuilder::class);
-        $indexBuilder->reindexFull();
+        $this->reindex([
+            ProductRuleProcessor::INDEXER_ID,
+        ]);
 
         $productsToSync = $this->getProductsToSync($product1, $store);
         foreach ($productsToSync as $productToSync) {
@@ -148,7 +154,8 @@ class FullReindexPluginTest extends TestCase
             ]
         );
         $collection->addFieldToFilter(
-            KlevuModel::FIELD_STORE_ID, ['eq' => $store->getId()]
+            KlevuModel::FIELD_STORE_ID,
+            ['eq' => $store->getId()]
         );
 
         return $collection->getItems();
@@ -189,6 +196,38 @@ class FullReindexPluginTest extends TestCase
                 $resourceModel->delete($item);
             } catch (\Exception $e) {
                 // this is fine
+            }
+        }
+    }
+
+    /**
+     * @return void
+     */
+    private function setIndexerToUpdateBySchedule()
+    {
+        $indexerRegistry = $this->objectManager->get(IndexerRegistry::class);
+        $indexer = $indexerRegistry->get(ProductRuleProcessor::INDEXER_ID);
+        if (!$indexer->isScheduled()) {
+            $indexer->setScheduled(true);
+        }
+    }
+
+    /**
+     * @param string[] $indexes
+     *
+     * @return void
+     */
+    private function reindex(array $indexes)
+    {
+        $indexerFactory = $this->objectManager->get(IndexerFactory::class);
+        foreach ($indexes as $index) {
+            $indexer = $indexerFactory->create();
+            try {
+                $indexer->load($index);
+                $indexer->reindexAll();
+            } catch (\InvalidArgumentException $e) {
+                // Support for older versions of Magento which may not have all indexers
+                continue;
             }
         }
     }

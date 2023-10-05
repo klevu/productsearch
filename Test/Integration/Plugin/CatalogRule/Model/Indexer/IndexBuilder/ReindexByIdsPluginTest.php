@@ -6,14 +6,19 @@
 
 namespace Klevu\Search\Test\Integration\Plugin\CatalogRule\Model\Indexer\IndexBuilder;
 
+// phpcs:disable PSR1.Methods.CamelCapsMethodName.NotCamelCaps
+
 use Klevu\Search\Model\Klevu\Klevu as KlevuModel;
 use Klevu\Search\Model\Klevu\ResourceModel\Klevu as KlevuResourceModel;
 use Klevu\Search\Model\Klevu\ResourceModel\Klevu\Collection as ProductSyncCollection;
 use Klevu\Search\Plugin\CatalogRule\Model\Indexer\IndexBuilder\ReindexByIdsPlugin;
 use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Catalog\Api\ProductRepositoryInterface;
+use Magento\Catalog\Model\ResourceModel\Product as ProductResourceModel;
 use Magento\CatalogRule\Model\Indexer\IndexBuilder;
+use Magento\CatalogRule\Model\Indexer\Product\ProductRuleProcessor;
 use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Framework\Indexer\IndexerRegistry;
 use Magento\Framework\ObjectManagerInterface;
 use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Api\StoreRepositoryInterface;
@@ -31,6 +36,10 @@ class ReindexByIdsPluginTest extends TestCase
      * @var string
      */
     private $pluginName = 'Klevu_Search::CatalogRuleReindexByIds';
+    /**
+     * @var ProductRepositoryInterface|null
+     */
+    private $productRepository = null;
 
     /**
      * @return void
@@ -39,6 +48,7 @@ class ReindexByIdsPluginTest extends TestCase
     private function setupPhp5()
     {
         $this->objectManager = Bootstrap::getObjectManager();
+        $this->productRepository = $this->objectManager->get(ProductRepositoryInterface::class);
     }
 
     /**
@@ -57,52 +67,45 @@ class ReindexByIdsPluginTest extends TestCase
     }
 
     /**
+     * @magentoAppArea adminhtml
      * @magentoAppIsolation enabled
      * @magentoDbIsolation disabled
      * @magentoDataFixture loadWebsiteFixtures
      * @magentoDataFixture loadProductFixtures
      */
-    public function testAfterReindexByIds_SetsLastSyncedAt_ForSuppliedIds()
+    public function testAfterReindexByIds_SetsLastSyncedAt_ForSuppliedIds_UpdateOnSave()
     {
         $this->setupPhp5();
+
+        $this->setIndexerToUpdateOnSave();
 
         $store = $this->getStore('klevu_test_store_1');
         $product1 = $this->getProduct('klevu_simple_1');
         $product2 = $this->getProduct('klevu_simple_2');
+        $product3 = $this->getProduct('klevu_configurable_1');
 
-        $this->createKlevuProductSyncEntity($store, $product1, null);
-        $this->createKlevuProductSyncEntity($store, $product2, null);
+        $this->createKlevuProductSyncEntity($store, $product1, $product3);
+        $this->createKlevuProductSyncEntity($store, $product2, $product3);
 
-        $productsToSync = array_merge(
-            $this->getProductsToSync($product1, $store),
-            $this->getProductsToSync($product2, $store)
-        );
+        $productsToSync = $this->getProductsToSync($product3, $store);
         foreach ($productsToSync as $productToSync) {
             $this->assertNotSame(
                 '0000-00-00 00:00:00',
                 $productToSync->getData(KlevuModel::FIELD_LAST_SYNCED_AT),
-                'Before afterReindexById'
+                'Before afterReindexByIds'
             );
         }
 
-        $ids = [
-            $product1->getId(),
-            $product2->getId(),
-        ];
-        $indexBuilder = $this->objectManager->get(IndexBuilder::class);
+        $product3->setName($product3->getName() . ' ');
+        $productResourceModel = $this->objectManager->get(ProductResourceModel::class);
+        $productResourceModel->save($product3);
 
-        $plugin = $this->objectManager->get(ReindexByIdsPlugin::class);
-        $ids = $plugin->afterReindexByIds($indexBuilder, $ids);
-
-        $productsToSync = array_merge(
-            $this->getProductsToSync($product1, $store),
-            $this->getProductsToSync($product2, $store)
-        );
+        $productsToSync = $this->getProductsToSync($product3, $store);
         foreach ($productsToSync as $productToSync) {
             $this->assertSame(
                 '0000-00-00 00:00:00',
                 $productToSync->getData(KlevuModel::FIELD_LAST_SYNCED_AT),
-                'After afterReindexById'
+                'After afterReindexByIds'
             );
         }
 
@@ -110,14 +113,17 @@ class ReindexByIdsPluginTest extends TestCase
     }
 
     /**
+     * @magentoAppArea adminhtml
      * @magentoAppIsolation enabled
      * @magentoDbIsolation disabled
      * @magentoDataFixture loadWebsiteFixtures
      * @magentoDataFixture loadProductFixtures
      */
-    public function testAfterReindexById_SetsLastSyncedAt_ForSuppliedIds()
+    public function testAfterReindexById_SetsLastSyncedAt_ForSuppliedId_UpdateOnSave()
     {
         $this->setupPhp5();
+
+        $this->setIndexerToUpdateOnSave();
 
         $store = $this->getStore('klevu_test_store_1');
         $product1 = $this->getProduct('klevu_simple_1');
@@ -138,10 +144,9 @@ class ReindexByIdsPluginTest extends TestCase
             );
         }
 
-        $indexBuilder = $this->objectManager->get(IndexBuilder::class);
-
-        $plugin = $this->objectManager->get(ReindexByIdsPlugin::class);
-        $id = $plugin->afterReindexById($indexBuilder,  $product1->getId());
+        $product1->setName($product1->getName() . ' ');
+        $productResourceModel = $this->objectManager->get(ProductResourceModel::class);
+        $productResourceModel->save($product1);
 
         $productsToSync = $this->getProductsToSync($product1, $store);
         foreach ($productsToSync as $productToSync) {
@@ -194,7 +199,8 @@ class ReindexByIdsPluginTest extends TestCase
             ]
         );
         $collection->addFieldToFilter(
-            KlevuModel::FIELD_STORE_ID, ['eq' => $store->getId()]
+            KlevuModel::FIELD_STORE_ID,
+            ['eq' => $store->getId()]
         );
 
         return $collection->getItems();
@@ -240,6 +246,18 @@ class ReindexByIdsPluginTest extends TestCase
     }
 
     /**
+     * @return void
+     */
+    private function setIndexerToUpdateOnSave()
+    {
+        $indexerRegistry = $this->objectManager->get(IndexerRegistry::class);
+        $indexer = $indexerRegistry->get(ProductRuleProcessor::INDEXER_ID);
+        if ($indexer->isScheduled()) {
+            $indexer->setScheduled(false);
+        }
+    }
+
+    /**
      * @param string $sku
      *
      * @return ProductInterface
@@ -247,9 +265,7 @@ class ReindexByIdsPluginTest extends TestCase
      */
     private function getProduct($sku)
     {
-        $productRepository = $this->objectManager->get(ProductRepositoryInterface::class);
-
-        return $productRepository->get($sku);
+        return $this->productRepository->get($sku);
     }
 
     /**

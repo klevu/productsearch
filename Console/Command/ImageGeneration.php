@@ -3,14 +3,19 @@
 namespace Klevu\Search\Console\Command;
 
 use Exception;
-use Klevu\Search\Model\Context\Proxy as Klevu_Context;
-use Magento\Catalog\Model\Product as Product_Model;
-use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory as Magento_CollectionFactory;
-use Magento\Framework\App\Filesystem\DirectoryList as DirectoryList;
+use Klevu\Search\Helper\Image as ImageHelper;
+use Klevu\Search\Model\Context\Proxy as KlevuContext;
+use Magento\Catalog\Model\Product as ProductModel;
+use Magento\Catalog\Model\ResourceModel\Product\Collection as ProductCollection;
+use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory as ProductCollectionFactory;
+use Magento\Framework\App\Filesystem\DirectoryList;
+use Magento\Framework\App\ObjectManager;
 use Magento\Framework\App\State as AppState;
 use Magento\Framework\Console\Cli;
 use Magento\Framework\Exception\LocalizedException;
-use Psr\Log\LoggerInterface as LoggerInterface;
+use Magento\Framework\Filesystem\Driver\File as FileDriver;
+use Magento\Framework\Filesystem\DriverInterface as FilesystemDriverInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\DescriptorHelper;
 use Symfony\Component\Console\Helper\ProgressBar;
@@ -20,10 +25,11 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * Class ImageGeneration
- * @package Klevu\Search\Console\Command
  *
- * Usage: This class contains product image processing on stores level. This can be set as a external job if website imports/manages product images from 3rd party system.
- * Make sure to run the any of the sync command after running this command in order to reflect the product images at Klevu.
+ * Usage: This class contains product image processing on stores level.
+ * This can be set as a external job if website imports/manages product images from 3rd party system.
+ * Make sure to run the any of the sync command after running this command in order to reflect
+ *  the product images at Klevu.
  */
 class ImageGeneration extends Command
 {
@@ -35,7 +41,7 @@ class ImageGeneration extends Command
     protected $appState;
 
     /**
-     * @var Magento_CollectionFactory
+     * @var ProductCollectionFactory
      */
     protected $_magentoCollectionFactory;
 
@@ -45,7 +51,7 @@ class ImageGeneration extends Command
     protected $_directoryList;
 
     /**
-     * @var Klevu_Context
+     * @var KlevuContext
      */
     protected $_klevuContext;
 
@@ -54,10 +60,19 @@ class ImageGeneration extends Command
      */
     protected $_logger;
 
+    /**
+     * @var ImageHelper|null
+     */
     protected $imageHelper;
 
+    /**
+     * @var float|null
+     */
     protected $startTime;
 
+    /**
+     * @var float|null
+     */
     protected $totalExecutionTime;
 
     /**
@@ -66,29 +81,42 @@ class ImageGeneration extends Command
     protected $descriptorHelper;
 
     /**
+     * @var FilesystemDriverInterface
+     */
+    private $fileDriver;
+
+    /**
+     * @var \Symfony\Component\Console\Command\Command|null
+     */
+    protected $command = null;
+
+    /**
      * ImageGeneration constructor.
      * @param AppState $appState
-     * @param Magento_CollectionFactory $magentoCollectionFactory
-     * @param Klevu_Context $klevuContext
+     * @param ProductCollectionFactory $magentoCollectionFactory
+     * @param KlevuContext $klevuContext
      * @param DirectoryList $directoryList
      * @param LoggerInterface $logger
      * @param DescriptorHelper $descriptorHelper
+     * @param FilesystemDriverInterface|null $fileDriver
      */
     public function __construct(
         AppState $appState,
-        Magento_CollectionFactory $magentoCollectionFactory,
-        Klevu_Context $klevuContext,
+        ProductCollectionFactory $magentoCollectionFactory,
+        KlevuContext $klevuContext,
         DirectoryList $directoryList,
         LoggerInterface $logger,
-        DescriptorHelper $descriptorHelper
-    )
-    {
+        DescriptorHelper $descriptorHelper,
+        FilesystemDriverInterface $fileDriver = null
+    ) {
         $this->appState = $appState;
         $this->_magentoCollectionFactory = $magentoCollectionFactory;
         $this->_klevuContext = $klevuContext;
         $this->_directoryList = $directoryList;
         $this->_logger = $logger;
         $this->descriptorHelper = $descriptorHelper;
+        $this->fileDriver = $fileDriver ?: ObjectManager::getInstance()->get(FileDriver::class);
+
         parent::__construct();
     }
 
@@ -97,6 +125,7 @@ class ImageGeneration extends Command
      */
     protected function configure()
     {
+        // phpcs:disable Magento2.SQL.RawQuery.FoundRawSql
         $this->setName('klevu:images')
             ->setDescription('
     Klevu maintains its own copy of your product images in the pub/media/klevu_images directory.
@@ -114,6 +143,7 @@ Regenerate images for all products:
 
 HELP
             );
+        // phpcs:enable Magento2.SQL.RawQuery.FoundRawSql
         parent::configure();
     }
 
@@ -128,12 +158,12 @@ HELP
         $logDir = $this->_directoryList->getPath(DirectoryList::VAR_DIR);
         $areacodeFile = $logDir . "/" . self::AREA_CODE_LOCK_FILE;
         try {
-            if (file_exists($areacodeFile)) {
-                unlink($areacodeFile);
+            if ($this->fileDriver->isExists($areacodeFile)) {
+                $this->fileDriver->deleteFile($areacodeFile);
             }
             $this->appState->setAreaCode('frontend');
         } catch (Exception $e) {
-            fopen($areacodeFile, 'w');
+            $this->fileDriver->fileOpen($areacodeFile, 'w');
             $this->_logger->critical($e->getMessage());
             throw $e;
         }
@@ -159,50 +189,73 @@ HELP
             $output->writeln('=== Starting process for image regeneration === ');
             //Product collection load, limited to
             $collection = $this->_magentoCollectionFactory->create();
-            $collection->addAttributeToSelect(array('id', 'image'));
+            $collection->addAttributeToSelect(['id', 'image']);
 
             $progress = new ProgressBar($output, count($collection));
             $output->writeln('');
-            $progress->setFormat("%current%/%max% [%bar%] %percent:3s%% %elapsed% %memory:6s% \t| <info>%message%</info>");
+            $progress->setFormat(
+                '%current%/%max% [%bar%] %percent:3s%% %elapsed% %memory:6s% \t| <info>%message%</info>'
+            );
 
             if ($input->hasParameterOption('--regenerate')) {
                 $this->regenerateImage($progress, $collection);
                 $output->writeln('');
-                $output->writeln('<info>Image regeneration successfully completed in ' . gmdate('H:i:s', round($this->totalExecutionTime)) . '</info>');
+                $output->writeln(
+                    sprintf(
+                        '<info>Image regeneration successfully completed in %s</info>',
+                        gmdate('H:i:s', round($this->totalExecutionTime))
+                    )
+                );
                 $returnValue = Cli::RETURN_SUCCESS;
 
             } elseif ($input->hasParameterOption('--regenerateall')) {
                 $this->regenerateImage($progress, $collection, true);
                 $output->writeln('');
-                $output->writeln('<info>Image regeneration completed for all the products ' . gmdate('H:i:s', round($this->totalExecutionTime)) . '</info>');
+                $output->writeln(
+                    sprintf(
+                        '<info>Image regeneration completed for all the products %s</info>',
+                        gmdate('H:i:s', round($this->totalExecutionTime))
+                    )
+                );
                 $returnValue = Cli::RETURN_SUCCESS;
             } else {
-                $output->writeln('<error>No option provided. Specify --regenerate or --regenerateall option to regenerate the product images</error>');
+                $output->writeln(
+                    '<error>No option provided. Specify --regenerate or --regenerateall option to regenerate '
+                    . 'the product images</error>'
+                );
             }
             $output->writeln('');
-            $output->writeln('<comment>To sync the latest image changes with Klevu, run the klevu:syncdata or klevu:syncstore:storecode command.</comment>');
+            $output->writeln(
+                '<comment>To sync the latest image changes with Klevu, run the klevu:syncdata or '
+                . 'klevu:syncstore:storecode command.</comment>'
+            );
             $output->writeln('<comment>You can skip this step if the CRON is already configured</comment>');
         } catch (LocalizedException $e) {
             $output->writeln('');
             $output->writeln('<error>LocalizedException: ' . $e->getMessage() . '</error>');
         } catch (Exception $e) {
             $output->writeln('');
-            $output->writeln('<error>Exception: Not able to regenerate images due to ' . $e->getMessage() . '</error>');
+            $output->writeln(
+                sprintf(
+                    '<error>Exception: Not able to regenerate images due to %s</error>',
+                    $e->getMessage()
+                )
+            );
         }
         return $returnValue;
     }
 
-
     /**
-     * @param $product
+     * @param ProgressBar $progress
+     * @param ProductCollection $collection
      * @param bool $force
+     * @return void
      */
     private function regenerateImage($progress, $collection, $force = false)
     {
         foreach ($collection as $product) {
-            if ($product instanceof Product_Model) {
+            if ($product instanceof ProductModel) {
                 $progress->setMessage($product->getImage() . ' ');
-
 
                 $image = $product->getImage();
                 if (($image != "no_selection") && (!empty($image))) {
@@ -218,6 +271,9 @@ HELP
         $this->totalExecutionTime = microtime(true) - $this->startTime;
     }
 
+    /**
+     * @return InputOption[]
+     */
     public function getInputList()
     {
         $inputList = [];
@@ -238,6 +294,3 @@ HELP
         return $inputList;
     }
 }
-
-
-
