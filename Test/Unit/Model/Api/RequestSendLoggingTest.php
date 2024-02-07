@@ -120,13 +120,13 @@ class RequestSendLoggingTest extends TestCase
     }
 
     /**
-     * @return \Laminas\Http\Client|\Zend\Http\Client|MockObject
+     * @return \Laminas\Http\Client|\Laminas\Http\Client|MockObject
      */
     private function getMockClient()
     {
         $responseFqcn = class_exists('\Laminas\Http\Response')
             ? \Laminas\Http\Response::class
-            : \Zend\Http\Response::class;
+            : \Laminas\Http\Response::class;
 
         $mockClientResponse = $this->getMockBuilder($responseFqcn)
             ->disableOriginalConstructor()
@@ -134,7 +134,7 @@ class RequestSendLoggingTest extends TestCase
 
         $clientFqcn = class_exists('\Laminas\Http\Client')
             ? \Laminas\Http\Client::class
-            : \Zend\Http\Client::class;
+            : \Laminas\Http\Client::class;
         $mockClient = $this->getMockBuilder($clientFqcn)
             ->disableOriginalConstructor()
             ->getMock();

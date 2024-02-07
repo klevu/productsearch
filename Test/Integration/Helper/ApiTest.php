@@ -321,11 +321,11 @@ class ApiTest extends TestCase
     private function getApiResponseMock($success, $responseXml)
     {
         if (method_exists($this, 'createMock')) {
-            $zendResponseMock = $this->createMock(\Zend\Http\Response::class);
+            $zendResponseMock = $this->createMock(\Laminas\Http\Response::class);
             $zendResponseMock->method('isSuccess')->willReturn($success);
             $zendResponseMock->method('getBody')->willReturn($responseXml);
         } else {
-            $zendResponseMock = $this->getMockBuilder(\Zend\Http\Response::class)
+            $zendResponseMock = $this->getMockBuilder(\Laminas\Http\Response::class)
                 ->disableOriginalConstructor()
                 ->getMock();
             $zendResponseMock->expects($this->any())

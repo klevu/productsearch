@@ -30,14 +30,14 @@ class Post extends \Klevu\Search\Model\Api\Request
     /**
      * Add POST parameters to the request, force POST method.
      *
-     * @return \Zend\Http\Client
+     * @return \Laminas\Http\Client
      */
     protected function build()
     {
         $client = parent::build();
 
         $client
-            ->setMethod(\Zend\Http\Request::METHOD_POST)
+            ->setMethod(\Laminas\Http\Request::METHOD_POST)
             ->setParameterPost($this->getData());
 
         return $client;

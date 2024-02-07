@@ -312,18 +312,18 @@ XML
         $this->objectManager = ObjectManager::getInstance();
 
         $this->httpClientResponseMock['https://tiers.klevu.com/uti/getFeaturesAndUpgradeLink'] =
-            $this->getMockBuilder('Zend\Http\Response')
+            $this->getMockBuilder('Laminas\Http\Response')
                 ->disableOriginalConstructor()
                 ->setMethods(['getBody'])
                 ->getMock();
 
         $this->httpClientResponseMock['https://tiers.klevu.com/uti/getFeatureValues'] =
-            $this->getMockBuilder('Zend\Http\Response')
+            $this->getMockBuilder('Laminas\Http\Response')
                 ->disableOriginalConstructor()
                 ->setMethods(['getBody'])
                 ->getMock();
 
-        $this->httpClientMock = $this->getMockBuilder('Zend\Http\Client')
+        $this->httpClientMock = $this->getMockBuilder('Laminas\Http\Client')
             ->disableOriginalConstructor()
             ->setMethods(['setParameterPost', 'setUri', 'send'])
             ->getMock();
@@ -355,7 +355,7 @@ XML
             ->willReturnCallback(function () {
                 return $this->httpClientResponseMock[$this->httpClientCurrentEndpoint];
             });
-        $this->objectManager->addSharedInstance($this->httpClientMock, 'Zend\Http\Client');
+        $this->objectManager->addSharedInstance($this->httpClientMock, 'Laminas\Http\Client');
     }
 
     /**

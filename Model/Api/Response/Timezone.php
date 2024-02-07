@@ -5,7 +5,7 @@ namespace Klevu\Search\Model\Api\Response;
 class Timezone extends \Klevu\Search\Model\Api\Response\Data
 {
 
-    protected function parseRawResponse(\Zend\Http\Response $response)
+    protected function parseRawResponse(\Laminas\Http\Response $response)
     {
         parent::parseRawResponse($response);
 

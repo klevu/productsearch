@@ -16,11 +16,11 @@ class Rempty extends \Klevu\Search\Model\Api\Response
     /**
      * Override the parse response method, this API response is static.
      *
-     * @param \Zend\Http\Response $response
+     * @param \Laminas\Http\Response $response
      *
      * @return $this
      */
-    protected function parseRawResponse(\Zend\Http\Response $response)
+    protected function parseRawResponse(\Laminas\Http\Response $response)
     {
         // Do nothing
         return $this;

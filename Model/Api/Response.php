@@ -47,11 +47,11 @@ class Response extends \Magento\Framework\DataObject
     /**
      * Set the raw response object representing this API response.
      *
-     * @param \Zend\Http\Response $response
+     * @param \Laminas\Http\Response $response
      *
      * @return $this
      */
-    public function setRawResponse(\Zend\Http\Response $response)
+    public function setRawResponse(\Laminas\Http\Response $response)
     {
         $this->raw_response = $response;
 
@@ -83,11 +83,11 @@ class Response extends \Magento\Framework\DataObject
     /**
      * Extract the API response data from the given HTTP response object.
      *
-     * @param \Zend\Http\Response $response
+     * @param \Laminas\Http\Response $response
      *
      * @return $this
      */
-    protected function parseRawResponse(\Zend\Http\Response $response)
+    protected function parseRawResponse(\Laminas\Http\Response $response)
     {
         if ($response->isSuccess()) {
             $content = $response->getBody();

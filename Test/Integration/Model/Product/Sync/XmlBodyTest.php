@@ -55,7 +55,7 @@ class XmlBodyTest extends TestCase
     private $baseUrl = '';
 
     /**
-     * @var MockObject&\Zend\Http\Client
+     * @var MockObject&\Laminas\Http\Client
      */
     private $clientMock;
 
@@ -676,7 +676,7 @@ class XmlBodyTest extends TestCase
         $backendSession = $this->objectManager->get(Session::class);
         $backendSession->setKlevuSessionId(self::SESSION_ID_FIXTURE);
 
-        $mockClientBuilder = $this->getMockBuilder('Zend\Http\Client');
+        $mockClientBuilder = $this->getMockBuilder(\Laminas\Http\Client::class);
         if (method_exists($mockClientBuilder, 'onlyMethods')) {
             $mockClientBuilder->onlyMethods(['setRawBody', 'send']);
         } else {
@@ -688,10 +688,10 @@ class XmlBodyTest extends TestCase
 
         $this->clientMock->method('send')
             ->willReturnCallback(function (Request $request = null) {
-                return $this->objectManager->create('Zend\Http\Response');
+                return $this->objectManager->create(\Laminas\Http\Response::class);
             });
 
-        $this->objectManager->addSharedInstance($this->clientMock, 'Zend\Http\Client');
+        $this->objectManager->addSharedInstance($this->clientMock, \Laminas\Http\Client::class);
     }
 
     /**
@@ -789,7 +789,7 @@ class XmlBodyTest extends TestCase
     {
         include __DIR__ . '/_files/productFixturesXmlBody_rollback.php';
     }
-    
+
     /**
      * @param string $needle
      * @param string $haystack

@@ -37,7 +37,7 @@ use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\Store;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Tax\Model\Config as MagentoTaxConfig;
-use Zend\Http\Client\Exception\RuntimeException;
+use Laminas\Http\Client\Exception\RuntimeException;
 
 class Config extends AbstractHelper
 {
