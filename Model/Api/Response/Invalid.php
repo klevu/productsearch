@@ -1,13 +1,13 @@
 <?php
 
-/**
- * Class \Klevu\Search\Model\Api\Response\Invalid
- *
- * @method setErrors($errors)
- */
 namespace Klevu\Search\Model\Api\Response;
 
-class Invalid extends \Klevu\Search\Model\Api\Response
+use Klevu\Search\Model\Api\Response;
+
+/**
+ * @method setErrors($errors)
+ */
+class Invalid extends Response
 {
 
     public function _construct()
@@ -54,11 +54,11 @@ class Invalid extends \Klevu\Search\Model\Api\Response
     /**
      * Override the parse response method, this API response is doesn't use HTTP.
      *
-     * @param \Zend\Http\Response $response
+     * @param mixed $response
      *
      * @return $this
      */
-    protected function parseRawResponse(\Zend\Http\Response $response)
+    protected function parseRawResponse($response)
     {
         // Do nothing
         return $this;

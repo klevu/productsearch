@@ -652,6 +652,9 @@ class XmlBodyTest extends TestCase
      */
     private function setupPhp5()
     {
+        if (class_exists('Klevu\ApiRequest\Model\Api\Request')) {
+            $this->markTestSkipped('Test covered in ApiRequest module');
+        }
         $this->objectManager = Bootstrap::getObjectManager();
         $this->storeManager = $this->objectManager->get(StoreManagerInterface::class);
         $this->scopeConfig = $this->objectManager->get(ScopeConfigInterface::class);
@@ -789,7 +792,7 @@ class XmlBodyTest extends TestCase
     {
         include __DIR__ . '/_files/productFixturesXmlBody_rollback.php';
     }
-    
+
     /**
      * @param string $needle
      * @param string $haystack

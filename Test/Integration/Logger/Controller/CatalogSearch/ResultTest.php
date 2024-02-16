@@ -250,6 +250,9 @@ class ResultTest extends AbstractControllerTestCase
      */
     private function setupPhp5()
     {
+        if (class_exists('Klevu\ApiRequest\Model\Api\Request')) {
+            $this->markTestSkipped('Test covered in ApiRequest module');
+        }
         $this->installDir = $GLOBALS['installDir'];
         $this->objectManager = Bootstrap::getObjectManager();
         $this->storeManager = $this->objectManager->get(StoreManagerInterface::class);

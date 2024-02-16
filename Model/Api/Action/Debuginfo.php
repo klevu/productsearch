@@ -2,64 +2,105 @@
 
 namespace Klevu\Search\Model\Api\Action;
 
-class Debuginfo extends \Klevu\Search\Model\Api\Actionall
+use Klevu\Search\Helper\Api as ApiHelper;
+use Klevu\Search\Helper\Config as ConfigHelper;
+use Klevu\Search\Model\Api\Actionall;
+use Klevu\Search\Model\Api\Response;
+use Klevu\Search\Model\Api\Response\Invalid as InvalidResponse;
+use Klevu\Search\Model\Api\Response\Rempty;
+use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Store\Model\StoreManagerInterface;
+
+class Debuginfo extends Actionall
 {
-    
+    const ENDPOINT = "/n-search/logReceiver";
+    const METHOD = "POST";
+    const DEFAULT_REQUEST_MODEL = "Klevu\Search\Model\Api\Request\Post";
+    const DEFAULT_RESPONSE_MODEL = "Klevu\Search\Model\Api\Response\Data";
+
     /**
-     * @var \Klevu\Search\Model\Api\Response\Invalid
+     * @var InvalidResponse
      */
     protected $_apiResponseInvalid;
-
     /**
-     * @var \Klevu\Search\Helper\Api
+     * @var ApiHelper
      */
     protected $_searchHelperApi;
-
     /**
-     * @var \Klevu\Search\Helper\Config
+     * @var ConfigHelper
      */
     protected $_searchHelperConfig;
-    
-     /**
-      * @var \Magento\Store\Model\StoreManagerInterface
-      */
+    /**
+     * @var StoreManagerInterface
+     */
     protected $_storeModelStoreManagerInterface;
 
+    /**
+     * @param InvalidResponse $apiResponseInvalid
+     * @param ApiHelper $searchHelperApi
+     * @param StoreManagerInterface $storeModelStoreManagerInterface
+     * @param ConfigHelper $searchHelperConfig
+     * @param $requestModel
+     * @param $responseModel
+     */
     public function __construct(
-        \Klevu\Search\Model\Api\Response\Invalid $apiResponseInvalid,
-        \Klevu\Search\Helper\Api $searchHelperApi,
-        \Magento\Store\Model\StoreManagerInterface $storeModelStoreManagerInterface,
-        \Klevu\Search\Helper\Config $searchHelperConfig
+        InvalidResponse $apiResponseInvalid,
+        ApiHelper $searchHelperApi,
+        StoreManagerInterface $storeModelStoreManagerInterface,
+        ConfigHelper $searchHelperConfig,
+        $requestModel = null,
+        $responseModel = null
     ) {
-    
         $this->_apiResponseInvalid = $apiResponseInvalid;
         $this->_searchHelperApi = $searchHelperApi;
         $this->_searchHelperConfig = $searchHelperConfig;
         $this->_storeModelStoreManagerInterface = $storeModelStoreManagerInterface;
+
+        parent::__construct(
+            $apiResponseInvalid,
+            $searchHelperConfig,
+            $storeModelStoreManagerInterface,
+            $requestModel ?: static::DEFAULT_REQUEST_MODEL,
+            $responseModel ?: static::DEFAULT_RESPONSE_MODEL,
+        );
     }
-  
-    const ENDPOINT = "/n-search/logReceiver";
-    const METHOD   = "POST";
-    
-    const DEFAULT_REQUEST_MODEL = "Klevu\Search\Model\Api\Request\Post";
-    const DEFAULT_RESPONSE_MODEL = "Klevu\Search\Model\Api\Response\Data";
-    
+
+    /**
+     * @param $parameters
+     *
+     * @return Response|Rempty
+     * @throws NoSuchEntityException
+     * @throws \Exception
+     */
     public function debugKlevu($parameters)
     {
-        $endpoint = $this->buildEndpoint(static::ENDPOINT, $this->_storeModelStoreManagerInterface->getStore(), $this->_searchHelperConfig->getHostname($this->_storeModelStoreManagerInterface->getStore()));
+        $endpoint = $this->buildEndpoint(
+            static::ENDPOINT,
+            $this->_storeModelStoreManagerInterface->getStore(),
+            $this->_searchHelperConfig->getHostname($this->_storeModelStoreManagerInterface->getStore()),
+        );
         $response = $this->getResponse();
+
         $request = $this->getRequest();
-        $request
-            ->setResponseModel($response)
-            ->setEndpoint($endpoint)
-            ->setMethod(static::METHOD)
-            ->setData($parameters);
+        $request->setResponseModel($response);
+        $request->setEndpoint($endpoint);
+        $request->setMethod(static::METHOD);
+        $request->setData($parameters);
+
         return $request->send();
     }
-    
+
+    /**
+     * @param $endpoint
+     * @param $store
+     * @param $hostname
+     *
+     * @return string
+     */
     public function buildEndpoint($endpoint, $store = null, $hostname = null)
     {
-       
-        return static::ENDPOINT_PROTOCOL . (($hostname) ? $hostname : $this->_searchHelperConfig->getHostname($store)) . $endpoint;
+        return static::ENDPOINT_PROTOCOL .
+            ($hostname ?: $this->_searchHelperConfig->getHostname($store))
+            . $endpoint;
     }
 }

@@ -2,10 +2,17 @@
 
 namespace Klevu\Search\Model\Api\Response;
 
-class Timezone extends \Klevu\Search\Model\Api\Response\Data
-{
+use Magento\Framework\Exception\NoSuchEntityException;
 
-    protected function parseRawResponse(\Zend\Http\Response $response)
+class Timezone extends Data
+{
+    /**
+     * @param $response
+     *
+     * @return void
+     * @throws NoSuchEntityException
+     */
+    protected function parseRawResponse($response)
     {
         parent::parseRawResponse($response);
 

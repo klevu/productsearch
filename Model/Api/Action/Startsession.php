@@ -40,17 +40,29 @@ class Startsession extends ApiActionall
      * @param ApiHelper $searchHelperApi
      * @param StoreManagerInterface $storeModelStoreManagerInterface
      * @param ConfigHelper $searchHelperConfig
+     * @param string|null $requestModel
+     * @param string|null $responseModel
      */
     public function __construct(
         ApiResponseInvalid $apiResponseInvalid,
         ApiHelper $searchHelperApi,
         StoreManagerInterface $storeModelStoreManagerInterface,
-        ConfigHelper $searchHelperConfig
+        ConfigHelper $searchHelperConfig,
+        $requestModel = null,
+        $responseModel = null
     ) {
         $this->_apiResponseInvalid = $apiResponseInvalid;
         $this->_searchHelperApi = $searchHelperApi;
         $this->_searchHelperConfig = $searchHelperConfig;
         $this->_storeModelStoreManagerInterface = $storeModelStoreManagerInterface;
+
+        parent::__construct(
+            $apiResponseInvalid,
+            $searchHelperConfig,
+            $storeModelStoreManagerInterface,
+            $requestModel ?: static::DEFAULT_REQUEST_MODEL,
+            $responseModel ?: static::DEFAULT_RESPONSE_MODEL
+        );
     }
 
     /**
@@ -91,9 +103,6 @@ class Startsession extends ApiActionall
             }
             $this->setDataUsingMethod('store', $store);
         }
-        $request = $this->getRequest();
-        $request->setData([]);
-
         try {
             $store = $this->getStore();
         } catch (NoSuchEntityException $e) {
@@ -107,10 +116,12 @@ class Startsession extends ApiActionall
             $store,
             $this->_searchHelperConfig->getRestHostname($store)
         );
-        $request->setResponseModel($this->getResponse())
-            ->setEndpoint($endpoint)
-            ->setMethod(static::METHOD)
-            ->setHeader('Authorization', $parameters['api_key']);
+        $request = $this->getRequest();
+        $request->setData([]);
+        $request->setResponseModel($this->getResponse());
+        $request->setEndpoint($endpoint);
+        $request->setMethod(static::METHOD);
+        $request->setHeader('Authorization', $parameters['api_key']);
 
         return $request->send();
     }

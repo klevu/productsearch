@@ -2,10 +2,18 @@
 
 namespace Klevu\Search\Model\Api\Response;
 
-class Data extends \Klevu\Search\Model\Api\Response
-{
+use Klevu\Search\Model\Api\Response;
+use Magento\Framework\Exception\NoSuchEntityException;
 
-    protected function parseRawResponse(\Zend\Http\Response $response)
+class Data extends Response
+{
+    /**
+     * @param mixed $response
+     *
+     * @return $this|Data
+     * @throws NoSuchEntityException
+     */
+    protected function parseRawResponse($response)
     {
         parent::parseRawResponse($response);
 
@@ -31,7 +39,7 @@ class Data extends \Klevu\Search\Model\Api\Response
     /**
      * Convert XML to an array.
      *
-     * @param SimpleXMLElement $xml
+     * @param \SimpleXMLElement $xml
      *
      * @return array
      */

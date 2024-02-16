@@ -49,6 +49,8 @@ class Features extends Actionall
      * @param StoreManagerInterface $storeModelStoreManagerInterface
      * @param SearchHelper $searchHelperData
      * @param Store $frameworkModelStore
+     * @param null $requestModel
+     * @param null $responseModel
      */
     public function __construct(
         InvalidApiResponse $apiResponseInvalid,
@@ -56,7 +58,9 @@ class Features extends Actionall
         ConfigHelper $searchHelperConfig,
         StoreManagerInterface $storeModelStoreManagerInterface,
         SearchHelper $searchHelperData,
-        Store $frameworkModelStore
+        Store $frameworkModelStore,
+        $requestModel = null,
+        $responseModel = null
     ) {
         $this->_apiResponseInvalid = $apiResponseInvalid;
         $this->_searchHelperApi = $searchHelperApi;
@@ -64,6 +68,14 @@ class Features extends Actionall
         $this->_storeModelStoreManagerInterface = $storeModelStoreManagerInterface;
         $this->_searchHelperData = $searchHelperData;
         $this->_frameworkModelStore = $frameworkModelStore;
+
+        parent::__construct(
+            $apiResponseInvalid,
+            $searchHelperConfig,
+            $storeModelStoreManagerInterface,
+            $requestModel ?: static::DEFAULT_REQUEST_MODEL,
+            $responseModel ?: static::DEFAULT_RESPONSE_MODEL,
+        );
     }
 
     /**
@@ -105,10 +117,10 @@ class Features extends Actionall
             $this->_searchHelperConfig->getTiresUrl($store)
         );
         $request = $this->getRequest();
-        $request->setResponseModel($this->getResponse())
-            ->setEndpoint($endpoint)
-            ->setMethod(static::METHOD)
-            ->setData($parameters);
+        $request->setResponseModel($this->getResponse());
+        $request->setEndpoint($endpoint);
+        $request->setMethod(static::METHOD);
+        $request->setData($parameters);
 
         return $request->send();
     }

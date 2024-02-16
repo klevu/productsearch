@@ -2,69 +2,98 @@
 
 namespace Klevu\Search\Model\Api;
 
+use Klevu\Search\Helper\Api as ApiHelper;
+use Klevu\Search\Helper\Config as ConfigHelper;
+use Klevu\Search\Model\Api\Response\Invalid as InvalidResponse;
+use Magento\Framework\App\ObjectManager;
+use Magento\Framework\DataObject;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Store\Api\Data\StoreInterface;
+use Magento\Store\Model\StoreManagerInterface;
 
-class Actionall extends \Magento\Framework\DataObject
+class Actionall extends DataObject
 {
+    const ENDPOINT = "";
+    const METHOD = "GET";
+    const ENDPOINT_PROTOCOL = 'https://';
+    const ENDPOINT_DEFAULT_HOSTNAME = 'box.klevu.com';
+    const DEFAULT_REQUEST_MODEL = "Klevu\Search\Model\Api\Request";
+    const DEFAULT_RESPONSE_MODEL = "Klevu\Search\Model\Api\Response";
+
     /**
-     * @var \Klevu\Search\Model\Api\Response\Invalid
+     * @var InvalidResponse
      */
     protected $_apiResponseInvalid;
-
     /**
-     * @var \Klevu\Search\Helper\Api
+     * @var ApiHelper
      */
     protected $_searchHelperApi;
-
     /**
-     * @var \Klevu\Search\Helper\Config
+     * @var ConfigHelper
      */
     protected $_searchHelperConfig;
-
     /**
-     * @var \Klevu\Search\Model\Api
+     * @deprecated is never used
      */
     protected $_searchModelApi;
-
     /**
-     * @var \Magento\Store\Model\StoreManagerInterface
+     * @var StoreManagerInterface
      */
     protected $_storeModelStoreManagerInterface;
+    /**
+     * @var Request $request
+     */
+    protected $request;
+    /**
+     * @var Response $response
+     */
+    protected $response;
+    /**
+     * @var string|null
+     */
+    private $requestModel;
+    /**
+     * @var string|null
+     */
+    private $responseModel;
 
+    /**
+     * @param InvalidResponse $apiResponseInvalid
+     * @param ConfigHelper $searchHelperConfig
+     * @param StoreManagerInterface $storeModelStoreManagerInterface
+     * @param string|null $requestModel
+     * @param string|null $responseModel
+     * @param array|null $data
+     */
     public function __construct(
-        \Klevu\Search\Model\Api\Response\Invalid $apiResponseInvalid,
-        \Klevu\Search\Helper\Config $searchHelperConfig,
-        \Magento\Store\Model\StoreManagerInterface $storeModelStoreManagerInterface
+        InvalidResponse $apiResponseInvalid,
+        ConfigHelper $searchHelperConfig,
+        StoreManagerInterface $storeModelStoreManagerInterface,
+        $requestModel = null,
+        $responseModel = null,
+        $data = []
     ) {
         $this->_apiResponseInvalid = $apiResponseInvalid;
         $this->_searchHelperConfig = $searchHelperConfig;
         $this->_storeModelStoreManagerInterface = $storeModelStoreManagerInterface;
+        $this->requestModel = $requestModel ?: static::DEFAULT_REQUEST_MODEL;
+        $this->responseModel = $responseModel ?: static::DEFAULT_RESPONSE_MODEL;
+
+        parent::__construct($data);
     }
-
-    const ENDPOINT = "";
-    const METHOD   = "GET";
-    const ENDPOINT_PROTOCOL = 'https://';
-    const ENDPOINT_DEFAULT_HOSTNAME = 'box.klevu.com';
-
-    const DEFAULT_REQUEST_MODEL = "Klevu\Search\Model\Api\Request";
-    const DEFAULT_RESPONSE_MODEL = "Klevu\Search\Model\Api\Response";
-
-    /** @var \Klevu\Search\Model\Api\Request $request */
-    protected $request;
-
-    /** @var \Klevu\Search\Model\Api\Response $response */
-    protected $response;
 
     /**
      * Set the request model to use for this API action.
      *
-     * @param \Klevu\Search\Model\Api\Request $request_model
+     * @param Request $request_model
      *
      * @return $this
+     *
+     * @deprecated due to hardcoded type hint
+     * @see setRequestModel
      */
-    public function setRequest(\Klevu\Search\Model\Api\Request $request_model)
+    public function setRequest(Request $request_model)
     {
         $this->request = $request_model;
 
@@ -72,14 +101,24 @@ class Actionall extends \Magento\Framework\DataObject
     }
 
     /**
+     * @param mixed $requestModel
+     *
+     * @return void
+     */
+    public function setRequestModel($requestModel)
+    {
+        $this->request = $requestModel;
+    }
+
+    /**
      * Return the request model used for this API action.
      *
-     * @return \Klevu\Search\Model\Api\Request
+     * @return Request
      */
     public function getRequest()
     {
         if (!$this->request) {
-            $this->request = \Magento\Framework\App\ObjectManager::getInstance()->get(static::DEFAULT_REQUEST_MODEL);
+            $this->request = ObjectManager::getInstance()->get($this->requestModel);
         }
 
         return $this->request;
@@ -88,11 +127,14 @@ class Actionall extends \Magento\Framework\DataObject
     /**
      * Set the response model to use for this API action.
      *
-     * @param \Klevu\Search\Model\Api\Response $response_model
+     * @param Response $response_model
      *
      * @return $this
+     *
+     * @deprecated due to hardcoded type hint
+     * @see setResponseModel
      */
-    public function setResponse(\Klevu\Search\Model\Api\Response $response_model)
+    public function setResponse(Response $response_model)
     {
         $this->response = $response_model;
 
@@ -100,14 +142,24 @@ class Actionall extends \Magento\Framework\DataObject
     }
 
     /**
+     * @param mixed $responseModel
+     *
+     * @return void
+     */
+    public function setResponseModel($responseModel)
+    {
+        $this->response = $responseModel;
+    }
+
+    /**
      * Return the response model used for this API action.
      *
-     * @return \Klevu\Search\Model\Api\Response
+     * @return Response
      */
     public function getResponse()
     {
         if (!$this->response) {
-            $this->response = \Magento\Framework\App\ObjectManager::getInstance()->get(static::DEFAULT_RESPONSE_MODEL);
+            $this->response = ObjectManager::getInstance()->get($this->responseModel);
         }
 
         return $this->response;
@@ -118,7 +170,7 @@ class Actionall extends \Magento\Framework\DataObject
      *
      * @param array $parameters
      *
-     * @return \Klevu\Search\Model\Api\Response
+     * @return Response
      * @throws LocalizedException
      */
     public function execute($parameters)
@@ -127,8 +179,6 @@ class Actionall extends \Magento\Framework\DataObject
         if ($validation_result !== true) {
             return $this->_apiResponseInvalid->setErrors($validation_result);
         }
-
-        $request = $this->getRequest();
         switch (true) {
             case !isset($parameters['store']):
                 $store = $this->getStore();
@@ -153,24 +203,24 @@ class Actionall extends \Magento\Framework\DataObject
                 ));
                 break;
         }
-
         $endpoint = $this->buildEndpoint(
             static::ENDPOINT,
             $store,
             $this->_searchHelperConfig->getHostname($store)
         );
-        $request
-            ->setResponseModel($this->getResponse())
-            ->setEndpoint($endpoint)
-            ->setMethod(static::METHOD)
-            ->setData($parameters);
+        $request = $this->getRequest();
+        $request->setResponseModel($this->getResponse());
+        $request->setEndpoint($endpoint);
+        $request->setMethod(static::METHOD);
+        $request->setData($parameters);
 
         return $request->send();
     }
 
     /**
      * Get the store used for this request
-     * @return \Magento\Framework\Model\Store
+     * @return StoreInterface
+     * @throws NoSuchEntityException
      */
     public function getStore()
     {
@@ -194,8 +244,17 @@ class Actionall extends \Magento\Framework\DataObject
         return true;
     }
 
+    /**
+     * @param $endpoint
+     * @param $store
+     * @param $hostname
+     *
+     * @return string
+     */
     public function buildEndpoint($endpoint, $store = null, $hostname = null)
     {
-        return static::ENDPOINT_PROTOCOL . (($hostname) ? $hostname : $this->_searchHelperConfig->getHostname($store)) . $endpoint;
+        return static::ENDPOINT_PROTOCOL
+            . ($hostname ?: $this->_searchHelperConfig->getHostname($store))
+            . $endpoint;
     }
 }

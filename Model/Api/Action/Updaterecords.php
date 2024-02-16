@@ -2,7 +2,7 @@
 
 namespace Klevu\Search\Model\Api\Action;
 
-class Updaterecords extends \Klevu\Search\Model\Api\Action\Addrecords
+class Updaterecords extends Addrecords
 {
     const ENDPOINT = "/rest/service/updateRecords";
     const METHOD   = "POST";
