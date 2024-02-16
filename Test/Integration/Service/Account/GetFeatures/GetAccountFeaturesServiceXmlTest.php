@@ -3,7 +3,6 @@
 namespace Klevu\Search\Test\Integration\Service\Account\GetFeatures;
 
 use Klevu\Search\Api\Service\Account\Model\AccountFeaturesInterface;
-use Klevu\Search\Model\Api\Actionall;
 use Klevu\Search\Service\Account\GetFeatures;
 use Klevu\Search\Service\Account\Model\AccountFeatures;
 use Magento\TestFramework\ObjectManager;
@@ -309,6 +308,9 @@ XML
      */
     private function setupPhp5()
     {
+        if (class_exists('Klevu\ApiRequest\Model\Api\Request')) {
+            $this->markTestSkipped('Test covered in ApiRequest module');
+        }
         $this->objectManager = ObjectManager::getInstance();
 
         $this->httpClientResponseMock['https://tiers.klevu.com/uti/getFeaturesAndUpgradeLink'] =

@@ -75,8 +75,10 @@ class Addrecords extends Actionall
      * @param ConfigHelper $searchHelperConfig
      * @param StoreManagerInterface $storeModelStoreManagerInterface
      * @param SearchHelper $searchHelperData
-     * @param EventManager $eventManager
-     * @param LoggerInterface $logger
+     * @param EventManager|null $eventManager
+     * @param LoggerInterface|null $logger
+     * @param null $requestModel
+     * @param null $responseModel
      */
     public function __construct(
         InvalidResponse $apiResponseInvalid,
@@ -85,7 +87,9 @@ class Addrecords extends Actionall
         StoreManagerInterface $storeModelStoreManagerInterface,
         SearchHelper $searchHelperData,
         EventManager $eventManager = null,
-        LoggerInterface $logger = null
+        LoggerInterface $logger = null,
+        $requestModel = null,
+        $responseModel = null
     ) {
         $this->_apiResponseInvalid = $apiResponseInvalid;
         $this->_searchHelperApi = $searchHelperApi;
@@ -95,6 +99,14 @@ class Addrecords extends Actionall
         $objectManager = ObjectManager::getInstance();
         $this->eventManager = $eventManager ?: $objectManager->get(EventManager::class);
         $this->logger = $logger ?: $objectManager->get(LoggerInterface::class);
+
+        parent::__construct(
+            $apiResponseInvalid,
+            $searchHelperConfig,
+            $storeModelStoreManagerInterface,
+            $requestModel ?: static::DEFAULT_REQUEST_MODEL,
+            $responseModel ?: static::DEFAULT_RESPONSE_MODEL
+        );
     }
 
     /**

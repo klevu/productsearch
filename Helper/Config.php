@@ -37,7 +37,6 @@ use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\Store;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Tax\Model\Config as MagentoTaxConfig;
-use Zend\Http\Client\Exception\RuntimeException;
 
 class Config extends AbstractHelper
 {
@@ -1522,11 +1521,6 @@ class Config extends AbstractHelper
 
                 return $this->_klevu_features_response;
             }
-        } catch (RuntimeException $re) {
-            $searchHelper->log(
-                LoggerConstants::ZEND_LOG_INFO,
-                sprintf("Unable to get Klevu Features list (%s)", $re->getMessage())
-            );
         } catch (\Exception $e) {
             $searchHelper->log(
                 LoggerConstants::ZEND_LOG_INFO,
