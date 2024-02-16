@@ -389,7 +389,17 @@ class LoadAttribute extends AbstractModel implements LoadAttributeInterface
     }
 
     /**
-     * Process product data if wannt to add any extra information from third party module
+     *
+     * This method can be extended to add extra information to the product data.
+     *
+     *  Add a preference to this class, which extends this class, and contain only the processProductAfter method.
+     *  In the processProductAfter method add extra attributes/custom key values to the $product array.
+     *
+     *  Please note, plugins won't work on this method as the parameters are passed by reference.
+     *  To maintain backwards compatibility we will not be removing this passing by reference.
+     *
+     *  <preference for="Klevu\Search\Model\Product\LoadAttributeInterface"
+     *           type="KlevuOverride\LoadAttribute\Model\Product\LoadAttributeCustom"/>
      *
      * @param array $product
      * @param MagentoProductInterface|null $parent
@@ -430,6 +440,16 @@ class LoadAttribute extends AbstractModel implements LoadAttributeInterface
         $collection->load();
         $collection->addCategoryIds();
 
+        $logLevel = $this->_searchHelperConfig->getLogLevel();
+        if ($logLevel === LoggerConstants::ZEND_LOG_DEBUG) {
+            $this->_searchHelperData->log(
+                LoggerConstants::ZEND_LOG_DEBUG,
+                sprintf(
+                    "Product Data Load By Collection Query: \n %s",
+                    $collection->getSelect()->__toString()
+                )
+            );
+        }
         return $collection;
     }
 
