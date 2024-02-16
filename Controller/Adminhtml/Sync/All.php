@@ -99,26 +99,39 @@ class All extends Action
             $store = $this->_storeModelStoreManagerInterface->getStore($storeId);
             $website = $store->getWebsite();
         } catch (NoSuchEntityException $e) {
-            $this->_backendModelSession->addErrorMessage(__("Selected store could not be found!"));
+            $this->messageManager->addErrorMessage(__("Selected store could not be found!"));
             $this->_redirect($this->_redirect->getRefererUrl());
         }
 
         if ($this->_searchHelperConfig->isProductSyncEnabled((int)$store->getId())) {
             if ($this->_searchHelperConfig->getSyncOptionsFlag() === "2") {
-                $this->_magentoProductActions->markAllProductsForUpdate($store);
-                $this->_searchHelperData->log(
-                    LoggerConstants::ZEND_LOG_INFO,
-                    sprintf(
-                        "Product Sync scheduled to re-sync ALL products in %s (%s).",
+                if ($storeId) {
+                    $this->_magentoProductActions->markAllProductsForUpdate($store);
+                    $this->_searchHelperData->log(
+                        LoggerConstants::ZEND_LOG_INFO,
+                        sprintf(
+                            "Product Sync scheduled to re-sync ALL products in %s (%s).",
+                            $website ? $website->getName() : '',
+                            $store->getName()
+                        )
+                    );
+                    $this->messageManager->addSuccessMessage(sprintf(
+                        "Klevu Search Sync scheduled to be run on the next cron run for ALL products in %s (%s).",
                         $website ? $website->getName() : '',
                         $store->getName()
-                    )
-                );
-                $this->messageManager->addSuccessMessage(sprintf(
-                    "Klevu Search Product Sync scheduled to be run on the next cron run for ALL products in %s (%s).",
-                    $website ? $website->getName() : '',
-                    $store->getName()
-                ));
+                    ));
+                } else {
+                    $this->_magentoProductActions->markAllProductsForUpdate();
+                    $this->_searchHelperData->log(
+                        LoggerConstants::ZEND_LOG_INFO,
+                        "Product Sync scheduled to re-sync ALL products."
+                    );
+                    $this->messageManager->addSuccessMessage(
+                        __(
+                            "Klevu Search Sync scheduled to be run on the next cron run for ALL products."
+                        )
+                    );
+                }
             } else {
                 $this->syncWithoutCron();
             }
