@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Cron:etc/crontab.xsd">
-    <group id="default">
+    <group id="klevu_cron">
         <job name="klevu_search_product_sync" instance="Klevu\Search\Model\Product\Sync" method="runCron">
             <config_path>klevu_search/product_sync/frequency</config_path>
         </job>
