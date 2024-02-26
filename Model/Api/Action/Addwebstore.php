@@ -4,6 +4,8 @@ namespace Klevu\Search\Model\Api\Action;
 
 use Klevu\Search\Helper\Config as ConfigHelper;
 use Klevu\Search\Model\Api\Actionall;
+use Klevu\Search\Model\Api\Request\Post as ApiPostRequest;
+use Klevu\Search\Model\Api\Response\Data as ApiResponseData;
 use Klevu\Search\Model\Api\Response\Invalid as InvalidResponse;
 use Magento\Store\Model\StoreManagerInterface;
 
@@ -11,8 +13,8 @@ class Addwebstore extends Actionall
 {
     const ENDPOINT = "/n-search/addWebstore";
     const METHOD = "POST";
-    const DEFAULT_REQUEST_MODEL = "Klevu\Search\Model\Api\Request\Post";
-    const DEFAULT_RESPONSE_MODEL = "Klevu\Search\Model\Api\Response\Data";
+    const DEFAULT_REQUEST_MODEL = ApiPostRequest::class;
+    const DEFAULT_RESPONSE_MODEL = ApiResponseData::class;
 
     /**
      * @param InvalidResponse $apiResponseInvalid
@@ -33,12 +35,12 @@ class Addwebstore extends Actionall
             $searchHelperConfig,
             $storeManagerInterface,
             $requestModel ?: static::DEFAULT_REQUEST_MODEL,
-            $responseModel ?: static::DEFAULT_RESPONSE_MODEL,
+            $responseModel ?: static::DEFAULT_RESPONSE_MODEL
         );
     }
 
     /**
-     * @param $parameters
+     * @param array $parameters
      *
      * @return array|true
      */

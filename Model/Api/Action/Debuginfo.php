@@ -5,18 +5,21 @@ namespace Klevu\Search\Model\Api\Action;
 use Klevu\Search\Helper\Api as ApiHelper;
 use Klevu\Search\Helper\Config as ConfigHelper;
 use Klevu\Search\Model\Api\Actionall;
+use Klevu\Search\Model\Api\Request\Post as ApiPostRequest;
 use Klevu\Search\Model\Api\Response;
+use Klevu\Search\Model\Api\Response\Data as ApiResponseData;
 use Klevu\Search\Model\Api\Response\Invalid as InvalidResponse;
 use Klevu\Search\Model\Api\Response\Rempty;
 use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Model\StoreManagerInterface;
 
 class Debuginfo extends Actionall
 {
     const ENDPOINT = "/n-search/logReceiver";
     const METHOD = "POST";
-    const DEFAULT_REQUEST_MODEL = "Klevu\Search\Model\Api\Request\Post";
-    const DEFAULT_RESPONSE_MODEL = "Klevu\Search\Model\Api\Response\Data";
+    const DEFAULT_REQUEST_MODEL = ApiPostRequest::class;
+    const DEFAULT_RESPONSE_MODEL = ApiResponseData::class;
 
     /**
      * @var InvalidResponse
@@ -40,8 +43,8 @@ class Debuginfo extends Actionall
      * @param ApiHelper $searchHelperApi
      * @param StoreManagerInterface $storeModelStoreManagerInterface
      * @param ConfigHelper $searchHelperConfig
-     * @param $requestModel
-     * @param $responseModel
+     * @param string|null $requestModel
+     * @param string|null $responseModel
      */
     public function __construct(
         InvalidResponse $apiResponseInvalid,
@@ -61,12 +64,12 @@ class Debuginfo extends Actionall
             $searchHelperConfig,
             $storeModelStoreManagerInterface,
             $requestModel ?: static::DEFAULT_REQUEST_MODEL,
-            $responseModel ?: static::DEFAULT_RESPONSE_MODEL,
+            $responseModel ?: static::DEFAULT_RESPONSE_MODEL
         );
     }
 
     /**
-     * @param $parameters
+     * @param array $parameters
      *
      * @return Response|Rempty
      * @throws NoSuchEntityException
@@ -91,9 +94,9 @@ class Debuginfo extends Actionall
     }
 
     /**
-     * @param $endpoint
-     * @param $store
-     * @param $hostname
+     * @param string $endpoint
+     * @param StoreInterface|string|int|null $store
+     * @param string $hostname
      *
      * @return string
      */

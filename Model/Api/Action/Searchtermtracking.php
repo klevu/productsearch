@@ -5,7 +5,9 @@ namespace Klevu\Search\Model\Api\Action;
 use Klevu\Search\Helper\Api as ApiHelper;
 use Klevu\Search\Helper\Config as ConfigHelper;
 use Klevu\Search\Model\Api\Actionall;
+use Klevu\Search\Model\Api\Request\Post as ApiPostRequest;
 use Klevu\Search\Model\Api\Response;
+use Klevu\Search\Model\Api\Response\Data as ApiResponseData;
 use Klevu\Search\Model\Api\Response\Invalid;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Store\Api\Data\StoreInterface;
@@ -15,8 +17,8 @@ class Searchtermtracking extends Actionall
 {
     const ENDPOINT = "/analytics/n-search/search";
     const METHOD = "POST";
-    const DEFAULT_REQUEST_MODEL = "Klevu\Search\Model\Api\Request\Post";
-    const DEFAULT_RESPONSE_MODEL = "Klevu\Search\Model\Api\Response\Data";
+    const DEFAULT_REQUEST_MODEL = ApiPostRequest::class;
+    const DEFAULT_RESPONSE_MODEL = ApiResponseData::class;
 
     /**
      * @var Invalid
@@ -31,6 +33,14 @@ class Searchtermtracking extends Actionall
      */
     protected $_searchHelperConfig;
 
+    /**
+     * @param Invalid $apiResponseInvalid
+     * @param ApiHelper $searchHelperApi
+     * @param StoreManagerInterface $storeModelStoreManagerInterface
+     * @param ConfigHelper $searchHelperConfig
+     * @param string|null $requestModel
+     * @param string|null $responseModel
+     */
     public function __construct(
         Invalid $apiResponseInvalid,
         ApiHelper $searchHelperApi,
@@ -49,12 +59,12 @@ class Searchtermtracking extends Actionall
             $searchHelperConfig,
             $storeModelStoreManagerInterface,
             $requestModel ?: static::DEFAULT_REQUEST_MODEL,
-            $responseModel ?: static::DEFAULT_RESPONSE_MODEL,
+            $responseModel ?: static::DEFAULT_RESPONSE_MODEL
         );
     }
 
     /**
-     * @param $parameters
+     * @param array $parameters
      *
      * @return array|true
      */
