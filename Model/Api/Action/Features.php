@@ -11,6 +11,7 @@ use Klevu\Search\Model\Api\Response as KlevuApiResponse;
 use Klevu\Search\Model\Api\Response\Data as ApiResponseData;
 use Klevu\Search\Model\Api\Response\Invalid as InvalidApiResponse;
 use Magento\Framework\Exception\LocalizedException;
+use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Model\Store;
 use Magento\Store\Model\StoreManagerInterface;
 
@@ -49,8 +50,8 @@ class Features extends Actionall
      * @param StoreManagerInterface $storeModelStoreManagerInterface
      * @param SearchHelper $searchHelperData
      * @param Store $frameworkModelStore
-     * @param null $requestModel
-     * @param null $responseModel
+     * @param string|null $requestModel
+     * @param string|null $responseModel
      */
     public function __construct(
         InvalidApiResponse $apiResponseInvalid,
@@ -74,12 +75,12 @@ class Features extends Actionall
             $searchHelperConfig,
             $storeModelStoreManagerInterface,
             $requestModel ?: static::DEFAULT_REQUEST_MODEL,
-            $responseModel ?: static::DEFAULT_RESPONSE_MODEL,
+            $responseModel ?: static::DEFAULT_RESPONSE_MODEL
         );
     }
 
     /**
-     * @param $parameters
+     * @param array $parameters
      *
      * @return array|bool
      */
@@ -126,9 +127,9 @@ class Features extends Actionall
     }
 
     /**
-     * @param $endpoint
-     * @param $store
-     * @param $hostname
+     * @param string $endpoint
+     * @param StoreInterface|string|int|null $store
+     * @param string $hostname
      *
      * @return string
      */

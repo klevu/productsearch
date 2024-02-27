@@ -5,17 +5,20 @@ namespace Klevu\Search\Model\Api\Action;
 use Klevu\Search\Helper\Api as ApiHelper;
 use Klevu\Search\Helper\Config as ConfigHelper;
 use Klevu\Search\Model\Api\Actionall;
+use Klevu\Search\Model\Api\Request\Post as ApiPostRequest;
 use Klevu\Search\Model\Api\Response;
+use Klevu\Search\Model\Api\Response\Data as ApiResponseData;
 use Klevu\Search\Model\Api\Response\Invalid;
 use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Model\StoreManagerInterface;
 
 class Getplans extends Actionall
 {
     const ENDPOINT = "/analytics/getBillingDetailsOfUser";
     const METHOD = "POST";
-    const DEFAULT_REQUEST_MODEL = "Klevu\Search\Model\Api\Request\Post";
-    const DEFAULT_RESPONSE_MODEL = "Klevu\Search\Model\Api\Response\Data";
+    const DEFAULT_REQUEST_MODEL = ApiPostRequest::class;
+    const DEFAULT_RESPONSE_MODEL = ApiResponseData::class;
 
     /**
      * @var Invalid
@@ -63,12 +66,12 @@ class Getplans extends Actionall
             $searchHelperConfig,
             $storeModelStoreManagerInterface,
             $requestModel ?: static::DEFAULT_REQUEST_MODEL,
-            $responseModel ?: static::DEFAULT_RESPONSE_MODEL,
+            $responseModel ?: static::DEFAULT_RESPONSE_MODEL
         );
     }
 
     /**
-     * @param $parameters
+     * @param array $parameters
      *
      * @return array|true
      */
@@ -114,9 +117,9 @@ class Getplans extends Actionall
     }
 
     /**
-     * @param $endpoint
-     * @param $store
-     * @param $hostname
+     * @param string $endpoint
+     * @param StoreInterface|string|int|null $store
+     * @param string $hostname
      *
      * @return string
      */
