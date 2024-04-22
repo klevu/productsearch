@@ -609,6 +609,13 @@
                 <field id="theme_version">v2</field>
             </depends>
         </field>
+        <field id="pub_path_in_image_url" translate="label comment" sortOrder="525" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Add the "pub" path into the image URL</label>
+            <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+            <comment>
+                <![CDATA[Whether to use the `pub` path into the image URL.]]>
+            </comment>
+        </field>
     </group>
 
     <group id="notification" translate="label comment" sortOrder="1000" showInDefault="1">

@@ -84,12 +84,38 @@ class ImageTest extends TestCase
     /**
      * @magentoDbIsolation enabled
      * @magentoConfigFixture default_store klevu_search/secureurl_setting/enabled 1
+     * @magentoConfigFixture klevu_test_store_1_store klevu_search/secureurl_setting/enabled 0
+     * @magentoConfigFixture klevu_test_store_1_store web/unsecure/base_media_url http://www.klevu.com/media/
+     * @magentoConfigFixture klevu_test_store_1_store web/secure/base_media_url https://www.klevu.com/media/
+     * @magentoConfigFixture klevu_test_store_1_store klevu_search/developer/pub_path_in_image_url 1
+     * @magentoDataFixture loadWebsiteFixtures
+     */
+    public function testGetMediaUrl_Unsecure_WhenPubPathIsRequired()
+    {
+        $this->setUpPhp5();
+
+        $store = $this->getStore('klevu_test_store_1');
+        $storeManager = $this->objectManager->create(StoreManagerInterface::class);
+        $storeManager->setCurrentStore($store);
+
+        $imageHelper = $this->instantiateImageHelper();
+        $actual = $imageHelper->getMediaUrl();
+
+        $expected = 'http://www.klevu.com/needtochange/media/';
+
+        $this->assertSame($expected, $actual);
+    }
+
+    /**
+     * @magentoDbIsolation disabled
+     * @magentoConfigFixture default_store klevu_search/secureurl_setting/enabled 1
      * @magentoConfigFixture klevu_test_store_1_store klevu_search/secureurl_setting/enabled 1
      * @magentoConfigFixture klevu_test_store_1_store web/unsecure/base_media_url http://www.klevu.com/media/
      * @magentoConfigFixture klevu_test_store_1_store web/secure/base_media_url https://www.klevu.com/media/
+     * @magentoConfigFixture klevu_test_store_1_store klevu_search/developer/pub_path_in_image_url 1
      * @magentoDataFixture loadWebsiteFixtures
      */
-    public function testGetMediaUrl_Secure()
+    public function testGetMediaUrl_Secure_WhenPubPathIsRequired()
     {
         $this->setUpPhp5();
 
@@ -106,14 +132,40 @@ class ImageTest extends TestCase
     }
 
     /**
+     * @magentoDbIsolation disabled
+     * @magentoConfigFixture default_store klevu_search/secureurl_setting/enabled 1
+     * @magentoConfigFixture klevu_test_store_1_store klevu_search/secureurl_setting/enabled 1
+     * @magentoConfigFixture klevu_test_store_1_store web/unsecure/base_media_url http://www.klevu.com/media/
+     * @magentoConfigFixture klevu_test_store_1_store web/secure/base_media_url https://www.klevu.com/media/
+     * @magentoConfigFixture klevu_test_store_1_store klevu_search/developer/pub_path_in_image_url 0
+     * @magentoDataFixture loadWebsiteFixtures
+     */
+    public function testGetMediaUrl_Secure_WhenPubPathIsNotRequired()
+    {
+        $this->setUpPhp5();
+
+        $store = $this->getStore('klevu_test_store_1');
+        $storeManager = $this->objectManager->create(StoreManagerInterface::class);
+        $storeManager->setCurrentStore($store);
+
+        $imageHelper = $this->instantiateImageHelper();
+        $actual = $imageHelper->getMediaUrl();
+
+        $expected = 'https://www.klevu.com/media/';
+
+        $this->assertSame($expected, $actual);
+    }
+
+    /**
      * @magentoDbIsolation enabled
      * @magentoConfigFixture default_store klevu_search/secureurl_setting/enabled 1
      * @magentoConfigFixture klevu_test_store_1_store klevu_search/secureurl_setting/enabled 1
      * @magentoConfigFixture klevu_test_store_1_store web/unsecure/base_media_url http://www.klevu.com/pub
      * @magentoConfigFixture klevu_test_store_1_store web/secure/base_media_url https://www.klevu.com/pub
+     * @magentoConfigFixture klevu_test_store_1_store klevu_search/developer/pub_path_in_image_url 1
      * @magentoDataFixture loadWebsiteFixtures
      */
-    public function testGetMediaUrl_Secure_TrailingNoSlash()
+    public function testGetMediaUrl_Secure_TrailingNoSlash_WhenPubPathIsRequired()
     {
         $this->setUpPhp5();
 
@@ -125,6 +177,31 @@ class ImageTest extends TestCase
         $actual = $imageHelper->getMediaUrl();
 
         $expected = 'https://www.klevu.com/needtochange/';
+
+        $this->assertSame($expected, $actual);
+    }
+
+    /**
+     * @magentoDbIsolation enabled
+     * @magentoConfigFixture default_store klevu_search/secureurl_setting/enabled 1
+     * @magentoConfigFixture klevu_test_store_1_store klevu_search/secureurl_setting/enabled 1
+     * @magentoConfigFixture klevu_test_store_1_store web/unsecure/base_media_url http://www.klevu.com/media
+     * @magentoConfigFixture klevu_test_store_1_store web/secure/base_media_url https://www.klevu.com/media
+     * @magentoConfigFixture klevu_test_store_1_store klevu_search/developer/pub_path_in_image_url 0
+     * @magentoDataFixture loadWebsiteFixtures
+     */
+    public function testGetMediaUrl_Secure_TrailingNoSlash_WhenPubPathIsNotRequired()
+    {
+        $this->setUpPhp5();
+
+        $store = $this->getStore('klevu_test_store_1');
+        $storeManager = $this->objectManager->create(StoreManagerInterface::class);
+        $storeManager->setCurrentStore($store);
+
+        $imageHelper = $this->instantiateImageHelper();
+        $actual = $imageHelper->getMediaUrl();
+
+        $expected = 'https://www.klevu.com/media/';
 
         $this->assertSame($expected, $actual);
     }
