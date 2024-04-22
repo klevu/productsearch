@@ -108,17 +108,21 @@ class Image extends AbstractHelper
     public function getMediaUrl()
     {
         $store = $this->_storeModelStoreManagerInterface->getStore();
-        $secureUrlEnabled = $this->_searchHelperConfig->isSecureUrlEnabled($store->getId());
+        $storeId = $store->getId();
+        $secureUrlEnabled = $this->_searchHelperConfig->isSecureUrlEnabled($storeId);
         $mediaUrl = $store->getBaseUrl(UrlInterface::URL_TYPE_MEDIA, $secureUrlEnabled);
         if (substr($mediaUrl, -1) !== '/') {
             $mediaUrl .= '/';
         }
+        if (DirectoryList::PUB === $this->_directoryList->getUrlPath(DirectoryList::PUB)) {
+            $position = strpos($mediaUrl, '/pub/');
+            if ($position !== false) {
+                // replace only the first instance of /pub/
+                $mediaUrl = substr_replace($mediaUrl, '/needtochange/', $position, strlen('/pub/'));
+            }
+        }
 
-        $isPubUrl = strpos($mediaUrl, "/pub/") !== false;
-        $search = $isPubUrl ? '/pub/' : '/media/';
-        $replace = $isPubUrl ? '/needtochange/' : '/needtochange/media/';
-
-        return str_replace($search, $replace, $mediaUrl);
+        return $mediaUrl;
     }
 
     /**

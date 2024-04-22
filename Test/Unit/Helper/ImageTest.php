@@ -161,14 +161,14 @@ class ImageTest extends TestCase
     {
         return [
             ['image/png', 'image/path.png'],
-            ['image/jpg', 'image/path.jpg']
+            ['image/jpg', 'image/path.jpg'],
         ];
     }
 
     /**
      * @dataProvider testGetMediaUrl_dataProvider
      */
-    public function testGetMediaUrl($baseUrl, $expected)
+    public function testGetMediaUrl($baseUrl, $expected, $isPubPathRequired)
     {
         $this->setUpPhp5();
 
@@ -182,7 +182,7 @@ class ImageTest extends TestCase
         $mockStore = $this->getMockBuilder(Store::class)
             ->disableOriginalConstructor()
             ->getMock();
-        $mockStore->expects($this->once())
+        $mockStore->expects($this->atMost(2))
             ->method('getId')
             ->willReturn($storeId);
         $mockStore->expects($this->once())
@@ -199,6 +199,11 @@ class ImageTest extends TestCase
             ->with($storeId)
             ->willReturn($secureEnabled);
 
+        $this->mockDirectoryList->expects($this->once())
+            ->method('getUrlPath')
+            ->with(DirectoryList::PUB)
+            ->willReturn($isPubPathRequired ? DirectoryList::PUB : '');
+
         $imageHelper = $this->instantiateImageHelper();
         $actual = $imageHelper->getMediaUrl();
 
@@ -208,15 +213,81 @@ class ImageTest extends TestCase
     public function testGetMediaUrl_dataProvider()
     {
         return [
-            ['magento.test/pub/', 'magento.test/needtochange/'],
-            ['magento.test/pub/sub_directory/', 'magento.test/needtochange/sub_directory/'],
-            ['magento.test/pub/sub_directory/400x300/', 'magento.test/needtochange/sub_directory/400x300/'],
-            ['magento.test/media/', 'magento.test/needtochange/media/'],
-            ['magento.test/media/sub_directory/', 'magento.test/needtochange/media/sub_directory/'],
-            ['magento.test/media/sub_directory/400x300/', 'magento.test/needtochange/media/sub_directory/400x300/'],
-            ['magento.test/pub/media/', 'magento.test/needtochange/media/'],
-            ['magento.test/pub/media/sub_directory/', 'magento.test/needtochange/media/sub_directory/'],
-            ['magento.test/pub/media/sub_directory/400x300/', 'magento.test/needtochange/media/sub_directory/400x300/'],
+            [
+                'magento.test/pub/sub_directory/400x300/',
+                'magento.test/needtochange/sub_directory/400x300/',
+                true,
+            ],
+            [
+                'magento.test/pub/sub_directory/400x300/',
+                'magento.test/pub/sub_directory/400x300/',
+                false,
+            ],
+            [
+                'magento.test/media/',
+                'magento.test/media/',
+                true,
+            ],
+            [
+                'magento.test/media/',
+                'magento.test/media/',
+                false,
+            ],
+            [
+                'magento.test/media/sub_directory/',
+                'magento.test/media/sub_directory/',
+                true,
+            ],
+            [
+                'magento.test/media/sub_directory/',
+                'magento.test/media/sub_directory/',
+                false,
+            ],
+            [
+                'magento.test/media/sub_directory/400x300/',
+                'magento.test/media/sub_directory/400x300/',
+                true,
+            ],
+            [
+                'magento.test/media/sub_directory/400x300/',
+                'magento.test/media/sub_directory/400x300/',
+                false,
+            ],
+            [
+                'magento.test/pub/media/',
+                'magento.test/needtochange/media/',
+                true,
+            ],
+            [
+                'magento.test/pub/media/',
+                'magento.test/pub/media/',
+                false,
+            ],
+            [
+                'magento.test/pub/media/sub_directory/',
+                'magento.test/needtochange/media/sub_directory/',
+                true,
+            ],
+            [
+                'magento.test/pub/media/pub/',
+                'magento.test/needtochange/media/pub/',
+                true,
+            ],
+            [
+                'magento.test/pub/media/sub_directory/',
+                'magento.test/pub/media/sub_directory/',
+                false,
+            ],
+            [
+                'magento.test/pub/media/sub_directory/400x300/',
+                'magento.test/needtochange/media/sub_directory/400x300/',
+                true,
+            ],
+            [
+                'magento.test/pub/media/sub_directory/400x300/',
+                'magento.test/pub/media/sub_directory/400x300/',
+                false,
+            ],
         ];
     }
 
@@ -280,10 +351,10 @@ class ImageTest extends TestCase
     public function testGetImagePath_WhenThumbnailNotCreated_dataProvider()
     {
         return [
-            ['test.png', 'magento.test/needtochange/media/catalog/product/test.png'],
-            ['/test.png', 'magento.test/needtochange/media/catalog/product/test.png'],
-            ['dir1/dir2/test.png', 'magento.test/needtochange/media/catalog/product/dir1/dir2/test.png'],
-            ['/dir1/dir2/test.png', 'magento.test/needtochange/media/catalog/product/dir1/dir2/test.png']
+            ['test.png', 'magento.test/media/catalog/product/test.png'],
+            ['/test.png', 'magento.test/media/catalog/product/test.png'],
+            ['dir1/dir2/test.png', 'magento.test/media/catalog/product/dir1/dir2/test.png'],
+            ['/dir1/dir2/test.png', 'magento.test/media/catalog/product/dir1/dir2/test.png'],
         ];
     }
 
@@ -350,10 +421,10 @@ class ImageTest extends TestCase
     public function testGetImagePath_WhenThumbnailExists_dataProvider()
     {
         return [
-            ['test.png', 'magento.test/needtochange/media/klevu_images/350X300/test.png'],
-            ['/test.png', 'magento.test/needtochange/media/klevu_images/350X300/test.png'],
-            ['dir1/dir2/test.png', 'magento.test/needtochange/media/klevu_images/350X300/dir1/dir2/test.png'],
-            ['/dir1/dir2/test.png', 'magento.test/needtochange/media/klevu_images/350X300/dir1/dir2/test.png']
+            ['test.png', 'magento.test/media/klevu_images/350X300/test.png'],
+            ['/test.png', 'magento.test/media/klevu_images/350X300/test.png'],
+            ['dir1/dir2/test.png', 'magento.test/media/klevu_images/350X300/dir1/dir2/test.png'],
+            ['/dir1/dir2/test.png', 'magento.test/media/klevu_images/350X300/dir1/dir2/test.png'],
         ];
     }
 
