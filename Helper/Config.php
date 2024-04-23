@@ -110,6 +110,7 @@ class Config extends AbstractHelper
     const XML_PATH_LAZYLOAD_QUICK_SEARCH = 'klevu_search/developer/lazyload_js_quick_search';
     const XML_PATH_LAZYLOAD_SEARCH_LANDING = 'klevu_search/developer/lazyload_js_search_landing';
     const XML_PATH_SRLP_CONTENT_MIN_HEIGHT = 'klevu_search/developer/content_min_height_srlp';
+    const XML_PATH_PUB_PATH_IN_IMAGE_URL = 'klevu_search/developer/pub_path_in_image_url';
 
     /**
      * @var RequestInterface
@@ -1902,5 +1903,19 @@ class Config extends AbstractHelper
         );
 
         return $imageAdapter ?: ImageAdapterInterface::ADAPTER_GD2;
+    }
+
+    /**
+     * @param StoreInterface|string|int|null $storeId
+     *
+     * @return bool
+     */
+    public function isPubPathRequired($storeId = null)
+    {
+        return $this->_appConfigScopeConfigInterface->isSetFlag(
+            static::XML_PATH_PUB_PATH_IN_IMAGE_URL,
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        );
     }
 }

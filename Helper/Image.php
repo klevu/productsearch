@@ -105,12 +105,19 @@ class Image extends AbstractHelper
     public function getMediaUrl()
     {
         $store = $this->_storeModelStoreManagerInterface->getStore();
-        $secureUrlEnabled = $this->_searchHelperConfig->isSecureUrlEnabled($store->getId());
+        $storeId = $store->getId();
+        $secureUrlEnabled = $this->_searchHelperConfig->isSecureUrlEnabled($storeId);
         $mediaUrl = $store->getBaseUrl(UrlInterface::URL_TYPE_MEDIA, $secureUrlEnabled);
         if (substr($mediaUrl, -1) !== '/') {
             $mediaUrl .= '/';
         }
-
+        /**
+         * If pub path is not required then return direct accessible media URL,
+         * keeping the klevu_images as it is as resize is involved
+         */
+        if (!$this->_searchHelperConfig->isPubPathRequired($storeId)) {
+            return $mediaUrl;
+        }
         $isPubUrl = strpos($mediaUrl, "/pub/") !== false;
         $search = $isPubUrl ? '/pub/' : '/media/';
         $replace = $isPubUrl ? '/needtochange/' : '/needtochange/media/';
