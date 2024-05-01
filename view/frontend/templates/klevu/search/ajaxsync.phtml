@@ -1,4 +1,10 @@
-<?php /** @var \Klevu\Search\Block\Search\Index $block */ ?>
+<?php
+/**
+ * @var \Klevu\Search\Block\Search\Index $block
+ * @var Magento\Framework\View\Helper\SecureHtmlRenderer $secureRenderer
+ */
+?>
+
 <?php
 $store_id = (int)$block->getStoreParam();
 $key = $block->getRestApiParam();
@@ -45,56 +51,66 @@ $indexersMessage = $block->isShowIndexerMessage();
         </span>
     </div>
 
-    <script type="text/javascript">
-        function callAjaxRecurrsively() {
-            document.getElementById("loader").style.display = "block";
+    <?php
+    $scriptString = <<<script
 
-            const url = '<?= $block->escapeUrl(
-                sprintf('%s/search/index/syncstoreview/store/%s/hashkey/', $block->getBaseUrl(), $store_id)
-            ) . $key ?>';
+    function callAjaxRecurrsively() {
+        document.getElementById("loader").style.display = "block";
 
-            fetch(url, {
-                method: 'GET',
-                crossDomain: true
-            }).then((response) => response.json()).then((data) => {
-                let htmlToDisplay;
-                if (data.numberOfRecord_add == null &&
-                    data.numberOfRecord_update == null &&
-                    data.numberOfRecord_delete == null
-                ) {
-                    htmlToDisplay = '<br />';
-                    htmlToDisplay += '<div class="message warning">';
-                    htmlToDisplay += '<span>';
-                    htmlToDisplay += '<?= __('Something went wrong with the sync. Please see Klevu_Search.log file for further information.') ?>';
-                    if (data.msg != null) {
-                        htmlToDisplay += '<br />' + data.msg;
-                    }
-                    htmlToDisplay += '</span>';
-                    htmlToDisplay += '</div>';
-                    htmlToDisplay += "<br />"
+        const url = '<?= $block->escapeUrl(
+            sprintf('%s/search/index/syncstoreview/store/%s/hashkey/', $block->getBaseUrl(), $store_id)
+        ) . $key ?>';
 
-                    document.getElementById("info_message").innerHTML += htmlToDisplay;
-                } else if (parseInt(data.numberOfRecord_add) !== 0 ||
-                    parseInt(data.numberOfRecord_update) !== 0 ||
-                    parseInt(data.numberOfRecord_delete) !== 0
-                ) {
-                    htmlToDisplay = "<?= __('Next batch sent to Klevu') ?>";
-                    htmlToDisplay += "<br />"
-
-                    document.getElementById("info_message").innerHTML += htmlToDisplay;
-                    callAjaxRecurrsively();
-                } else {
-                    htmlToDisplay = "<?= __('No records found to sync') ?>";
-                    htmlToDisplay += "<br />"
-
-                    document.getElementById("info_message").innerHTML += htmlToDisplay;
-                    document.getElementById("kl_close_warning_before").style.display = "none";
-                    document.getElementById("kl_close_warning_after").style.display = "block";
+        fetch(url, {
+            method: 'GET',
+            crossDomain: true
+        }).then((response) => response.json()).then((data) => {
+            let htmlToDisplay;
+            if (data.numberOfRecord_add == null &&
+                data.numberOfRecord_update == null &&
+                data.numberOfRecord_delete == null
+            ) {
+                htmlToDisplay = '<br />';
+                htmlToDisplay += '<div class="message warning">';
+                htmlToDisplay += '<span>';
+                htmlToDisplay += '<?= __('Something went wrong with the sync. Please see Klevu_Search.log file for further information.') ?>';
+                if (data.msg != null) {
+                    htmlToDisplay += '<br />' + data.msg;
                 }
-                document.getElementById("loader").style.display = "none";
-            });
-        }
+                htmlToDisplay += '</span>';
+                htmlToDisplay += '</div>';
+                htmlToDisplay += "<br />"
 
-        callAjaxRecurrsively();
-    </script>
+                document.getElementById("info_message").innerHTML += htmlToDisplay;
+            } else if (parseInt(data.numberOfRecord_add) !== 0 ||
+                parseInt(data.numberOfRecord_update) !== 0 ||
+                parseInt(data.numberOfRecord_delete) !== 0
+            ) {
+                htmlToDisplay = "<?= __('Next batch sent to Klevu') ?>";
+                htmlToDisplay += "<br />"
+
+                document.getElementById("info_message").innerHTML += htmlToDisplay;
+                callAjaxRecurrsively();
+            } else {
+                htmlToDisplay = "<?= __('No records found to sync') ?>";
+                htmlToDisplay += "<br />"
+
+                document.getElementById("info_message").innerHTML += htmlToDisplay;
+                document.getElementById("kl_close_warning_before").style.display = "none";
+                document.getElementById("kl_close_warning_after").style.display = "block";
+            }
+            document.getElementById("loader").style.display = "none";
+        });
+    }
+
+    callAjaxRecurrsively()
+
+script;
+    ?>
+    <?= $secureRenderer->renderTag(
+        'script',
+        ['type' => 'text/javascript'],
+        $scriptString,
+        false
+    ) ?>
 <?php endif; ?>

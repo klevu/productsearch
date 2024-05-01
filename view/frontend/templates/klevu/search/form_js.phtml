@@ -1,107 +1,148 @@
-<?php /** @var \Klevu\Search\Block\Search\Index $block */ ?>
-<?php if ($block->isExtensionConfigured()) :
-$url = $block->getUrl('search', ['_secure' => $block->getRequest()->isSecure()]);?>
-<script type="text/javascript">
-// add in cms template
-var klevu_current_version = '<?php echo $block->getModuleInfo(); ?>';
-var allInputs = document.getElementsByTagName( 'input' );
 <?php
-    if ($block->isLandingEnabled()== $block::DISABLE) { ?>
-    var klevu_showQuickSearchOnEnter=true;
-    (function () {
-        // Remove Magento event observers from the search box
-        // No Redirection of landing page
-        for( i = 0, len = allInputs.length; i < len; i++ ){
-            if( allInputs[i].type === "text" || allInputs[i].type === "search" ){
-                if( allInputs[i].name === "q" ||  allInputs[i].id === "search" ){
-                    var search_input = allInputs[i];
-                    search_input.form.onsubmit = function() {
-                        return false;
-                    };
-               }
-            }
-        }
+/**
+ * @var \Klevu\Search\Block\Search\Index $block
+ * @var Magento\Framework\View\Helper\SecureHtmlRenderer $secureRenderer
+ */
+?>
 
-    })();
-    <?php } elseif ($block->isLandingEnabled()== $block::KlEVUTEMPLATE) { ?>
-    (function () {
-        // Remove Magento event observers from the search box
-        // Redirect to klevu js page
-        for( i = 0, len = allInputs.length; i < len; i++ ){
-            if( allInputs[i].type === "text" || allInputs[i].type === "search" ){
-                if( allInputs[i].name === "q" ||  allInputs[i].id === "search" ){
-                    var search_input = allInputs[i];
-                    search_input.form.action='<?php echo $url; ?>' ;//?q="+search_input.value;
-                }
-            }
-        }
-
-    })();
-
-    <?php } elseif ($block->isLandingEnabled()== $block::KlEVUPRESERVELAYOUT) { ?>
-    (function () {
-        // Remove Magento event observers from the search box
-        // default magetno layout landing page
-        for( i = 0, len = allInputs.length; i < len; i++ ){
-            if( allInputs[i].type === "text" || allInputs[i].type === "search" ){
-                if( allInputs[i].name === "q" ||  allInputs[i].id === "search" ){
-                    var search_input = allInputs[i];
-                }
-            }
-        }
-    })();
-    <?php } ?>
+<?php if ($block->isExtensionConfigured()) :
+    $url = $block->getUrl('search', ['_secure' => $block->getRequest()->isSecure()]); ?>
     <?php
-    if ($block->isLandingEnabled()== $block::KlEVUPRESERVELAYOUT) {?>
-        var klevu_storeLandingPageUrl = '<?php echo $block->getUrl('catalogsearch/result', ['_secure' => $block->getRequest()->isSecure()]);?>';
-        var klevu_showQuickSearchOnEnter=false;
-    <?php                                                                                                         } elseif ($block->isLandingEnabled()== $block::KlEVUTEMPLATE) { ?>
-        var klevu_storeLandingPageUrl = '<?php echo $url;?>';
-        var klevu_showQuickSearchOnEnter=false;
-    <?php } ?>
+    $isLandingDisabled = $block->isLandingEnabled() === $block::DISABLE;
+    $isLandingThemeJs = $block->isLandingEnabled() === $block::KlEVUTEMPLATE;
+    $isLandingPreserveLayout = $block->isLandingEnabled() === $block::KlEVUPRESERVELAYOUT;
+    $scriptString = <<<script
+
+    // add in cms template
+    var klevu_current_version = '<?php echo $block->getModuleInfo(); ?>';
+    var allInputs = document.getElementsByTagName('input');
+    if ({$isLandingDisabled}) {
+        var klevu_showQuickSearchOnEnter = true;
+        (function () {
+            // Remove Magento event observers from the search box
+            // No Redirection of landing page
+            for (i = 0, len = allInputs.length; i < len; i++) {
+                if (allInputs[i].type === "text" || allInputs[i].type === "search") {
+                    if (allInputs[i].name === "q" || allInputs[i].id === "search") {
+                        var search_input = allInputs[i];
+                        search_input.form.onsubmit = function () {
+                            return false;
+                        };
+                    }
+                }
+            }
+        })();
+    } elseif ({$isLandingThemeJs}) {
+        (function () {
+            // Remove Magento event observers from the search box
+            // Redirect to klevu js page
+            for (i = 0, len = allInputs.length; i < len; i++) {
+                if (allInputs[i].type === "text" || allInputs[i].type === "search") {
+                    if (allInputs[i].name === "q" || allInputs[i].id === "search") {
+                        var search_input = allInputs[i];
+                        search_input.form.action = '{$url}';//?q="+search_input.value;
+                    }
+                }
+            }
+
+        })();
+    } elseif ({$isLandingPreserveLayout}) {
+        (function () {
+            // Remove Magento event observers from the search box
+            // default magetno layout landing page
+            for (i = 0, len = allInputs.length; i < len; i++) {
+                if (allInputs[i].type === "text" || allInputs[i].type === "search") {
+                    if (allInputs[i].name === "q" || allInputs[i].id === "search") {
+                        var search_input = allInputs[i];
+                    }
+                }
+            }
+        })();
+        <?php
+    } ?>
+
+    if ({$isLandingPreserveLayout}) {
+        var klevu_storeLandingPageUrl = '{$block->getUrl(
+            'catalogsearch/result',
+            ['_secure' => $block->getRequest()->isSecure()]
+        )}';
+        var klevu_showQuickSearchOnEnter = false;
+    } elseif ({$isLandingThemeJs}) { ?>
+        var klevu_storeLandingPageUrl = '{$url}';
+        var klevu_showQuickSearchOnEnter = false;
+    }
 
     // call store js
-    var klevu_apiKey = '<?php echo $block->getJsApiKey() ?>',
+    var klevu_apiKey = '{$block->getJsApiKey()}',
         searchTextBoxName = 'search',
-        klevu_lang = '<?php echo $block->getStoreLanguage() ?>',
+        klevu_lang = '{$block->getStoreLanguage()}',
         klevu_result_top_margin = '',
         klevu_result_left_margin = '';
-    (function () { var ws = document.createElement('script'),kl_protocol =("https:"===document.location.protocol?"https://":"http://"); ws.type = 'text/javascript'; ws.async = true; ws.src = kl_protocol+'<?php echo $block->getJsUrl() ?>/klevu-js-v1/js/klevu-webstore.js'; var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ws, s); })();
-</script>
-<?php endif; ?>
-<script type="text/javascript">
+    (function () {
+        var ws = document.createElement('script'),
+            kl_protocol = ("https:" === document.location.protocol ? "https://" : "http://");
+        ws.type = 'text/javascript';
+        ws.async = true;
+        ws.src = kl_protocol + '{$block->getJsUrl()}/klevu-js-v1/js/klevu-webstore.js';
+        var s = document.getElementsByTagName('script')[0];
+        s.parentNode.insertBefore(ws, s);
+    })();
+
+script;
+    ?>
+    <?= $secureRenderer->renderTag(
+        'script',
+        ['type' => 'text/javascript'],
+        $scriptString,
+        false
+    ) ?>
+
+    <?php
+    $currency = $block->getCurrencyData();
+    $pubIsInUse = $block->isPubInUse() ? "true" : "false";
+    $currencyScriptString = <<<script
+
     if (typeof klevu_baseCurrencyCode === "undefined") {
-        var klevu_baseCurrencyCode = "<?php echo $block->escapeJsQuote($block->getBaseCurrencyCode()); ?>";
+        var klevu_baseCurrencyCode = "{$block->escapeJsQuote($block->getBaseCurrencyCode())}";
     }
     if (typeof klevu_currentCurrencyCode === "undefined") {
-        var klevu_currentCurrencyCode = "<?php echo $block->escapeJsQuote($block->getCurrentCurrencyCode()); ?>";
+        var klevu_currentCurrencyCode = "{$block->escapeJsQuote($block->getCurrentCurrencyCode())}";
     }
-    <?php $currency = $block->getCurrencyData(); ?>
-    <?php if (!empty($currency)) : ?>
-        if (typeof klevu_currentCurrencyRates === "undefined") {
-            var klevu_currentCurrencyRates = {<?php /** @noEscape */ echo $currency;?>};
-        }
-    <?php endif; ?>
-    
-	klevu_pubIsInUse = <?php echo ($block->isPubInUse())?"true":"false"; ?> ;
-	if(!(typeof klevu_uc_productCustomizations === "function" && typeof klevu_uc_productCustomizations.nodeType !== "number")) {
-		function klevu_uc_productCustomizations( product ){
-			if(klevu_pubIsInUse){
-				product.productImage = product.productImage.replace( 'pub/', '');
-				product.productImage = product.productImage.replace( 'needtochange/', '');
-			} else {
-				product.productImage = product.productImage.replace( 'needtochange/', 'pub/');
-			}
 
-			if ('undefined' !== typeof klevuMagentoCustomerGroupFlag && klevuMagentoCustomerGroupFlag == false) {
+    <?php if (!empty({$currency})) : ?>
+    if (typeof klevu_currentCurrencyRates === "undefined") {
+        var klevu_currentCurrencyRates = {{$currency}};
+    }
+    <?php endif; ?>
+
+    klevu_pubIsInUse = {$pubIsInUse};
+    if (!(typeof klevu_uc_productCustomizations === "function" && typeof klevu_uc_productCustomizations.nodeType !== "number")) {
+        function klevu_uc_productCustomizations(product) {
+            if (klevu_pubIsInUse) {
+                // maintained for products that have not been re-synced since the removal of need to change from indexing
+                product.productImage = product.productImage.replace('pub/', '');
+                product.productImage = product.productImage.replace('needtochange/', '');
+            } else {
+                product.productImage = product.productImage.replace('needtochange/', 'pub/');
+            }
+
+            if ('undefined' !== typeof klevuMagentoCustomerGroupFlag && klevuMagentoCustomerGroupFlag == false) {
                 product.productPrice = '0';
                 product.startPrice = '0';
                 product.toPrice = '0';
                 product.salePrice = '0';
             }
 
-			return product;
-		}
-	}
+            return product;
+        }
+    }
 
-</script>
+script;
+    ?>
+    <?= $secureRenderer->renderTag(
+        'script',
+        ['type' => 'text/javascript'],
+        $currencyScriptString,
+        false
+    ) ?>
+<?php endif; ?>

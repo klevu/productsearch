@@ -1,6 +1,13 @@
-<?php /** @var Klevu\Search\Block\Html\Head\ThemeV2\AddPriceSuffixToQuery $block */ ?>
-<script type="text/javascript">
-    <?php if ($block->shouldOutputQuickScript()): ?>
+<?php
+/**
+ * @var Klevu\Search\Block\Html\Head\ThemeV2\AddPriceSuffixToQuery $block
+ * @var Magento\Framework\View\Helper\SecureHtmlRenderer $secureRenderer
+ */
+?>
+<?php
+$scriptString = <<<script
+
+    if ({$block->shouldOutputQuickScript()}) {
         klevu.settings.chains.initChain.add({
             name: "addPriceSuffixToQuickQuery",
             fire: function (data) {
@@ -13,10 +20,10 @@
                 }
             }
         });
-        document.addEventListener('<?php /** @noEscape */ echo $block->getCustomerDataLoadErrorEventName(); ?>', function () {
+        document.addEventListener('{$block->getCustomerDataLoadErrorEventName()}', function () {
             klevu({ powerUp: { quick: true } });
         });
-        document.addEventListener('<?php /** @noEscape */ echo $block->getCustomerDataLoadedEventName(); ?>', function () {
+        document.addEventListener('{$block->getCustomerDataLoadedEventName()}', function () {
             klevu({
                 powerUp: { quick: true },
                 flags: {
@@ -26,9 +33,9 @@
                 }
             });
         });
-    <?php endif; ?>
+    }
 
-    <?php if ($block->shouldOutputLandingScript()): ?>
+    if ({$block->shouldOutputLandingScript()}) {
         klevu.settings.chains.initChain.add({
             name: "addPriceSuffixToLandingQuery",
             fire: function (data) {
@@ -42,10 +49,10 @@
             }
         });
 
-        document.addEventListener('<?php /** @noEscape */ echo $block->getCustomerDataLoadErrorEventName(); ?>', function () {
+        document.addEventListener('{$block->getCustomerDataLoadErrorEventName()}', function () {
             klevu({ powerUp: { landing: true } });
         });
-        document.addEventListener('<?php /** @noEscape */ echo $block->getCustomerDataLoadedEventName(); ?>', function () {
+        document.addEventListener('{$block->getCustomerDataLoadedEventName()}', function () {
             klevu({ powerUp: { landing: true },
                 flags: {
                     addPriceSuffixToQuery: {
@@ -54,5 +61,13 @@
                 }
             });
         });
-    <?php endif; ?>
-</script>
+    }
+
+script;
+?>
+<?= $secureRenderer->renderTag(
+    'script',
+    ['type' => 'text/javascript'],
+    $scriptString,
+    false
+) ?>

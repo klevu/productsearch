@@ -4,11 +4,14 @@ namespace Klevu\Search\Service\Catalog\Product\Stock;
 
 use Klevu\Search\Api\Service\Catalog\Product\Stock\GetCompositeProductStockStatusInterface;
 use Magento\Catalog\Api\Data\ProductInterface;
-use Magento\CatalogInventory\Api\Data\StockItemInterface;
-use Magento\CatalogInventory\Api\StockItemCriteriaInterface;
+use Magento\CatalogInventory\Api\Data\StockStatusInterface;
 use Magento\CatalogInventory\Api\StockItemCriteriaInterfaceFactory;
 use Magento\CatalogInventory\Api\StockItemRepositoryInterface;
+use Magento\CatalogInventory\Api\StockStatusCriteriaInterface;
+use Magento\CatalogInventory\Api\StockStatusCriteriaInterfaceFactory;
+use Magento\CatalogInventory\Api\StockStatusRepositoryInterface;
 use Magento\CatalogInventory\Model\Stock;
+use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Exception\LocalizedException;
 use Psr\Log\LoggerInterface;
 
@@ -26,20 +29,37 @@ class GetCompositeProductStockStatus implements GetCompositeProductStockStatusIn
      * @var StockItemRepositoryInterface
      */
     private $stockItemRepository;
+    /**
+     * @var StockStatusRepositoryInterface|null
+     */
+    private $stockStatusRepository;
+    /**
+     * @var StockStatusCriteriaInterfaceFactory|null
+     */
+    private $stockStatusCriteriaFactory;
 
     /**
      * @param LoggerInterface $logger
      * @param StockItemCriteriaInterfaceFactory $stockItemCriteriaFactory
      * @param StockItemRepositoryInterface $stockItemRepository
+     * @param StockStatusCriteriaInterfaceFactory|null $stockStatusCriteriaFactory
+     * @param StockStatusRepositoryInterface|null $stockStatusRepository
      */
     public function __construct(
         LoggerInterface $logger,
         StockItemCriteriaInterfaceFactory $stockItemCriteriaFactory,
-        StockItemRepositoryInterface $stockItemRepository
+        StockItemRepositoryInterface $stockItemRepository,
+        StockStatusCriteriaInterfaceFactory $stockStatusCriteriaFactory = null,
+        StockStatusRepositoryInterface $stockStatusRepository = null
     ) {
         $this->logger = $logger;
         $this->stockItemCriteriaFactory = $stockItemCriteriaFactory;
         $this->stockItemRepository = $stockItemRepository;
+        $objectManager = ObjectManager::getInstance();
+        $this->stockStatusCriteriaFactory = $stockStatusCriteriaFactory
+            ?: $objectManager->get(StockStatusCriteriaInterfaceFactory::class);
+        $this->stockStatusRepository = $stockStatusRepository
+            ?: $objectManager->get(StockStatusRepositoryInterface::class);
     }
 
     /**
@@ -60,17 +80,17 @@ class GetCompositeProductStockStatus implements GetCompositeProductStockStatusIn
         if (!$product->isAvailable()) { // isAvailable returns false if no child products are available
              return false;
         }
-        /** @var StockItemCriteriaInterface $searchCriteria */
-        $searchCriteria = $this->stockItemCriteriaFactory->create();
+        /** @var StockStatusCriteriaInterface $searchCriteria */
+        $searchCriteria = $this->stockStatusCriteriaFactory->create();
         try {
             $searchCriteria->addFilter(
-                StockItemInterface::PRODUCT_ID,
-                StockItemInterface::PRODUCT_ID,
+                StockStatusInterface::PRODUCT_ID,
+                StockStatusInterface::PRODUCT_ID,
                 (int)$product->getId()
             );
             $searchCriteria->addFilter(
-                StockItemInterface::STOCK_ID,
-                StockItemInterface::STOCK_ID,
+                StockStatusInterface::STOCK_ID,
+                StockStatusInterface::STOCK_ID,
                 (null !== $stockId) ? $stockId : Stock::DEFAULT_STOCK_ID
             );
         } catch (LocalizedException $e) {
@@ -80,14 +100,13 @@ class GetCompositeProductStockStatus implements GetCompositeProductStockStatusIn
 
             return false;
         }
-
         $searchCriteria->setLimit(1, 1);
 
-        $stockItemCollection = $this->stockItemRepository->getList($searchCriteria);
+        $stockItemCollection = $this->stockStatusRepository->getList($searchCriteria);
         $stockItems = $stockItemCollection->getItems();
-        /** @var StockItemInterface $stockItem */
-        $stockItem = reset($stockItems);
+        /** @var StockStatusInterface $stockStatus */
+        $stockStatus = reset($stockItems);
 
-        return $stockItem && (bool)(int)$stockItem->getIsInStock();
+        return $stockStatus && (bool)(int)$stockStatus->getStockStatus();
     }
 }

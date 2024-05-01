@@ -183,10 +183,11 @@ class ImageTest extends TestCase
             ->with($storeId)
             ->willReturn($secureEnabled);
 
-        $this->mockConfigHelper->expects($this->once())
-            ->method('isPubPathRequired')
-            ->with($storeId)
-            ->willReturn($isPubPathRequired);
+        $this->mockDirectoryList->expects($this->once())
+            ->method('getUrlPath')
+            ->with(DirectoryList::PUB)
+            ->willReturn($isPubPathRequired ? DirectoryList::PUB : '');
+
         $imageHelper = $this->instantiateImageHelper();
         $actual = $imageHelper->getMediaUrl();
 
@@ -206,13 +207,29 @@ class ImageTest extends TestCase
                 'magento.test/pub/sub_directory/400x300/',
                 false,
             ],
-            ['magento.test/media/', 'magento.test/needtochange/media/', true],
-            ['magento.test/media/', 'magento.test/media/', false],
-            ['magento.test/media/sub_directory/', 'magento.test/needtochange/media/sub_directory/', true],
-            ['magento.test/media/sub_directory/', 'magento.test/media/sub_directory/', false],
+            [
+                'magento.test/media/',
+                'magento.test/media/',
+                true,
+            ],
+            [
+                'magento.test/media/',
+                'magento.test/media/',
+                false,
+            ],
+            [
+                'magento.test/media/sub_directory/',
+                'magento.test/media/sub_directory/',
+                true,
+            ],
+            [
+                'magento.test/media/sub_directory/',
+                'magento.test/media/sub_directory/',
+                false,
+            ],
             [
                 'magento.test/media/sub_directory/400x300/',
-                'magento.test/needtochange/media/sub_directory/400x300/',
+                'magento.test/media/sub_directory/400x300/',
                 true,
             ],
             [
@@ -220,10 +237,31 @@ class ImageTest extends TestCase
                 'magento.test/media/sub_directory/400x300/',
                 false,
             ],
-            ['magento.test/pub/media/', 'magento.test/needtochange/media/', true],
-            ['magento.test/media/', 'magento.test/media/', false],
-            ['magento.test/pub/media/sub_directory/', 'magento.test/needtochange/media/sub_directory/', true],
-            ['magento.test/pub/media/sub_directory/', 'magento.test/pub/media/sub_directory/', false],
+            [
+                'magento.test/pub/media/',
+                'magento.test/needtochange/media/',
+                true,
+            ],
+            [
+                'magento.test/pub/media/',
+                'magento.test/pub/media/',
+                false,
+            ],
+            [
+                'magento.test/pub/media/sub_directory/',
+                'magento.test/needtochange/media/sub_directory/',
+                true,
+            ],
+            [
+                'magento.test/pub/media/pub/',
+                'magento.test/needtochange/media/pub/',
+                true,
+            ],
+            [
+                'magento.test/pub/media/sub_directory/',
+                'magento.test/pub/media/sub_directory/',
+                false,
+            ],
             [
                 'magento.test/pub/media/sub_directory/400x300/',
                 'magento.test/needtochange/media/sub_directory/400x300/',

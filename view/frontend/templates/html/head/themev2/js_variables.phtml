@@ -1,14 +1,30 @@
 <?php
-/** @var Klevu\Search\Block\Html\Head\ThemeV2\JsVariables $block */
+/**
+ * @var Klevu\Search\Block\Html\Head\ThemeV2\JsVariables $block
+ * @var Magento\Framework\View\Helper\SecureHtmlRenderer $secureRenderer
+ */
 $currencyCurrencyRates = $block->getCurrentCurrencyRates();
+$isPubInUse = $block->isPubInUse() ? 'true' : 'false';
+$outputCurrencyRates = $currencyCurrencyRates
+    ? 'var klevu_currentCurrencyRates = ' . $currencyCurrencyRates .';'
+    : '';
 ?>
-<script type="text/javascript">
-    var klevu_lang = '<?php echo $block->escapeJsQuote($block->getStoreLanguage()); ?>';
-    var klevu_baseCurrencyCode = '<?php echo $block->escapeJsQuote($block->getBaseCurrencyCode()); ?>';
-    var klevu_currentCurrencyCode = '<?php echo $block->escapeJsQuote($block->getCurrentCurrencyCode()); ?>';
-    <?php if ($currencyCurrencyRates): ?>
-        var klevu_currentCurrencyRates = {<?php echo /** @noEscape */ $currencyCurrencyRates; ?>};
-    <?php endif; ?>
-    var klevu_pubIsInUse = <?php echo $block->isPubInUse() ? "true" : "false"; ?>;
-    var klevu_current_version = '<?php echo $block->escapeJsQuote($block->getModuleVersion('Klevu_Search')); ?>';
-</script>
+
+<?php
+$scriptString = <<<script
+
+    var klevu_lang = '{$block->escapeJsQuote($block->getStoreLanguage())}';
+    var klevu_baseCurrencyCode = '{$block->escapeJsQuote($block->getBaseCurrencyCode())}';
+    var klevu_currentCurrencyCode = '{$block->escapeJsQuote($block->getCurrentCurrencyCode())}';
+    {$outputCurrencyRates}
+    var klevu_pubIsInUse = {$isPubInUse};
+    var klevu_current_version = '{$block->escapeJsQuote($block->getModuleVersion('Klevu_Search'))}';
+
+script;
+?>
+<?= $secureRenderer->renderTag(
+    'script',
+    ['type' => 'text/javascript'],
+    $scriptString,
+    false
+) ?>
