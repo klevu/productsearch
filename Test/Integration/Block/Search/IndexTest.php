@@ -2,6 +2,8 @@
 
 namespace Klevu\Search\Test\Integration\Block\Search;
 
+// phpcs:disable PSR1.Methods.CamelCapsMethodName.NotCamelCaps
+
 use Magento\TestFramework\Helper\Bootstrap;
 use Magento\TestFramework\ObjectManager;
 use Magento\TestFramework\TestCase\AbstractController as AbstractControllerTestCase;
@@ -39,10 +41,10 @@ class IndexTest extends AbstractControllerTestCase
 
         if (method_exists($this, 'assertStringContainsString')) {
             $this->assertStringContainsString('<div class="kuContainer" id="kuMainContainer">', $responseBody);
-            $this->assertStringContainsString('/klevu-js-v1/js-1-1/klevu-landing.js', $responseBody);
+            $this->assertStringContainsString('&#x2F;klevu-js-v1&#x2F;js-1-1&#x2F;klevu-landing.js', $responseBody);
         } else {
             $this->assertContains('<div class="kuContainer" id="kuMainContainer">', $responseBody);
-            $this->assertContains('/klevu-js-v1/js-1-1/klevu-landing.js', $responseBody);
+            $this->assertContains('&#x2F;klevu-js-v1&#x2F;js-1-1&#x2F;klevu-landing.js', $responseBody);
         }
     }
 
@@ -72,10 +74,10 @@ class IndexTest extends AbstractControllerTestCase
 
         if (method_exists($this, 'assertStringNotContainsString')) {
             $this->assertStringNotContainsString('<div class="kuContainer" id="kuMainContainer">', $responseBody);
-            $this->assertStringNotContainsString('/klevu-js-v1/js-1-1/klevu-landing.js', $responseBody);
+            $this->assertStringNotContainsString('&#x2F;klevu-js-v1&#x2F;js-1-1&#x2F;klevu-landing.js', $responseBody);
         } else {
             $this->assertNotContains('<div class="kuContainer" id="kuMainContainer">', $responseBody);
-            $this->assertNotContains('/klevu-js-v1/js-1-1/klevu-landing.js', $responseBody);
+            $this->assertNotContains('&#x2F;klevu-js-v1&#x2F;js-1-1&#x2F;klevu-landing.js', $responseBody);
         }
     }
 

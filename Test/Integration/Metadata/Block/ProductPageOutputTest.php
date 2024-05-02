@@ -73,9 +73,12 @@ class ProductPageOutputTest extends AbstractControllerTestCase
         $responseBody = $response->getBody();
         $this->assertSame(200, $response->getHttpResponseCode());
         if (method_exists($this, 'assertStringContainsString')) {
-            $this->assertStringContainsString('<script type="text/javascript" id="klevu_page_meta">', $responseBody);
+            $this->assertStringContainsString(
+                '<script type="text&#x2F;javascript" id="klevu_page_meta">',
+                $responseBody
+            );
         } else {
-            $this->assertContains('<script type="text/javascript" id="klevu_page_meta">', $responseBody);
+            $this->assertContains('<script type="text&#x2F;javascript" id="klevu_page_meta">', $responseBody);
         }
         if (method_exists($this, 'assertMatchesRegularExpression')) {
             $this->assertMatchesRegularExpression('#klevu_page_meta\s*=#', $responseBody);

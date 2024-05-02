@@ -2,6 +2,8 @@
 
 namespace Klevu\Search\Test\Integration\Block\ThemeV2;
 
+// phpcs:disable PSR1.Methods.CamelCapsMethodName.NotCamelCaps
+
 use Magento\Framework\ObjectManagerInterface;
 use Magento\Framework\UrlInterface;
 use Magento\TestFramework\Helper\Bootstrap;
@@ -55,12 +57,12 @@ class PageOutputTest extends AbstractControllerTestCase
         $landingUrl = $this->urlBuilder->getUrl('search', ['_secure' => $this->getRequest()->isSecure()]);
         if (method_exists($this, 'assertStringContainsString')) {
             $this->assertStringContainsString(
-                '<script type="text/javascript" src="https://js.klevu.com/core/v2/klevu.js"></script>',
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;core&#x2F;v2&#x2F;klevu.js"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
                 $responseBody,
                 'Library JS include is present in response body'
             );
             $this->assertStringContainsString(
-                '<script type="text/javascript" id="klevu_jsinteractive">',
+                '<script type="text&#x2F;javascript" id="klevu_jsinteractive">',
                 $responseBody,
                 'Initialisation script is present in response body'
             );
@@ -71,12 +73,12 @@ class PageOutputTest extends AbstractControllerTestCase
             );
         } else {
             $this->assertContains(
-                '<script type="text/javascript" src="https://js.klevu.com/core/v2/klevu.js"></script>',
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;core&#x2F;v2&#x2F;klevu.js"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
                 $responseBody,
                 'Library JS include is present in response body'
             );
             $this->assertContains(
-                '<script type="text/javascript" id="klevu_jsinteractive">',
+                '<script type="text&#x2F;javascript" id="klevu_jsinteractive">',
                 $responseBody,
                 'Initialisation script is present in response body'
             );
@@ -89,13 +91,13 @@ class PageOutputTest extends AbstractControllerTestCase
 
         if (method_exists($this, 'assertMatchesRegularExpression')) {
             $this->assertMatchesRegularExpression(
-                '#var klevu_lang.*js\.klevu\.com/core/v2/klevu\.js#s',
+                '#var klevu_lang.*js\.klevu\.com&\#x2F;core&\#x2F;v2&\#x2F;klevu\.js#s',
                 $responseBody,
                 'Klevu Lang JS variable defined before core library include'
             );
         } else {
             $this->assertRegExp(
-                '#var klevu_lang.*js\.klevu\.com/core/v2/klevu\.js#s',
+                '#var klevu_lang.*js\.klevu\.com&\#x2F;core&\#x2F;v2&\#x2F;klevu\.js#s',
                 $responseBody,
                 'Klevu Lang JS variable defined before core library include'
             );
@@ -155,25 +157,25 @@ class PageOutputTest extends AbstractControllerTestCase
         $landingUrl = $this->urlBuilder->getUrl('search', ['_secure' => $this->getRequest()->isSecure()]);
         if (method_exists($this, 'assertStringNotContainsString')) {
             $this->assertStringNotContainsString(
-                '<script type="text/javascript" src="https://js.klevu.com/core/v2/klevu.js"></script>',
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;core&#x2F;v2&#x2F;klevu.js"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
                 $responseBody,
                 'Library JS include is present in response body'
             );
         } else {
             $this->assertNotContains(
-                '<script type="text/javascript" src="https://js.klevu.com/core/v2/klevu.js"></script>',
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;core&#x2F;v2&#x2F;klevu.js"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
                 $responseBody,
                 'Library JS include is present in response body'
             );
         }
         if (method_exists($this, 'assertStringContainsString')) {
             $this->assertStringContainsString(
-                '<script type="text/javascript" src="https://js-test.klevu.com/core/v2/klevu.js"></script>',
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js-test.klevu.com&#x2F;core&#x2F;v2&#x2F;klevu.js"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
                 $responseBody,
                 'Library JS include is present in response body'
             );
             $this->assertStringContainsString(
-                '<script type="text/javascript" id="klevu_jsinteractive">',
+                '<script type="text&#x2F;javascript" id="klevu_jsinteractive">',
                 $responseBody,
                 'Initialisation script is present in response body'
             );
@@ -184,12 +186,12 @@ class PageOutputTest extends AbstractControllerTestCase
             );
         } else {
             $this->assertContains(
-                '<script type="text/javascript" src="https://js-test.klevu.com/core/v2/klevu.js"></script>',
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js-test.klevu.com&#x2F;core&#x2F;v2&#x2F;klevu.js"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
                 $responseBody,
                 'Library JS include is present in response body'
             );
             $this->assertContains(
-                '<script type="text/javascript" id="klevu_jsinteractive">',
+                '<script type="text&#x2F;javascript" id="klevu_jsinteractive">',
                 $responseBody,
                 'Initialisation script is present in response body'
             );
@@ -252,12 +254,12 @@ class PageOutputTest extends AbstractControllerTestCase
         $landingUrl = $this->urlBuilder->getUrl('catalogsearch/result', ['_secure' => $this->getRequest()->isSecure()]);
         if (method_exists($this, 'assertStringContainsString')) {
             $this->assertStringContainsString(
-                '<script type="text/javascript" src="https://js.klevu.com/core/v2/klevu.js"></script>',
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;core&#x2F;v2&#x2F;klevu.js"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
                 $responseBody,
                 'Library JS include is present in response body'
             );
             $this->assertStringContainsString(
-                '<script type="text/javascript" id="klevu_jsinteractive">',
+                '<script type="text&#x2F;javascript" id="klevu_jsinteractive">',
                 $responseBody,
                 'Initialisation script is present in response body'
             );
@@ -268,12 +270,12 @@ class PageOutputTest extends AbstractControllerTestCase
             );
         } else {
             $this->assertContains(
-                '<script type="text/javascript" src="https://js.klevu.com/core/v2/klevu.js"></script>',
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;core&#x2F;v2&#x2F;klevu.js"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
                 $responseBody,
                 'Library JS include is present in response body'
             );
             $this->assertContains(
-                '<script type="text/javascript" id="klevu_jsinteractive">',
+                '<script type="text&#x2F;javascript" id="klevu_jsinteractive">',
                 $responseBody,
                 'Initialisation script is present in response body'
             );
@@ -286,13 +288,13 @@ class PageOutputTest extends AbstractControllerTestCase
 
         if (method_exists($this, 'assertMatchesRegularExpression')) {
             $this->assertMatchesRegularExpression(
-                '#var klevu_lang.*js\.klevu\.com/core/v2/klevu\.js#s',
+                '#var klevu_lang.*js\.klevu\.com&\#x2F;core&\#x2F;v2&\#x2F;klevu\.js#s',
                 $responseBody,
                 'Klevu Lang JS variable defined before core library include'
             );
         } else {
             $this->assertRegExp(
-                '#var klevu_lang.*js\.klevu\.com/core/v2/klevu\.js#s',
+                '#var klevu_lang.*js\.klevu\.com&\#x2F;core&\#x2F;v2&\#x2F;klevu\.js#s',
                 $responseBody,
                 'Klevu Lang JS variable defined before core library include'
             );
@@ -359,12 +361,12 @@ class PageOutputTest extends AbstractControllerTestCase
         $landingUrl = $this->urlBuilder->getUrl('search', ['_secure' => $this->getRequest()->isSecure()]);
         if (method_exists($this, 'assertStringNotContainsString')) {
             $this->assertStringNotContainsString(
-                '<script type="text/javascript" src="https://js.klevu.com/core/v2/klevu.js"></script>',
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;core&#x2F;v2&#x2F;klevu.js"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
                 $responseBody,
                 'Library JS include is present in response body'
             );
             $this->assertStringNotContainsString(
-                '<script type="text/javascript" id="klevu_jsinteractive">',
+                '<script type="text&#x2F;javascript" id="klevu_jsinteractive">',
                 $responseBody,
                 'Initialisation script is present in response body'
             );
@@ -375,12 +377,12 @@ class PageOutputTest extends AbstractControllerTestCase
             );
         } else {
             $this->assertNotContains(
-                '<script type="text/javascript" src="https://js.klevu.com/core/v2/klevu.js"></script>',
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;core&#x2F;v2&#x2F;klevu.js"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
                 $responseBody,
                 'Library JS include is present in response body'
             );
             $this->assertNotContains(
-                '<script type="text/javascript" id="klevu_jsinteractive">',
+                '<script type="text&#x2F;javascript" id="klevu_jsinteractive">',
                 $responseBody,
                 'Initialisation script is present in response body'
             );
@@ -442,12 +444,12 @@ class PageOutputTest extends AbstractControllerTestCase
         $landingUrl = $this->urlBuilder->getUrl('search', ['_secure' => $this->getRequest()->isSecure()]);
         if (method_exists($this, 'assertStringNotContainsString')) {
             $this->assertStringNotContainsString(
-                '<script type="text/javascript" src="https://js.klevu.com/core/v2/klevu.js"></script>',
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;core&#x2F;v2&#x2F;klevu.js"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
                 $responseBody,
                 'Library JS include is present in response body'
             );
             $this->assertStringNotContainsString(
-                '<script type="text/javascript" id="klevu_jsinteractive">',
+                '<script type="text&#x2F;javascript" id="klevu_jsinteractive">',
                 $responseBody,
                 'Initialisation script is present in response body'
             );
@@ -458,12 +460,12 @@ class PageOutputTest extends AbstractControllerTestCase
             );
         } else {
             $this->assertNotContains(
-                '<script type="text/javascript" src="https://js.klevu.com/core/v2/klevu.js"></script>',
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;core&#x2F;v2&#x2F;klevu.js"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
                 $responseBody,
                 'Library JS include is present in response body'
             );
             $this->assertNotContains(
-                '<script type="text/javascript" id="klevu_jsinteractive">',
+                '<script type="text&#x2F;javascript" id="klevu_jsinteractive">',
                 $responseBody,
                 'Initialisation script is present in response body'
             );
@@ -526,12 +528,12 @@ class PageOutputTest extends AbstractControllerTestCase
         $landingUrl = $this->urlBuilder->getUrl('search', ['_secure' => $this->getRequest()->isSecure()]);
         if (method_exists($this, 'assertStringNotContainsString')) {
             $this->assertStringNotContainsString(
-                '<script type="text/javascript" src="https://js.klevu.com/core/v2/klevu.js"></script>',
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;core&#x2F;v2&#x2F;klevu.js"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
                 $responseBody,
                 'Library JS include is present in response body'
             );
             $this->assertStringNotContainsString(
-                '<script type="text/javascript" id="klevu_jsinteractive">',
+                '<script type="text&#x2F;javascript" id="klevu_jsinteractive">',
                 $responseBody,
                 'Initialisation script is present in response body'
             );
@@ -542,12 +544,12 @@ class PageOutputTest extends AbstractControllerTestCase
             );
         } else {
             $this->assertNotContains(
-                '<script type="text/javascript" src="https://js.klevu.com/core/v2/klevu.js"></script>',
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;core&#x2F;v2&#x2F;klevu.js"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
                 $responseBody,
                 'Library JS include is present in response body'
             );
             $this->assertNotContains(
-                '<script type="text/javascript" id="klevu_jsinteractive">',
+                '<script type="text&#x2F;javascript" id="klevu_jsinteractive">',
                 $responseBody,
                 'Initialisation script is present in response body'
             );

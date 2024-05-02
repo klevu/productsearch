@@ -57,9 +57,9 @@ $indexersMessage = $block->isShowIndexerMessage();
     function callAjaxRecurrsively() {
         document.getElementById("loader").style.display = "block";
 
-        const url = '<?= $block->escapeUrl(
+        const url = '{$block->escapeUrl(
             sprintf('%s/search/index/syncstoreview/store/%s/hashkey/', $block->getBaseUrl(), $store_id)
-        ) . $key ?>';
+        )} . {$key} ';
 
         fetch(url, {
             method: 'GET',

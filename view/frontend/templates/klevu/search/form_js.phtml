@@ -14,7 +14,7 @@
     $scriptString = <<<script
 
     // add in cms template
-    var klevu_current_version = '<?php echo $block->getModuleInfo(); ?>';
+    var klevu_current_version = '{$block->getModuleInfo()}';
     var allInputs = document.getElementsByTagName('input');
     if ({$isLandingDisabled}) {
         var klevu_showQuickSearchOnEnter = true;
