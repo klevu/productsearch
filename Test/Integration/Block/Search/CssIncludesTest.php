@@ -2,6 +2,8 @@
 
 namespace Klevu\Search\Test\Integration\Block\Search;
 
+// phpcs:disable PSR1.Methods.CamelCapsMethodName.NotCamelCaps
+
 use Magento\TestFramework\Helper\Bootstrap;
 use Magento\TestFramework\ObjectManager;
 use Magento\TestFramework\TestCase\AbstractController as AbstractControllerTestCase;
@@ -38,11 +40,11 @@ class CssIncludesTest extends AbstractControllerTestCase
         $this->assertSame(200, $response->getHttpResponseCode());
 
         if (method_exists($this, 'assertStringContainsString')) {
-            $this->assertStringContainsString('css/klevu-landing-page-style.css', $responseBody);
-            $this->assertStringContainsString('css/klevu-landing-responsive.css', $responseBody);
+            $this->assertStringContainsString('css&#x2F;klevu-landing-page-style.css', $responseBody);
+            $this->assertStringContainsString('css&#x2F;klevu-landing-responsive.css', $responseBody);
         } else {
-            $this->assertContains('css/klevu-landing-page-style.css', $responseBody);
-            $this->assertContains('css/klevu-landing-responsive.css', $responseBody);
+            $this->assertContains('css&#x2F;klevu-landing-page-style.css', $responseBody);
+            $this->assertContains('css&#x2F;klevu-landing-responsive.css', $responseBody);
         }
     }
 
@@ -71,11 +73,11 @@ class CssIncludesTest extends AbstractControllerTestCase
         $this->assertSame(200, $response->getHttpResponseCode());
 
         if (method_exists($this, 'assertStringNotContainsString')) {
-            $this->assertStringNotContainsString('css/klevu-landing-page-style.css', $responseBody);
-            $this->assertStringNotContainsString('css/klevu-landing-responsive.css', $responseBody);
+            $this->assertStringNotContainsString('css&#x2F;klevu-landing-page-style.css', $responseBody);
+            $this->assertStringNotContainsString('css&#x2F;klevu-landing-responsive.css', $responseBody);
         } else {
-            $this->assertNotContains('css/klevu-landing-page-style.css', $responseBody);
-            $this->assertNotContains('css/klevu-landing-responsive.css', $responseBody);
+            $this->assertNotContains('css&#x2F;klevu-landing-page-style.css', $responseBody);
+            $this->assertNotContains('css&#x2F;klevu-landing-responsive.css', $responseBody);
         }
     }
 

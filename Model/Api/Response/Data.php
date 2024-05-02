@@ -29,7 +29,7 @@ class Data extends Response
             }
 
             foreach ($data as $key => $value) {
-                $this->setData($this->_underscore($key), $value);
+                $this->setData($this->sanitizeKey($key), $value);
             }
         }
 
@@ -46,5 +46,24 @@ class Data extends Response
     protected function xmlToArray(\SimpleXMLElement $xml)
     {
         return json_decode(json_encode($xml), true);
+    }
+
+    /**
+     * @param string $key
+     *
+     * @return string
+     */
+    private function sanitizeKey(string $key)
+    {
+        return strtolower(
+            trim(
+                preg_replace(
+                    '/([A-Z]|[0-9]+)/',
+                    "_$1",
+                    $key,
+                ),
+                '_',
+            ),
+        );
     }
 }

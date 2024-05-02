@@ -1,4 +1,9 @@
-<?php /** @var \Klevu\FrontendJs\Block\Html\Head\InitSessionData $block */ ?>
+<?php
+/**
+ * @var Klevu\FrontendJs\Block\Html\Head\InitSessionData $block
+ * @var Magento\Framework\View\Helper\SecureHtmlRenderer $secureRenderer
+ */
+?>
 <span style="display:none;">
     <span id="klevu_sessionId"></span>
     <span id="klevu_loginCustomerGroup"></span>
@@ -6,12 +11,14 @@
     <span id="klevu_shopperIP"></span>
 </span>
 
-<script>
+<?php
+$scriptString = <<<script
+
     var updateKlevuSessionDataElementsFromLocalStorage = function() {
         var klevuLocalStorage = JSON.parse(window.localStorage.getItem(
-            '<?php /** @noEscape */ echo $block->getLocalStorageKey(); ?>'
+            '{$block->getLocalStorageKey()}'
         ) || '{}');
-        var klevuMagentoCustomerDataKey = '<?php /** @noEscape */ echo $block->getCustomerDataKey(); ?>';
+        var klevuMagentoCustomerDataKey = '{$block->getCustomerDataKey()}';
         var klevuLocalStorageCustomerData = klevuLocalStorage.hasOwnProperty(klevuMagentoCustomerDataKey)
             ? klevuLocalStorage[klevuMagentoCustomerDataKey]
             : {};
@@ -31,7 +38,15 @@
     updateKlevuSessionDataElementsFromLocalStorage();
 
     document.addEventListener(
-        '<?php /** @noEscape */ echo $block->getCustomerDataLoadedEventName(); ?>',
+        '{$block->getCustomerDataLoadedEventName()}',
         updateKlevuSessionDataElementsFromLocalStorage
     );
-</script>
+
+script;
+?>
+<?= $secureRenderer->renderTag(
+    'script',
+    ['type' => 'text/javascript'],
+    $scriptString,
+    false
+) ?>

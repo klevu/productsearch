@@ -1,6 +1,13 @@
-<?php /** @var Klevu\Search\Block\Html\Head\ThemeV2\InlineCurrencyTranslation $block */ ?>
-<script type="text/javascript">
-    <?php if ($block->shouldOutputQuickScript()): ?>
+<?php
+/**
+ * @var Klevu\Search\Block\Html\Head\ThemeV2\InlineCurrencyTranslation $block
+ * @var Magento\Framework\View\Helper\SecureHtmlRenderer $secureRenderer
+ */
+?>
+<?php
+$scriptString = <<<script
+
+    if ({$block->shouldOutputQuickScript()}) {
         klevu.settings.chains.initChain.add({
             name: "addCurrencyTranslationToQuick",
             fire: function (data) {
@@ -20,9 +27,9 @@
                 klevu.setObjectPath(data, "flags.currencyTranslationAdded.quick", true);
             }
         });
-    <?php endif; ?>
+    }
 
-    <?php if ($block->shouldOutputLandingScript()): ?>
+    if ({$block->shouldOutputLandingScript()}) {
         klevu.settings.chains.initChain.add({
             name: "addCurrencyTranslationToLanding",
             fire: function (data) {
@@ -42,5 +49,13 @@
                 klevu.setObjectPath(data, "flags.currencyTranslationAdded.landing", true);
             }
         });
-    <?php endif; ?>
-</script>
+    }
+
+script;
+?>
+<?= $secureRenderer->renderTag(
+    'script',
+    ['type' => 'text/javascript'],
+    $scriptString,
+    false
+) ?>

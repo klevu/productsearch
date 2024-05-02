@@ -1,8 +1,15 @@
 <?php
-    /** @var Klevu\Search\Block\Search\Index\ThemeV2 $block */
-    $contentMinHeight = $block->getContentMinHeight();
+/**
+ * @var Klevu\Search\Block\Search\Index\ThemeV2 $block
+ * @var Magento\Framework\View\Helper\SecureHtmlRenderer $secureRenderer
+ */
+$contentMinHeight = $block->getContentMinHeight();
 ?>
+
 <?php if ($contentMinHeight): ?>
-    <style>.klevuLanding { min-height: <?php /** @noEscape */ echo $contentMinHeight; ?>px; }</style>
+    <?= $secureRenderer->renderStyleAsTag(
+        'min-height: ' . /** @noEscape */ $contentMinHeight .'px',
+        '.klevuLanding'
+    ) ?>
 <?php endif; ?>
 <div class="klevuLanding"></div>
