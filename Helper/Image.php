@@ -111,18 +111,15 @@ class Image extends AbstractHelper
         if (substr($mediaUrl, -1) !== '/') {
             $mediaUrl .= '/';
         }
-        /**
-         * If pub path is not required then return direct accessible media URL,
-         * keeping the klevu_images as it is as resize is involved
-         */
-        if (!$this->_searchHelperConfig->isPubPathRequired($storeId)) {
-            return $mediaUrl;
+        if (DirectoryList::PUB === $this->_directoryList->getUrlPath(DirectoryList::PUB)) {
+            $position = strpos($mediaUrl, '/pub/');
+            if ($position !== false) {
+                // replace only the first instance of /pub/
+                $mediaUrl = substr_replace($mediaUrl, '/needtochange/', $position, strlen('/pub/'));
+            }
         }
-        $isPubUrl = strpos($mediaUrl, "/pub/") !== false;
-        $search = $isPubUrl ? '/pub/' : '/media/';
-        $replace = $isPubUrl ? '/needtochange/' : '/needtochange/media/';
 
-        return str_replace($search, $replace, $mediaUrl);
+        return $mediaUrl;
     }
 
     /**
