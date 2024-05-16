@@ -5,9 +5,11 @@
  */
 ?>
 <?php
-$scriptString = <<<script
+$quickSearchScriptString = '';
+$landingScriptString = '';
 
-    if ({$block->shouldOutputQuickScript()}) {
+if ($block->shouldOutputQuickScript()) {
+    $quickSearchScriptString = <<<script
         klevu.settings.chains.initChain.add({
             name: "addPriceSuffixToQuickQuery",
             fire: function (data) {
@@ -33,9 +35,12 @@ $scriptString = <<<script
                 }
             });
         });
-    }
 
-    if ({$block->shouldOutputLandingScript()}) {
+script;
+}
+
+if ($block->shouldOutputLandingScript()) {
+    $landingScriptString = <<<script
         klevu.settings.chains.initChain.add({
             name: "addPriceSuffixToLandingQuery",
             fire: function (data) {
@@ -61,13 +66,16 @@ $scriptString = <<<script
                 }
             });
         });
-    }
 
 script;
+}
+
 ?>
-<?= $secureRenderer->renderTag(
-    'script',
-    ['type' => 'text/javascript'],
-    $scriptString,
-    false
-) ?>
+<?php if (strlen($quickSearchScriptString) || strlen($landingScriptString)): ?>
+    <?= $secureRenderer->renderTag(
+        'script',
+        ['type' => 'text/javascript'],
+        $quickSearchScriptString . $landingScriptString,
+        false
+    ) ?>
+<?php endif; ?>

@@ -5,18 +5,19 @@
  */
 ?>
 
-<?php if ($block->isExtensionConfigured()) :
-    $url = $block->getUrl('search', ['_secure' => $block->getRequest()->isSecure()]); ?>
+<?php if ($block->isExtensionConfigured()) : ?>
     <?php
-    $isLandingDisabled = $block->isLandingEnabled() === $block::DISABLE;
-    $isLandingThemeJs = $block->isLandingEnabled() === $block::KlEVUTEMPLATE;
-    $isLandingPreserveLayout = $block->isLandingEnabled() === $block::KlEVUPRESERVELAYOUT;
+    $url = $block->getUrl('search', ['_secure' => $block->getRequest()->isSecure()]);
+    $landingTheme = (int)$block->isLandingEnabled();
     $scriptString = <<<script
 
     // add in cms template
     var klevu_current_version = '{$block->getModuleInfo()}';
     var allInputs = document.getElementsByTagName('input');
-    if ({$isLandingDisabled}) {
+
+script;
+    if ($landingTheme === $block::DISABLE) {
+        $scriptString .= <<<script
         var klevu_showQuickSearchOnEnter = true;
         (function () {
             // Remove Magento event observers from the search box
@@ -32,7 +33,10 @@
                 }
             }
         })();
-    } elseif ({$isLandingThemeJs}) {
+
+script;
+    } else if ($landingTheme === $block::KlEVUTEMPLATE) {
+        $scriptString .= <<<script
         (function () {
             // Remove Magento event observers from the search box
             // Redirect to klevu js page
@@ -40,16 +44,21 @@
                 if (allInputs[i].type === "text" || allInputs[i].type === "search") {
                     if (allInputs[i].name === "q" || allInputs[i].id === "search") {
                         var search_input = allInputs[i];
-                        search_input.form.action = '{$url}';//?q="+search_input.value;
+                        search_input.form.action = '$url';//?q="+search_input.value;
                     }
                 }
             }
 
         })();
-    } elseif ({$isLandingPreserveLayout}) {
+        var klevu_storeLandingPageUrl = '$url';
+        var klevu_showQuickSearchOnEnter = false;
+
+script;
+    } else if ($landingTheme === $block::KlEVUPRESERVELAYOUT) {
+        $scriptString .= <<<script
         (function () {
             // Remove Magento event observers from the search box
-            // default magetno layout landing page
+            // default Magento layout landing page
             for (i = 0, len = allInputs.length; i < len; i++) {
                 if (allInputs[i].type === "text" || allInputs[i].type === "search") {
                     if (allInputs[i].name === "q" || allInputs[i].id === "search") {
@@ -58,20 +67,16 @@
                 }
             }
         })();
-        <?php
-    } ?>
-
-    if ({$isLandingPreserveLayout}) {
         var klevu_storeLandingPageUrl = '{$block->getUrl(
             'catalogsearch/result',
             ['_secure' => $block->getRequest()->isSecure()]
         )}';
         var klevu_showQuickSearchOnEnter = false;
-    } elseif ({$isLandingThemeJs}) { ?>
-        var klevu_storeLandingPageUrl = '{$url}';
-        var klevu_showQuickSearchOnEnter = false;
+
+script;
     }
 
+$scriptString .= <<<script
     // call store js
     var klevu_apiKey = '{$block->getJsApiKey()}',
         searchTextBoxName = 'search',
@@ -108,14 +113,20 @@ script;
     if (typeof klevu_currentCurrencyCode === "undefined") {
         var klevu_currentCurrencyCode = "{$block->escapeJsQuote($block->getCurrentCurrencyCode())}";
     }
+script;
 
-    <?php if (!empty({$currency})) : ?>
-    if (typeof klevu_currentCurrencyRates === "undefined") {
-        var klevu_currentCurrencyRates = {{$currency}};
+    if ($currency) {
+         $currencyScriptString .= <<<script
+
+        if (typeof klevu_currentCurrencyRates === "undefined") {
+            var klevu_currentCurrencyRates = {{$currency}};
+        }
+script;
     }
-    <?php endif; ?>
 
-    klevu_pubIsInUse = {$pubIsInUse};
+    $currencyScriptString .= <<<script
+
+    klevu_pubIsInUse = $pubIsInUse;
     if (!(typeof klevu_uc_productCustomizations === "function" && typeof klevu_uc_productCustomizations.nodeType !== "number")) {
         function klevu_uc_productCustomizations(product) {
             if (klevu_pubIsInUse) {

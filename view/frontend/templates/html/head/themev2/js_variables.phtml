@@ -6,7 +6,7 @@
 $currencyCurrencyRates = $block->getCurrentCurrencyRates();
 $isPubInUse = $block->isPubInUse() ? 'true' : 'false';
 $outputCurrencyRates = $currencyCurrencyRates
-    ? 'var klevu_currentCurrencyRates = ' . $currencyCurrencyRates .';'
+    ? 'var klevu_currentCurrencyRates = {' . $currencyCurrencyRates .'};'
     : '';
 ?>
 
