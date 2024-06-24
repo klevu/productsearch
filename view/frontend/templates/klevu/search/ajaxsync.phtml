@@ -52,16 +52,19 @@ $indexersMessage = $block->isShowIndexerMessage();
     </div>
 
     <?php
+    $errorMessage = __("Something went wrong with the sync. Please see Klevu_Search.log file for further information.");
+    $nextBatchMessage = __("Next batch sent to Klevu");
+    $noRecordsMessage = __("No records found to sync");
+    $url = $block->escapeUrl(
+        sprintf('%ssearch/index/syncstoreview/store/%s/hashkey/', $block->getBaseUrl(), $store_id)
+    ) . $key;
+
     $scriptString = <<<script
 
     function callAjaxRecurrsively() {
         document.getElementById("loader").style.display = "block";
 
-        const url = '{$block->escapeUrl(
-            sprintf('%s/search/index/syncstoreview/store/%s/hashkey/', $block->getBaseUrl(), $store_id)
-        )} . {$key} ';
-
-        fetch(url, {
+        fetch('$url', {
             method: 'GET',
             crossDomain: true
         }).then((response) => response.json()).then((data) => {
@@ -73,27 +76,27 @@ $indexersMessage = $block->isShowIndexerMessage();
                 htmlToDisplay = '<br />';
                 htmlToDisplay += '<div class="message warning">';
                 htmlToDisplay += '<span>';
-                htmlToDisplay += '<?= __('Something went wrong with the sync. Please see Klevu_Search.log file for further information.') ?>';
+                htmlToDisplay += '$errorMessage';
                 if (data.msg != null) {
                     htmlToDisplay += '<br />' + data.msg;
                 }
                 htmlToDisplay += '</span>';
                 htmlToDisplay += '</div>';
-                htmlToDisplay += "<br />"
+                htmlToDisplay += '<br />'
 
                 document.getElementById("info_message").innerHTML += htmlToDisplay;
             } else if (parseInt(data.numberOfRecord_add) !== 0 ||
                 parseInt(data.numberOfRecord_update) !== 0 ||
                 parseInt(data.numberOfRecord_delete) !== 0
             ) {
-                htmlToDisplay = "<?= __('Next batch sent to Klevu') ?>";
-                htmlToDisplay += "<br />"
+                htmlToDisplay = '$nextBatchMessage';
+                htmlToDisplay += '<br />'
 
                 document.getElementById("info_message").innerHTML += htmlToDisplay;
                 callAjaxRecurrsively();
             } else {
-                htmlToDisplay = "<?= __('No records found to sync') ?>";
-                htmlToDisplay += "<br />"
+                htmlToDisplay = '$noRecordsMessage';
+                htmlToDisplay += '<br />'
 
                 document.getElementById("info_message").innerHTML += htmlToDisplay;
                 document.getElementById("kl_close_warning_before").style.display = "none";
