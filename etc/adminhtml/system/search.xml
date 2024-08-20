@@ -573,7 +573,8 @@
                 <![CDATA[
                     Lazy-loads JavaScript for Quick Search to prevent render blocking scripts on page load.
                     Please do not modify this unless you have read and understood the following guide:
-                    <a href="https://help.klevu.com/support/solutions/articles/5000877463-lazy-load-jsv2-theme-scripts" target="_blank">Lazy-Load JSv2 Theme Scripts</a>.
+                    <a href="https://help.klevu.com/support/solutions/articles/5000877463-lazy-load-jsv2-theme-scripts" target="_blank">Lazy-Load JSv2 Theme Scripts</a>.<br />
+                    <strong>Note: this is not compatible with CSP.</strong>
                 ]]>
             </comment>
             <depends>
@@ -587,7 +588,8 @@
                 <![CDATA[
                     Lazy-loads JavaScript for the Search Results Landing Page to prevent render blocking scripts on page load.
                     Please do not modify this unless you have read and understood the following guide:
-                    <a href="https://help.klevu.com/support/solutions/articles/5000877463-lazy-load-jsv2-theme-scripts" target="_blank">Lazy-Load JSv2 Theme Scripts</a>.
+                    <a href="https://help.klevu.com/support/solutions/articles/5000877463-lazy-load-jsv2-theme-scripts" target="_blank">Lazy-Load JSv2 Theme Scripts</a>.<br />
+                    <strong>Note: this is not compatible with CSP.</strong>
                 ]]>
             </comment>
             <depends>
@@ -608,6 +610,22 @@
             <depends>
                 <field id="theme_version">v2</field>
             </depends>
+        </field>
+        <field id="use_magento_currency_format"
+               translate="label comment"
+               type="select"
+               sortOrder="530"
+               showInDefault="1"
+               showInWebsite="1"
+               showInStore="1">
+            <label>Use Magento Currency Format</label>
+            <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+            <comment>
+                <![CDATA[
+                    Whether prices displayed by Klevu JavaScript templates should use currency formatting
+                    configured in Magento
+                ]]>
+            </comment>
         </field>
     </group>
 

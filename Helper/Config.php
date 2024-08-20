@@ -110,6 +110,7 @@ class Config extends AbstractHelper
     const XML_PATH_LAZYLOAD_QUICK_SEARCH = 'klevu_search/developer/lazyload_js_quick_search';
     const XML_PATH_LAZYLOAD_SEARCH_LANDING = 'klevu_search/developer/lazyload_js_search_landing';
     const XML_PATH_SRLP_CONTENT_MIN_HEIGHT = 'klevu_search/developer/content_min_height_srlp';
+    const XML_PATH_USE_MAGENTO_CURRENCY_FORMAT = 'klevu_search/developer/use_magento_currency_format';
 
     /**
      * @var RequestInterface
