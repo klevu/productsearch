@@ -140,7 +140,7 @@ class MagentoAllRatingsDataProvider implements AllRatingsDataProviderInterface
                 RatingDataMapper::RATING_PRODUCT_ID => 'rating_option_vote.entity_pk_value',
                 RatingDataMapper::RATING_SUM => $sumCond,
                 RatingDataMapper::RATING_COUNT => $countCond,
-                RatingDataMapper::RATING_STORE => 'store.store_id'
+                RatingDataMapper::RATING_STORE => new \Zend_Db_Expr(':store_id')
             ]
         );
         $select->join(

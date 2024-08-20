@@ -12,6 +12,7 @@ use Magento\Catalog\Model\Product;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Api\StoreRepositoryInterface;
+use Magento\Store\Model\StoreManagerInterface;
 use Magento\TestFramework\ObjectManager;
 use PHPUnit\Framework\TestCase;
 
@@ -43,6 +44,38 @@ class MagentoAllRatingsDataProviderTest extends TestCase
         $this->setUpPhp5();
 
         $store = $this->getStore('klevu_test_store_1');
+        $product = $this->getProduct('klevu_simple_1', $store);
+
+        $dataProvider = $this->instantiateMagentoAllRatingsDataProvider();
+        $data = $dataProvider->getData((int)$store->getId());
+
+        $expected = [
+            RatingDataMapper::RATING_COUNT => '3',
+            RatingDataMapper::RATING_PRODUCT_ID => $product->getId(),
+            RatingDataMapper::RATING_STORE => $store->getId(),
+            RatingDataMapper::RATING_SUM => '240',
+            RatingDataMapper::REVIEW_COUNT => '1'
+        ];
+        $this->assertDataIsCorrect($expected, $data);
+
+        static::loadProductFixturesRollback();
+        static::loadWebsiteFixturesRollback();
+    }
+
+    /**
+     * @magentoConfigFixture default/general/single_store_mode/enabled 1
+     * @magentoAppArea adminhtml
+     * @magentoAppIsolation enabled
+     * @magentoDbIsolation disabled
+     * @magentoDataFixture loadProductFixturesSSM
+     * @magentoDataFixture loadReviewFixturesSSM
+     */
+    public function testReturnedSingleApprovedRatingForOneProduct_InSSM()
+    {
+        $this->setUpPhp5();
+
+        $storeManager = $this->objectManager->get(StoreManagerInterface::class);
+        $store = $storeManager->getDefaultStoreView();
         $product = $this->getProduct('klevu_simple_1', $store);
 
         $dataProvider = $this->instantiateMagentoAllRatingsDataProvider();
@@ -363,5 +396,41 @@ class MagentoAllRatingsDataProviderTest extends TestCase
     public static function loadWebsiteFixturesRollback()
     {
         include __DIR__ . '/../../../../_files/websiteFixtures_rollback.php';
+    }
+
+    /**
+     * Loads review creation scripts for SSM because annotations use a relative path
+     *  from integration tests root
+     */
+    public static function loadReviewFixturesSSM()
+    {
+        include __DIR__ . '/_files/SSM/reviewFixturesWithRating.php';
+    }
+
+    /**
+     * Rolls back review creation for SSM scripts because annotations use a relative path
+     *  from integration tests root
+     */
+    public static function loadReviewFixturesSSMRollback()
+    {
+        include __DIR__ . '/_files/SSM/reviewFixturesWithRating_rollback.php';
+    }
+
+    /**
+     * Loads review creation scripts because annotations use a relative path
+     *  from integration tests root
+     */
+    public static function loadProductFixturesSSM()
+    {
+        include __DIR__ . '/_files/SSM/productFixtures.php';
+    }
+
+    /**
+     * Rolls back review creation scripts because annotations use a relative path
+     *  from integration tests root
+     */
+    public static function loadProductFixturesSSMRollback()
+    {
+        include __DIR__ . '/_files/SSM/productFixtures_rollback.php';
     }
 }

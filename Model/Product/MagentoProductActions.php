@@ -45,6 +45,7 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
 {
     const PARENT_ID_WHEN_NOT_VISIBLE = '0';
     const MAX_ITERATIONS = 100000;
+    const MAX_ACTIONED_ITERATIONS = self::MAX_ITERATIONS;
 
     /**
      * @var Klevu_HelperManager
@@ -252,14 +253,15 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
         }
         $this->klevuSyncRepository->clearKlevuCollection();
         $lastEntityId = 0;
-        $i = 0;
+        $iteration = 0;
+        $actionedIteration = 0;
         while ($lastEntityId < $maxEntityId) {
             $productsToSync = $this->klevuSyncRepository->getProductIdsForUpdate(
                 $store,
                 $productIdsToUpdate,
                 $lastEntityId
             );
-            if (!$productsToSync || ++$i >= static::MAX_ITERATIONS) {
+            if (!$productsToSync || ++$iteration >= static::MAX_ITERATIONS) {
                 break;
             }
             $lastEntityId = (int)max(array_column($productsToSync, Klevu::FIELD_ENTITY_ID));
@@ -269,6 +271,9 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
                 $uniqueGroupKey = $parentFieldId . "-" . $productFieldId;
                 $klevuToUpdate[$uniqueGroupKey]["product_id"] = $productFieldId;
                 $klevuToUpdate[$uniqueGroupKey]["parent_id"] = $parentFieldId;
+            }
+            if (++$actionedIteration >= static::MAX_ACTIONED_ITERATIONS) {
+                break;
             }
         }
 
@@ -317,7 +322,8 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
         );
         $lastProductEntityId = 0;
         $lastChildEntityId = 0;
-        $i = 0;
+        $iteration = 0;
+        $actionedIteration = 0;
         while ($lastProductEntityId < $maxEntityId || $lastChildEntityId < $maxEntityId) {
             $productIds = ($lastProductEntityId < $maxEntityId) ?
                 $this->getMagentoProductIds($productCollection, $store, $productIdsToAdd, $lastProductEntityId) :
@@ -326,7 +332,7 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
                 $this->getMagentoProductIds($childProductCollection, $store, $productIdsToAdd, $lastChildEntityId) :
                 [];
 
-            if ((!$productIds && !$childProductIds) || ++$i >= static::MAX_ITERATIONS) {
+            if ((!$productIds && !$childProductIds) || ++$iteration >= static::MAX_ITERATIONS) {
                 break;
             }
             $lastProductEntityId = $productIds ? (int)max($productIds) : $maxEntityId + 1;
@@ -351,6 +357,10 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
 
             if ($diff = $this->diffMultiDimensionalArrays($magentoProductIds, $klevuProductIds)) {
                 $batchedProductIds[] = $this->formatProductIdsToAdd($diff, $store, $includeOosProductsInSync);
+                $actionedIteration++;
+            }
+            if ($actionedIteration >= static::MAX_ACTIONED_ITERATIONS) {
+                break;
             }
             unset($klevuProductIds, $magentoProductIds);
         }
@@ -390,11 +400,12 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
         $batchedProductIds = [];
         $this->klevuSyncRepository->clearKlevuCollection();
         $lastEntityId = 0;
-        $i = 0;
+        $iteration = 0;
+        $actionedIteration = 0;
         while ($lastEntityId <  $maxEntityId) {
             // getKlevuProductCollection method has to remain in this class for backwards compatibility
             $klevuProductIds = $this->getKlevuProductCollection($store, $productIdsToDelete, $lastEntityId);
-            if (!$klevuProductIds || ++$i >= static::MAX_ITERATIONS) {
+            if (!$klevuProductIds || ++$iteration >= static::MAX_ITERATIONS) {
                 break;
             }
             $lastEntityId = (int)max(array_column($klevuProductIds, Klevu::FIELD_ENTITY_ID));
@@ -444,6 +455,10 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
 
             if ($diff = $this->diffMultiDimensionalArrays($klevuProductIds, $magentoProductIds)) {
                 $batchedProductIds[] = $this->formatProductIdsToDelete($diff, $store, $includeOosProductsInSync);
+                $actionedIteration++;
+            }
+            if ($actionedIteration >= static::MAX_ACTIONED_ITERATIONS) {
+                break;
             }
             unset($klevuProductIds, $magentoProductIds);
         }

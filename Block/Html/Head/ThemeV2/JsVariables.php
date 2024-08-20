@@ -2,14 +2,19 @@
 
 namespace Klevu\Search\Block\Html\Head\ThemeV2;
 
+use Klevu\Search\Api\SerializerInterface;
+use Klevu\Search\Helper\Config as ConfigHelper;
 use Klevu\Search\Helper\Data as DataHelper;
 use Klevu\Search\Helper\VersionReader;
 use Klevu\Search\Service\ThemeV2\IsEnabledCondition;
 use Magento\Framework\App\Filesystem\DirectoryList;
+use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Framework\Locale\Format as LocaleFormat;
 use Magento\Framework\View\Element\Template;
 use Magento\Framework\View\Element\Template\Context;
 use Magento\Store\Api\Data\StoreInterface;
+use Magento\Store\Model\ScopeInterface;
 
 class JsVariables extends Template
 {
@@ -37,6 +42,14 @@ class JsVariables extends Template
      * @var StoreInterface
      */
     private $currentStore;
+    /**
+     * @var SerializerInterface
+     */
+    private $serializer;
+    /**
+     * @var LocaleFormat
+     */
+    private $localeFormat;
 
     /**
      * @param Context $context
@@ -44,7 +57,9 @@ class JsVariables extends Template
      * @param DataHelper $dataHelper
      * @param DirectoryList $directoryList
      * @param VersionReader $versionReader
-     * @param array $data
+     * @param mixed[] $data
+     * @param SerializerInterface|null $serializer
+     * @param LocaleFormat|null $localeFormat
      */
     public function __construct(
         Context $context,
@@ -52,7 +67,9 @@ class JsVariables extends Template
         DataHelper $dataHelper,
         DirectoryList $directoryList,
         VersionReader $versionReader,
-        array $data = []
+        array $data = [],
+        SerializerInterface $serializer = null,
+        LocaleFormat $localeFormat = null,
     ) {
         parent::__construct($context, $data);
 
@@ -60,6 +77,9 @@ class JsVariables extends Template
         $this->dataHelper = $dataHelper;
         $this->directoryList = $directoryList;
         $this->versionReader = $versionReader;
+        $objectManager = ObjectManager::getInstance();
+        $this->serializer = $serializer ?: $objectManager->get(SerializerInterface::class);
+        $this->localeFormat = $localeFormat ?: $objectManager->get(LocaleFormat::class);
     }
 
     /**
@@ -104,6 +124,54 @@ class JsVariables extends Template
     public function getCurrentCurrencyRates()
     {
         return $this->dataHelper->getCurrencyData($this->getCurrentStore());
+    }
+
+    /**
+     * @return mixed[]
+     */
+    public function getKlevuPriceFormatterConfiguration(): array
+    {
+        $priceFormat = $this->localeFormat->getPriceFormat(null, $this->getCurrentCurrencyCode());
+
+        $currencySymbol = trim(str_replace('%s', '', $priceFormat['pattern']));
+        $appendCurrencyAtLast = (0 === strpos($priceFormat['pattern'], '%s'));
+
+        return [
+            'appendCurrencyAtLast' => $appendCurrencyAtLast,
+            'currencySymbol' => $currencySymbol,
+            'decimalPlaces' => $priceFormat['precision'],
+            'decimalSeparator' => $priceFormat['decimalSymbol'],
+            'thousandSeparator' => $priceFormat['groupSymbol'],
+            'grouping' => $priceFormat['groupLength'],
+            'format' => str_replace(
+                $currencySymbol,
+                '%s',
+                $priceFormat['pattern'],
+            ),
+        ];
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getKlevuPriceFormatterConfigurationSerialized(): ?string
+    {
+        $currentStore = $this->getCurrentStore();
+        if (!$currentStore) {
+            return null;
+        }
+
+        $useMagentoCurrencyFormat = $this->_scopeConfig->isSetFlag(
+            ConfigHelper::XML_PATH_USE_MAGENTO_CURRENCY_FORMAT,
+            ScopeInterface::SCOPE_STORES,
+            (int)$currentStore->getId()
+        );
+        
+        return $useMagentoCurrencyFormat
+            ? $this->serializer->serialize(
+                $this->getKlevuPriceFormatterConfiguration()
+            )
+            : null;
     }
 
     /**
