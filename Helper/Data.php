@@ -578,7 +578,7 @@ class Data extends AbstractHelper
         $currency = $this->_currencyFactory->create();
         $currencyResource = $currency->getResource();
         $currencyRates = $currencyResource->getCurrencyRates($baseCurrencyCode, array_values($availableCurrencies));
-        if (count($availableCurrencies) <= 1) {
+        if (count($availableCurrencies) <= 1 && in_array($baseCurrencyCode, $availableCurrencies, true)) {
             return null;
         }
         foreach ($currencyRates as $key => &$value) {

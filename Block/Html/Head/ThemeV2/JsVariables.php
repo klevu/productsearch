@@ -69,7 +69,7 @@ class JsVariables extends Template
         VersionReader $versionReader,
         array $data = [],
         SerializerInterface $serializer = null,
-        LocaleFormat $localeFormat = null,
+        LocaleFormat $localeFormat = null
     ) {
         parent::__construct($context, $data);
 
@@ -166,7 +166,7 @@ class JsVariables extends Template
             ScopeInterface::SCOPE_STORES,
             (int)$currentStore->getId()
         );
-        
+
         return $useMagentoCurrencyFormat
             ? $this->serializer->serialize(
                 $this->getKlevuPriceFormatterConfiguration()
