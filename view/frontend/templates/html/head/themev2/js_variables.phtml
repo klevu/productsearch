@@ -8,7 +8,7 @@ $isPubInUse = $block->isPubInUse() ? 'true' : 'false';
 $outputCurrencyRates = $currencyCurrencyRates
     ? 'var klevu_currentCurrencyRates = {' . $currencyCurrencyRates .'};'
     : '';
-$klevuPriceFormatterCconfiugrationSerialized = $block->getKlevuPriceFormatterConfigurationSerialized();
+$klevuPriceFormatterConfigurationSerialized = $block->getKlevuPriceFormatterConfigurationSerialized();
 ?>
 
 <?php
@@ -22,13 +22,13 @@ $scriptString = <<<script
     var klevu_current_version = '{$block->escapeJsQuote($block->getModuleVersion('Klevu_Search'))}';
 script;
 
-if ($klevuPriceFormatterCconfiugrationSerialized) {
+if ($klevuPriceFormatterConfigurationSerialized) {
     $scriptString .= <<<script
     if (typeof klevu_uc_userOptions === "undefined") {
         klevu_uc_userOptions = {}
     }
 
-    klevu_uc_userOptions.priceFormatter = {$klevuPriceFormatterCconfiugrationSerialized};
+    klevu_uc_userOptions.priceFormatter = {$klevuPriceFormatterConfigurationSerialized};
 script;
 }
 ?>
