@@ -7,9 +7,13 @@ $contentMinHeight = $block->getContentMinHeight();
 ?>
 
 <?php if ($contentMinHeight): ?>
-    <?= $secureRenderer->renderStyleAsTag(
-        'min-height: ' . /** @noEscape */ $contentMinHeight .'px',
-        '.klevuLanding'
+    <?= $secureRenderer->renderTag(
+            'style',
+        [
+                'type' => 'text/css',
+        ],
+        '.klevuLanding{min-height: ' . /** @noEscape */ $contentMinHeight .'px;}',
+        true
     ) ?>
 <?php endif; ?>
 <div class="klevuLanding"></div>
