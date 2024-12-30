@@ -72,18 +72,18 @@ class ProductPageOutputTest extends AbstractControllerTestCase
         $response = $this->getResponse();
         $responseBody = $response->getBody();
         $this->assertSame(200, $response->getHttpResponseCode());
-        if (method_exists($this, 'assertStringContainsString')) {
-            $this->assertStringContainsString('<script type="text/javascript" id="klevu_page_meta">', $responseBody);
-        } else {
-            $this->assertContains('<script type="text/javascript" id="klevu_page_meta">', $responseBody);
-        }
-        if (method_exists($this, 'assertMatchesRegularExpression')) {
-            $this->assertMatchesRegularExpression('#klevu_page_meta\s*=#', $responseBody);
-            $this->assertMatchesRegularExpression('#"pageType"\s*:\s*"pdp"#', $responseBody);
-        } else {
-            $this->assertRegExp('#klevu_page_meta\s*=#', $responseBody);
-            $this->assertRegExp('#"pageType"\s*:\s*"pdp"#', $responseBody);
-        }
+
+        $pageMetaMatches = [];
+        preg_match(
+            '#<script\s*type="text&\#x2F;javascript"\s*id="klevu_page_meta"\s*>\s*.*klevu_page_meta\s*=.*"pageType"\s*:\s*"pdp".*\s*</script>#',
+            $responseBody,
+            $pageMetaMatches
+        );
+        $this->assertNotCount(
+            0,
+            $pageMetaMatches,
+            'Page meta include is present in response body'
+        );
     }
 
     /**

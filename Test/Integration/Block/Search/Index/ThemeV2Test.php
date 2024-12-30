@@ -2,15 +2,18 @@
 
 namespace Klevu\Search\Test\Integration\Block\Search\Index;
 
+// phpcs:disable PSR1.Methods.CamelCapsMethodName.NotCamelCaps
+
 use Magento\TestFramework\Helper\Bootstrap;
 use Magento\TestFramework\ObjectManager;
 use Magento\TestFramework\TestCase\AbstractController as AbstractControllerTestCase;
 
 class ThemeV2Test extends AbstractControllerTestCase
 {
-    const KLEVU_LANDING_ELEMENT_REGEX = '#<div +([a-zA-Z-_="\']+ +)*class=(\'|") *((-?[_a-zA-Z]+[_a-zA-Z0-9-]*) +)*klevuLanding( +(-?[_a-zA-Z]+[_a-zA-Z0-9-]*))* *(\'|")( +[a-zA-Z-_="\']+)* *></div>#';
-    const STYLE_MIN_HEIGHT_REGEX_PREPEND = '#<style.*>.*\.klevuLanding\s*\{.*min-height:\s*';
-    const STYLE_MIN_HEIGHT_REGEX_APPEND = 'px;.*</style>#';
+    const KLEVU_LANDING_ELEMENT_REGEX = '#<div +([a-zA-Z-_="\']+ +)*class=(\'|") *((-?[_a-zA-Z]+[_a-zA-Z0-9-]*) +)'
+    . '*klevuLanding( +(-?[_a-zA-Z]+[_a-zA-Z0-9-]*))* *(\'|")( +[a-zA-Z-_="\']+)* *></div>#';
+    const STYLE_MIN_HEIGHT_REGEX_PREPEND = '#<style.*>\s*\.klevuLanding\s*{\s*min-height:\s*';
+    const STYLE_MIN_HEIGHT_REGEX_APPEND = "px;\s*}\s*</style>#";
 
     /**
      * @var ObjectManager
@@ -48,49 +51,220 @@ class ThemeV2Test extends AbstractControllerTestCase
         } else {
             $this->assertRegExp(static::KLEVU_LANDING_ELEMENT_REGEX, $responseBody);
         }
-        if (method_exists($this, 'assertStringContainsString')) {
-            $this->assertStringContainsString(
-                '<script type="text/javascript" src="https://js.klevu.com/theme/default/v2/landing-page-theme.js"></script>',
-                $responseBody,
-                'Landing Page Js include is present in response body'
-            );
-            $this->assertStringNotContainsString(
-                '<script type="text/javascript" src="https://js.klevu.com/theme/default/v2/landing-page-theme.lazyload.js"></script>',
-                $responseBody,
-                'Lazy Load Landing Page Js include is not present in response body'
-            );
-            $this->assertStringContainsString(
-                '<script type="text/javascript" src="https://js.klevu.com/theme/default/v2/quick-search-theme.js"></script>',
-                $responseBody,
-                'Quick Search Js include is present in response body'
-            );
-            $this->assertStringNotContainsString(
-                '<script type="text/javascript" src="https://js.klevu.com/theme/default/v2/quick-search-theme.lazyload.js"></script>',
-                $responseBody,
-                'Lazy Load Quick Search Js include is Not present in response body'
-            );
+
+        $jsLandingMatches = [];
+        preg_match(
+            '#<script\s*type="text/javascript"\s*src="https://js\.klevu\.com/theme/default/v2/landing-page-theme\.js"\s*></script>#',
+            $responseBody,
+            $jsLandingMatches
+        );
+        $this->assertNotCount(
+            0,
+            $jsLandingMatches,
+            'Landing Page Js include is present in response body'
+        );
+        $jsLandingDeferMatches = [];
+        preg_match(
+            '#<script\s*type="text/javascript"\s*src="https://js\.klevu\.com/theme/default/v2/landing-page-theme\.js"\s*defer="defer"\s*></script>#',
+            $responseBody,
+            $jsLandingDeferMatches
+        );
+        $this->assertCount(
+            0,
+            $jsLandingDeferMatches,
+            'Deferred Landing Page Js include is present in response body'
+        );
+        $jsLandingLazyLoadMatches = [];
+        preg_match(
+            '#<script\s*type="text/javascript"\s*src="https://js\.klevu\.com/theme/default/v2/landing-page-theme\.lazyload\.js"\s*></script>#',
+            $responseBody,
+            $jsLandingLazyLoadMatches
+        );
+        $this->assertCount(
+            0,
+            $jsLandingLazyLoadMatches,
+            'Lazy Load Landing Page Js include is present in response body'
+        );
+        $jsLandingDeferLazyLoadMatches = [];
+        preg_match(
+            '#<script\s*type="text/javascript"\s*src="https://js\.klevu\.com/theme/default/v2/landing-page-theme\.lazyload\.js"\s*defer="defer"\s*></script>#',
+            $responseBody,
+            $jsLandingDeferLazyLoadMatches
+        );
+        $this->assertCount(
+            0,
+            $jsLandingDeferLazyLoadMatches,
+            'Lazy Load Landing Page Js include is present in response body'
+        );
+
+        $jsQuickMatches = [];
+        preg_match(
+            '#<script\s*type="text/javascript"\s*src="https://js\.klevu\.com/theme/default/v2/quick-search-theme\.js"\s*></script>#',
+            $responseBody,
+            $jsQuickMatches
+        );
+        $this->assertNotCount(
+            0,
+            $jsQuickMatches,
+            'Quick Search Js include is present in response body'
+        );
+        $jsQuickDeferMatches = [];
+        preg_match(
+            '#<script\s*type="text/javascript"\s*src="https://js\.klevu\.com/theme/default/v2/quick-search-theme\.js"\s*defer="defer"\s*></script>#',
+            $responseBody,
+            $jsQuickDeferMatches
+        );
+        $this->assertCount(
+            0,
+            $jsQuickDeferMatches,
+            'Deferred Quick Search Js include is present in response body'
+        );
+        $jsQuickLazyLoadMatches = [];
+        preg_match(
+            '#<script\s*type="text/javascript"\s*src="https://js\.klevu\.com/theme/default/v2/quick-search-theme\.lazyload\.js"\s*></script>#',
+            $responseBody,
+            $jsQuickLazyLoadMatches
+        );
+        $this->assertCount(
+            0,
+            $jsQuickLazyLoadMatches,
+            'Lazy Load Quick Search Js include is present in response body'
+        );
+        $jsQuickDeferLazyLoadMatches = [];
+        preg_match(
+            '#<script\s*type="text/javascript"\s*src="https://js\.klevu\.com/theme/default/v2/quick-search-theme\.lazyload\.js"\s*defer="defer"\s*></script>#',
+            $responseBody,
+            $jsQuickDeferLazyLoadMatches
+        );
+        $this->assertCount(
+            0,
+            $jsQuickDeferLazyLoadMatches,
+            'Lazy Load Quick Search Js include is present in response body'
+        );
+    }
+
+    /**
+     * @magentoAppArea frontend
+     * @magentoCache all disabled
+     * @magentoAppIsolation enabled
+     * @magentoDbIsolation disabled
+     * @magentoConfigFixture default/klevu_search/general/enabled 1
+     * @magentoConfigFixture default_store klevu_search/general/enabled 1
+     * @magentoConfigFixture default/klevu_search/general/js_api_key klevu-1234567890
+     * @magentoConfigFixture default_store klevu_search/general/js_api_key klevu-1234567890
+     * @magentoConfigFixture default/klevu_search/developer/theme_version v2
+     * @magentoConfigFixture default_store klevu_search/developer/theme_version v2
+     * @magentoConfigFixture default/klevu_search/developer/lazyload_js_search_landing 0
+     * @magentoConfigFixture default_store klevu_search/developer/lazyload_js_search_landing 0
+     * @magentoConfigFixture default/klevu_search/developer/lazyload_js_quick_search 0
+     * @magentoConfigFixture default_store klevu_search/developer/lazyload_js_quick_search 0
+     * @magentoConfigFixture default/klevu_frontendjs/configuration/defer_js 1
+     * @magentoConfigFixture default_store klevu_frontendjs/configuration/defer_js 1
+     */
+    public function testSRLPContentOutput_ThemeV2_WithJsDeferred()
+    {
+        $this->setupPhp5();
+
+        $this->dispatch('search/?q=simple');
+
+        $response = $this->getResponse();
+        $responseBody = $response->getBody();
+        $this->assertSame(200, $response->getHttpResponseCode());
+
+        if (method_exists($this, 'assertMatchesRegularExpression')) {
+            $this->assertMatchesRegularExpression(static::KLEVU_LANDING_ELEMENT_REGEX, $responseBody);
         } else {
-            $this->assertContains(
-                '<script type="text/javascript" src="https://js.klevu.com/theme/default/v2/landing-page-theme.js"></script>',
-                $responseBody,
-                'Landing Page Js include is present in response body'
-            );
-            $this->assertNotContains(
-                '<script type="text/javascript" src="https://js.klevu.com/theme/default/v2/landing-page-theme.lazyload.js"></script>',
-                $responseBody,
-                'Lazy Load Landing Page Js include is not present in response body'
-            );
-            $this->assertContains(
-                '<script type="text/javascript" src="https://js.klevu.com/theme/default/v2/quick-search-theme.js"></script>',
-                $responseBody,
-                'Quick Search Js include is present in response body'
-            );
-            $this->assertNotContains(
-                '<script type="text/javascript" src="https://js.klevu.com/theme/default/v2/quick-search-theme.lazyload.js"></script>',
-                $responseBody,
-                'Lazy Load Quick Search Js include is Not present in response body'
-            );
+            $this->assertRegExp(static::KLEVU_LANDING_ELEMENT_REGEX, $responseBody);
         }
+        $jsLandingMatches = [];
+        preg_match(
+            '#<script\s*type="text/javascript"\s*src="https://js\.klevu\.com/theme/default/v2/landing-page-theme\.js"\s*></script>#',
+            $responseBody,
+            $jsLandingMatches
+        );
+        $this->assertCount(
+            0,
+            $jsLandingMatches,
+            'Landing Page Js include is present in response body'
+        );
+        $jsLandingDeferMatches = [];
+        preg_match(
+            '#<script\s*type="text/javascript"\s*src="https://js\.klevu\.com/theme/default/v2/landing-page-theme\.js"\s*defer="defer"\s*></script>#',
+            $responseBody,
+            $jsLandingDeferMatches
+        );
+        $this->assertNotCount(
+            0,
+            $jsLandingDeferMatches,
+            'Deferred Landing Page Js include is present in response body'
+        );
+        $jsLandingLazyLoadMatches = [];
+        preg_match(
+            '#<script\s*type="text/javascript"\s*src="https://js\.klevu\.com/theme/default/v2/landing-page-theme\.lazyload\.js"\s*></script>#',
+            $responseBody,
+            $jsLandingLazyLoadMatches
+        );
+        $this->assertCount(
+            0,
+            $jsLandingLazyLoadMatches,
+            'Lazy Load Landing Page Js include is present in response body'
+        );
+        $jsLandingDeferLazyLoadMatches = [];
+        preg_match(
+            '#<script\s*type="text/javascript"\s*src="https://js\.klevu\.com/theme/default/v2/landing-page-theme\.lazyload\.js"\s*defer="defer"\s*></script>#',
+            $responseBody,
+            $jsLandingDeferLazyLoadMatches
+        );
+        $this->assertCount(
+            0,
+            $jsLandingDeferLazyLoadMatches,
+            'Lazy Load Landing Page Js include is present in response body'
+        );
+
+        $jsQuickMatches = [];
+        preg_match(
+            '#<script\s*type="text/javascript"\s*src="https://js\.klevu\.com/theme/default/v2/quick-search-theme\.js"\s*></script>#',
+            $responseBody,
+            $jsQuickMatches
+        );
+        $this->assertCount(
+            0,
+            $jsQuickMatches,
+            'Quick Search Js include is present in response body'
+        );
+        $jsQuickDeferMatches = [];
+        preg_match(
+            '#<script\s*type="text/javascript"\s*src="https://js\.klevu\.com/theme/default/v2/quick-search-theme\.js"\s*defer="defer"\s*></script>#',
+            $responseBody,
+            $jsQuickDeferMatches
+        );
+        $this->assertNotCount(
+            0,
+            $jsQuickDeferMatches,
+            'Deferred Quick Search Js include is present in response body'
+        );
+        $jsQuickLazyLoadMatches = [];
+        preg_match(
+            '#<script\s*type="text/javascript"\s*src="https://js\.klevu\.com/theme/default/v2/quick-search-theme\.lazyload\.js"\s*></script>#',
+            $responseBody,
+            $jsQuickLazyLoadMatches
+        );
+        $this->assertCount(
+            0,
+            $jsQuickLazyLoadMatches,
+            'Lazy Load Quick Search Js include is present in response body'
+        );
+        $jsQuickDeferLazyLoadMatches = [];
+        preg_match(
+            '#<script\s*type="text/javascript"\s*src="https://js\.klevu\.com/theme/default/v2/quick-search-theme\.lazyload\.js"\s*defer="defer"\s*></script>#',
+            $responseBody,
+            $jsQuickDeferLazyLoadMatches
+        );
+        $this->assertCount(
+            0,
+            $jsQuickDeferLazyLoadMatches,
+            'Lazy Load Quick Search Js include is present in response body'
+        );
     }
 
     /**
@@ -124,49 +298,220 @@ class ThemeV2Test extends AbstractControllerTestCase
         } else {
             $this->assertRegExp(static::KLEVU_LANDING_ELEMENT_REGEX, $responseBody);
         }
-        if (method_exists($this, 'assertStringContainsString')) {
-            $this->assertStringContainsString(
-                '<script type="text/javascript" src="https://js.klevu.com/theme/default/v2/landing-page-theme.lazyload.js"></script>',
-                $responseBody,
-                'Lazy Load Landing Page Js include is present in response body'
-            );
-            $this->assertStringNotContainsString(
-                '<script type="text/javascript" src="https://js.klevu.com/theme/default/v2/landing-page-theme.js"></script>',
-                $responseBody,
-                'Landing Page Js include is not present in response body'
-            );
-            $this->assertStringContainsString(
-                '<script type="text/javascript" src="https://js.klevu.com/theme/default/v2/quick-search-theme.lazyload.js"></script>',
-                $responseBody,
-                'Lazy Load Quick Search Js include is present in response body'
-            );
-            $this->assertStringNotContainsString(
-                '<script type="text/javascript" src="https://js.klevu.com/theme/default/v2/quick-search-theme.js"></script>',
-                $responseBody,
-                'Quick Search Page Js include is not present in response body'
-            );
+
+        $jsLandingMatches = [];
+        preg_match(
+            '#<script\s*type="text/javascript"\s*src="https://js\.klevu\.com/theme/default/v2/landing-page-theme\.js"\s*></script>#',
+            $responseBody,
+            $jsLandingMatches
+        );
+        $this->assertCount(
+            0,
+            $jsLandingMatches,
+            'Landing Page Js include is present in response body'
+        );
+        $jsLandingDeferMatches = [];
+        preg_match(
+            '#<script\s*type="text/javascript"\s*src="https://js\.klevu\.com/theme/default/v2/landing-page-theme\.js"\s*defer="defer"\s*></script>#',
+            $responseBody,
+            $jsLandingDeferMatches
+        );
+        $this->assertCount(
+            0,
+            $jsLandingDeferMatches,
+            'Deferred Landing Page Js include is present in response body'
+        );
+        $jsLandingLazyLoadMatches = [];
+        preg_match(
+            '#<script\s*type="text/javascript"\s*src="https://js\.klevu\.com/theme/default/v2/landing-page-theme\.lazyload\.js"\s*></script>#',
+            $responseBody,
+            $jsLandingLazyLoadMatches
+        );
+        $this->assertNotCount(
+            0,
+            $jsLandingLazyLoadMatches,
+            'Lazy Load Landing Page Js include is present in response body'
+        );
+        $jsLandingDeferLazyLoadMatches = [];
+        preg_match(
+            '#<script\s*type="text/javascript"\s*src="https://js\.klevu\.com/theme/default/v2/landing-page-theme\.lazyload\.js"\s*defer="defer"\s*></script>#',
+            $responseBody,
+            $jsLandingDeferLazyLoadMatches
+        );
+        $this->assertCount(
+            0,
+            $jsLandingDeferLazyLoadMatches,
+            'Lazy Load Landing Page Js include is present in response body'
+        );
+
+        $jsQuickMatches = [];
+        preg_match(
+            '#<script\s*type="text/javascript"\s*src="https://js\.klevu\.com/theme/default/v2/quick-search-theme\.js"\s*></script>#',
+            $responseBody,
+            $jsQuickMatches
+        );
+        $this->assertCount(
+            0,
+            $jsQuickMatches,
+            'Quick Search Js include is present in response body'
+        );
+        $jsQuickDeferMatches = [];
+        preg_match(
+            '#<script\s*type="text/javascript"\s*src="https://js\.klevu\.com/theme/default/v2/quick-search-theme\.js"\s*defer="defer"\s*></script>#',
+            $responseBody,
+            $jsQuickDeferMatches
+        );
+        $this->assertCount(
+            0,
+            $jsQuickDeferMatches,
+            'Deferred Quick Search Js include is present in response body'
+        );
+        $jsQuickLazyLoadMatches = [];
+        preg_match(
+            '#<script\s*type="text/javascript"\s*src="https://js\.klevu\.com/theme/default/v2/quick-search-theme\.lazyload\.js"\s*></script>#',
+            $responseBody,
+            $jsQuickLazyLoadMatches
+        );
+        $this->assertNotCount(
+            0,
+            $jsQuickLazyLoadMatches,
+            'Lazy Load Quick Search Js include is present in response body'
+        );
+        $jsQuickDeferLazyLoadMatches = [];
+        preg_match(
+            '#<script\s*type="text/javascript"\s*src="https://js\.klevu\.com/theme/default/v2/quick-search-theme\.lazyload\.js"\s*defer="defer"\s*></script>#',
+            $responseBody,
+            $jsQuickDeferLazyLoadMatches
+        );
+        $this->assertCount(
+            0,
+            $jsQuickDeferLazyLoadMatches,
+            'Lazy Load Quick Search Js include is present in response body'
+        );
+    }
+
+    /**
+     * @magentoAppArea frontend
+     * @magentoCache all disabled
+     * @magentoAppIsolation enabled
+     * @magentoDbIsolation disabled
+     * @magentoConfigFixture default/klevu_search/general/enabled 1
+     * @magentoConfigFixture default_store klevu_search/general/enabled 1
+     * @magentoConfigFixture default/klevu_search/general/js_api_key klevu-1234567890
+     * @magentoConfigFixture default_store klevu_search/general/js_api_key klevu-1234567890
+     * @magentoConfigFixture default/klevu_search/developer/theme_version v2
+     * @magentoConfigFixture default_store klevu_search/developer/theme_version v2
+     * @magentoConfigFixture default/klevu_search/developer/lazyload_js_search_landing 1
+     * @magentoConfigFixture default_store klevu_search/developer/lazyload_js_search_landing 1
+     * @magentoConfigFixture default/klevu_search/developer/lazyload_js_quick_search 1
+     * @magentoConfigFixture default_store klevu_search/developer/lazyload_js_quick_search 1
+     * @magentoConfigFixture default/klevu_frontendjs/configuration/defer_js 1
+     * @magentoConfigFixture default_store klevu_frontendjs/configuration/defer_js 1
+     */
+    public function testSRLPContentOutput_ThemeV2LazyLoadLandingJs_WithJsDeferred()
+    {
+        $this->setupPhp5();
+
+        $this->dispatch('search/?q=simple');
+
+        $response = $this->getResponse();
+        $responseBody = $response->getBody();
+        $this->assertSame(200, $response->getHttpResponseCode());
+
+        if (method_exists($this, 'assertMatchesRegularExpression')) {
+            $this->assertMatchesRegularExpression(static::KLEVU_LANDING_ELEMENT_REGEX, $responseBody);
         } else {
-            $this->assertContains(
-                '<script type="text/javascript" src="https://js.klevu.com/theme/default/v2/landing-page-theme.lazyload.js"></script>',
-                $responseBody,
-                'Lazy Load Landing Page Js include is present in response body'
-            );
-            $this->assertNotContains(
-                '<script type="text/javascript" src="https://js.klevu.com/theme/default/v2/landing-page-theme.js"></script>',
-                $responseBody,
-                'Landing Page Js include is not present in response body'
-            );
-            $this->assertContains(
-                '<script type="text/javascript" src="https://js.klevu.com/theme/default/v2/quick-search-theme.lazyload.js"></script>',
-                $responseBody,
-                'Lazy Load Quick Search Js include is present in response body'
-            );
-            $this->assertNotContains(
-                '<script type="text/javascript" src="https://js.klevu.com/theme/default/v2/quick-search-theme.js"></script>',
-                $responseBody,
-                'Quick Search Page Js include is not present in response body'
-            );
+            $this->assertRegExp(static::KLEVU_LANDING_ELEMENT_REGEX, $responseBody);
         }
+        $jsLandingMatches = [];
+        preg_match(
+            '#<script\s*type="text/javascript"\s*src="https://js\.klevu\.com/theme/default/v2/landing-page-theme\.js"\s*></script>#',
+            $responseBody,
+            $jsLandingMatches
+        );
+        $this->assertCount(
+            0,
+            $jsLandingMatches,
+            'Landing Page Js include is present in response body'
+        );
+        $jsLandingDeferMatches = [];
+        preg_match(
+            '#<script\s*type="text/javascript"\s*src="https://js\.klevu\.com/theme/default/v2/landing-page-theme\.js"\s*defer="defer"\s*></script>#',
+            $responseBody,
+            $jsLandingDeferMatches
+        );
+        $this->assertCount(
+            0,
+            $jsLandingDeferMatches,
+            'Deferred Landing Page Js include is present in response body'
+        );
+        $jsLandingLazyLoadMatches = [];
+        preg_match(
+            '#<script\s*type="text/javascript"\s*src="https://js\.klevu\.com/theme/default/v2/landing-page-theme\.lazyload\.js"\s*></script>#',
+            $responseBody,
+            $jsLandingLazyLoadMatches
+        );
+        $this->assertCount(
+            0,
+            $jsLandingLazyLoadMatches,
+            'Lazy Load Landing Page Js include is present in response body'
+        );
+        $jsLandingDeferLazyLoadMatches = [];
+        preg_match(
+            '#<script\s*type="text/javascript"\s*src="https://js\.klevu\.com/theme/default/v2/landing-page-theme\.lazyload\.js"\s*defer="defer"\s*></script>#',
+            $responseBody,
+            $jsLandingDeferLazyLoadMatches
+        );
+        $this->assertNotCount(
+            0,
+            $jsLandingDeferLazyLoadMatches,
+            'Lazy Load Landing Page Js include is present in response body'
+        );
+
+        $jsQuickMatches = [];
+        preg_match(
+            '#<script\s*type="text/javascript"\s*src="https://js\.klevu\.com/theme/default/v2/quick-search-theme\.js"\s*></script>#',
+            $responseBody,
+            $jsQuickMatches
+        );
+        $this->assertCount(
+            0,
+            $jsQuickMatches,
+            'Quick Search Js include is present in response body'
+        );
+        $jsQuickDeferMatches = [];
+        preg_match(
+            '#<script\s*type="text/javascript"\s*src="https://js\.klevu\.com/theme/default/v2/quick-search-theme\.js"\s*defer="defer"\s*></script>#',
+            $responseBody,
+            $jsQuickDeferMatches
+        );
+        $this->assertCount(
+            0,
+            $jsQuickDeferMatches,
+            'Deferred Quick Search Js include is present in response body'
+        );
+        $jsQuickLazyLoadMatches = [];
+        preg_match(
+            '#<script\s*type="text/javascript"\s*src="https://js\.klevu\.com/theme/default/v2/quick-search-theme\.lazyload\.js"\s*></script>#',
+            $responseBody,
+            $jsQuickLazyLoadMatches
+        );
+        $this->assertCount(
+            0,
+            $jsQuickLazyLoadMatches,
+            'Lazy Load Quick Search Js include is present in response body'
+        );
+        $jsQuickDeferLazyLoadMatches = [];
+        preg_match(
+            '#<script\s*type="text/javascript"\s*src="https://js\.klevu\.com/theme/default/v2/quick-search-theme\.lazyload\.js"\s*defer="defer"\s*></script>#',
+            $responseBody,
+            $jsQuickDeferLazyLoadMatches
+        );
+        $this->assertNotCount(
+            0,
+            $jsQuickDeferLazyLoadMatches,
+            'Lazy Load Quick Search Js include is present in response body'
+        );
     }
 
     /**

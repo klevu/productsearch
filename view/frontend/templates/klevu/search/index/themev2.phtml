@@ -1,7 +1,10 @@
 <?php
-    /** @var Klevu\Search\Block\Search\Index\ThemeV2 $block */
-    $contentMinHeight = $block->getContentMinHeight();
+/**
+ * @var Klevu\Search\Block\Search\Index\ThemeV2 $block
+ */
+$contentMinHeight = $block->getContentMinHeight();
 ?>
+
 <?php if ($contentMinHeight): ?>
     <style>.klevuLanding { min-height: <?php /** @noEscape */ echo $contentMinHeight; ?>px; }</style>
 <?php endif; ?>
