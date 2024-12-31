@@ -53,33 +53,37 @@ class PageOutputTest extends AbstractControllerTestCase
 
         // Theme V2
         $landingUrl = $this->urlBuilder->getUrl('search', ['_secure' => $this->getRequest()->isSecure()]);
+        $jsCoreMatches = [];
+        preg_match(
+            '#<script\s*type="text/javascript"\s*src="https://js\.klevu\.com/core/v2/klevu\.js"\s*></script>#',
+            $responseBody,
+            $jsCoreMatches
+        );
+        $this->assertNotCount(
+            0,
+            $jsCoreMatches,
+            'Library JS include is present in response body'
+        );
+
+        $jsInteractiveMatches = [];
+        preg_match(
+            '#<script\s*type="text/javascript"\s*id="klevu_jsinteractive">#',
+            $responseBody,
+            $jsInteractiveMatches
+        );
+        $this->assertNotCount(
+            0,
+            $jsInteractiveMatches,
+            'Initialisation script is present in response body'
+        );
+
         if (method_exists($this, 'assertStringContainsString')) {
-            $this->assertStringContainsString(
-                '<script type="text/javascript" src="https://js.klevu.com/core/v2/klevu.js"></script>',
-                $responseBody,
-                'Library JS include is present in response body'
-            );
-            $this->assertStringContainsString(
-                '<script type="text/javascript" id="klevu_jsinteractive">',
-                $responseBody,
-                'Initialisation script is present in response body'
-            );
             $this->assertStringContainsString(
                 sprintf('"url":{"protocol":"https:","landing":%s', json_encode($landingUrl)),
                 $responseBody,
                 'JS options contain landing page URL'
             );
         } else {
-            $this->assertContains(
-                '<script type="text/javascript" src="https://js.klevu.com/core/v2/klevu.js"></script>',
-                $responseBody,
-                'Library JS include is present in response body'
-            );
-            $this->assertContains(
-                '<script type="text/javascript" id="klevu_jsinteractive">',
-                $responseBody,
-                'Initialisation script is present in response body'
-            );
             $this->assertContains(
                 sprintf('"url":{"protocol":"https:","landing":%s', json_encode($landingUrl)),
                 $responseBody,
@@ -153,46 +157,49 @@ class PageOutputTest extends AbstractControllerTestCase
 
         // Theme V2
         $landingUrl = $this->urlBuilder->getUrl('search', ['_secure' => $this->getRequest()->isSecure()]);
-        if (method_exists($this, 'assertStringNotContainsString')) {
-            $this->assertStringNotContainsString(
-                '<script type="text/javascript" src="https://js.klevu.com/core/v2/klevu.js"></script>',
-                $responseBody,
-                'Library JS include is present in response body'
-            );
-        } else {
-            $this->assertNotContains(
-                '<script type="text/javascript" src="https://js.klevu.com/core/v2/klevu.js"></script>',
-                $responseBody,
-                'Library JS include is present in response body'
-            );
-        }
+        $jsCoreMatches = [];
+        preg_match(
+            '#<script\s*type="text/javascript"\s*src="https://js\.klevu\.com/core/v2/klevu\.js"\s*></script>#',
+            $responseBody,
+            $jsCoreMatches
+        );
+        $this->assertCount(
+            0,
+            $jsCoreMatches,
+            'Library JS include is present in response body'
+        );
+
+        $jsTestCoreMatches = [];
+        preg_match(
+            '#<script\s*type="text/javascript"\s*src="https://js-test\.klevu\.com/core/v2/klevu\.js"\s*></script>#',
+            $responseBody,
+            $jsTestCoreMatches
+        );
+        $this->assertNotCount(
+            0,
+            $jsTestCoreMatches,
+            'Library JS include is present in response body'
+        );
+
+        $jsInteractiveMatches = [];
+        preg_match(
+            '#<script\s*type="text/javascript"\s*id="klevu_jsinteractive">#',
+            $responseBody,
+            $jsInteractiveMatches
+        );
+        $this->assertNotCount(
+            0,
+            $jsInteractiveMatches,
+            'Initialisation script is present in response body'
+        );
+
         if (method_exists($this, 'assertStringContainsString')) {
-            $this->assertStringContainsString(
-                '<script type="text/javascript" src="https://js-test.klevu.com/core/v2/klevu.js"></script>',
-                $responseBody,
-                'Library JS include is present in response body'
-            );
-            $this->assertStringContainsString(
-                '<script type="text/javascript" id="klevu_jsinteractive">',
-                $responseBody,
-                'Initialisation script is present in response body'
-            );
             $this->assertStringContainsString(
                 sprintf('"url":{"protocol":"https:","landing":%s', json_encode($landingUrl)),
                 $responseBody,
                 'JS options contain landing page URL'
             );
         } else {
-            $this->assertContains(
-                '<script type="text/javascript" src="https://js-test.klevu.com/core/v2/klevu.js"></script>',
-                $responseBody,
-                'Library JS include is present in response body'
-            );
-            $this->assertContains(
-                '<script type="text/javascript" id="klevu_jsinteractive">',
-                $responseBody,
-                'Initialisation script is present in response body'
-            );
             $this->assertContains(
                 sprintf('"url":{"protocol":"https:","landing":%s', json_encode($landingUrl)),
                 $responseBody,
@@ -250,33 +257,37 @@ class PageOutputTest extends AbstractControllerTestCase
 
         // Theme V2
         $landingUrl = $this->urlBuilder->getUrl('catalogsearch/result', ['_secure' => $this->getRequest()->isSecure()]);
+        $jsCoreMatches = [];
+        preg_match(
+            '#<script\s*type="text/javascript"\s*src="https://js\.klevu\.com/core/v2/klevu\.js"\s*></script>#',
+            $responseBody,
+            $jsCoreMatches
+        );
+        $this->assertNotCount(
+            0,
+            $jsCoreMatches,
+            'Library JS include is present in response body'
+        );
+
+        $jsInteractiveMatches = [];
+        preg_match(
+            '#<script\s*type="text/javascript"\s*id="klevu_jsinteractive">#',
+            $responseBody,
+            $jsInteractiveMatches
+        );
+        $this->assertNotCount(
+            0,
+            $jsInteractiveMatches,
+            'Initialisation script is present in response body'
+        );
+
         if (method_exists($this, 'assertStringContainsString')) {
-            $this->assertStringContainsString(
-                '<script type="text/javascript" src="https://js.klevu.com/core/v2/klevu.js"></script>',
-                $responseBody,
-                'Library JS include is present in response body'
-            );
-            $this->assertStringContainsString(
-                '<script type="text/javascript" id="klevu_jsinteractive">',
-                $responseBody,
-                'Initialisation script is present in response body'
-            );
             $this->assertStringContainsString(
                 sprintf('"url":{"protocol":"https:","landing":%s', json_encode($landingUrl)),
                 $responseBody,
                 'JS options contain landing page URL'
             );
         } else {
-            $this->assertContains(
-                '<script type="text/javascript" src="https://js.klevu.com/core/v2/klevu.js"></script>',
-                $responseBody,
-                'Library JS include is present in response body'
-            );
-            $this->assertContains(
-                '<script type="text/javascript" id="klevu_jsinteractive">',
-                $responseBody,
-                'Initialisation script is present in response body'
-            );
             $this->assertContains(
                 sprintf('"url":{"protocol":"https:","landing":%s', json_encode($landingUrl)),
                 $responseBody,
@@ -357,33 +368,37 @@ class PageOutputTest extends AbstractControllerTestCase
 
         // Theme V2
         $landingUrl = $this->urlBuilder->getUrl('search', ['_secure' => $this->getRequest()->isSecure()]);
+        $jsCoreMatches = [];
+        preg_match(
+            '#<script\s*type="text/javascript"\s*src="https://js\.klevu\.com/core/v2/klevu\.js"\s*></script>#',
+            $responseBody,
+            $jsCoreMatches
+        );
+        $this->assertCount(
+            0,
+            $jsCoreMatches,
+            'Library JS include is present in response body'
+        );
+
+        $jsInteractiveMatches = [];
+        preg_match(
+            '#<script\s*type="text/javascript"\s*id="klevu_jsinteractive">#',
+            $responseBody,
+            $jsInteractiveMatches
+        );
+        $this->assertCount(
+            0,
+            $jsInteractiveMatches,
+            'Initialisation script is present in response body'
+        );
+
         if (method_exists($this, 'assertStringNotContainsString')) {
-            $this->assertStringNotContainsString(
-                '<script type="text/javascript" src="https://js.klevu.com/core/v2/klevu.js"></script>',
-                $responseBody,
-                'Library JS include is present in response body'
-            );
-            $this->assertStringNotContainsString(
-                '<script type="text/javascript" id="klevu_jsinteractive">',
-                $responseBody,
-                'Initialisation script is present in response body'
-            );
             $this->assertStringNotContainsString(
                 sprintf('"url":{"protocol":"https:","landing":%s', json_encode($landingUrl)),
                 $responseBody,
                 'JS options contain landing page URL'
             );
         } else {
-            $this->assertNotContains(
-                '<script type="text/javascript" src="https://js.klevu.com/core/v2/klevu.js"></script>',
-                $responseBody,
-                'Library JS include is present in response body'
-            );
-            $this->assertNotContains(
-                '<script type="text/javascript" id="klevu_jsinteractive">',
-                $responseBody,
-                'Initialisation script is present in response body'
-            );
             $this->assertNotContains(
                 sprintf('"url":{"protocol":"https:","landing":%s', json_encode($landingUrl)),
                 $responseBody,
@@ -440,33 +455,37 @@ class PageOutputTest extends AbstractControllerTestCase
 
         // Theme V2
         $landingUrl = $this->urlBuilder->getUrl('search', ['_secure' => $this->getRequest()->isSecure()]);
+        $jsCoreMatches = [];
+        preg_match(
+            '#<script\s*type="text/javascript"\s*src="https://js\.klevu\.com/core/v2/klevu\.js"\s*></script>#',
+            $responseBody,
+            $jsCoreMatches
+        );
+        $this->assertCount(
+            0,
+            $jsCoreMatches,
+            'Library JS include is present in response body'
+        );
+
+        $jsInteractiveMatches = [];
+        preg_match(
+            '#<script\s*type="text/javascript"\s*id="klevu_jsinteractive">#',
+            $responseBody,
+            $jsInteractiveMatches
+        );
+        $this->assertCount(
+            0,
+            $jsInteractiveMatches,
+            'Initialisation script is present in response body'
+        );
+
         if (method_exists($this, 'assertStringNotContainsString')) {
-            $this->assertStringNotContainsString(
-                '<script type="text/javascript" src="https://js.klevu.com/core/v2/klevu.js"></script>',
-                $responseBody,
-                'Library JS include is present in response body'
-            );
-            $this->assertStringNotContainsString(
-                '<script type="text/javascript" id="klevu_jsinteractive">',
-                $responseBody,
-                'Initialisation script is present in response body'
-            );
             $this->assertStringNotContainsString(
                 sprintf('"url":{"protocol":"https:","landing":%s', json_encode($landingUrl)),
                 $responseBody,
                 'JS options contain landing page URL'
             );
         } else {
-            $this->assertNotContains(
-                '<script type="text/javascript" src="https://js.klevu.com/core/v2/klevu.js"></script>',
-                $responseBody,
-                'Library JS include is present in response body'
-            );
-            $this->assertNotContains(
-                '<script type="text/javascript" id="klevu_jsinteractive">',
-                $responseBody,
-                'Initialisation script is present in response body'
-            );
             $this->assertNotContains(
                 sprintf('"url":{"protocol":"https:","landing":%s', json_encode($landingUrl)),
                 $responseBody,
@@ -524,33 +543,37 @@ class PageOutputTest extends AbstractControllerTestCase
 
         // Theme V2
         $landingUrl = $this->urlBuilder->getUrl('search', ['_secure' => $this->getRequest()->isSecure()]);
+        $jsCoreMatches = [];
+        preg_match(
+            '#<script\s*type="text/javascript"\s*src="https://js\.klevu\.com/core/v2/klevu\.js"\s*></script>#',
+            $responseBody,
+            $jsCoreMatches
+        );
+        $this->assertCount(
+            0,
+            $jsCoreMatches,
+            'Library JS include is present in response body'
+        );
+
+        $jsInteractiveMatches = [];
+        preg_match(
+            '#<script\s*type="text/javascript"\s*id="klevu_jsinteractive">#',
+            $responseBody,
+            $jsInteractiveMatches
+        );
+        $this->assertCount(
+            0,
+            $jsInteractiveMatches,
+            'Initialisation script is present in response body'
+        );
+
         if (method_exists($this, 'assertStringNotContainsString')) {
-            $this->assertStringNotContainsString(
-                '<script type="text/javascript" src="https://js.klevu.com/core/v2/klevu.js"></script>',
-                $responseBody,
-                'Library JS include is present in response body'
-            );
-            $this->assertStringNotContainsString(
-                '<script type="text/javascript" id="klevu_jsinteractive">',
-                $responseBody,
-                'Initialisation script is present in response body'
-            );
             $this->assertStringNotContainsString(
                 sprintf('"url":{"protocol":"https:","landing":%s', json_encode($landingUrl)),
                 $responseBody,
                 'JS options contain landing page URL'
             );
         } else {
-            $this->assertNotContains(
-                '<script type="text/javascript" src="https://js.klevu.com/core/v2/klevu.js"></script>',
-                $responseBody,
-                'Library JS include is present in response body'
-            );
-            $this->assertNotContains(
-                '<script type="text/javascript" id="klevu_jsinteractive">',
-                $responseBody,
-                'Initialisation script is present in response body'
-            );
             $this->assertNotContains(
                 sprintf('"url":{"protocol":"https:","landing":%s', json_encode($landingUrl)),
                 $responseBody,

@@ -1,6 +1,15 @@
-<?php /** @var Klevu\Search\Block\Html\Head\ThemeV2\InlineCurrencyTranslation $block */ ?>
-<script type="text/javascript">
-    <?php if ($block->shouldOutputQuickScript()): ?>
+<?php
+/**
+ * @var Klevu\Search\Block\Html\Head\ThemeV2\InlineCurrencyTranslation $block
+ */
+?>
+<?php
+$quickSearchScriptString = '';
+$landingScriptString = '';
+?>
+<?php if ($block->shouldOutputQuickScript()): ?>
+    <?php
+    $quickSearchScriptString = <<<script
         klevu.settings.chains.initChain.add({
             name: "addCurrencyTranslationToQuick",
             fire: function (data) {
@@ -14,15 +23,24 @@
                 klevu.search.quick.getScope().chains.response.success.addAfter("processQuery", {
                     name: "addCurrencyTranslation",
                     fire: function (data, scope) {
-                        klevu.search.modules.mageConvertPriceRecordCurrencyData(klevu.getObjectPath(data, "template.query.productList.result"), klevu_currentCurrencyCode, klevu_currentCurrencyRates);
+                        klevu.search.modules.mageConvertPriceRecordCurrencyData(
+                            klevu.getObjectPath(data, "template.query.productList.result"),
+                            klevu_currentCurrencyCode,
+                            klevu_currentCurrencyRates
+                        );
                     }
                 });
                 klevu.setObjectPath(data, "flags.currencyTranslationAdded.quick", true);
             }
         });
-    <?php endif; ?>
 
-    <?php if ($block->shouldOutputLandingScript()): ?>
+script;
+    ?>
+<?php endif; ?>
+
+<?php if ($block->shouldOutputLandingScript()): ?>
+    <?php
+    $landingScriptString = <<<script
         klevu.settings.chains.initChain.add({
             name: "addCurrencyTranslationToLanding",
             fire: function (data) {
@@ -36,11 +54,35 @@
                 klevu.search.landing.getScope().chains.response.success.addAfter("processQuery", {
                     name: "addCurrencyTranslation",
                     fire: function (data, scope) {
-                        klevu.search.modules.mageConvertPriceRecordCurrencyData(klevu.getObjectPath(data, "template.query.productList.result"), klevu_currentCurrencyCode, klevu_currentCurrencyRates);
+                        klevu.search.modules.mageConvertPriceRecordCurrencyData(
+                            klevu.getObjectPath(data, "template.query.productList.result"),
+                            klevu_currentCurrencyCode,
+                            klevu_currentCurrencyRates
+                        );
                     }
                 });
                 klevu.setObjectPath(data, "flags.currencyTranslationAdded.landing", true);
             }
         });
-    <?php endif; ?>
-</script>
+
+script;
+?>
+<?php endif; ?>
+
+<?php if (strlen($quickSearchScriptString) || strlen($landingScriptString)): ?>
+    <?php
+        $scriptString = $quickSearchScriptString . PHP_EOL . $landingScriptString;
+        $script = $block->isDeferJs()
+            ? <<<script
+                window._klvReady = window._klvReady || [];
+                window._klvReady.push(function() {
+                    {$scriptString}
+                });
+
+script
+            : $scriptString;
+    ?>
+    <script type="text/javascript" id="klevu_search_currencytranslation">
+        <?= $script ?>
+    </script>
+<?php endif; ?>

@@ -9,14 +9,14 @@
         "magento/module-eav": "@stable",
         "magento/framework": "<103.0.7",
         "klevu/module-logger": "^1.0.0|^2.0.0",
-        "klevu/module-frontend-js": "^1.4.0",
+        "klevu/module-frontend-js": "^1.6.0",
         "klevu/module-metadata": "^1.4.1"
     },
     "suggest": {
         "klevu/module-msi": "Add support for MSI during product sync"
     },
     "type": "magento2-module",
-    "version": "2.13.1",
+    "version": "2.14.0",
     "license": [
         "OSL-3.0",
         "AFL-3.0"
