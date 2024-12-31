@@ -12,13 +12,8 @@ class ThemeV2Test extends AbstractControllerTestCase
 {
     const KLEVU_LANDING_ELEMENT_REGEX = '#<div +([a-zA-Z-_="\']+ +)*class=(\'|") *((-?[_a-zA-Z]+[_a-zA-Z0-9-]*) +)'
         . '*klevuLanding( +(-?[_a-zA-Z]+[_a-zA-Z0-9-]*))* *(\'|")( +[a-zA-Z-_="\']+)* *></div>#';
-    const STYLE_MIN_HEIGHT_REGEX_PREPEND = "#<script.*>"
-        . "\s*var elem.*Array = document\.querySelectorAll\('\.klevuLanding'\);"
-        . "\s*if\(elem.*Array.length !== 'undefined'\){"
-        . "\s*elem.*Array\.forEach\(function\(element\) {"
-        . "\s*if \(element\) {"
-        . "\s*element\.style\.minHeight = '";
-    const STYLE_MIN_HEIGHT_REGEX_APPEND = "px';\s*}\s*}\);\s*}</script>#";
+    const STYLE_MIN_HEIGHT_REGEX_PREPEND = '#<style type="text&\#x2F;css".*>\s*\.klevuLanding\s*{\s*min-height:\s*';
+    const STYLE_MIN_HEIGHT_REGEX_APPEND = "px;\s*}\s*</style>#";
 
     /**
      * @var ObjectManager
@@ -63,19 +58,40 @@ class ThemeV2Test extends AbstractControllerTestCase
                 'Landing Page Js include is present in response body'
             );
             $this->assertStringNotContainsString(
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;landing-page-theme.js" defer="defer"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
+                $responseBody,
+                'Deferred Landing Page Js include is not present in response body'
+            );
+            $this->assertStringNotContainsString(
                 '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;landing-page-theme.lazyload.js"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
                 $responseBody,
                 'Lazy Load Landing Page Js include is not present in response body'
             );
+            $this->assertStringNotContainsString(
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;landing-page-theme.lazyload.js" defer="defer"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
+                $responseBody,
+                'Deferred Lazy Load Landing Page Js include is not present in response body'
+            );
+
             $this->assertStringContainsString(
                 '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;quick-search-theme.js"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
                 $responseBody,
                 'Quick Search Js include is present in response body'
             );
             $this->assertStringNotContainsString(
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;quick-search-theme.js" defer="defer"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
+                $responseBody,
+                'Deferred Quick Search Js include is present in response body'
+            );
+            $this->assertStringNotContainsString(
                 '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;quick-search-theme.lazyload.js"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
                 $responseBody,
                 'Lazy Load Quick Search Js include is Not present in response body'
+            );
+            $this->assertStringNotContainsString(
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;quick-search-theme.lazyload.js" defer="defer"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
+                $responseBody,
+                'Deferred Lazy Load Quick Search Js include is Not present in response body'
             );
         } else {
             $this->assertContains(
@@ -84,12 +100,28 @@ class ThemeV2Test extends AbstractControllerTestCase
                 'Landing Page Js include is present in response body'
             );
             $this->assertNotContains(
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;landing-page-theme.js" defer="defer"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
+                $responseBody,
+                'Deferred Landing Page Js include is present in response body'
+            );
+            $this->assertNotContains(
                 '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;landing-page-theme.lazyload.js"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
                 $responseBody,
                 'Lazy Load Landing Page Js include is not present in response body'
             );
+            $this->assertNotContains(
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;landing-page-theme.lazyload.js" defer="defer"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
+                $responseBody,
+                'Deferred Lazy Load Landing Page Js include is not present in response body'
+            );
+
             $this->assertContains(
                 '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;quick-search-theme.js"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
+                $responseBody,
+                'Quick Search Js include is present in response body'
+            );
+            $this->assertNotContains(
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;quick-search-theme.js" defer="defer"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
                 $responseBody,
                 'Quick Search Js include is present in response body'
             );
@@ -97,6 +129,131 @@ class ThemeV2Test extends AbstractControllerTestCase
                 '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;quick-search-theme.lazyload.js"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
                 $responseBody,
                 'Lazy Load Quick Search Js include is Not present in response body'
+            );
+            $this->assertNotContains(
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;quick-search-theme.lazyload.js" defer="defer"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
+                $responseBody,
+                'Deferred Lazy Load Quick Search Js include is Not present in response body'
+            );
+        }
+    }
+
+    /**
+     * @magentoAppArea frontend
+     * @magentoCache all disabled
+     * @magentoAppIsolation enabled
+     * @magentoDbIsolation disabled
+     * @magentoConfigFixture default/klevu_search/general/enabled 1
+     * @magentoConfigFixture default_store klevu_search/general/enabled 1
+     * @magentoConfigFixture default/klevu_search/general/js_api_key klevu-1234567890
+     * @magentoConfigFixture default_store klevu_search/general/js_api_key klevu-1234567890
+     * @magentoConfigFixture default/klevu_search/developer/theme_version v2
+     * @magentoConfigFixture default_store klevu_search/developer/theme_version v2
+     * @magentoConfigFixture default/klevu_search/developer/lazyload_js_search_landing 0
+     * @magentoConfigFixture default_store klevu_search/developer/lazyload_js_search_landing 0
+     * @magentoConfigFixture default/klevu_search/developer/lazyload_js_quick_search 0
+     * @magentoConfigFixture default_store klevu_search/developer/lazyload_js_quick_search 0
+     * @magentoConfigFixture default/klevu_frontendjs/configuration/defer_js 1
+     * @magentoConfigFixture default_store klevu_frontendjs/configuration/defer_js 1
+     */
+    public function testSRLPContentOutput_ThemeV2_WithJsDeferred()
+    {
+        $this->setupPhp5();
+
+        $this->dispatch('search/?q=simple');
+
+        $response = $this->getResponse();
+        $responseBody = $response->getBody();
+        $this->assertSame(200, $response->getHttpResponseCode());
+
+        if (method_exists($this, 'assertMatchesRegularExpression')) {
+            $this->assertMatchesRegularExpression(static::KLEVU_LANDING_ELEMENT_REGEX, $responseBody);
+        } else {
+            $this->assertRegExp(static::KLEVU_LANDING_ELEMENT_REGEX, $responseBody);
+        }
+        if (method_exists($this, 'assertStringContainsString')) {
+            $this->assertStringNotContainsString(
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;landing-page-theme.js"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
+                $responseBody,
+                'Landing Page Js include is not present in response body'
+            );
+            $this->assertStringContainsString(
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;landing-page-theme.js" defer="defer"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
+                $responseBody,
+                'Landing Page Js include is present in response body'
+            );
+            $this->assertStringNotContainsString(
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;landing-page-theme.lazyload.js"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
+                $responseBody,
+                'Lazy Load Landing Page Js include is not present in response body'
+            );
+            $this->assertStringNotContainsString(
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;landing-page-theme.lazyload.js" defer="defer"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
+                $responseBody,
+                'Deferred Lazy Load Landing Page Js include is not present in response body'
+            );
+
+            $this->assertStringNotContainsString(
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;quick-search-theme.js"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
+                $responseBody,
+                'Quick Search Js include is not present in response body'
+            );
+            $this->assertStringContainsString(
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;quick-search-theme.js" defer="defer"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
+                $responseBody,
+                'Quick Search Js include is present in response body'
+            );
+            $this->assertStringNotContainsString(
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;quick-search-theme.lazyload.js"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
+                $responseBody,
+                'Lazy Load Quick Search Js include is Not present in response body'
+            );
+            $this->assertStringNotContainsString(
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;quick-search-theme.lazyload.js" defer="defer"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
+                $responseBody,
+                'Deferred Lazy Load Quick Search Js include is Not present in response body'
+            );
+        } else {
+            $this->assertNotContains(
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;landing-page-theme.js"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
+                $responseBody,
+                'Landing Page Js include is present in response body'
+            );
+            $this->assertContains(
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;landing-page-theme.js" defer="defer"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
+                $responseBody,
+                'Landing Page Js include is present in response body'
+            );
+            $this->assertNotContains(
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;landing-page-theme.lazyload.js"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
+                $responseBody,
+                'Lazy Load Landing Page Js include is not present in response body'
+            );
+            $this->assertNotContains(
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;landing-page-theme.lazyload.js" defer="defer"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
+                $responseBody,
+                'Deferred Lazy Load Landing Page Js include is not present in response body'
+            );
+
+            $this->assertNotContains(
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;quick-search-theme.js"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
+                $responseBody,
+                'Quick Search Js include is present in response body'
+            );
+            $this->assertContains(
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;quick-search-theme.js" defer="defer"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
+                $responseBody,
+                'Quick Search Js include is present in response body'
+            );
+            $this->assertNotContains(
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;quick-search-theme.lazyload.js"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
+                $responseBody,
+                'Lazy Load Quick Search Js include is Not present in response body'
+            );
+            $this->assertNotContains(
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;quick-search-theme.lazyload.js" defer="defer"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
+                $responseBody,
+                'Deferred Lazy Load Quick Search Js include is Not present in response body'
             );
         }
     }
@@ -133,15 +290,36 @@ class ThemeV2Test extends AbstractControllerTestCase
             $this->assertRegExp(static::KLEVU_LANDING_ELEMENT_REGEX, $responseBody);
         }
         if (method_exists($this, 'assertStringContainsString')) {
+            $this->assertStringNotContainsString(
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;landing-page-theme.js"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
+                $responseBody,
+                'Landing Page Js include is not present in response body'
+            );
+            $this->assertStringNotContainsString(
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;landing-page-theme.js" defer="defer"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
+                $responseBody,
+                'Deferred Landing Page Js include is not present in response body'
+            );
             $this->assertStringContainsString(
                 '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;landing-page-theme.lazyload.js"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
                 $responseBody,
                 'Lazy Load Landing Page Js include is present in response body'
             );
             $this->assertStringNotContainsString(
-                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;landing-page-theme.js"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;landing-page-theme.lazyload.js" defer="defer"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
                 $responseBody,
-                'Landing Page Js include is not present in response body'
+                'Deferred Lazy Load Landing Page Js include is not present in response body'
+            );
+
+            $this->assertStringNotContainsString(
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;quick-search-theme.js"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
+                $responseBody,
+                'Quick Search Page Js include is not present in response body'
+            );
+            $this->assertStringNotContainsString(
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;quick-search-theme.js" defer="defer"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
+                $responseBody,
+                'Deferred Quick Search Js include is present in response body'
             );
             $this->assertStringContainsString(
                 '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;quick-search-theme.lazyload.js"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
@@ -149,20 +327,41 @@ class ThemeV2Test extends AbstractControllerTestCase
                 'Lazy Load Quick Search Js include is present in response body'
             );
             $this->assertStringNotContainsString(
-                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;quick-search-theme.js"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;quick-search-theme.lazyload.js" defer="defer"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
                 $responseBody,
-                'Quick Search Page Js include is not present in response body'
+                'Deferred Lazy Load Quick Search Js include is Not present in response body'
             );
         } else {
+            $this->assertNotContains(
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;landing-page-theme.js"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
+                $responseBody,
+                'Landing Page Js include is not present in response body'
+            );
+            $this->assertNotContains(
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;landing-page-theme.js" defer="defer"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
+                $responseBody,
+                'Deferred Landing Page Js include is present in response body'
+            );
             $this->assertContains(
                 '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;landing-page-theme.lazyload.js"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
                 $responseBody,
                 'Lazy Load Landing Page Js include is present in response body'
             );
             $this->assertNotContains(
-                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;landing-page-theme.js"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;landing-page-theme.lazyload.js" defer="defer"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
                 $responseBody,
-                'Landing Page Js include is not present in response body'
+                'Deferred Lazy Load Landing Page Js include is not present in response body'
+            );
+
+            $this->assertNotContains(
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;quick-search-theme.js"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
+                $responseBody,
+                'Quick Search Page Js include is not present in response body'
+            );
+            $this->assertNotContains(
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;quick-search-theme.js" defer="defer"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
+                $responseBody,
+                'Quick Search Js include is present in response body'
             );
             $this->assertContains(
                 '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;quick-search-theme.lazyload.js"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
@@ -170,9 +369,129 @@ class ThemeV2Test extends AbstractControllerTestCase
                 'Lazy Load Quick Search Js include is present in response body'
             );
             $this->assertNotContains(
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;quick-search-theme.lazyload.js" defer="defer"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
+                $responseBody,
+                'Deferred Lazy Load Quick Search Js include is Not present in response body'
+            );
+        }
+    }
+
+    /**
+     * @magentoAppArea frontend
+     * @magentoCache all disabled
+     * @magentoAppIsolation enabled
+     * @magentoDbIsolation disabled
+     * @magentoConfigFixture default/klevu_search/general/enabled 1
+     * @magentoConfigFixture default_store klevu_search/general/enabled 1
+     * @magentoConfigFixture default/klevu_search/general/js_api_key klevu-1234567890
+     * @magentoConfigFixture default_store klevu_search/general/js_api_key klevu-1234567890
+     * @magentoConfigFixture default/klevu_search/developer/theme_version v2
+     * @magentoConfigFixture default_store klevu_search/developer/theme_version v2
+     * @magentoConfigFixture default/klevu_search/developer/lazyload_js_search_landing 1
+     * @magentoConfigFixture default_store klevu_search/developer/lazyload_js_search_landing 1
+     * @magentoConfigFixture default/klevu_search/developer/lazyload_js_quick_search 1
+     * @magentoConfigFixture default_store klevu_search/developer/lazyload_js_quick_search 1
+     * @magentoConfigFixture default/klevu_frontendjs/configuration/defer_js 1
+     * @magentoConfigFixture default_store klevu_frontendjs/configuration/defer_js 1
+     */
+    public function testSRLPContentOutput_ThemeV2LazyLoadLandingJs_WithJsDeferred()
+    {
+        $this->setupPhp5();
+
+        $this->dispatch('search/?q=simple');
+
+        $response = $this->getResponse();
+        $responseBody = $response->getBody();
+        $this->assertSame(200, $response->getHttpResponseCode());
+
+        if (method_exists($this, 'assertMatchesRegularExpression')) {
+            $this->assertMatchesRegularExpression(static::KLEVU_LANDING_ELEMENT_REGEX, $responseBody);
+        } else {
+            $this->assertRegExp(static::KLEVU_LANDING_ELEMENT_REGEX, $responseBody);
+        }
+        if (method_exists($this, 'assertStringContainsString')) {
+            $this->assertStringNotContainsString(
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;landing-page-theme.js"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
+                $responseBody,
+                'Landing Page Js include is not present in response body'
+            );
+            $this->assertStringNotContainsString(
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;landing-page-theme.js" defer="defer"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
+                $responseBody,
+                'Deferred Landing Page Js include is not present in response body'
+            );
+            $this->assertStringNotContainsString(
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;landing-page-theme.lazyload.js"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
+                $responseBody,
+                'Lazy Load Landing Page Js include is not present in response body'
+            );
+            $this->assertStringContainsString(
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;landing-page-theme.lazyload.js" defer="defer"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
+                $responseBody,
+                'Deferred Lazy Load Landing Page Js include is present in response body'
+            );
+
+            $this->assertStringNotContainsString(
                 '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;quick-search-theme.js"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
                 $responseBody,
                 'Quick Search Page Js include is not present in response body'
+            );
+            $this->assertStringNotContainsString(
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;quick-search-theme.js" defer="defer"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
+                $responseBody,
+                'Deferred Quick Search Js include is present in response body'
+            );
+            $this->assertStringNotContainsString(
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;quick-search-theme.lazyload.js"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
+                $responseBody,
+                'Lazy Load Quick Search Js include is not present in response body'
+            );
+            $this->assertStringContainsString(
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;quick-search-theme.lazyload.js" defer="defer"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
+                $responseBody,
+                'Deferred Lazy Load Quick Search Js include is present in response body'
+            );
+        } else {
+            $this->assertNotContains(
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;landing-page-theme.js"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
+                $responseBody,
+                'Landing Page Js include is not present in response body'
+            );
+            $this->assertNotContains(
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;landing-page-theme.js" defer="defer"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
+                $responseBody,
+                'Deferred Landing Page Js include is present in response body'
+            );
+            $this->assertNotContains(
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;landing-page-theme.lazyload.js"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
+                $responseBody,
+                'Lazy Load Landing Page Js include is not present in response body'
+            );
+            $this->assertContains(
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;landing-page-theme.lazyload.js" defer="defer"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
+                $responseBody,
+                'Deferred Lazy Load Landing Page Js include is present in response body'
+            );
+
+            $this->assertNotContains(
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;quick-search-theme.js"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
+                $responseBody,
+                'Quick Search Page Js include is not present in response body'
+            );
+            $this->assertNotContains(
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;quick-search-theme.js" defer="defer"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
+                $responseBody,
+                'Quick Search Js include is present in response body'
+            );
+            $this->assertNotContains(
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;quick-search-theme.lazyload.js"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
+                $responseBody,
+                'Lazy Load Quick Search Js include is not present in response body'
+            );
+            $this->assertContains(
+                '<script type="text&#x2F;javascript" src="https&#x3A;&#x2F;&#x2F;js.klevu.com&#x2F;theme&#x2F;default&#x2F;v2&#x2F;quick-search-theme.lazyload.js" defer="defer"></script>', // phpcs:ignore Generic.Files.LineLength.TooLong
+                $responseBody,
+                'Deferred Lazy Load Quick Search Js include is present in response body'
             );
         }
     }
