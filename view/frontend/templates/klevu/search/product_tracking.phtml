@@ -7,7 +7,7 @@
 
 <?php if ($block->isExtensionConfigured()) : ?>
     <?php
-    $scriptString = <<<script
+    $scriptString = "
 
     var referrer, search_term, klevu_search_product_tracking;
     referrer = document.referrer;
@@ -19,7 +19,7 @@
             return null;
         }
 
-        return decodeURIComponent(string[1].replace(/\+/g, " "));
+        return decodeURIComponent(string[1].replace(/\+/g, ' '));
     };
     search_term = getQueryString('q', referrer);
 
@@ -44,8 +44,7 @@
         }).then(response => {
         });
     }
-
-script;
+    ";
     ?>
     <?= $secureRenderer->renderTag(
         'script',

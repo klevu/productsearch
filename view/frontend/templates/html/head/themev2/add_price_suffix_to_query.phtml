@@ -11,28 +11,27 @@ $landingScriptString = '';
 
 <?php if ($block->shouldOutputQuickScript()): ?>
     <?php
-    $quickSearchScriptStringChains = <<<script
+    $quickSearchScriptStringChains = "
     klevu.settings.chains.initChain.add({
-        name: "addPriceSuffixToQuickQuery",
+        name: 'addPriceSuffixToQuickQuery',
         fire: function (data) {
-            if (klevu.getObjectPath(klevu.search, "quick", false)
-                && klevu.getGlobalSetting("flags.addPriceSuffixToQuery.quick", false)
-                && typeof klevu_addPriceSuffixToQueryControl === "object"
+            if (klevu.getObjectPath(klevu.search, 'quick', false)
+                && klevu.getGlobalSetting('flags.addPriceSuffixToQuery.quick', false)
+                && typeof klevu_addPriceSuffixToQueryControl === 'object'
             ) {
                 klevu.search.quick.getScope().chains.request.control.addAfter('initRequest', klevu_addPriceSuffixToQueryControl);
-                klevu.setObjectPath(data, "flags.addPriceSuffixToQuery.quick", false);
+                klevu.setObjectPath(data, 'flags.addPriceSuffixToQuery.quick', false);
             }
         }
     });
-
-script;
+    ";
     ?>
     <?php
-    $quickPowerUp = <<<script
+    $quickPowerUp = "
         klevu({ powerUp: { quick: true } });
-script;
+    ";
 
-    $quickPowerUpWithSuffix = <<<script
+    $quickPowerUpWithSuffix = "
          klevu({
             powerUp: { quick: true },
             flags: {
@@ -41,11 +40,11 @@ script;
                 }
             }
         });
-script;
+    ";
     ?>
     <?php if ($block->isDeferJs()): ?>
         <?php
-        $quickSearchScriptString .= <<<script
+        $quickSearchScriptString .= "
         window._klvReady = window._klvReady || [];
         window._klvReady.push(function() {
             {$quickSearchScriptStringChains}
@@ -66,12 +65,11 @@ script;
 
             return true;
         };
-
-script;
+        ";
         ?>
     <?php else: ?>
         <?php
-        $quickSearchScriptString .= <<<script
+        $quickSearchScriptString .= "
         {$quickSearchScriptStringChains}
 
         var klevuPowerUpQuick = function() {
@@ -83,49 +81,45 @@ script;
             {$quickPowerUpWithSuffix}
 
             return true;
-        };
-
-script;
+        };";
         ?>
     <?php endif; ?>
     <?php
-    $quickSearchScriptString .= <<<script
+    $quickSearchScriptString .= "
     document.addEventListener('{$block->getCustomerDataLoadErrorEventName()}', function () {
         klevuPowerUpQuick();
     });
     document.addEventListener('{$block->getCustomerDataLoadedEventName()}', function () {
         klevuPowerUpQuickWithSuffix();
     });
-
-script;
+    ";
     ?>
 <?php endif; ?>
 
 <?php if ($block->shouldOutputLandingScript()): ?>
     <?php
-    $landingScriptStringChains = <<<script
+    $landingScriptStringChains = "
     klevu.settings.chains.initChain.add({
-        name: "addPriceSuffixToLandingQuery",
+        name: 'addPriceSuffixToLandingQuery',
         fire: function (data) {
-            if (klevu.getObjectPath(klevu.search, "landing", false)
-                && klevu.getGlobalSetting("flags.addPriceSuffixToQuery.landing", false)
-                && typeof klevu_addPriceSuffixToQueryControl === "object"
+            if (klevu.getObjectPath(klevu.search, 'landing', false)
+                && klevu.getGlobalSetting('flags.addPriceSuffixToQuery.landing', false)
+                && typeof klevu_addPriceSuffixToQueryControl === 'object'
             ) {
                 klevu.search.landing.getScope().chains.request.control.addAfter('initRequest', klevu_addPriceSuffixToQueryControl);
-                klevu.setObjectPath(data, "flags.addPriceSuffixToQuery.landing", false);
+                klevu.setObjectPath(data, 'flags.addPriceSuffixToQuery.landing', false);
             }
         }
     });
-
-script;
+    ";
     ?>
 
     <?php
-    $landingPowerUp = <<<script
+    $landingPowerUp = "
         klevu({ powerUp: { landing: true } });
-script;
+    ";
 
-    $landingPowerUpWithSuffix = <<<script
+    $landingPowerUpWithSuffix = "
          klevu({
             powerUp: { landing: true },
             flags: {
@@ -134,12 +128,12 @@ script;
                 }
             }
         });
-script;
+    ";
     ?>
 
     <?php if ($block->isDeferJs()): ?>
         <?php
-        $landingScriptString .= <<<script
+        $landingScriptString .= "
         window._klvReady = window._klvReady || [];
         window._klvReady.push(function() {
             {$landingScriptStringChains}
@@ -160,12 +154,11 @@ script;
 
             return true;
         };
-
-script;
+        ";
         ?>
     <?php else: ?>
         <?php
-        $landingScriptString .= <<<script
+        $landingScriptString .= "
         {$landingScriptStringChains}
 
         var klevuPowerUpLanding = function() {
@@ -178,20 +171,18 @@ script;
 
             return true;
         };
-
-script;
+        ";
         ?>
     <?php endif; ?>
     <?php
-    $landingScriptString .= <<<script
+    $landingScriptString .= "
         document.addEventListener('{$block->getCustomerDataLoadErrorEventName()}', function () {
             klevuPowerUpLanding();
         });
         document.addEventListener('{$block->getCustomerDataLoadedEventName()}', function () {
             klevuPowerUpLandingWithSuffix();
         });
-
-script;
+    ";
     ?>
 <?php endif; ?>
 

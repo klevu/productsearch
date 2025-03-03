@@ -9,22 +9,20 @@
     <?php
     $url = $block->getUrl('search', ['_secure' => $block->getRequest()->isSecure()]);
     $landingTheme = (int)$block->isLandingEnabled();
-    $scriptString = <<<script
-
+    $scriptString = "
     // add in cms template
     var klevu_current_version = '{$block->getModuleInfo()}';
     var allInputs = document.getElementsByTagName('input');
-
-script;
+    ";
     if ($landingTheme === $block::DISABLE) {
-        $scriptString .= <<<script
+        $scriptString .= "
         var klevu_showQuickSearchOnEnter = true;
         (function () {
             // Remove Magento event observers from the search box
             // No Redirection of landing page
             for (i = 0, len = allInputs.length; i < len; i++) {
-                if (allInputs[i].type === "text" || allInputs[i].type === "search") {
-                    if (allInputs[i].name === "q" || allInputs[i].id === "search") {
+                if (allInputs[i].type === 'text' || allInputs[i].type === 'search') {
+                    if (allInputs[i].name === 'q' || allInputs[i].id === 'search') {
                         var search_input = allInputs[i];
                         search_input.form.onsubmit = function () {
                             return false;
@@ -33,35 +31,32 @@ script;
                 }
             }
         })();
-
-script;
-    } else if ($landingTheme === $block::KlEVUTEMPLATE) {
-        $scriptString .= <<<script
+        ";
+    } elseif ($landingTheme === $block::KlEVUTEMPLATE) {
+        $scriptString .= "
         (function () {
             // Remove Magento event observers from the search box
             // Redirect to klevu js page
             for (i = 0, len = allInputs.length; i < len; i++) {
-                if (allInputs[i].type === "text" || allInputs[i].type === "search") {
-                    if (allInputs[i].name === "q" || allInputs[i].id === "search") {
+                if (allInputs[i].type === 'text' || allInputs[i].type === 'search') {
+                    if (allInputs[i].name === 'q' || allInputs[i].id === 'search') {
                         var search_input = allInputs[i];
-                        search_input.form.action = '$url';//?q="+search_input.value;
+                        search_input.form.action = '{$url}';
                     }
                 }
             }
-
         })();
-        var klevu_storeLandingPageUrl = '$url';
+        var klevu_storeLandingPageUrl = '{$url}';
         var klevu_showQuickSearchOnEnter = false;
-
-script;
-    } else if ($landingTheme === $block::KlEVUPRESERVELAYOUT) {
-        $scriptString .= <<<script
+        ";
+    } elseif ($landingTheme === $block::KlEVUPRESERVELAYOUT) {
+        $scriptString .= "
         (function () {
             // Remove Magento event observers from the search box
             // default Magento layout landing page
             for (i = 0, len = allInputs.length; i < len; i++) {
-                if (allInputs[i].type === "text" || allInputs[i].type === "search") {
-                    if (allInputs[i].name === "q" || allInputs[i].id === "search") {
+                if (allInputs[i].type === 'text' || allInputs[i].type === 'search') {
+                    if (allInputs[i].name === 'q' || allInputs[i].id === 'search') {
                         var search_input = allInputs[i];
                     }
                 }
@@ -72,11 +67,10 @@ script;
             ['_secure' => $block->getRequest()->isSecure()]
         )}';
         var klevu_showQuickSearchOnEnter = false;
-
-script;
+        ";
     }
 
-$scriptString .= <<<script
+$scriptString .= "
     // call store js
     var klevu_apiKey = '{$block->getJsApiKey()}',
         searchTextBoxName = 'search',
@@ -85,15 +79,14 @@ $scriptString .= <<<script
         klevu_result_left_margin = '';
     (function () {
         var ws = document.createElement('script'),
-            kl_protocol = ("https:" === document.location.protocol ? "https://" : "http://");
+            kl_protocol = ('https:' === document.location.protocol ? 'https://' : 'http://');
         ws.type = 'text/javascript';
         ws.async = true;
         ws.src = kl_protocol + '{$block->getJsUrl()}/klevu-js-v1/js/klevu-webstore.js';
         var s = document.getElementsByTagName('script')[0];
         s.parentNode.insertBefore(ws, s);
     })();
-
-script;
+    ";
     ?>
     <?= $secureRenderer->renderTag(
         'script',
@@ -105,29 +98,28 @@ script;
     <?php
     $currency = $block->getCurrencyData();
     $pubIsInUse = $block->isPubInUse() ? "true" : "false";
-    $currencyScriptString = <<<script
+    $currencyScriptString = "
 
-    if (typeof klevu_baseCurrencyCode === "undefined") {
-        var klevu_baseCurrencyCode = "{$block->escapeJsQuote($block->getBaseCurrencyCode())}";
+    if (typeof klevu_baseCurrencyCode === 'undefined') {
+        var klevu_baseCurrencyCode = '{$block->escapeJsQuote($block->getBaseCurrencyCode())}';
     }
-    if (typeof klevu_currentCurrencyCode === "undefined") {
-        var klevu_currentCurrencyCode = "{$block->escapeJsQuote($block->getCurrentCurrencyCode())}";
+    if (typeof klevu_currentCurrencyCode === 'undefined') {
+        var klevu_currentCurrencyCode = '{$block->escapeJsQuote($block->getCurrentCurrencyCode())}';
     }
-script;
+    ";
 
     if ($currency) {
-         $currencyScriptString .= <<<script
-
-        if (typeof klevu_currentCurrencyRates === "undefined") {
-            var klevu_currentCurrencyRates = {{$currency}};
-        }
-script;
+        $currencyScriptString .= "
+            if (typeof klevu_currentCurrencyRates === 'undefined') {
+                var klevu_currentCurrencyRates = {{$currency}};
+            }
+        ";
     }
 
-    $currencyScriptString .= <<<script
+    $currencyScriptString .= "
 
     klevu_pubIsInUse = $pubIsInUse;
-    if (!(typeof klevu_uc_productCustomizations === "function" && typeof klevu_uc_productCustomizations.nodeType !== "number")) {
+    if (!(typeof klevu_uc_productCustomizations === 'function' && typeof klevu_uc_productCustomizations.nodeType !== 'number')) {
         function klevu_uc_productCustomizations(product) {
             if (klevu_pubIsInUse) {
                 // maintained for products that have not been re-synced since the removal of need to change from indexing
@@ -147,8 +139,7 @@ script;
             return product;
         }
     }
-
-script;
+    ";
     ?>
     <?= $secureRenderer->renderTag(
         'script',
