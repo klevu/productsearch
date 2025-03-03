@@ -9,11 +9,11 @@ $productListSortOrderOptions = $block->getProductListSortOrderOptions();
 <?php if ($productListSortOrderOptions): ?>
     <?php $landingSortDefaultValueOption = current($productListSortOrderOptions); ?>
     <?php
-    $scriptString = <<<script
+    $scriptString = "
 
     var klevu_landingSortDefaultValue = '{$block->escapeQuote($landingSortDefaultValueOption['value'])}';
 
-script;
+    ";
     ?>
     <?= $secureRenderer->renderTag(
         'script',

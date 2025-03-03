@@ -59,12 +59,12 @@ $indexersMessage = $block->isShowIndexerMessage();
         sprintf('%ssearch/index/syncstoreview/store/%s/hashkey/', $block->getBaseUrl(), $store_id)
     ) . $key;
 
-    $scriptString = <<<script
+    $scriptString = "
 
     function callAjaxRecurrsively() {
-        document.getElementById("loader").style.display = "block";
+        document.getElementById('loader').style.display = 'block';
 
-        fetch('$url', {
+        fetch('{$url}', {
             method: 'GET',
             crossDomain: true
         }).then((response) => response.json()).then((data) => {
@@ -74,9 +74,9 @@ $indexersMessage = $block->isShowIndexerMessage();
                 data.numberOfRecord_delete == null
             ) {
                 htmlToDisplay = '<br />';
-                htmlToDisplay += '<div class="message warning">';
+                htmlToDisplay += '<div class=\"message warning\">';
                 htmlToDisplay += '<span>';
-                htmlToDisplay += '$errorMessage';
+                htmlToDisplay += '{$errorMessage}';
                 if (data.msg != null) {
                     htmlToDisplay += '<br />' + data.msg;
                 }
@@ -84,31 +84,30 @@ $indexersMessage = $block->isShowIndexerMessage();
                 htmlToDisplay += '</div>';
                 htmlToDisplay += '<br />'
 
-                document.getElementById("info_message").innerHTML += htmlToDisplay;
+                document.getElementById('info_message').innerHTML += htmlToDisplay;
             } else if (parseInt(data.numberOfRecord_add) !== 0 ||
                 parseInt(data.numberOfRecord_update) !== 0 ||
                 parseInt(data.numberOfRecord_delete) !== 0
             ) {
-                htmlToDisplay = '$nextBatchMessage';
+                htmlToDisplay = '{$nextBatchMessage}';
                 htmlToDisplay += '<br />'
 
-                document.getElementById("info_message").innerHTML += htmlToDisplay;
+                document.getElementById('info_message').innerHTML += htmlToDisplay;
                 callAjaxRecurrsively();
             } else {
-                htmlToDisplay = '$noRecordsMessage';
+                htmlToDisplay = '{$noRecordsMessage}';
                 htmlToDisplay += '<br />'
 
-                document.getElementById("info_message").innerHTML += htmlToDisplay;
-                document.getElementById("kl_close_warning_before").style.display = "none";
-                document.getElementById("kl_close_warning_after").style.display = "block";
+                document.getElementById('info_message').innerHTML += htmlToDisplay;
+                document.getElementById('kl_close_warning_before').style.display = 'none';
+                document.getElementById('kl_close_warning_after').style.display = 'block';
             }
-            document.getElementById("loader").style.display = "none";
+            document.getElementById('loader').style.display = 'none';
         });
     }
 
     callAjaxRecurrsively()
-
-script;
+    ";
     ?>
     <?= $secureRenderer->renderTag(
         'script',

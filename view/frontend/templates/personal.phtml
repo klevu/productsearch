@@ -12,7 +12,7 @@
 </span>
 
 <?php
-$scriptString = <<<script
+$scriptString = "
 
     var updateKlevuSessionDataElementsFromLocalStorage = function() {
         var klevuLocalStorage = JSON.parse(window.localStorage.getItem(
@@ -34,15 +34,14 @@ $scriptString = <<<script
         document.getElementById('klevu_shopperIP').innerText = klevuLocalStorageCustomerData.hasOwnProperty('shopper_ip')
             ? klevuLocalStorageCustomerData.shopper_ip
             : '';
-    }
+    };
     updateKlevuSessionDataElementsFromLocalStorage();
 
     document.addEventListener(
         '{$block->getCustomerDataLoadedEventName()}',
         updateKlevuSessionDataElementsFromLocalStorage
     );
-
-script;
+    ";
 ?>
 <?= $secureRenderer->renderTag(
     'script',

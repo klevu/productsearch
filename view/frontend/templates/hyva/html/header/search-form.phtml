@@ -39,7 +39,7 @@ $helper = $this->helper(SearchHelper::class);
 <?php
 $minQueryLength = (int) $helper->getMinQueryLength();
 $suggestionsAllowed = $configProvider->isSuggestionsAllowed() ? 'true' : 'false';
-$scriptString = <<<script
+$scriptString = "
 
     'use strict';
 
@@ -91,7 +91,7 @@ $scriptString = <<<script
                 }
             },
             focusElement(element) {
-                if (element && element.nodeName === "DIV") {
+                if (element && element.nodeName === 'DIV') {
                     element.focus();
                     return true;
                 } else {
@@ -100,8 +100,7 @@ $scriptString = <<<script
             }
         }
     }
-
-script;
+    ";
 ?>
 <?= $secureRenderer->renderTag(
     'script',

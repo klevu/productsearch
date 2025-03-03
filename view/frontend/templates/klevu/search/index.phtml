@@ -157,7 +157,7 @@ $src = $protocol . $block->getJsUrl();
 
 <?php if ($block->isCustomerGroupPriceEnabled()): ?>
     <?php
-    $scriptString = <<<script
+    $scriptString = "
 
     var counter = 0;
     var klevuMagentoCustomerGroupFlag = false;
@@ -166,7 +166,7 @@ $src = $protocol . $block->getJsUrl();
         if(elem !== null && elem.innerHTML) {
             // custom code here
             klevuMagentoCustomerGroupFlag = true;
-            if(typeof klevu_pageLoadEvent == "function"){
+            if(typeof klevu_pageLoadEvent == 'function'){
                 klevu_pageLoadEvent() ;
             }
             clearInterval(timeKlevuUpdate);
@@ -174,15 +174,14 @@ $src = $protocol . $block->getJsUrl();
             counter++;
             if (counter > 7) {
                 klevuMagentoCustomerGroupFlag = true;
-                if(typeof klevu_pageLoadEvent == "function"){
+                if(typeof klevu_pageLoadEvent == 'function'){
                     klevu_pageLoadEvent() ;
                 }
                 clearInterval(timeKlevuUpdate);
             }
         }
     }, 700);
-
-script;
+    ";
     ?>
     <?= $secureRenderer->renderTag(
         'script',
