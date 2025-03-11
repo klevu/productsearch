@@ -7,6 +7,7 @@ use Klevu\Search\Model\Attribute\Rating;
 use Klevu\Search\Model\Attribute\ReviewCount;
 use Magento\Catalog\Model\ResourceModel\Product\Collection as ProductCollection;
 use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory as ProductCollectionFactory;
+use Magento\Catalog\Model\ResourceModel\Product\Flat as ProductFlat;
 use Magento\Eav\Model\Entity\AbstractEntity;
 use Magento\Eav\Model\Entity\Attribute\AbstractAttribute;
 use Magento\Eav\Model\Entity\Collection\AbstractCollection;
@@ -183,15 +184,16 @@ class MagentoProductsWithRatingAttributeDataProvider implements ProductsWithRati
     /**
      * @param AdapterInterface $connection
      * @param Select $select
-     * @param AbstractEntity $productEntity
+     * @param AbstractEntity|ProductFlat $productEntity
      * @param string $attributeCode
      * @param int|null $storeId
+     *
      * @return bool
      */
     private function joinAttribute(
         AdapterInterface $connection,
         Select $select,
-        AbstractEntity $productEntity,
+        $productEntity,
         $attributeCode,
         $storeId
     ) {

@@ -2,6 +2,9 @@
 
 namespace Klevu\Search\Test\Integration\Service\Account;
 
+// phpcs:disable PSR1.Methods.CamelCapsMethodName.NotCamelCaps
+
+use Klevu\Registry\Api\ConfigRegistryInterface;
 use Klevu\Search\Api\Service\Account\IntegrationStatusInterface;
 use Magento\Framework\App\Config\Storage\Writer as ScopeConfigWriter;
 use Magento\Framework\App\RequestInterface;
@@ -24,14 +27,16 @@ class IntegrationStatusServiceTest extends TestCase
 
     /**
      * @magentoDataFixture loadWebsiteFixtures
+     * @magentoConfigFixture default/general/single_store_mode/enabled 0
+     * @magentoConfigFixture klevu_test_store_1_store general/single_store_mode/enabled 0
      * @magentoConfigFixture klevu_test_store_1_store klevu_integration/integration/status 1
      * @magentoConfigFixture klevu_test_store_1_store klevu_search/general/rest_api_key klevu-someValidRestApiKey
      * @magentoConfigFixture klevu_test_store_1_store klevu_search/general/js_api_key klevu-someValidJsApiKey
      */
-    public function testIsIntegratedReturnsTrueWhenApiKeysArePresent()
+    public function testIsIntegratedReturnsTrueWhenApiKeysArePresentForExplicitStoreInMultisiteMode()
     {
         $this->setUpPhp5();
-        $store = $this->getStore();
+        $store = $this->getStore('klevu_test_store_1');
 
         $integrationStatus = $this->objectManager->get(IntegrationStatusInterface::class);
         $result = $integrationStatus->isIntegrated($store);
@@ -43,6 +48,63 @@ class IntegrationStatusServiceTest extends TestCase
 
     /**
      * @magentoDataFixture loadWebsiteFixtures
+     * @magentoConfigFixture default/general/single_store_mode/enabled 0
+     * @magentoConfigFixture default_store general/single_store_mode/enabled 0
+     * @magentoConfigFixture klevu_test_store_1_store general/single_store_mode/enabled 0
+     * @magentoConfigFixture klevu_test_store_1_store klevu_integration/integration/status 0
+     * @magentoConfigFixture default_store klevu_integration/integration/status 1
+     * @magentoConfigFixture default_store klevu_search/general/rest_api_key klevu-someValidRestApiKey
+     * @magentoConfigFixture default_store klevu_search/general/js_api_key klevu-someValidJsApiKey
+     */
+    public function testIsIntegratedReturnsTrueWhenApiKeysArePresentForNullStoreInMultisiteMode()
+    {
+        $this->setUpPhp5();
+
+        $integrationStatus = $this->objectManager->get(IntegrationStatusInterface::class);
+        $result = $integrationStatus->isIntegrated();
+
+        $this->assertTrue($result, 'Is Integrated');
+
+        static::loadWebsiteFixturesRollback();
+    }
+
+    /**
+     * @magentoConfigFixture default/general/single_store_mode/enabled 1
+     * @magentoConfigFixture default_store general/single_store_mode/enabled 1
+     * @magentoConfigFixture default/klevu_integration/integration/status 1
+     * @magentoConfigFixture default/klevu_search/general/rest_api_key klevu-someValidRestApiKey
+     * @magentoConfigFixture default/klevu_search/general/js_api_key klevu-someValidJsApiKey
+     */
+    public function testIsIntegratedReturnsTrueWhenApiKeysArePresentForExplicitStoreInSingleStoreMode()
+    {
+        $this->setUpPhp5();
+        $store = $this->getStore('admin');
+
+        $integrationStatus = $this->objectManager->get(IntegrationStatusInterface::class);
+        $result = $integrationStatus->isIntegrated($store);
+
+        $this->assertTrue($result, 'Is Integrated');
+    }
+
+    /**
+     * @magentoConfigFixture default/general/single_store_mode/enabled 1
+     * @magentoConfigFixture default_store general/single_store_mode/enabled 1
+     * @magentoConfigFixture default/klevu_integration/integration/status 1
+     * @magentoConfigFixture default/klevu_search/general/rest_api_key klevu-someValidRestApiKey
+     * @magentoConfigFixture default/klevu_search/general/js_api_key klevu-someValidJsApiKey
+     */
+    public function testIsIntegratedReturnsTrueWhenApiKeysArePresentForNullStoreInSingleStoreMode()
+    {
+        $this->setUpPhp5();
+
+        $integrationStatus = $this->objectManager->get(IntegrationStatusInterface::class);
+        $result = $integrationStatus->isIntegrated();
+
+        $this->assertTrue($result, 'Is Integrated');
+    }
+
+    /**
+     * @magentoDataFixture loadWebsiteFixtures
      * @magentoConfigFixture klevu_test_store_1_store klevu_integration/integration/status 0
      * @magentoConfigFixture klevu_test_store_1_store klevu_search/general/rest_api_key klevu-someValidRestApiKey
      * @magentoConfigFixture klevu_test_store_1_store klevu_search/general/js_api_key 0
@@ -50,7 +112,7 @@ class IntegrationStatusServiceTest extends TestCase
     public function testIsIntegratedReturnsFalseWhenJsApiKeyMissing()
     {
         $this->setUpPhp5();
-        $store = $this->getStore();
+        $store = $this->getStore('klevu_test_store_1');
 
         $integrationStatus = $this->objectManager->get(IntegrationStatusInterface::class);
         $result = $integrationStatus->isIntegrated($store);
@@ -69,7 +131,7 @@ class IntegrationStatusServiceTest extends TestCase
     public function testIsIntegratedReturnsFalseWhenRestApiKeyIsMissing()
     {
         $this->setUpPhp5();
-        $store = $this->getStore();
+        $store = $this->getStore('klevu_test_store_1');
 
         $integrationStatus = $this->objectManager->get(IntegrationStatusInterface::class);
         $result = $integrationStatus->isIntegrated($store);
@@ -88,7 +150,7 @@ class IntegrationStatusServiceTest extends TestCase
     public function testIsJustIntegratedReturnsFalseWhenNotIntegrated()
     {
         $this->setUpPhp5();
-        $store = $this->getStore();
+        $store = $this->getStore('klevu_test_store_1');
         $request = $this->objectManager->get(RequestInterface::class);
         $request->setParams(['store' => $store->getId()]);
 
@@ -109,7 +171,7 @@ class IntegrationStatusServiceTest extends TestCase
     public function testIsJustIntegratedReturnsFalseWhenPreviouslyIntegrated()
     {
         $this->setUpPhp5();
-        $store = $this->getStore();
+        $store = $this->getStore('klevu_test_store_1');
         $request = $this->objectManager->get(RequestInterface::class);
         $request->setParams(['store' => $store->getId()]);
 
@@ -130,7 +192,7 @@ class IntegrationStatusServiceTest extends TestCase
     public function testIsJustIntegratedReturnsTrueWhenJustIntegrated()
     {
         $this->setUpPhp5();
-        $store = $this->getStore();
+        $store = $this->getStore('klevu_test_store_1');
         $request = $this->objectManager->get(RequestInterface::class);
         $request->setParams(['store' => $store->getId()]);
 
@@ -151,7 +213,7 @@ class IntegrationStatusServiceTest extends TestCase
     public function testIsJustIntegratedReturnsFalseWhenJsApiKeyIsInvalid()
     {
         $this->setUpPhp5();
-        $store = $this->getStore();
+        $store = $this->getStore('klevu_test_store_1');
         $request = $this->objectManager->get(RequestInterface::class);
         $request->setParams(['store' => $store->getId()]);
 
@@ -172,7 +234,7 @@ class IntegrationStatusServiceTest extends TestCase
     public function testIsJustIntegratedReturnsFalseWhenRestApiKeyIsInvalid()
     {
         $this->setUpPhp5();
-        $store = $this->getStore();
+        $store = $this->getStore('klevu_test_store_1');
         $request = $this->objectManager->get(RequestInterface::class);
         $request->setParams(['store' => $store->getId()]);
 
@@ -214,7 +276,7 @@ class IntegrationStatusServiceTest extends TestCase
     public function testSetJustIntegrated_SetsConfigValue_ForStoresTHatHaveNotBeenIntegrated()
     {
         $this->setUpPhp5();
-        $store = $this->getStore();
+        $store = $this->getStore('klevu_test_store_1');
         $request = $this->objectManager->get(RequestInterface::class);
         $request->setParams(['store' => $store->getId()]);
 
@@ -239,7 +301,7 @@ class IntegrationStatusServiceTest extends TestCase
     public function testSetJustIntegrated_DoesNotSetAnything_ForPreviouslyIntegratedStores()
     {
         $this->setUpPhp5();
-        $store = $this->getStore();
+        $store = $this->getStore('klevu_test_store_1');
         $request = $this->objectManager->get(RequestInterface::class);
         $request->setParams(['store' => $store->getId()]);
 
@@ -260,7 +322,7 @@ class IntegrationStatusServiceTest extends TestCase
      * @return StoreInterface
      * @throws NoSuchEntityException
      */
-    private function getStore($storeCode = 'klevu_test_store_1')
+    private function getStore($storeCode)
     {
         /** @var StoreRepositoryInterface $storeRepository */
         $storeRepository = $this->objectManager->get(StoreRepositoryInterface::class);
@@ -277,6 +339,10 @@ class IntegrationStatusServiceTest extends TestCase
         if (!$this->objectManager) {
             $this->objectManager = ObjectManager::getInstance();
         }
+
+        /** @var ConfigRegistryInterface $configRegistry */
+        $configRegistry = $this->objectManager->get(ConfigRegistryInterface::class);
+        $configRegistry->reset();
     }
 
     /**

@@ -10,6 +10,7 @@
             <!-- FrontendJs intentionally omitted to prevent circular reference -->
             <module name="Klevu_Logger"/>
             <module name="Klevu_Metadata"/>
+            <module name="Klevu_Registry"/>
         </sequence>
     </module>
 </config>

@@ -2,11 +2,13 @@
 
 namespace Klevu\Search\Service\Account;
 
+use Klevu\Registry\Api\ConfigRegistryInterface;
 use Klevu\Search\Api\Service\Account\IntegrationStatusInterface;
 use Klevu\Search\Helper\Config;
 use Magento\Framework\App\Config\ReinitableConfigInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Config\Storage\Writer as ScopeConfigWriter;
+use Magento\Framework\App\ObjectManager;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Validator\ValidatorInterface;
@@ -54,6 +56,10 @@ class IntegrationStatus implements IntegrationStatusInterface
      * @var ReinitableConfigInterface
      */
     private $reinitableConfig;
+    /**
+     * @var ConfigRegistryInterface
+     */
+    private $configRegistry;
 
     /**
      * @param ScopeConfigInterface $scopeConfig
@@ -64,6 +70,7 @@ class IntegrationStatus implements IntegrationStatusInterface
      * @param ValidatorInterface $jsApiKeyValidator
      * @param ValidatorInterface $restApiKeyValidator
      * @param ReinitableConfigInterface $reinitableConfig
+     * @param ConfigRegistryInterface|null $configRegistry
      */
     public function __construct(
         ScopeConfigInterface $scopeConfig,
@@ -73,7 +80,8 @@ class IntegrationStatus implements IntegrationStatusInterface
         LoggerInterface $logger,
         ValidatorInterface $jsApiKeyValidator,
         ValidatorInterface $restApiKeyValidator,
-        ReinitableConfigInterface $reinitableConfig
+        ReinitableConfigInterface $reinitableConfig,
+        ConfigRegistryInterface $configRegistry = null
     ) {
         $this->scopeConfig = $scopeConfig;
         $this->request = $request;
@@ -83,27 +91,38 @@ class IntegrationStatus implements IntegrationStatusInterface
         $this->jsApiKeyValidator = $jsApiKeyValidator;
         $this->restApiKeyValidator = $restApiKeyValidator;
         $this->reinitableConfig = $reinitableConfig;
+        $this->configRegistry = $configRegistry ?: ObjectManager::getInstance()->get(ConfigRegistryInterface::class);
     }
 
     /**
+     * @param StoreInterface|null $store
      * @return bool
      */
-    public function isJustIntegrated()
+    public function isJustIntegrated(StoreInterface $store = null)
     {
-        try {
-            $store = $this->getStore();
-        } catch (NoSuchEntityException $exception) {
-            $this->logger->error('Could not load store to check integration status ' . $exception->getMessage());
+        if ($this->configRegistry->isSingleStoreMode()) {
+            $scopeType = ScopeConfigInterface::SCOPE_TYPE_DEFAULT;
+            $scopeId = 0;
+        } else {
+            $scopeType = ScopeInterface::SCOPE_STORES;
+            try {
+                $store = $store ?: $this->getStore();
+            } catch (NoSuchEntityException $exception) {
+                $this->logger->error('Could not load store to check integration status ' . $exception->getMessage());
 
-            return false;
+                return false;
+            }
+
+            $scopeId = $store->getId();
         }
         if (!$this->isIntegrated($store)) {
             return false;
         }
+
         $status = (int)$this->scopeConfig->getValue(
             static::XML_CONFIG_PATH_INTEGRATION_STATUS,
-            ScopeInterface::SCOPE_STORES,
-            $store->getId()
+            $scopeType,
+            $scopeId
         );
 
         return $status === static::INTEGRATION_STATUS_JUST_INTEGRATED;
@@ -116,10 +135,18 @@ class IntegrationStatus implements IntegrationStatusInterface
      */
     public function setJustIntegrated(StoreInterface $store)
     {
+        if ($this->configRegistry->isSingleStoreMode()) {
+            $scopeType = ScopeConfigInterface::SCOPE_TYPE_DEFAULT;
+            $scopeId = 0;
+        } else {
+            $scopeType = ScopeInterface::SCOPE_STORES;
+            $scopeId = $store->getId();
+        }
+
         $status = (int)$this->scopeConfig->getValue(
             static::XML_CONFIG_PATH_INTEGRATION_STATUS,
-            ScopeInterface::SCOPE_STORES,
-            $store->getId()
+            $scopeType,
+            $scopeId
         );
         if ($status === static::INTEGRATION_STATUS_PREVIOUSLY_INTEGRATED) {
             return;
@@ -128,33 +155,42 @@ class IntegrationStatus implements IntegrationStatusInterface
         $this->scopeConfigWriter->save(
             static::XML_CONFIG_PATH_INTEGRATION_STATUS,
             static::INTEGRATION_STATUS_JUST_INTEGRATED,
-            ScopeInterface::SCOPE_STORES,
-            $store->getId()
+            $scopeType,
+            $scopeId
         );
         $this->reinitableConfig->reinit();
     }
 
     /**
-     * @param StoreInterface|null $store
+     * @param StoreInterface $store
      *
      * @return bool
      */
     public function isIntegrated(StoreInterface $store = null)
     {
-        try {
-            $store = $store ?: $this->getStore();
-        } catch (NoSuchEntityException $e) {
-            return false;
+        if ($this->configRegistry->isSingleStoreMode()) {
+            $scopeType = ScopeConfigInterface::SCOPE_TYPE_DEFAULT;
+            $scopeId = 0;
+        } else {
+            $scopeType = ScopeInterface::SCOPE_STORES;
+            try {
+                $store = $store ?: $this->getStore();
+            } catch (NoSuchEntityException $e) {
+                return false;
+            }
+
+            $scopeId = $store->getId();
         }
+
         $jsApiKey = $this->scopeConfig->getValue(
             Config::XML_PATH_JS_API_KEY,
-            ScopeInterface::SCOPE_STORES,
-            $store->getId()
+            $scopeType,
+            $scopeId
         );
         $restApiKey = $this->scopeConfig->getValue(
             Config::XML_PATH_REST_API_KEY,
-            ScopeInterface::SCOPE_STORES,
-            $store->getId()
+            $scopeType,
+            $scopeId
         );
 
         return $this->jsApiKeyValidator->isValid($jsApiKey) &&
@@ -168,11 +204,19 @@ class IntegrationStatus implements IntegrationStatusInterface
      */
     public function setIntegrated(StoreInterface $store)
     {
+        if ($this->configRegistry->isSingleStoreMode()) {
+            $scopeType = ScopeConfigInterface::SCOPE_TYPE_DEFAULT;
+            $scopeId = 0;
+        } else {
+            $scopeType = ScopeInterface::SCOPE_STORES;
+            $scopeId = $store->getId();
+        }
+
         $this->scopeConfigWriter->save(
             static::XML_CONFIG_PATH_INTEGRATION_STATUS,
             static::INTEGRATION_STATUS_PREVIOUSLY_INTEGRATED,
-            ScopeInterface::SCOPE_STORES,
-            $store->getId()
+            $scopeType,
+            $scopeId
         );
         $this->reinitableConfig->reinit();
     }
@@ -183,7 +227,10 @@ class IntegrationStatus implements IntegrationStatusInterface
      */
     private function getStore()
     {
-        $storeId = (int)$this->request->getParam('store');
+        $storeId = $this->request->getParam('store');
+        if ('' === (string)$storeId) {
+            $storeId = $this->configRegistry->isSingleStoreMode() ? 0 : null;
+        }
 
         return $this->storeManager->getStore($storeId);
     }

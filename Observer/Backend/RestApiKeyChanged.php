@@ -2,14 +2,18 @@
 
 namespace Klevu\Search\Observer\Backend;
 
+use Klevu\Registry\Api\ConfigRegistryInterface;
 use Klevu\Search\Helper\Config as ConfigHelper;
 use Klevu\Search\Service\Account\GetFeatures;
 use Magento\Framework\App\Config\ReinitableConfigInterface;
+use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Config\Storage\WriterInterface as ScopeConfigWriterInterface;
+use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Event\Observer as EventObserver;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Store\Model\ScopeInterface;
+use Magento\Store\Model\Store;
 use Magento\Store\Model\StoreManagerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -37,23 +41,30 @@ class RestApiKeyChanged implements ObserverInterface
      * @var ReinitableConfigInterface
      */
     private $reinitableConfig;
+    /**
+     * @var ConfigRegistryInterface
+     */
+    private $configRegistry;
 
     /**
      * @param StoreManagerInterface $storeManager
      * @param ScopeConfigWriterInterface $scopeConfigWriter
      * @param LoggerInterface $logger
      * @param ReinitableConfigInterface $reinitableConfig
+     * @param ConfigRegistryInterface|null $configRegistry
      */
     public function __construct(
         StoreManagerInterface $storeManager,
         ScopeConfigWriterInterface $scopeConfigWriter,
         LoggerInterface $logger,
-        ReinitableConfigInterface $reinitableConfig
+        ReinitableConfigInterface $reinitableConfig,
+        ConfigRegistryInterface $configRegistry = null
     ) {
         $this->storeManager = $storeManager;
         $this->scopeConfigWriter = $scopeConfigWriter;
         $this->logger = $logger;
         $this->reinitableConfig = $reinitableConfig;
+        $this->configRegistry = $configRegistry ?: ObjectManager::getInstance()->get(ConfigRegistryInterface::class);
     }
 
     /**
@@ -67,17 +78,25 @@ class RestApiKeyChanged implements ObserverInterface
         if (!array_intersect($this->resetSyncDateOnFieldChange, $changedPaths)) {
             return;
         }
-        try {
-            $store = $this->storeManager->getStore($observer->getData('store'));
-        } catch (NoSuchEntityException $exception) {
-            $this->logger->error($exception->getMessage());
-            return;
+        if ($this->configRegistry->isSingleStoreMode()) {
+            $scopeType = ScopeConfigInterface::SCOPE_TYPE_DEFAULT;
+            $scopeId = Store::DEFAULT_STORE_ID;
+        } else {
+            try {
+                $store = $this->storeManager->getStore($observer->getData('store'));
+            } catch (NoSuchEntityException $exception) {
+                $this->logger->error($exception->getMessage());
+                return;
+            }
+            $scopeType = ScopeInterface::SCOPE_STORES;
+            $scopeId = $store->getId();
         }
+
         $this->scopeConfigWriter->save(
             GetFeatures::XML_PATH_FEATURES_LAST_SYNC_DATE,
             0,
-            ScopeInterface::SCOPE_STORES,
-            $store->getId()
+            $scopeType,
+            $scopeId
         );
         $this->reinitableConfig->reinit();
     }
