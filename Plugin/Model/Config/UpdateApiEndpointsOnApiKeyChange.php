@@ -2,6 +2,7 @@
 
 namespace Klevu\Search\Plugin\Model\Config;
 
+use Klevu\Registry\Api\ConfigRegistryInterface;
 use Klevu\Search\Api\Service\Account\GetAccountDetailsInterface;
 use Klevu\Search\Api\Service\Account\Model\AccountDetailsInterface;
 use Klevu\Search\Api\Service\Account\UpdateEndpointsInterface;
@@ -9,9 +10,12 @@ use Klevu\Search\Exception\InvalidApiResponseException;
 use Klevu\Search\Helper\Config as ConfigHelper;
 use Klevu\Search\Service\Account\Model\AccountDetailsFactory;
 use Magento\Config\Model\Config;
+use Magento\Framework\App\Config\ReinitableConfigInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\App\ObjectManager;
 use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Model\ScopeInterface;
+use Magento\Store\Model\Store;
 use Magento\Store\Model\StoreManagerInterface;
 
 class UpdateApiEndpointsOnApiKeyChange
@@ -48,6 +52,10 @@ class UpdateApiEndpointsOnApiKeyChange
      * @var AccountDetailsFactory
      */
     private $accountDetailsFactory;
+    /**
+     * @var ConfigRegistryInterface
+     */
+    private $configRegistry;
 
     /**
      * @param UpdateEndpointsInterface $updateEndpoints
@@ -55,19 +63,22 @@ class UpdateApiEndpointsOnApiKeyChange
      * @param StoreManagerInterface $storeManager
      * @param ScopeConfigInterface $scopeConfig
      * @param AccountDetailsFactory $accountDetailsFactory
+     * @param ConfigRegistryInterface|null $configRegistry
      */
     public function __construct(
         UpdateEndpointsInterface $updateEndpoints,
         GetAccountDetailsInterface $getAccountDetails,
         StoreManagerInterface $storeManager,
         ScopeConfigInterface $scopeConfig,
-        AccountDetailsFactory $accountDetailsFactory
+        AccountDetailsFactory $accountDetailsFactory,
+        ConfigRegistryInterface $configRegistry = null
     ) {
         $this->updateEndpoints = $updateEndpoints;
         $this->getAccountDetails = $getAccountDetails;
         $this->storeManager = $storeManager;
         $this->scopeConfig = $scopeConfig;
         $this->accountDetailsFactory = $accountDetailsFactory;
+        $this->configRegistry = $configRegistry ?: ObjectManager::getInstance()->get(ConfigRegistryInterface::class);
     }
 
     /**
@@ -77,7 +88,9 @@ class UpdateApiEndpointsOnApiKeyChange
      */
     public function beforeSave(Config $subject)
     {
-        if (!$apiKeys = $this->getApiKeyIncludedInSave($subject)) {
+        // an array of empty strings is value here
+        $apiKeys = $this->getApiKeyIncludedInSave($subject);
+        if (!$apiKeys) {
             return [];
         }
         try {
@@ -118,15 +131,14 @@ class UpdateApiEndpointsOnApiKeyChange
         }
         $groups = $config->getData('groups');
 
-        // phpcs:ignore Generic.Files.LineLength.TooLong
+        // phpcs:disable Generic.Files.LineLength.TooLong
         $formJsApiKey = isset($groups[static::GROUP_AUTHENTICATION_KEYS]['fields'][static::CONFIG_FORM_JS_API_KEY]['value'])
             ? $groups[static::GROUP_AUTHENTICATION_KEYS]['fields'][static::CONFIG_FORM_JS_API_KEY]['value']
             : null;
-
-        // phpcs:ignore Generic.Files.LineLength.TooLong
         $formRestApiKey = isset($groups[static::GROUP_AUTHENTICATION_KEYS]['fields'][static::CONFIG_FORM_REST_API_KEY]['value'])
             ? $groups[static::GROUP_AUTHENTICATION_KEYS]['fields'][static::CONFIG_FORM_REST_API_KEY]['value']
             : null;
+        // phpcs:enable Generic.Files.LineLength.TooLong
 
         return [
             static::CONFIG_FORM_JS_API_KEY => $formJsApiKey,
@@ -142,15 +154,23 @@ class UpdateApiEndpointsOnApiKeyChange
      */
     private function haveApiKeysChanged(StoreInterface $store, array $apiKeys)
     {
+        if ($this->configRegistry->isSingleStoreMode()) {
+            $scopeType = ScopeConfigInterface::SCOPE_TYPE_DEFAULT;
+            $scopeId = Store::DEFAULT_STORE_ID;
+        } else {
+            $scopeType = ScopeInterface::SCOPE_STORES;
+            $scopeId = $store->getId();
+        }
+
         $jsApiKey = $this->scopeConfig->getValue(
             ConfigHelper::XML_PATH_JS_API_KEY,
-            ScopeInterface::SCOPE_STORES,
-            $store->getId()
+            $scopeType,
+            $scopeId
         );
         $restApiKey = $this->scopeConfig->getValue(
             ConfigHelper::XML_PATH_REST_API_KEY,
-            ScopeInterface::SCOPE_STORES,
-            $store->getId()
+            $scopeType,
+            $scopeId
         );
 
         $suppliedJsApiKey = isset($apiKeys[static::CONFIG_FORM_JS_API_KEY]) ?

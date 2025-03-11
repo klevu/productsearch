@@ -2,12 +2,15 @@
 
 namespace Klevu\Search\Service\Account;
 
+use Klevu\Registry\Api\ConfigRegistryInterface;
 use Klevu\Search\Helper\Config as ConfigHelper;
 use Klevu\Search\Api\Service\Account\GetKmcUrlServiceInterface;
 use Magento\Framework\App\Config\ConfigSourceInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\App\ObjectManager;
 use Magento\Framework\App\RequestInterface;
 use Magento\Store\Model\ScopeInterface;
+use Magento\Store\Model\Store;
 use Psr\Log\LoggerInterface;
 
 class GetKmcUrlService implements GetKmcUrlServiceInterface
@@ -30,17 +33,30 @@ class GetKmcUrlService implements GetKmcUrlServiceInterface
      * @var LoggerInterface
      */
     private $logger;
+    /**
+     * @var ConfigRegistryInterface
+     */
+    private $configRegistry;
 
+    /**
+     * @param ConfigSourceInterface $configSource
+     * @param ScopeConfigInterface $scopeConfig
+     * @param RequestInterface $request
+     * @param LoggerInterface $logger
+     * @param ConfigRegistryInterface|null $configRegistry
+     */
     public function __construct(
         ConfigSourceInterface $configSource,
         ScopeConfigInterface $scopeConfig,
         RequestInterface $request,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        ConfigRegistryInterface $configRegistry = null,
     ) {
         $this->configSource = $configSource;
         $this->scopeConfig = $scopeConfig;
         $this->request = $request;
         $this->logger = $logger;
+        $this->configRegistry = $configRegistry ?: ObjectManager::getInstance()->get(ConfigRegistryInterface::class);
     }
 
     /**
@@ -75,19 +91,25 @@ class GetKmcUrlService implements GetKmcUrlServiceInterface
      */
     private function getScope($storeId = null)
     {
-        $scope = ScopeInterface::SCOPE_STORES;
-        if ($storeId) {
-            return [$scope, $storeId];
+        if ($this->configRegistry->isSingleStoreMode()) {
+            $scopeType = ScopeConfigInterface::SCOPE_TYPE_DEFAULT;
+            $scopeId = Store::DEFAULT_STORE_ID;
+        } else {
+            $scopeType = ScopeInterface::SCOPE_STORES;
+            $scopeId = $storeId;
+        }
+        if (null !== $scopeId) {
+            return [$scopeType, $scopeId];
         }
         $scopeId = $this->request->getParam('store');
         if (!$scopeId && $scopeId !== '') {
-            $scope = ScopeInterface::SCOPE_WEBSITES;
+            $scopeType = ScopeInterface::SCOPE_WEBSITES;
             $scopeId = $this->request->getParam('website');
             if (!$scopeId && $scopeId !== '') {
-                $scope = ScopeConfigInterface::SCOPE_TYPE_DEFAULT;
+                $scopeType = ScopeConfigInterface::SCOPE_TYPE_DEFAULT;
             }
         }
 
-        return [$scope, $scopeId];
+        return [$scopeType, $scopeId];
     }
 }

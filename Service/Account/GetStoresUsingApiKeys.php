@@ -9,6 +9,7 @@ use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Validator\ValidatorInterface;
 use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Model\ScopeInterface;
+use Magento\Store\Model\Store;
 use Magento\Store\Model\StoreManagerInterface;
 
 class GetStoresUsingApiKeys implements GetStoresUsingApiKeysInterface
@@ -30,6 +31,12 @@ class GetStoresUsingApiKeys implements GetStoresUsingApiKeysInterface
      */
     private $jsApiKeyValidator;
 
+    /**
+     * @param StoreManagerInterface $storeManager
+     * @param ScopeConfigInterface $scopeConfig
+     * @param ValidatorInterface $jsApiKeyValidator
+     * @param ValidatorInterface $restApiKeyValidator
+     */
     public function __construct(
         StoreManagerInterface $storeManager,
         ScopeConfigInterface $scopeConfig,
@@ -60,8 +67,8 @@ class GetStoresUsingApiKeys implements GetStoresUsingApiKeysInterface
     }
 
     /**
-     * @param $restApiKey
-     * @param $jsApiKey
+     * @param string $restApiKey
+     * @param string $jsApiKey
      *
      * @return array
      */
@@ -69,23 +76,29 @@ class GetStoresUsingApiKeys implements GetStoresUsingApiKeysInterface
     {
         $stores = $this->storeManager->getStores(true);
         $configuredStores = [];
+        $singleStoreMode = $this->storeManager->isSingleStoreMode();
+        $scopeType = $singleStoreMode
+            ? ScopeConfigInterface::SCOPE_TYPE_DEFAULT
+            : ScopeInterface::SCOPE_STORES;
 
         foreach ($stores as $store) {
+            $storeId = $singleStoreMode ? Store::DEFAULT_STORE_ID : $store->getId();
+
             $configJsApiKey = $this->scopeConfig->getValue(
                 ConfigHelper::XML_PATH_JS_API_KEY,
-                ScopeInterface::SCOPE_STORE,
-                $store->getCode()
+                $scopeType,
+                $storeId
             );
             if ($configJsApiKey === $jsApiKey) {
                 $configuredStores[] = $store;
             }
             $configRestApiKey = $this->scopeConfig->getValue(
                 ConfigHelper::XML_PATH_REST_API_KEY,
-                ScopeInterface::SCOPE_STORE,
-                $store->getCode()
+                $scopeType,
+                $storeId
             );
-            if ($configRestApiKey === $restApiKey &&
-                !in_array($store, $configuredStores, true)
+            if ($configRestApiKey === $restApiKey
+                && !in_array($store, $configuredStores, true)
             ) {
                 $configuredStores[] = $store;
             }
@@ -95,8 +108,8 @@ class GetStoresUsingApiKeys implements GetStoresUsingApiKeysInterface
     }
 
     /**
-     * @param $restApiKey
-     * @param $jsApiKey
+     * @param string $restApiKey
+     * @param string $jsApiKey
      *
      * @return void
      * @throws InvalidApiKeyException

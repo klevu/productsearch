@@ -2,15 +2,19 @@
 
 namespace Klevu\Search\Service\Account;
 
+use Klevu\Registry\Api\ConfigRegistryInterface;
 use Klevu\Search\Api\Service\Account\IntegrationStatusInterface;
 use Klevu\Search\Api\Service\Account\Model\AccountDetailsInterface;
 use Klevu\Search\Api\Service\Account\UpdateEndpointsInterface;
 use Klevu\Search\Exception\InvalidApiResponseException;
 use Magento\Framework\App\Config\ReinitableConfigInterface;
+use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Config\Storage\WriterInterface as ScopeConfigWriterInterface;
+use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Model\ScopeInterface;
+use Magento\Store\Model\Store;
 use Magento\Store\Model\StoreManagerInterface;
 
 class UpdateEndpoints implements UpdateEndpointsInterface
@@ -40,17 +44,30 @@ class UpdateEndpoints implements UpdateEndpointsInterface
      * @var ReinitableConfigInterface
      */
     private $reinitableConfig;
+    /**
+     * @var ConfigRegistryInterface
+     */
+    private $configRegistry;
 
+    /**
+     * @param ScopeConfigWriterInterface $scopeConfigWriter
+     * @param StoreManagerInterface $storeManager
+     * @param IntegrationStatusInterface $integrationStatus
+     * @param ReinitableConfigInterface $reinitableConfig
+     * @param ConfigRegistryInterface|null $configRegistry
+     */
     public function __construct(
         ScopeConfigWriterInterface $scopeConfigWriter,
         StoreManagerInterface $storeManager,
         IntegrationStatusInterface $integrationStatus,
-        ReinitableConfigInterface $reinitableConfig
+        ReinitableConfigInterface $reinitableConfig,
+        ConfigRegistryInterface $configRegistry = null
     ) {
         $this->scopeConfigWriter = $scopeConfigWriter;
         $this->storeManager = $storeManager;
         $this->integrationStatus = $integrationStatus;
         $this->reinitableConfig = $reinitableConfig;
+        $this->configRegistry = $configRegistry ?: ObjectManager::getInstance()->get(ConfigRegistryInterface::class);
     }
 
     /**
@@ -80,21 +97,22 @@ class UpdateEndpoints implements UpdateEndpointsInterface
     private function saveEndpoints(AccountDetailsInterface $accountDetails, StoreInterface $store)
     {
         $endpoints = $this->getEndpointsFromAccountDetails($accountDetails);
+        list($scopeType, $scopeId) = $this->getScope($store);
 
         foreach ($endpoints as $configPath => $endpoint) {
             if ($endpoint) {
                 $this->scopeConfigWriter->save(
                     $configPath,
                     $endpoint,
-                    ScopeInterface::SCOPE_STORES,
-                    $store->getId()
+                    $scopeType,
+                    $scopeId
                 );
                 continue;
             }
             $this->scopeConfigWriter->delete(
                 $configPath,
-                ScopeInterface::SCOPE_STORES,
-                $store->getId()
+                $scopeType,
+                $scopeId
             );
         }
     }
@@ -125,11 +143,28 @@ class UpdateEndpoints implements UpdateEndpointsInterface
      */
     private function resetLastSyncDate(StoreInterface $store)
     {
+        list($scopeType, $scopeId) = $this->getScope($store);
+
         $this->scopeConfigWriter->save(
             GetFeatures::XML_PATH_FEATURES_LAST_SYNC_DATE,
             0,
-            ScopeInterface::SCOPE_STORES,
-            $store->getId()
+            $scopeType,
+            $scopeId
         );
+    }
+
+    /**
+     * @param StoreInterface $store
+     *
+     * @return array<int|string>
+     */
+    private function getScope(StoreInterface $store)
+    {
+        $singleStoreMode = $this->configRegistry->isSingleStoreMode();
+
+        return [
+            $singleStoreMode ? ScopeConfigInterface::SCOPE_TYPE_DEFAULT : ScopeInterface::SCOPE_STORES,
+            $singleStoreMode ? Store::DEFAULT_STORE_ID : (int)$store->getId()
+        ];
     }
 }

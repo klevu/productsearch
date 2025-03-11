@@ -2,7 +2,7 @@
 
 namespace Klevu\Search\Service\Account;
 
-use InvalidArgumentException;
+use Klevu\Registry\Api\ConfigRegistryInterface;
 use Klevu\Search\Api\Service\Account\ConfirmIntegrationInterface;
 use Klevu\Search\Api\Service\Account\GetAccountDetailsInterface;
 use Klevu\Search\Api\Service\Account\UpdateEndpointsInterface;
@@ -10,11 +10,15 @@ use Klevu\Search\Exception\InvalidApiKeyException;
 use Klevu\Search\Exception\InvalidApiResponseException;
 use Klevu\Search\Helper\Config as ConfigHelper;
 use Klevu\Search\Service\Account\KlevuApi\GetAccountDetails as ApiGetAccountDetails;
+use Magento\Framework\App\Config\ReinitableConfigInterface;
+use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Config\Storage\WriterInterface as ScopeConfigWriterInterface;
+use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Validator\ValidatorInterface;
 use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Model\ScopeInterface;
+use Magento\Store\Model\Store;
 use Magento\Store\Model\StoreManagerInterface;
 
 class ConfirmIntegration implements ConfirmIntegrationInterface
@@ -43,14 +47,34 @@ class ConfirmIntegration implements ConfirmIntegrationInterface
      * @var GetAccountDetailsInterface
      */
     private $getAccountDetails;
+    /**
+     * @var ConfigRegistryInterface
+     */
+    private $configRegistry;
+    /**
+     * @var ReinitableConfigInterface
+     */
+    private $reinitableConfig;
 
+    /**
+     * @param ScopeConfigWriterInterface $scopeConfigWriter
+     * @param StoreManagerInterface $storeManager
+     * @param GetAccountDetailsInterface $getAccountDetails
+     * @param UpdateEndpointsInterface $updateEndpoints
+     * @param ValidatorInterface $jsApiKeyValidator
+     * @param ValidatorInterface $restApiKeyValidator
+     * @param ConfigRegistryInterface|null $configRegistry
+     * @param ReinitableConfigInterface|null $reinitableConfig
+     */
     public function __construct(
         ScopeConfigWriterInterface $scopeConfigWriter,
         StoreManagerInterface $storeManager,
         GetAccountDetailsInterface $getAccountDetails,
         UpdateEndpointsInterface $updateEndpoints,
         ValidatorInterface $jsApiKeyValidator,
-        ValidatorInterface $restApiKeyValidator
+        ValidatorInterface $restApiKeyValidator,
+        ConfigRegistryInterface $configRegistry = null,
+        ReinitableConfigInterface $reinitableConfig = null
     ) {
         $this->scopeConfigWriter = $scopeConfigWriter;
         $this->storeManager = $storeManager;
@@ -58,6 +82,9 @@ class ConfirmIntegration implements ConfirmIntegrationInterface
         $this->updateEndpoints = $updateEndpoints;
         $this->jsApiKeyValidator = $jsApiKeyValidator;
         $this->restApiKeyValidator = $restApiKeyValidator;
+        $objectManager = ObjectManager::getInstance();
+        $this->configRegistry = $configRegistry ?: $objectManager->get(ConfigRegistryInterface::class);
+        $this->reinitableConfig = $reinitableConfig ?: $objectManager->get(ReinitableConfigInterface::class);
     }
 
     /**
@@ -114,17 +141,26 @@ class ConfirmIntegration implements ConfirmIntegrationInterface
      */
     private function saveApiKeys(array $apiKeys, StoreInterface $store)
     {
+        if ($this->configRegistry->isSingleStoreMode()) {
+            $scopeType = ScopeConfigInterface::SCOPE_TYPE_DEFAULT;
+            $scopeId = Store::DEFAULT_STORE_ID;
+        } else {
+            $scopeType = ScopeInterface::SCOPE_STORES;
+            $scopeId = $store->getId();
+        }
+
         $this->scopeConfigWriter->save(
             ConfigHelper::XML_PATH_REST_API_KEY,
             $apiKeys[ApiGetAccountDetails::REQUEST_PARAM_REST_API_KEY],
-            ScopeInterface::SCOPE_STORES,
-            $store->getId()
+            $scopeType,
+            $scopeId
         );
         $this->scopeConfigWriter->save(
             ConfigHelper::XML_PATH_JS_API_KEY,
             $apiKeys[ApiGetAccountDetails::REQUEST_PARAM_JS_API_KEY],
-            ScopeInterface::SCOPE_STORES,
-            $store->getId()
+            $scopeType,
+            $scopeId
         );
+        $this->reinitableConfig->reinit();
     }
 }

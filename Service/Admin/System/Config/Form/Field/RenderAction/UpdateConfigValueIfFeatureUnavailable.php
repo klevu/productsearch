@@ -12,6 +12,7 @@ use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Data\Form\Element\AbstractElement;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Store\Model\ScopeInterface;
+use Magento\Store\Model\Store;
 use Magento\Store\Model\StoreManagerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -239,10 +240,17 @@ class UpdateConfigValueIfFeatureUnavailable implements SystemConfigFormFieldRend
             return [$element];
         }
 
+        if ($this->storeManager->isSingleStoreMode()) {
+            $scopeType = ScopeConfigInterface::SCOPE_TYPE_DEFAULT;
+            $scopeId = Store::DEFAULT_STORE_ID;
+        } else {
+            $scopeType = ScopeInterface::SCOPE_STORES;
+            $scopeId = (int)$store->getId();
+        }
         $currentValue = $this->scopeConfig->getValue(
             $configPath,
-            ScopeInterface::SCOPE_STORES,
-            (int)$store->getId()
+            $scopeType,
+            $scopeId
         );
 
         if (in_array($currentValue, $allowedValues, false)) {
@@ -253,8 +261,8 @@ class UpdateConfigValueIfFeatureUnavailable implements SystemConfigFormFieldRend
             $this->scopeConfigWriter->save(
                 $configPath,
                 $element->getData('value'),
-                ScopeInterFace::SCOPE_STORES,
-                (int)$store->getId()
+                $scopeType,
+                $scopeId
             );
 
             $this->logger->debug(

@@ -10,12 +10,30 @@ use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Store\Model\StoreManagerInterface;
 use Klevu\Search\Model\Klevu\HelperManager as Klevu_HelperManager;
 
+/**
+ * @deprecated 3.7.2 - no longer required. Targeted config load rather than config save.
+ * @see no direct alternative.
+ */
 class SingleStoreViewConfigToShow implements ObserverInterface
 {
+    /**
+     * @var Klevu_HelperManager
+     */
     private $_klevuHelperManager;
+    /**
+     * @var StoreManagerInterface
+     */
     private $_storeManager;
+    /**
+     * @var RequestInterface
+     */
     private $_request;
 
+    /**
+     * @param Klevu_HelperManager $klevuHelperManager
+     * @param StoreManagerInterface $storeManager
+     * @param RequestInterface $request
+     */
     public function __construct(
         Klevu_HelperManager $klevuHelperManager,
         StoreManagerInterface $storeManager,
@@ -30,55 +48,11 @@ class SingleStoreViewConfigToShow implements ObserverInterface
      * @param EventObserver $observer
      *
      * @return void
+     * @deprecated 3.7.2 - no longer required. Targeted config load rather than config save.
+     * @see no direct alternative. Changed adminhtml/system.xml fields to all have showInDefault="1"
+     *       using group showInDefault to control visibility
      */
-    public function execute(EventObserver $observer)
+    public function execute(EventObserver $observer) //phpcs:ignore Magento2.CodeAnalysis.EmptyBlock.DetectedFunction
     {
-        try {
-            if (!($this->_storeManager->isSingleStoreMode())) {
-                return;
-            }
-            if (
-                $this->_request->getFullActionName() !== 'adminhtml_system_config_edit' ||
-                $this->_request->getParam('section') !== 'klevu_search'
-            ) {
-                return;
-            }
-            $klevuConfig = $this->_klevuHelperManager->getConfigHelper();
-            if (!$klevuConfig->getModuleInfo()) {
-                return;
-            }
-            try {
-                $store = $this->_storeManager->getStore();
-            } catch (NoSuchEntityException $e) {
-                return;
-            }
-            $klevuConfig->setGlobalConfig(
-                $klevuConfig::XML_PATH_JS_API_KEY,
-                $klevuConfig->getJsApiKey($store)
-            );
-            $klevuConfig->setGlobalConfig(
-                $klevuConfig::XML_PATH_REST_API_KEY,
-                $klevuConfig->getRestApiKey($store)
-            );
-            $klevuConfig->setGlobalConfig(
-                $klevuConfig::XML_PATH_CLOUD_SEARCH_URL,
-                $klevuConfig->getCloudSearchUrl($store)
-            );
-            $klevuConfig->setGlobalConfig(
-                $klevuConfig::XML_PATH_ANALYTICS_URL,
-                $klevuConfig->getAnalyticsUrl($store)
-            );
-            $klevuConfig->setGlobalConfig(
-                $klevuConfig::XML_PATH_RESTHOSTNAME,
-                $klevuConfig->getRestHostname($store)
-            );
-        } catch (\Exception $e) {
-            $this->_klevuHelperManager->getDataHelper()->log(
-                LoggerConstants::ZEND_LOG_CRIT,
-                sprintf("Exception thrown for single store view %s::%s - %s",
-                    __CLASS__, __METHOD__, $e->getMessage()
-                )
-            );
-        }
     }
 }

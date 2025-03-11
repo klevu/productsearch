@@ -4,6 +4,7 @@ namespace Klevu\Search\Service\Account;
 
 use Exception;
 use InvalidArgumentException;
+use Klevu\Registry\Api\ConfigRegistryInterface;
 use Klevu\Search\Api\SerializerInterface;
 use Klevu\Search\Api\Service\Account\AccountFeaturesMaskInterface;
 use Klevu\Search\Api\Service\Account\Model\AccountFeaturesInterface;
@@ -21,6 +22,7 @@ use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Validator\ValidatorInterface;
 use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Model\ScopeInterface;
+use Magento\Store\Model\Store;
 use Magento\Store\Model\StoreManagerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -88,7 +90,25 @@ class GetFeatures implements GetFeaturesInterface
      * @var AccountFeaturesMaskInterface
      */
     private $accountFeaturesMask;
+    /**
+     * @var ConfigRegistryInterface
+     */
+    private $configRegistry;
 
+    /**
+     * @param FeaturesApi $featuresApi
+     * @param StoreManagerInterface $storeManager
+     * @param ScopeConfigInterface $scopeConfig
+     * @param ScopeConfigWriterInterface $scopeConfigWriter
+     * @param AccountFeaturesFactory $accountFeaturesFactory
+     * @param LoggerInterface $logger
+     * @param SerializerInterface $serializer
+     * @param ValidatorInterface $restApiKeyValidator
+     * @param RequestInterface $request
+     * @param ReinitableConfigInterface $reinitableConfig
+     * @param AccountFeaturesMaskInterface|null $accountFeaturesMask
+     * @param ConfigRegistryInterface|null $configRegistry
+     */
     public function __construct(
         FeaturesApi $featuresApi,
         StoreManagerInterface $storeManager,
@@ -100,7 +120,8 @@ class GetFeatures implements GetFeaturesInterface
         ValidatorInterface $restApiKeyValidator,
         RequestInterface $request,
         ReinitableConfigInterface $reinitableConfig,
-        AccountFeaturesMaskInterface $accountFeaturesMask = null
+        AccountFeaturesMaskInterface $accountFeaturesMask = null,
+        ConfigRegistryInterface $configRegistry = null
     ) {
         $this->featuresApi = $featuresApi;
         $this->storeManager = $storeManager;
@@ -112,12 +133,13 @@ class GetFeatures implements GetFeaturesInterface
         $this->restApiKeyValidator = $restApiKeyValidator;
         $this->request = $request;
         $this->reinitableConfig = $reinitableConfig;
-        $this->accountFeaturesMask = $accountFeaturesMask
-            ?: ObjectManager::getInstance()->get(AccountFeaturesMaskInterface::class);
+        $objectManager = ObjectManager::getInstance();
+        $this->accountFeaturesMask = $accountFeaturesMask ?: $objectManager->get(AccountFeaturesMaskInterface::class);
+        $this->configRegistry = $configRegistry ?: $objectManager->get(ConfigRegistryInterface::class);
     }
 
     /**
-     * @param $store
+     * @param StoreInterface|string|int|null $store
      *
      * @return AccountFeaturesInterface|null
      * @throws InvalidApiKeyException
@@ -131,7 +153,9 @@ class GetFeatures implements GetFeaturesInterface
                 sprintf(
                     'Store argument must be null, scalar, or instance of %s; %s passed',
                     StoreInterface::class,
-                    is_object($store) ? get_class($store) : gettype($store)
+                    is_object($store)
+                        ? get_class($store)
+                        : gettype($store) //phpcs:ignore Magento2.Functions.DiscouragedFunction.Discouraged
                 ),
                 ['method' => __METHOD__]
             );
@@ -177,17 +201,18 @@ class GetFeatures implements GetFeaturesInterface
         if (!$features) {
             return true;
         }
+        list($scopeType, $scopeId) = $this->getScopeTypeAndId($store);
         $lastSyncDate = $this->lastSyncDate ?: $this->scopeConfig->getValue(
             static::XML_PATH_FEATURES_LAST_SYNC_DATE,
-            ScopeInterface::SCOPE_STORES,
-            $store->getId()
+            $scopeType,
+            $scopeId
         );
 
         return (int)$lastSyncDate < (time() - (60 * 60 * static::API_DATA_SYNC_REQUIRED_EVERY_HOURS));
     }
 
     /**
-     * @param $store
+     * @param StoreInterface|string|int|null $store
      *
      * @return StoreInterface
      * @throws InvalidArgumentException
@@ -199,7 +224,7 @@ class GetFeatures implements GetFeaturesInterface
         }
         try {
             $store = $this->storeManager->getStore($store);
-        } catch (NoSuchEntityException $exception) {
+        } catch (NoSuchEntityException $exception) { // phpcs:ignore Magento2.CodeAnalysis.EmptyBlock.DetectedCatch
             // intentionally left empty
         }
         if (!($store instanceof StoreInterface) || !$store->getId()) {
@@ -217,14 +242,18 @@ class GetFeatures implements GetFeaturesInterface
      */
     private function getRestApi(StoreInterface $store)
     {
+        list($scopeType, $scopeId) = $this->getScopeTypeAndId($store);
         $restApi = $this->scopeConfig->getValue(
             static::XML_PATH_REST_API_KEY,
-            ScopeInterface::SCOPE_STORES,
-            $store->getId()
+            $scopeType,
+            $scopeId
         );
         if (!$this->restApiKeyValidator->isValid($restApi)) {
             throw new InvalidApiKeyException(
-                __('Invalid Rest API Key: ' . implode('; ', $this->restApiKeyValidator->getMessages())),
+                __(
+                    'Invalid Rest API Key: %1',
+                    implode('; ', $this->restApiKeyValidator->getMessages())
+                ),
                 null,
                 400
             );
@@ -258,7 +287,8 @@ class GetFeatures implements GetFeaturesInterface
                     ]),
                 ]);
                 // Note, we don't check $v2Response->isSuccess() as the v2 response does not contain a
-                //  <response>success</response> line, as referenced in \Klevu\Search\Model\Api\Response\Data::parseRawResponse
+                //  <response>success</response> line,
+                // as referenced in \Klevu\Search\Model\Api\Response\Data::parseRawResponse
 
                 $v1ResponseData = $v1Response->getData();
                 $v2ResponseData = $v2Response->getData('feature');
@@ -304,19 +334,20 @@ class GetFeatures implements GetFeaturesInterface
 
             return;
         }
+        list($scopeType, $scopeId) = $this->getScopeTypeAndId($store);
         $savedData = $this->scopeConfig->getValue(
             static::XML_PATH_UPGRADE_FEATURES,
-            ScopeInterface::SCOPE_STORES,
-            $store->getId()
+            $scopeType,
+            $scopeId
         );
         if ($data !== $savedData) {
             $this->scopeConfigWriter->save(
                 static::XML_PATH_UPGRADE_FEATURES,
                 $data,
-                ScopeInterface::SCOPE_STORES,
-                $store->getId()
+                $scopeType,
+                $scopeId
             );
-            $this->accountFeatures[$store->getId()] = $accountFeatures;
+            $this->accountFeatures[$scopeId] = $accountFeatures;
         }
     }
 
@@ -327,14 +358,15 @@ class GetFeatures implements GetFeaturesInterface
      */
     private function loadAccountFeatures(StoreInterface $store)
     {
-        if (!isset($this->accountFeatures[$store->getId()])) {
+        list($scopeType, $scopeId) = $this->getScopeTypeAndId($store);
+        if (!isset($this->accountFeatures[$scopeId])) {
             $savedData = $this->scopeConfig->getValue(
                 static::XML_PATH_UPGRADE_FEATURES,
-                ScopeInterface::SCOPE_STORES,
-                $store->getId()
+                $scopeType,
+                $scopeId
             );
             try {
-                $this->accountFeatures[$store->getId()] = $savedData && trim($savedData) !== '' ?
+                $this->accountFeatures[$scopeId] = $savedData && trim($savedData) !== '' ?
                     $this->serializer->unserialize($savedData) :
                     [];
             } catch (Exception $exception) {
@@ -347,7 +379,7 @@ class GetFeatures implements GetFeaturesInterface
             }
         }
 
-        return $this->accountFeatures[$store->getId()];
+        return $this->accountFeatures[$scopeId];
     }
 
     /**
@@ -363,11 +395,12 @@ class GetFeatures implements GetFeaturesInterface
         }
         $this->lastSyncDate = $lastSyncDate;
 
+        list($scopeType, $scopeId) = $this->getScopeTypeAndId($store);
         $this->scopeConfigWriter->save(
             GetFeatures::XML_PATH_FEATURES_LAST_SYNC_DATE,
             $this->lastSyncDate,
-            ScopeInterface::SCOPE_STORES,
-            $store->getId()
+            $scopeType,
+            $scopeId
         );
     }
 
@@ -406,5 +439,20 @@ class GetFeatures implements GetFeaturesInterface
             ? array_filter(array_map('trim', explode(',', (string)$response['disabled'])))
             : [];
         $accountFeatures->setDisabledFeatures($disabledFeatures);
+    }
+
+    /**
+     * @param StoreInterface $store
+     *
+     * @return array<int|string>
+     */
+    private function getScopeTypeAndId(StoreInterface $store)
+    {
+        $singleStoreMode = $this->configRegistry->isSingleStoreMode();
+
+        return [
+            $singleStoreMode ? ScopeConfigInterface::SCOPE_TYPE_DEFAULT : ScopeInterface::SCOPE_STORES,
+            $singleStoreMode ? Store::DEFAULT_STORE_ID : (int)$store->getId()
+        ];
     }
 }

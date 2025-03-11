@@ -2,20 +2,23 @@
 
 namespace Klevu\Search\Block\Adminhtml\Form\Field\Integration\Confirmation;
 
+use Klevu\Registry\Api\ConfigRegistryInterface;
 use Klevu\Search\Api\SerializerInterface;
 use Klevu\Search\Api\Service\WebRestApi\Admin\GetBearerTokenInterface;
 use Klevu\Search\Helper\Config;
 use Magento\Backend\Block\Template;
 use Magento\Backend\Block\Template\Context;
+use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\ObjectManager;
 use Magento\Store\Model\ScopeInterface;
+use Magento\Store\Model\Store;
 
 class Button extends Template
 {
     const KLEVU_SEARCH_API_CONTINUE = 'klevu_search/integration/index';
     const KLEVU_SEARCH_API_CONFIRM = 'klevu_search/integration/confirm';
     const KLEVU_SEARCH_API_ENDPOINTS = 'klevu_search/integration/endpoints';
-    
+
     /**
      * @var GetBearerTokenInterface
      */
@@ -24,16 +27,31 @@ class Button extends Template
      * @var SerializerInterface
      */
     private $serializer;
+    /**
+     * @var ConfigRegistryInterface
+     */
+    private $configRegistry;
 
+    /**
+     * @param Context $context
+     * @param array $data
+     * @param GetBearerTokenInterface|null $getBearerToken
+     * @param SerializerInterface|null $serializer
+     * @param ConfigRegistryInterface|null $configRegistry
+     */
     public function __construct(
         Context $context,
         array $data = [],
         GetBearerTokenInterface $getBearerToken = null,
-        SerializerInterface $serializer = null
+        SerializerInterface $serializer = null,
+        ConfigRegistryInterface $configRegistry = null
     ) {
         parent::__construct($context, $data);
-        $this->getBearerToken = $getBearerToken ?: ObjectManager::getInstance()->get(GetBearerTokenInterface::class);
-        $this->serializer = $serializer ?: ObjectManager::getInstance()->get(SerializerInterface::class);
+
+        $objectManager = ObjectManager::getInstance();
+        $this->getBearerToken = $getBearerToken ?: $objectManager->get(GetBearerTokenInterface::class);
+        $this->serializer = $serializer ?: $objectManager->get(SerializerInterface::class);
+        $this->configRegistry = $configRegistry ?: $objectManager->get(ConfigRegistryInterface::class);
     }
 
     /**
@@ -68,7 +86,7 @@ class Button extends Template
     private function getContinueUrl()
     {
         $request = $this->getRequest();
-        $storeId = $request->getParam('store', 0);
+        $storeId = $request->getParam('store', Store::DEFAULT_STORE_ID);
 
         return $this->getUrl(
             static::KLEVU_SEARCH_API_CONTINUE,
@@ -82,7 +100,7 @@ class Button extends Template
     private function getConfirmationUrl()
     {
         $request = $this->getRequest();
-        $storeId = $request->getParam('store', 0);
+        $storeId = $request->getParam('store', Store::DEFAULT_STORE_ID);
 
         return $this->getUrl(
             static::KLEVU_SEARCH_API_CONFIRM,
@@ -96,7 +114,7 @@ class Button extends Template
     private function getEndpointsUrl()
     {
         $request = $this->getRequest();
-        $storeId = $request->getParam('store', 0);
+        $storeId = $request->getParam('store', Store::DEFAULT_STORE_ID);
 
         return $this->getUrl(
             static::KLEVU_SEARCH_API_ENDPOINTS,
@@ -109,13 +127,12 @@ class Button extends Template
      */
     private function getJsApiKey()
     {
-        $request = $this->getRequest();
-        $storeId = $request->getParam('store', 0);
+        list($scopeType, $scopeId) = $this->getScope();
 
-        return $this->_scopeConfig->getValue(
+        return $this->configRegistry->getValue(
             Config::XML_PATH_JS_API_KEY,
-            ScopeInterface::SCOPE_STORES,
-            $storeId
+            $scopeType,
+            $scopeId
         );
     }
 
@@ -124,13 +141,26 @@ class Button extends Template
      */
     private function getRestApiKey()
     {
-        $request = $this->getRequest();
-        $storeId = $request->getParam('store', 0);
+        list($scopeType, $scopeId) = $this->getScope();
 
-        return $this->_scopeConfig->getValue(
+        return $this->configRegistry->getValue(
             Config::XML_PATH_REST_API_KEY,
-            ScopeInterface::SCOPE_STORES,
-            $storeId
+            $scopeType,
+            $scopeId
         );
+    }
+
+    /**
+     * @return array<int|string>
+     */
+    private function getScope()
+    {
+        $singleStoreMode = $this->configRegistry->isSingleStoreMode();
+        $request = $this->getRequest();
+
+        return [
+            $singleStoreMode ? ScopeConfigInterface::SCOPE_TYPE_DEFAULT : ScopeInterface::SCOPE_STORES,
+            $singleStoreMode ? Store::DEFAULT_STORE_ID : (int)$request->getParam('store', Store::DEFAULT_STORE_ID)
+        ];
     }
 }

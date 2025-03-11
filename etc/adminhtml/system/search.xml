@@ -32,13 +32,18 @@
         </field>
     </group>
 
-    <group id="general" translate="label" type="text" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="1">
+    <group id="general_info" translate="label" type="text" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="0">
         <label>General Settings</label>
         <field id="enabled_info" translate="label comment" sortOrder="121" type="label" showInDefault="1" showInWebsite="1">
             <comment><![CDATA[Switch to Store View scope to manage.]]></comment>
         </field>
+        <hide_in_single_store_mode>1</hide_in_single_store_mode>
+    </group>
+
+    <group id="general" translate="label" type="text" sortOrder="100" showInDefault="0" showInWebsite="0" showInStore="1">
+        <label>General Settings</label>
         <field id="enabled" translate="label" type="select" sortOrder="121"
-               showInDefault="0" showInWebsite="0" showInStore="1">
+               showInDefault="1" showInWebsite="1" showInStore="1">
             <label>Enable on Frontend</label>
             <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
             <comment>
@@ -53,13 +58,18 @@
         </field>
     </group>
 
-    <group id="searchlanding" translate="label" sortOrder="103" showInDefault="1" showInWebsite="1" showInStore="1">
+    <group id="searchlanding_info" translate="label" sortOrder="103" showInDefault="1" showInWebsite="1" showInStore="0">
         <label>Search Result Page Settings</label>
         <field id="landenabled_info" translate="label comment" sortOrder="100" type="label" showInDefault="1" showInWebsite="1">
             <comment><![CDATA[Switch to Store View scope to manage.]]></comment>
         </field>
+        <hide_in_single_store_mode>1</hide_in_single_store_mode>
+    </group>
+
+    <group id="searchlanding" translate="label" sortOrder="103" showInDefault="0" showInWebsite="0" showInStore="1">
+        <label>Search Result Page Settings</label>
         <field id="landenabled" translate="label" sortOrder="100" type="select"
-               showInDefault="0" showInWebsite="0" showInStore="1">
+               showInDefault="1" showInWebsite="1" showInStore="1">
             <label>Ordering &amp; Rendering</label>
             <comment>
                 <![CDATA[
@@ -88,7 +98,7 @@
             </comment>
         </field>
         <field id="klevu_search_relevance" translate="label comment" type="select" sortOrder="130"
-               showInDefault="0" showInWebsite="0" showInStore="1">
+               showInDefault="1" showInWebsite="1" showInStore="1">
             <label>Sort by Klevu Relevance</label>
             <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
             <depends>
@@ -97,7 +107,7 @@
             <comment><![CDATA[When option "Klevu Powered - Preserve Theme Layout" is selected.]]></comment>
         </field>
         <field id="relevance_label" translate="label comment" type="text"
-               sortOrder="140" showInDefault="0" showInWebsite="0" showInStore="1">
+               sortOrder="140" showInDefault="1" showInWebsite="1" showInStore="1">
             <label>Sort Relevance Label</label>
             <validate>required-entry</validate>
             <depends>
@@ -308,12 +318,18 @@
         </field>
     </group>
 
-    <group id="attributes" translate="label" sortOrder="104" showInDefault="1" showInWebsite="1" showInStore="1">
+    <group id="attributes_info" translate="label" sortOrder="104" showInDefault="1" showInWebsite="1" showInStore="0">
         <label>Product Attribute Settings</label>
         <field id="info_attribute" translate="label comment" sortOrder="100" type="label"
                showInDefault="1" showInWebsite="1" showInStore="0">
             <comment><![CDATA[Switch to Store View scope to manage.]]></comment>
         </field>
+        <hide_in_single_store_mode>1</hide_in_single_store_mode>
+    </group>
+
+    <group id="attributes" translate="label" sortOrder="104" showInDefault="0" showInWebsite="0" showInStore="1">
+        <label>Product Attribute Settings</label>
+
         <field id="categoryanchor" translate="label comment" sortOrder="1000" type="select"
                showInDefault="1" showInWebsite="1" showInStore="1">
             <label>Respect is anchor Category</label>
@@ -329,7 +345,7 @@
             </comment>
         </field>
         <field id="boosting" translate="label comment" sortOrder="800" type="select"
-               showInDefault="0" showInWebsite="0" showInStore="1">
+               showInDefault="1" showInWebsite="1" showInStore="1">
             <label>Boosting Attribute</label>
             <source_model>Klevu\Search\Model\System\Config\Source\Boosting\Attribute</source_model>
             <comment>
@@ -340,7 +356,7 @@
             </comment>
         </field>
         <field id="other" translate="label comment" sortOrder="600" type="multiselect"
-               showInDefault="0" showInWebsite="0" showInStore="1">
+               showInDefault="1" showInWebsite="1" showInStore="1">
             <label>Other Attributes To Use In Search</label>
             <can_be_empty>1</can_be_empty>
             <source_model>Klevu\Search\Model\System\Config\Source\Product\Attributes</source_model>
@@ -357,12 +373,8 @@
     <group id="secureurl_setting" translate="label comment" sortOrder="106"
            showInDefault="1" showInWebsite="1" showInStore="1">
         <label>Secure Url Settings</label>
-        <field id="info_enabled" translate="label comment" sortOrder="100" type="label"
-               showInDefault="1" showInWebsite="1">
-            <comment><![CDATA[Switch to Store View scope to manage.]]></comment>
-        </field>
         <field id="enabled" translate="label comment" sortOrder="100" type="select"
-               showInDefault="0" showInWebsite="0" showInStore="1">
+               showInDefault="1" showInWebsite="1" showInStore="1">
             <label>Use Secure Base Url for Products and Images</label>
             <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
             <comment>
@@ -377,12 +389,8 @@
     <group id="image_setting" translate="label comment" sortOrder="106"
            showInDefault="1" showInWebsite="1" showInStore="1">
         <label>Product Image Settings</label>
-        <field id="info_enabled" translate="label comment" sortOrder="100" type="label"
-               showInDefault="1" showInWebsite="1">
-            <comment><![CDATA[Switch to Store View scope to manage.]]></comment>
-        </field>
         <field id="enabled" translate="label comment" sortOrder="100" type="select"
-               showInDefault="0" showInWebsite="0" showInStore="1">
+               showInDefault="1" showInWebsite="1" showInStore="1">
             <label>Use Configurable Product's Image in Search.</label>
             <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
             <comment>
@@ -393,13 +401,13 @@
             </comment>
         </field>
         <field id="image_width" translate="label comment" sortOrder="128"
-               showInDefault="0" showInWebsite="0" showInStore="1">
+               showInDefault="1" showInWebsite="1" showInStore="1">
             <label>Image Width</label>
             <comment><![CDATA[Image Width.]]></comment>
             <validate>required-entry validate-number</validate>
         </field>
         <field id="image_height" translate="label comment" sortOrder="128"
-               showInDefault="0" showInWebsite="0" showInStore="1">
+               showInDefault="1" showInWebsite="1" showInStore="1">
             <label>Image Height</label>
             <comment><![CDATA[Image Height.]]></comment>
             <validate>required-entry validate-number</validate>
@@ -409,11 +417,8 @@
     <group id="price_per_customer_group" translate="label comment" sortOrder="106"
            showInDefault="1" showInWebsite="1" showInStore="1">
         <label>Display prices after Customer Group load</label>
-        <field id="enabled_info" translate="label comment" sortOrder="121" type="label" showInDefault="1" showInWebsite="1">
-            <comment><![CDATA[Switch to Store View scope to manage.]]></comment>
-        </field>
         <field id="enabled" translate="label comment" sortOrder="100" type="select"
-               showInDefault="0" showInWebsite="0" showInStore="1">
+               showInDefault="1" showInWebsite="1" showInStore="1">
             <label>Display prices after Customer Group Load</label>
             <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
             <comment>
@@ -505,7 +510,7 @@
             <frontend_model>Klevu\Search\Block\Adminhtml\Form\Field\Logclear</frontend_model>
         </field>
         <field id="preserve_layout_log_enabled" translate="label" sortOrder="403" type="select"
-               showInDefault="0" showInWebsite="0" showInStore="1">
+               showInDefault="1" showInWebsite="1" showInStore="1">
             <label>Enable Preserve Layout Log</label>
             <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
             <comment>
