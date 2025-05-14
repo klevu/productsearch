@@ -74,9 +74,9 @@ class Information extends Fieldset
         ModuleList $moduleList,
         Filesystem $fileSystem,
         array $data = [],
-        OrdersWithSameIPCollection $ordersWithSameIPCollection = null,
-        GetFeaturesInterface $getFeatures = null,
-        AssetRepositoryFactory $assetRepositoryFactory = null
+        ?OrdersWithSameIPCollection $ordersWithSameIPCollection = null,
+        ?GetFeaturesInterface $getFeatures = null,
+        ?AssetRepositoryFactory $assetRepositoryFactory = null
     ) {
         $this->_searchHelperConfig = $config;
         $this->_directoryList = $directoryList;

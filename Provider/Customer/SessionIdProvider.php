@@ -37,7 +37,7 @@ class SessionIdProvider implements SessionIdProviderInterface
     public function __construct(
         EncryptorInterface $encryptor,
         SessionManagerInterface $sessionManager,
-        DeploymentConfig $deploymentConfig = null
+        ?DeploymentConfig $deploymentConfig = null
     ) {
         $this->encryptor = $encryptor;
         $this->sessionManager = $sessionManager;

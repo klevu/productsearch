@@ -73,8 +73,8 @@ class ConfirmIntegration implements ConfirmIntegrationInterface
         UpdateEndpointsInterface $updateEndpoints,
         ValidatorInterface $jsApiKeyValidator,
         ValidatorInterface $restApiKeyValidator,
-        ConfigRegistryInterface $configRegistry = null,
-        ReinitableConfigInterface $reinitableConfig = null
+        ?ConfigRegistryInterface $configRegistry = null,
+        ?ReinitableConfigInterface $reinitableConfig = null
     ) {
         $this->scopeConfigWriter = $scopeConfigWriter;
         $this->storeManager = $storeManager;

@@ -116,7 +116,7 @@ class MagentoCategoryActions extends AbstractModel implements MagentoCategoryAct
     }
 
     /**
-     * Returns category pages array based on store and action or error message will be shown if it failed.
+     * Returns a category pages array based on store, and an action or error message will be shown if it failed.
      *
      * @param StoreInterface $store
      * @param string $action
@@ -213,6 +213,7 @@ class MagentoCategoryActions extends AbstractModel implements MagentoCategoryAct
                     }, $data),
                 ]
             );
+
         if ($response->isSuccess()) {
             return $this->_klevuCategoryAction->executeDeleteCategorySuccess($data, $response);
         }
@@ -248,6 +249,7 @@ class MagentoCategoryActions extends AbstractModel implements MagentoCategoryAct
                     'records' => $data,
                 ]
             );
+
         if ($response->isSuccess()) {
             return $this->_klevuCategoryAction->executeAddCategorySuccess($data, $response);
         }

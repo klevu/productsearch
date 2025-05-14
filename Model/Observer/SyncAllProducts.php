@@ -60,7 +60,7 @@ class SyncAllProducts implements ObserverInterface
         SearchHelper $searchHelperData,
         ConfigHelper $searchHelperConfig,
         MagentoProductActionsInterface $magentoProductActions,
-        StoreManagerInterface $storeManager = null
+        ?StoreManagerInterface $storeManager = null
     ) {
         $this->_modelProductSync = $modelProductSync;
         $this->_magentoFrameworkFilesystem = $magentoFrameworkFilesystem;

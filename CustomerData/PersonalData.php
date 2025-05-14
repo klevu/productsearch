@@ -47,7 +47,7 @@ class PersonalData implements SectionSourceInterface
     public function __construct(
         CustomerSession $customerSession,
         Klevu_HelperData $klevuHelperData,
-        CustomerDataProviderInterface $customerDataProvider = null
+        ?CustomerDataProviderInterface $customerDataProvider = null
     ) {
         $this->_customerSession = $customerSession;
         $this->_klevuHelperData = $klevuHelperData;

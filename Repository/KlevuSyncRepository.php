@@ -65,8 +65,8 @@ class KlevuSyncRepository implements KlevuSyncRepositoryInterface
         KlevuSyncCollectionFactory $KlevuSyncCollectionFactory,
         KlevuResourceModel $klevuResourceModel,
         LoggerInterface $logger,
-        KlevuFactory $klevuFactory = null,
-        SyncEntitySearchResultsFactory $syncEntitySearchResultsFactory = null
+        ?KlevuFactory $klevuFactory = null,
+        ?SyncEntitySearchResultsFactory $syncEntitySearchResultsFactory = null
     ) {
         $this->KlevuSyncCollectionFactory = $KlevuSyncCollectionFactory;
         $this->klevuResourceModel = $klevuResourceModel;

@@ -68,8 +68,8 @@ class JsVariables extends Template
         DirectoryList $directoryList,
         VersionReader $versionReader,
         array $data = [],
-        SerializerInterface $serializer = null,
-        LocaleFormat $localeFormat = null
+        ?SerializerInterface $serializer = null,
+        ?LocaleFormat $localeFormat = null
     ) {
         parent::__construct($context, $data);
 

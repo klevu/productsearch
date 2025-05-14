@@ -35,7 +35,6 @@ use Magento\Framework\Model\Context;
 use Magento\Framework\Model\ResourceModel\AbstractResource;
 use Magento\Framework\Registry;
 use Magento\Framework\Stdlib\DateTime\DateTime;
-use Magento\GroupedProduct\Model\Product\Type\Grouped;
 use Magento\GroupedProduct\Model\Product\Type\Grouped as GroupedProduct;
 use Klevu\Search\Helper\Price as Klevu_Helper_Price;
 use Magento\Sales\Api\Data\OrderItemExtension;
@@ -140,6 +139,10 @@ class Sync extends AbstractModel
      * @var DriverInterface
      */
     private $fileDriver;
+    /**
+     * @var OrderItemFactory
+     */
+    protected $_modelOrderItemFactory;
 
     /**
      * @param ResourceConnection $frameworkModelResource
@@ -182,20 +185,20 @@ class Sync extends AbstractModel
         KlevuSync $klevuSyncModel,
         Context $context,
         Registry $registry,
-        AbstractResource $resource = null,
-        AbstractDb $resourceCollection = null,
-        Klevu_Helper_Price $klevuPriceHelper = null,
+        ?AbstractResource $resource = null,
+        ?AbstractDb $resourceCollection = null,
+        ?Klevu_Helper_Price $klevuPriceHelper = null,
         array $data = [],
-        StoreScopeResolverInterface $storeScopeResolver = null,
-        DirectoryList $directoryList = null,
-        SessionIdProviderInterface $sessionIdProvider = null,
-        CustomerIdProviderInterface $customerIdProvider = null,
-        GetOrderSelectMaxLimitInterface $getOrderSelectMaxLimit = null,
-        ItemsToSyncProviderInterface $itemsToSyncProvider = null,
-        OrderItemDataProviderInterface $orderItemDataProvider = null,
-        ItemDataConvertorInterface $orderSyncItemDataConvertor = null,
-        OrderItemExtensionFactory $orderItemExtensionFactory = null,
-        DriverInterface $fileDriver = null
+        ?StoreScopeResolverInterface $storeScopeResolver = null,
+        ?DirectoryList $directoryList = null,
+        ?SessionIdProviderInterface $sessionIdProvider = null,
+        ?CustomerIdProviderInterface $customerIdProvider = null,
+        ?GetOrderSelectMaxLimitInterface $getOrderSelectMaxLimit = null,
+        ?ItemsToSyncProviderInterface $itemsToSyncProvider = null,
+        ?OrderItemDataProviderInterface $orderItemDataProvider = null,
+        ?ItemDataConvertorInterface $orderSyncItemDataConvertor = null,
+        ?OrderItemExtensionFactory $orderItemExtensionFactory = null,
+        ?DriverInterface $fileDriver = null
     ) {
         parent::__construct($context, $registry, $resource, $resourceCollection, $data);
         $this->_klevuSyncModel = $klevuSyncModel;

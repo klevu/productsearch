@@ -18,7 +18,7 @@ class QuickLinks extends Template
     public function __construct(
         Context $context,
         array $data = [],
-        GetKmcUrlServiceInterface $getKmcUrlService = null
+        ?GetKmcUrlServiceInterface $getKmcUrlService = null
     ) {
         parent::__construct($context, $data);
         $this->getKmcUrlService = $getKmcUrlService ?: ObjectManager::getInstance()->get(GetKmcUrlServiceInterface::class);

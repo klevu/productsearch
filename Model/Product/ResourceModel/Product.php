@@ -83,11 +83,11 @@ class Product
         ProductResourceModel $productResourceModel,
         OptionProvider $optionProvider,
         GetBatchSize $getBatchSize,
-        ResourceConnection $resourceConnection = null,
-        JoinParentVisibilityToSelectInterface $joinParentVisibilityToSelectService = null,
-        LoggerInterface $logger = null,
-        JoinParentStockToSelectInterface $joinParentStockToSelect = null,
-        JoinParentStatusToSelectInterface $joinParentStatusToSelect = null
+        ?ResourceConnection $resourceConnection = null,
+        ?JoinParentVisibilityToSelectInterface $joinParentVisibilityToSelectService = null,
+        ?LoggerInterface $logger = null,
+        ?JoinParentStockToSelectInterface $joinParentStockToSelect = null,
+        ?JoinParentStatusToSelectInterface $joinParentStatusToSelect = null
     ) {
         $this->productResourceModel = $productResourceModel;
         $this->optionProvider = $optionProvider;

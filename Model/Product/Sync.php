@@ -142,7 +142,7 @@ class Sync extends AbstractModel
      * @param AbstractResource|null $resource
      * @param AbstractDb|null $resourceCollection
      * @param array $data
-     * @param GetRecordsPerPageInterface $getRecordsPerPage
+     * @param GetRecordsPerPageInterface|null $getRecordsPerPage
      * @param StoreScopeResolverInterface|null $storeScopeResolver
      */
     public function __construct(
@@ -161,11 +161,11 @@ class Sync extends AbstractModel
         // abstract parent
         Context $context,
         Registry $registry,
-        AbstractResource $resource = null,
-        AbstractDb $resourceCollection = null,
+        ?AbstractResource $resource = null,
+        ?AbstractDb $resourceCollection = null,
         array $data = [],
-        GetRecordsPerPageInterface $getRecordsPerPage = null,
-        StoreScopeResolverInterface $storeScopeResolver = null
+        ?GetRecordsPerPageInterface $getRecordsPerPage = null,
+        ?StoreScopeResolverInterface $storeScopeResolver = null
     ) {
         parent::__construct($context, $registry, $resource, $resourceCollection, $data);
         $this->_magentoProductActions = $magentoProductActions;

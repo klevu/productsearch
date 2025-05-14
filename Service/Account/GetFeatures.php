@@ -120,8 +120,8 @@ class GetFeatures implements GetFeaturesInterface
         ValidatorInterface $restApiKeyValidator,
         RequestInterface $request,
         ReinitableConfigInterface $reinitableConfig,
-        AccountFeaturesMaskInterface $accountFeaturesMask = null,
-        ConfigRegistryInterface $configRegistry = null
+        ?AccountFeaturesMaskInterface $accountFeaturesMask = null,
+        ?ConfigRegistryInterface $configRegistry = null
     ) {
         $this->featuresApi = $featuresApi;
         $this->storeManager = $storeManager;

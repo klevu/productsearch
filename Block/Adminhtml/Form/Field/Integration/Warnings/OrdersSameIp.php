@@ -24,8 +24,8 @@ class OrdersSameIp extends Template
     public function __construct(
         Context $context,
         array $data = [],
-        ConfigHelper $configHelper = null,
-        OrdersWithSameIPCollection $ordersWithSameIPCollection = null
+        ?ConfigHelper $configHelper = null,
+        ?OrdersWithSameIPCollection $ordersWithSameIPCollection = null
     ) {
         $this->configHelper = $configHelper ?: ObjectManager::getInstance()->get(ConfigHelper::class);
         $this->ordersWithSameIPCollection = $ordersWithSameIPCollection ?: ObjectManager::getInstance()->get(OrdersWithSameIPCollection::class);

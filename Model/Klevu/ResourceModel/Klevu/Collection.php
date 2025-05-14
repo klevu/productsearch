@@ -56,10 +56,10 @@ class Collection extends AbstractCollection
         LoggerInterface $logger,
         FetchStrategyInterface $fetchStrategy,
         ManagerInterface $eventManager,
-        AdapterInterface $connection = null,
-        AbstractDb $resource = null,
-        KlevuSync $klevuSync = null,
-        GetBatchSizeInterface $getBatchSize = null
+        ?AdapterInterface $connection = null,
+        ?AbstractDb $resource = null,
+        ?KlevuSync $klevuSync = null,
+        ?GetBatchSizeInterface $getBatchSize = null
     ) {
         parent::__construct($entityFactory, $logger, $fetchStrategy, $eventManager, $connection, $resource);
         $this->klevuSync = $klevuSync ?: ObjectManager::getInstance()->create(Klevu::class);

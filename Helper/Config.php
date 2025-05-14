@@ -188,10 +188,10 @@ class Config extends AbstractHelper
         ConfigValue $modelConfigData,
         ResourceConnection $frameworkModelResource,
         VersionReader $versionReader,
-        AppState $appState = null,
-        SerializerInterface $serializer = null,
-        ConfigResourceFactory $configResourceFactory = null,
-        Context $context = null
+        ?AppState $appState = null,
+        ?SerializerInterface $serializer = null,
+        ?ConfigResourceFactory $configResourceFactory = null,
+        ?Context $context = null
     ) {
         $this->_appConfigScopeConfigInterface = $appConfigScopeConfigInterface;
         $this->_magentoFrameworkUrlInterface = $magentoFrameworkUrlInterface;

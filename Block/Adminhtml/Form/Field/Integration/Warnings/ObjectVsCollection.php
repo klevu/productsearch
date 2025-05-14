@@ -19,7 +19,7 @@ class ObjectVsCollection extends Template
     public function __construct(
         Context $context,
         array $data = [],
-        ConfigHelper $configHelper = null
+        ?ConfigHelper $configHelper = null
     ) {
         $this->configHelper = $configHelper ?: ObjectManager::getInstance()->get(ConfigHelper::class);
 

@@ -71,7 +71,7 @@ class UpdateApiEndpointsOnApiKeyChange
         StoreManagerInterface $storeManager,
         ScopeConfigInterface $scopeConfig,
         AccountDetailsFactory $accountDetailsFactory,
-        ConfigRegistryInterface $configRegistry = null
+        ?ConfigRegistryInterface $configRegistry = null
     ) {
         $this->updateEndpoints = $updateEndpoints;
         $this->getAccountDetails = $getAccountDetails;

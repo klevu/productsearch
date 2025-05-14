@@ -61,7 +61,7 @@ class UpdateEndpoints implements UpdateEndpointsInterface
         StoreManagerInterface $storeManager,
         IntegrationStatusInterface $integrationStatus,
         ReinitableConfigInterface $reinitableConfig,
-        ConfigRegistryInterface $configRegistry = null
+        ?ConfigRegistryInterface $configRegistry = null
     ) {
         $this->scopeConfigWriter = $scopeConfigWriter;
         $this->storeManager = $storeManager;

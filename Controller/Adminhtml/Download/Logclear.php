@@ -41,11 +41,11 @@ class Logclear extends AbstractLogClear
         TimezoneInterface $timezone,
         DirectoryList $directoryList,
         Klevu_HelperData $klevuHelperData,
-        LoggerInterface $logger = null,
-        FileIo $fileIo = null,
-        StoreScopeResolverInterface $storeScopeResolver = null,
-        LogFileNameProviderInterface $logFileNameProvider = null,
-        ArchiveLogFileServiceInterface $archiveLogFileService = null
+        ?LoggerInterface $logger = null,
+        ?FileIo $fileIo = null,
+        ?StoreScopeResolverInterface $storeScopeResolver = null,
+        ?LogFileNameProviderInterface $logFileNameProvider = null,
+        ?ArchiveLogFileServiceInterface $archiveLogFileService = null
     ) {
         parent::__construct(
             $context,

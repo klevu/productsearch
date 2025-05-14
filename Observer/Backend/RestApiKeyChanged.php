@@ -58,7 +58,7 @@ class RestApiKeyChanged implements ObserverInterface
         ScopeConfigWriterInterface $scopeConfigWriter,
         LoggerInterface $logger,
         ReinitableConfigInterface $reinitableConfig,
-        ConfigRegistryInterface $configRegistry = null
+        ?ConfigRegistryInterface $configRegistry = null
     ) {
         $this->storeManager = $storeManager;
         $this->scopeConfigWriter = $scopeConfigWriter;

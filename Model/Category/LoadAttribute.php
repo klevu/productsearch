@@ -1,20 +1,35 @@
 <?php
-/**
- * Class \Klevu\Search\Model\Product\MagentoProductActionsInterface
- */
+
 namespace Klevu\Search\Model\Category;
-use \Magento\Framework\Model\AbstractModel as AbstractModel;
-use \Magento\Catalog\Model\Category as Category;
-use \Klevu\Search\Model\Context as Klevu_Context;
 
+use Klevu\Search\Model\Context as Klevu_Context;
+use Magento\Catalog\Model\Category as Category;
+use Magento\Framework\App\ResourceConnection;
+use Magento\Framework\UrlInterface;
 
-class LoadAttribute extends  \Klevu\Search\Model\Category\MagentoCategoryActions implements LoadAttributeInterface
+class LoadAttribute extends MagentoCategoryActions implements LoadAttributeInterface
 {
+    /**
+     * @var ResourceConnection
+     */
+    protected $_klevuSync;
+    /**
+     * @var ResourceConnection
+     */
+    protected $_stockHelper;
+    /**
+     * @var Category
+     */
+    protected Category $_catalogModelCategory;
 
+    /**
+     * @param Klevu_Context $context
+     * @param Category $catalogModelCategory
+     */
     public function __construct(
         Klevu_Context $context,
-		Category $catalogModelCategory
-    ){
+        Category $catalogModelCategory
+    ) {
         $this->_storeModelStoreManagerInterface = $context->getStoreManagerInterface();
         $this->_frameworkModelResource = $context->getResourceConnection();
         $this->_searchHelperConfig = $context->getHelperManager()->getConfigHelper();
@@ -22,40 +37,44 @@ class LoadAttribute extends  \Klevu\Search\Model\Category\MagentoCategoryActions
         $this->_searchHelperData = $context->getHelperManager()->getDataHelper();
         $this->_klevuSync = $context->getSync();
         $this->_stockHelper = $context->getHelperManager()->getStockHelper();
-		$this->_catalogModelCategory = $catalogModelCategory;
+        $this->_catalogModelCategory = $catalogModelCategory;
     }
 
     /**
      * Add the Category Sync data to each Category in the given list. Updates the given
      * list directly to save memory.
      *
-     * @param array $categories An array of categories. Each element should be an array with
-     *                        containing an element with "id" as the key and the Category
-     *                        ID as the value.
+     * @param  $categories
+     * An array of categories. Each element should be an array with
+     * containing an element with "id" as the key and the Category ID as the value.
      *
-     * @return $this
+     * @return array
      */
-    public function addcategoryData(&$pages)
+    public function addcategoryData(&$categories)
     {
-        $category_ids = [];
-        foreach ($pages as $key => $category_page) {
-            $category_ids[] = $category_page["category_id"];
+        $categoryIds = [];
+        foreach ($categories as $key => $categoryPage) {
+            $categoryIds[] = $categoryPage["category_id"];
         }
         $storeId = $this->_storeModelStoreManagerInterface->getStore()->getStoreId();
-        $category_data = $this->loadCategoryCollection($storeId,$category_ids);
-        $category_url_rewrite_data = $this->getCategoryUrlRewriteData($category_ids);
-        if ($this->_searchHelperConfig->isSecureUrlEnabled($this->_storeModelStoreManagerInterface->getStore()->getId())) {
-            $base_url = $this->_storeModelStoreManagerInterface->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_LINK, true);
+        $categoryData = $this->loadCategoryCollection($storeId, $categoryIds);
+        $categoryURLRewriteData = $this->getCategoryUrlRewriteData($categoryIds);
+        if ($this->_searchHelperConfig->isSecureUrlEnabled(
+            $this->_storeModelStoreManagerInterface->getStore()->getId()
+        )) {
+            $baseURL = $this->_storeModelStoreManagerInterface->getStore()
+                ->getBaseUrl(UrlInterface::URL_TYPE_LINK, true);
         } else {
-            $base_url = $this->_storeModelStoreManagerInterface->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_LINK);
+            $baseURL = $this->_storeModelStoreManagerInterface->getStore()
+                ->getBaseUrl(UrlInterface::URL_TYPE_LINK);
         }
-        $category_data_new = [];
-        foreach ($category_data as $category) {
-            $category['url'] = $base_url . (
-                (isset($category_url_rewrite_data[$category->getId()])) ?
-                    $category_url_rewrite_data[$category->getId()] :
-                    "catalog/category/view/id/" . $category->getId()
-                );
+        $klevuCategoryData = [];
+        foreach ($categoryData as $category) {
+            $category['url'] = $baseURL . (
+                (isset($categoryURLRewriteData[$category->getId()]))
+                    ? $categoryURLRewriteData[$category->getId()]
+                    : "catalog/category/view/id/" . $category->getId()
+            );
             $value["id"] = "categoryid_" . $category->getId();
             $value["name"] = $category->getName();
             $value["desc"] = strip_tags((string)$category->getDescription());
@@ -67,23 +86,28 @@ class LoadAttribute extends  \Klevu\Search\Model\Category\MagentoCategoryActions
             $value["salePrice"] = 0;
             $value["currency"] = "USD";
             $value["inStock"] = "yes";
-			$value["visibility"] = "search";
-            $category_data_new[] = $value;
+            $value["visibility"] = "search";
+            $klevuCategoryData[] = $value;
         }
-        return $category_data_new;
+
+        return $klevuCategoryData;
     }
 
-	public function loadCategoryCollection($storeId,$category_ids)
-	{
-
-		$category_data = $this->_catalogModelCategory->getCollection()
+    /**
+     * @param $storeId
+     * @param $categoryIds
+     *
+     * @return mixed
+     */
+    public function loadCategoryCollection($storeId, $categoryIds)
+    {
+        return $this->_catalogModelCategory->getCollection()
             ->setStoreId($storeId)
-            ->addAttributeToSelect("*")->addFieldToFilter('entity_id', [
-                'in' => $category_ids
-            ]);
-		return $category_data;
-	}
-
-
-
+            ->addAttributeToSelect("*")->addFieldToFilter(
+                'entity_id',
+                [
+                    'in' => $categoryIds,
+                ]
+            );
+    }
 }

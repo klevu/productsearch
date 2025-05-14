@@ -76,7 +76,7 @@ class RatingGeneration extends Command
         LoggerInterface $logger,
         MagentoProductActionsInterface $magentoProductActionsInterface,
         DescriptorHelper $descriptorHelper,
-        File $fileDriver = null
+        ?File $fileDriver = null
     ) {
         $this->appState = $appState;
         $this->_storeInterface = $storeInterface;

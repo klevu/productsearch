@@ -147,6 +147,10 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
      * @var UpdateAllRatingsInterface
      */
     private $updateAllRatings;
+    /**
+     * @var Klevu_Catalog_Product_Action
+     */
+    protected $_klevuCatalogProductAction;
 
     /**
      * @param \Magento\Framework\Model\Context $mcontext
@@ -188,12 +192,12 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
         OptionProvider $magentoOptionProvider,
         // abstract parent
         \Magento\Framework\Registry $registry,
-        \Magento\Framework\Model\ResourceModel\AbstractResource $resource = null,
-        \Magento\Framework\Data\Collection\AbstractDb $resourceCollection = null,
+        ?\Magento\Framework\Model\ResourceModel\AbstractResource $resource = null,
+        ?\Magento\Framework\Data\Collection\AbstractDb $resourceCollection = null,
         array $data = [],
-        KlevuSyncRepositoryInterface $klevuSyncRepository = null,
-        MagentoProductSyncRepositoryInterface $magentoProductRepository = null,
-        UpdateAllRatingsInterface $updateAllRatings = null
+        ?KlevuSyncRepositoryInterface $klevuSyncRepository = null,
+        ?MagentoProductSyncRepositoryInterface $magentoProductRepository = null,
+        ?UpdateAllRatingsInterface $updateAllRatings = null
     ) {
         parent::__construct($mcontext, $registry, $resource, $resourceCollection, $data);
         $this->_klevuHelperManager = $klevuHelperManager;

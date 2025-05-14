@@ -81,7 +81,7 @@ class IntegrationStatus implements IntegrationStatusInterface
         ValidatorInterface $jsApiKeyValidator,
         ValidatorInterface $restApiKeyValidator,
         ReinitableConfigInterface $reinitableConfig,
-        ConfigRegistryInterface $configRegistry = null
+        ?ConfigRegistryInterface $configRegistry = null
     ) {
         $this->scopeConfig = $scopeConfig;
         $this->request = $request;
@@ -98,7 +98,7 @@ class IntegrationStatus implements IntegrationStatusInterface
      * @param StoreInterface|null $store
      * @return bool
      */
-    public function isJustIntegrated(StoreInterface $store = null)
+    public function isJustIntegrated(?StoreInterface $store = null)
     {
         if ($this->configRegistry->isSingleStoreMode()) {
             $scopeType = ScopeConfigInterface::SCOPE_TYPE_DEFAULT;
@@ -162,11 +162,11 @@ class IntegrationStatus implements IntegrationStatusInterface
     }
 
     /**
-     * @param StoreInterface $store
+     * @param StoreInterface|null $store
      *
      * @return bool
      */
-    public function isIntegrated(StoreInterface $store = null)
+    public function isIntegrated(?StoreInterface $store = null)
     {
         if ($this->configRegistry->isSingleStoreMode()) {
             $scopeType = ScopeConfigInterface::SCOPE_TYPE_DEFAULT;

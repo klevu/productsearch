@@ -84,8 +84,8 @@ class RatingsUpdate implements ObserverInterface
         EntityType $modelEntityType,
         Attribute $modelEntityAttribute,
         ProductAction $modelProductAction,
-        UpdateRatingInterface $updateRating = null,
-        ProductRepositoryInterface $productRepository = null
+        ?UpdateRatingInterface $updateRating = null,
+        ?ProductRepositoryInterface $productRepository = null
     ) {
         $this->_modelProductSync = $modelProductSync;
         $this->_magentoFrameworkFilesystem = $magentoFrameworkFilesystem;

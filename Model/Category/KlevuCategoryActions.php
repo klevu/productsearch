@@ -1,10 +1,4 @@
 <?php
-/**
- * Class \Klevu\Search\Model\Product\Sync
- * @method \Magento\Framework\Db\Adapter\Interface getConnection()
- * @method \Magento\Store\Model\Store getStore()
- * @method string getKlevuSessionId()
- */
 
 namespace Klevu\Search\Model\Category;
 
@@ -14,10 +8,45 @@ use Magento\Framework\DataObject;
 class KlevuCategoryActions extends DataObject implements KlevuCategoryActionsInterface
 {
 
+    /**
+     * @var Klevu\Search\Helper\Config
+     */
+    protected $_searchHelperConfig;
+    /**
+     * @var Klevu\Search\Helper\Data
+     */
+    protected $_searchHelperData;
+    /**
+     * @var Klevu\Search\Model\Api\Action\StartSession
+     */
+    protected $_apiActionStartsession;
+    /**
+     * @var Klevu\Search\Model\Session
+     */
+    protected $_searchModelSession;
+    /**
+     * @var Klevu\Search\Model\Sync
+     */
+    protected $_klevuSyncModel;
+    /**
+     * @var Magento\Framework\App\ResourceConnection
+     */
+    protected $_frameworkModelResource;
+    /**
+     * @var Klevu\Search\Helper\Compat
+     */
+    protected $_searchHelperCompat;
+    /**
+     * @var Magento\Store\Model\StoreManagerInterface
+     */
+    protected $_storeModelStoreManagerInterface;
+
+    /**
+     * @param Context $context
+     */
     public function __construct(
         Context $context
-    )
-    {
+    ) {
         $this->_searchHelperConfig = $context->getHelperManager()->getConfigHelper();
         $this->_searchHelperData = $context->getHelperManager()->getDataHelper();
         $this->_apiActionStartsession = $context->getStartSession();
@@ -26,18 +55,23 @@ class KlevuCategoryActions extends DataObject implements KlevuCategoryActionsInt
         $this->_frameworkModelResource = $context->getResourceConnection();
         $this->_searchHelperCompat = $context->getHelperManager()->getCompatHelper();
         $this->_storeModelStoreManagerInterface = $context->getStoreManagerInterface();
-
     }
 
     /**
-     * Delete success processing , separated for easier override
+     * Delete success processing, separated for easier override
+     * @param array $data
+     * @param mixed $response
+     *
+     * @return string|true
      */
     public function executeDeleteCategorySuccess(array $data, $response)
     {
+
         $connection = $this->_frameworkModelResource->getConnection();
         $select = $connection->select()->from([
-            'k' => $this->_frameworkModelResource->getTableName("klevu_product_sync")
-        ])->where("k.store_id = ?", $this->_storeModelStoreManagerInterface->getStore()->getId())->where("k.type = ?", "categories");
+            'k' => $this->_frameworkModelResource->getTableName("klevu_product_sync"),
+        ])->where("k.store_id = ?", $this->_storeModelStoreManagerInterface->getStore()->getId())
+            ->where("k.type = ?", "categories");
         $skipped_record_ids = [];
         if ($skipped_records = $response->getSkippedRecords()) {
             $skipped_record_ids = array_flip($skipped_records["index"]);
@@ -54,14 +88,23 @@ class KlevuCategoryActions extends DataObject implements KlevuCategoryActionsInt
         $connection->query($select->deleteFromSelect("k"));
         $skipped_count = count($skipped_record_ids);
         if ($skipped_count > 0) {
-            return sprintf("%d category%s failed (%s)", $skipped_count, ($skipped_count > 1) ? "s" : "", implode(", ", $skipped_records["messages"]));
+            return sprintf(
+                "%d category%s failed (%s)",
+                $skipped_count,
+                ($skipped_count > 1) ? "s" : "",
+                implode(", ", $skipped_records["messages"])
+            );
         } else {
             return true;
         }
     }
 
     /**
-     * Update success processing , separated for easier override
+     * Update success processing, separated for easier override
+     * @param array $data
+     * @param mixed $response
+     *
+     * @return string|true
      */
     public function executeUpdateCategorySuccess(array $data, $response)
     {
@@ -76,22 +119,45 @@ class KlevuCategoryActions extends DataObject implements KlevuCategoryActionsInt
                 continue;
             }
             $ids[$i] = explode("_", $data[$i]['id']);
-            $where[] = sprintf("(%s AND %s AND %s)", $this->_frameworkModelResource->getConnection()->quoteInto("product_id = ?", $ids[$i][1]), $this->_frameworkModelResource->getConnection()->quoteInto("parent_id = ?", 0), $this->_frameworkModelResource->getConnection()->quoteInto("type = ?", "categories"));
+            $where[] = sprintf(
+                "(%s AND %s AND %s)",
+                $this->_frameworkModelResource->getConnection()->quoteInto("product_id = ?", $ids[$i][1]),
+                $this->_frameworkModelResource->getConnection()->quoteInto("parent_id = ?", 0),
+                $this->_frameworkModelResource->getConnection()->quoteInto("type = ?", "categories")
+            );
         }
-        $where = sprintf("(%s) AND (%s)", $this->_frameworkModelResource->getConnection()->quoteInto("store_id = ?", $this->_storeModelStoreManagerInterface->getStore()->getId()), implode(" OR ", $where));
-        $this->_frameworkModelResource->getConnection()->update($this->_frameworkModelResource->getTableName('klevu_product_sync'), [
-            'last_synced_at' => $this->_searchHelperCompat->now()
-        ], $where);
+        $where = sprintf(
+            "(%s) AND (%s)",
+            $this->_frameworkModelResource->getConnection()
+                ->quoteInto("store_id = ?", $this->_storeModelStoreManagerInterface->getStore()->getId()),
+            implode(" OR ", $where)
+        );
+        $this->_frameworkModelResource->getConnection()->update(
+            $this->_frameworkModelResource->getTableName('klevu_product_sync'),
+            [
+                'last_synced_at' => $this->_searchHelperCompat->now(),
+            ],
+            $where
+        );
         $skipped_count = count($skipped_record_ids);
         if ($skipped_count > 0) {
-            return sprintf("%d category%s failed (%s)", $skipped_count, ($skipped_count > 1) ? "s" : "", implode(", ", $skipped_records["messages"]));
+            return sprintf(
+                "%d category%s failed (%s)",
+                $skipped_count,
+                ($skipped_count > 1) ? "s" : "",
+                implode(", ", $skipped_records["messages"])
+            );
         } else {
             return true;
         }
     }
 
     /**
-     * Add success processing , separated for easier override
+     * Add success processing, separated for easier override
+     * @param array $data
+     * @param mixed $response
+     *
+     * @return string|true
      */
     public function executeAddCategorySuccess(array $data, $response)
     {
@@ -133,7 +199,12 @@ class KlevuCategoryActions extends DataObject implements KlevuCategoryActionsInt
 
         $skipped_count = count($skipped_record_ids);
         if ($skipped_count > 0) {
-            return sprintf("%d category%s failed (%s)", $skipped_count, ($skipped_count > 1) ? "s" : "", implode(", ", $skipped_records["messages"]));
+            return sprintf(
+                "%d category%s failed (%s)",
+                $skipped_count,
+                ($skipped_count > 1) ? "s" : "",
+                implode(", ", $skipped_records["messages"])
+            );
         } else {
             return true;
         }

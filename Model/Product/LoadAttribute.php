@@ -13,6 +13,7 @@ use Klevu\Search\Model\Klevu\ResourceModel\Klevu\Collection as KlevuProductSyncC
 use Klevu\Search\Model\Product\ProductInterface as Klevu_ProductData;
 use Magento\Catalog\Api\Data\ProductInterface as MagentoProductInterface;
 use Magento\Catalog\Api\ProductRepositoryInterface;
+use Magento\Catalog\Model\ResourceModel\Product\Attribute\Collection as Klevu_Product_Attribute_Collection;
 use Magento\Catalog\Model\ResourceModel\Product\Collection as ProductCollection;
 use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory as ProductCollectionFactory;
 use Magento\Customer\Model\Group as CustomerGroup;
@@ -21,7 +22,6 @@ use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Model\AbstractModel;
-use Magento\Catalog\Model\ResourceModel\Product\Attribute\Collection as Klevu_Product_Attribute_Collection;
 use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Model\StoreManagerInterface;
 
@@ -81,6 +81,11 @@ class LoadAttribute extends AbstractModel implements LoadAttributeInterface
     private $productRepository;
 
     /**
+     * @var \Klevu\Search\Helper\Data
+     */
+    protected $_searchHelperData;
+
+    /**
      * @param KlevuContext $context
      * @param ProductInterface $productdata
      * @param Klevu_Product_Attribute_Collection $productAttributeCollection
@@ -95,10 +100,10 @@ class LoadAttribute extends AbstractModel implements LoadAttributeInterface
         Klevu_ProductData $productdata,
         Klevu_Product_Attribute_Collection $productAttributeCollection,
         KlevuFactory $klevuFactory,
-        StockServiceInterface $stockService = null,
-        ProductCollectionFactory $productCollectionFactory = null,
-        ReservedAttributeCodesProviderInterface $reservedAttributeCodesProvider = null,
-        ProductRepositoryInterface $productRepository = null
+        ?StockServiceInterface $stockService = null,
+        ?ProductCollectionFactory $productCollectionFactory = null,
+        ?ReservedAttributeCodesProviderInterface $reservedAttributeCodesProvider = null,
+        ?ProductRepositoryInterface $productRepository = null
     ) {
         $this->_storeModelStoreManagerInterface = $context->getStoreManagerInterface();
         $this->_frameworkModelResource = $context->getResourceConnection();
@@ -888,6 +893,7 @@ class LoadAttribute extends AbstractModel implements LoadAttributeInterface
                 // switch to rating_count rather than ReviewCount::ATTRIBUTE_CODE, this what Klevu API expects
                 unset($product[ReviewCount::ATTRIBUTE_CODE]);
                 // Intentional cascade
+                // no break
             case 'rating_count':
                 $ratingCount = $this->_productData->getRatingCount($item, $parent);
                 if (null !== $ratingCount) {
@@ -948,7 +954,6 @@ class LoadAttribute extends AbstractModel implements LoadAttributeInterface
                 //param values will be catalog, catalog-search, search after processing
                 foreach ($attributes as $attribute) {
                     if ($parent) {
-
                         $product[$key] = $this->getAttributeData($attribute, $parent->getData($attribute));
                         $product[$key] = str_replace(
                             [' ', ","],

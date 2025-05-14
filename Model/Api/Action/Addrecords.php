@@ -86,8 +86,8 @@ class Addrecords extends Actionall
         ConfigHelper $searchHelperConfig,
         StoreManagerInterface $storeModelStoreManagerInterface,
         SearchHelper $searchHelperData,
-        EventManager $eventManager = null,
-        LoggerInterface $logger = null,
+        ?EventManager $eventManager = null,
+        ?LoggerInterface $logger = null,
         $requestModel = null,
         $responseModel = null
     ) {

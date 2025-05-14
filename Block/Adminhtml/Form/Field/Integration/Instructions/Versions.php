@@ -25,8 +25,8 @@ class Versions extends Template
     public function __construct(
         Context $context,
         array $data = [],
-        AssetRepositoryFactory $assetRepositoryFactory = null,
-        VersionReader $versionReader = null
+        ?AssetRepositoryFactory $assetRepositoryFactory = null,
+        ?VersionReader $versionReader = null
     ) {
         $this->assetRepositoryFactory = $assetRepositoryFactory ?: ObjectManager::getInstance()->get(AssetRepositoryFactory::class);
         $this->versionReader = $versionReader ?: ObjectManager::getInstance()->get(VersionReader::class);

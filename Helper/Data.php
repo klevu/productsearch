@@ -154,9 +154,9 @@ class Data extends AbstractHelper
         CurrencyFactory $currencyFactory,
         CurrencyInterface $localeCurrency,
         ConfigDataCollection $configDataCollection,
-        ConvertLogLevelServiceInterface $convertLogLevelService = null,
-        LoggerInterface $searchLogger = null,
-        LoggerInterface $preserveLayoutLogger = null
+        ?ConvertLogLevelServiceInterface $convertLogLevelService = null,
+        ?LoggerInterface $searchLogger = null,
+        ?LoggerInterface $preserveLayoutLogger = null
     ) {
         $this->_storeModelStoreManagerInterface = $storeModelStoreManagerInterface;
         $this->_backendModelUrl = $backendModelUrl;

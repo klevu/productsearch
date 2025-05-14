@@ -102,7 +102,7 @@ class SyncCommand extends Command
         Shell $shell,
         PhpExecutableFinderFactory $phpExecutableFinderFactory,
         LoggerInterface $logger,
-        StoreScopeResolverInterface $storeScopeResolver = null,
+        ?StoreScopeResolverInterface $storeScopeResolver = null,
         $klevuLoggerFQCN = null
     ) {
         $this->appState = $appState;

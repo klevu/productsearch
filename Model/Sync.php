@@ -2,21 +2,28 @@
 /**
  * Klevu main sync model
  */
+
 namespace Klevu\Search\Model;
 
 use Klevu\Logger\Constants as LoggerConstants;
-use Klevu\Search\Model\Klevu\Cron\SchedulerInterface as SchedulerInterface;
 use Klevu\Search\Model\Klevu\Category\CategoryInterface as CategoryInterface;
+use Klevu\Search\Model\Klevu\Cron\SchedulerInterface as SchedulerInterface;
 use Klevu\Search\Model\Klevu\HelperManager as KlevuHelperManager;
+use Magento\Framework\App\Filesystem\DirectoryList as DirectoryList;
+use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Data\Collection\AbstractDb;
+use Magento\Framework\Exception\FileSystemException;
+use Magento\Framework\Filesystem\Driver\File as FileDriver;
+use Magento\Framework\Filesystem\DriverInterface;
+use Magento\Framework\Filesystem\Glob as FileSystemGlob;
 use Magento\Framework\Model\AbstractModel;
 use Magento\Framework\Model\Context as Magento_Context;
 use Magento\Framework\Model\ResourceModel\AbstractResource;
 use Magento\Framework\Registry as Magento_Registry;
-use Magento\Framework\UrlInterface as Magento_UrlInterface;
-use Magento\Framework\App\Filesystem\DirectoryList as DirectoryList;
-use Symfony\Component\Process\PhpExecutableFinder as PhpExecutableFinderFactory;
+use Magento\Framework\Session\SessionManagerInterface;
 use Magento\Framework\Shell;
+use Magento\Framework\UrlInterface as Magento_UrlInterface;
+use Symfony\Component\Process\PhpExecutableFinder as PhpExecutableFinderFactory;
 
 class Sync extends AbstractModel
 {
@@ -33,15 +40,63 @@ class Sync extends AbstractModel
      */
     protected $_shell;
     /**
-     * @var \Symfony\Component\Process\PhpExecutableFinder
+     * @var PhpExecutableFinderFactory
      */
     protected $_phpExecutableFinder;
+    /**
+     * @var null
+     */
     protected $_phpPath = null;
-
+    /**
+     * @var KlevuHelperManager
+     */
     protected $_klevuHelperManager;
+    /**
+     * @var SchedulerInterface
+     */
     protected $_klevuSchedulerInterface;
+    /**
+     * @var CategoryInterface
+     */
     protected $_klevuCategoryInterface;
+    /**
+     * @var Magento_UrlInterface
+     */
     protected $_urlInterface;
+    /**
+     * @var DirectoryList
+     */
+    private $directoryList;
+    /**
+     * @var FileDriver
+     */
+    protected $fileDriver;
+    /**
+     * @var SessionManagerInterface
+     */
+    protected $sessionManager;
+    /**
+     * @var FileSystemGlob
+     */
+    protected $fileSystemGlob;
+
+    /**
+     * @param Magento_Context $context
+     * @param Magento_Registry $registry
+     * @param KlevuHelperManager $klevuHelperManager
+     * @param SchedulerInterface $klevuSchedulerInterface
+     * @param CategoryInterface $klevuCategoryInterface
+     * @param Magento_UrlInterface $urlInterface
+     * @param DirectoryList $directoryList
+     * @param Shell $shell
+     * @param PhpExecutableFinderFactory $phpExecutableFinderFactory
+     * @param AbstractResource|null $resource
+     * @param AbstractDb|null $resourceCollection
+     * @param array $data
+     * @param DriverInterface|null $fileDriver
+     * @param SessionManagerInterface|null $sessionManager
+     * @param FileSystemGlob|null $fileSystemGlob
+     */
 
     public function __construct(
         Magento_Context $context,
@@ -50,23 +105,31 @@ class Sync extends AbstractModel
         SchedulerInterface $klevuSchedulerInterface,
         CategoryInterface $klevuCategoryInterface,
         Magento_UrlInterface $urlInterface,
-		DirectoryList $directoryList,
+        DirectoryList $directoryList,
         Shell $shell,
         PhpExecutableFinderFactory $phpExecutableFinderFactory,
-        AbstractResource $resource = null,
-        AbstractDb $resourceCollection = null,
-		
-        array $data = []
-    )
-    {
-        parent::__construct($context, $registry, $resource, $resourceCollection,$data);
+        ?AbstractResource $resource = null,
+        ?AbstractDb $resourceCollection = null,
+        array $data = [],
+        ?DriverInterface $fileDriver = null,
+        ?SessionManagerInterface $sessionManager = null,
+        ?FileSystemGlob $fileSystemGlob = null
+    ) {
+        parent::__construct($context, $registry, $resource, $resourceCollection, $data);
         $this->_klevuHelperManager = $klevuHelperManager;
         $this->_klevuSchedulerInterface = $klevuSchedulerInterface;
         $this->_klevuCategoryInterface = $klevuCategoryInterface;
         $this->_urlInterface = $urlInterface;
         $this->_shell = $shell;
         $this->_phpExecutableFinder = $phpExecutableFinderFactory;
-		$this->directoryList = $directoryList;
+        $this->directoryList = $directoryList;
+        $objectManager = ObjectManager::getInstance();
+        $this->fileDriver = $fileDriver
+            ?: $objectManager->get(FileDriver::class);
+        $this->sessionManager = $sessionManager
+            ?: $objectManager->get(SessionManagerInterface::class);
+        $this->fileSystemGlob = $fileSystemGlob
+            ?: $objectManager->get(FileSystemGlob::class);
     }
 
     /**
@@ -84,100 +147,120 @@ class Sync extends AbstractModel
     public function isRunning($copies = 1)
     {
         return $this->_klevuSchedulerInterface->isRunning($this->getJobCode(), $copies);
-
     }
-    public function executeSubProcess($command){
-       if(is_null($this->_phpPath)) $this->_phpPath = $this->_phpExecutableFinder->find() ?: 'php';
-       try{
-           $this->_shell->execute(
-               $this->_phpPath . ' %s '.$command,
-               [
-                   BP . '/bin/magento'
-               ]
-           );
-           return true;
-       } catch (\Exception $e) {
-		   $logDir = $this->directoryList->getPath(DirectoryList::VAR_DIR);
-		   $subprocess_file = $logDir."/klevu_subprocess.lock";
-		   fopen($subprocess_file, 'w');
-		   $this->log(LoggerConstants::ZEND_LOG_CRIT, "can not execute subprocess $command ".$e->getMessage());
-		   throw new \Exception($e->getMessage()); 
-           return false;
-       }
+
+    /**
+     * @param string $command
+     *
+     * @return bool
+     * @throws FileSystemException
+     * @throws \Exception
+     */
+    public function executeSubProcess($command)
+    {
+        if ($this->_phpPath === null) {
+            $this->_phpPath = $this->_phpExecutableFinder->find()
+                ?: 'php';
+        }
+        try {
+            $this->_shell->execute(
+                $this->_phpPath . ' %s ' . $command,
+                [
+                    BP . '/bin/magento',
+                ]
+            );
+
+            return true;
+        } catch (\Exception $e) {
+            $logDir = $this->directoryList->getPath(DirectoryList::VAR_DIR);
+            $this->fileDriver->fileOpen($logDir . "/klevu_subprocess.lock", 'w');
+            $this->log(
+                LoggerConstants::ZEND_LOG_CRIT,
+                "Can not execute subprocess $command " . $e->getMessage()
+            );
+            throw new \Exception($e->getMessage());
+        }
     }
 
     /**
      * @return string
+     * @throws FileSystemException
      */
     public function getKlevuLockStatus()
     {
-        $messagestr = '';
         $lockFileMessages = [];
 
-        $files = glob($this->directoryList->getPath(DirectoryList::VAR_DIR).'/*klevu_running_index.lock');
-        if(!empty($files)) {
-            foreach($files as $key => $value) {
-                $params['filename'] = basename($value);
-                $url_lock = $this->_urlInterface->getUrl("klevu_search/sync/clearlock", $params);
-                $lockFileMessages[] = date('Y-m-d H:i:s', filemtime($value)) . ' - <a title="Remove Lock" href="' . $url_lock . '">Remove Lock</a><br />' . $params['filename'];
-            }
-            
-            $messagestr = implode('<br/><br/>', $lockFileMessages) . '<br/><br/>';
+        $files = $this->fileSystemGlob->glob(
+            $this->directoryList->getPath(DirectoryList::VAR_DIR) . '/*klevu_running_index.lock'
+        );
+        if (empty($files)) {
+            return 'No lock files found.';
+        }
+        foreach ($files as $key => $value) {
+            // phpcs:ignore Magento2.Functions.DiscouragedFunction.Discouraged
+            $params['filename'] = basename($value);
+            $urlLock = $this->_urlInterface->getUrl("klevu_search/sync/clearlock", $params);
+            // phpcs:ignore Magento2.Functions.DiscouragedFunction.Discouraged
+            $lockFileMessages[] = date('Y-m-d H:i:s', filemtime($value)) . ' - <a title="Remove Lock" href="'
+                . $urlLock . '">Remove Lock</a><br />' . $params['filename'];
         }
 
-        return $messagestr;
+        return implode('<br/><br/>', $lockFileMessages) . '<br/><br/>';
     }
-    
+
     /**
      * Get the klevu cron entry which is running mode
      *
      * @param string|null $jobCode
-     * @return string|void
+     *
+     * @return string
      */
     public function getKlevuCronStatus($jobCode = null)
     {
-        if (is_null($jobCode)) {
-            if ($this->getJobCode()) $jobCode = $this->getJobCode();
+        if ($jobCode === null) {
+            if ($this->getJobCode()) {
+                $jobCode = $this->getJobCode();
+            }
             $jobCode = $this->getDefaultJobCode();
         }
         $scheduler = $this->getScheduler();
-        $filters = array(
+        $filters = [
             "job_code" => $jobCode,
-            "status" => $scheduler->getStatusByCode('running')
-        );
-        $operations = array(
-            "setPageSize" => 1
+            "status" => $scheduler->getStatusByCode('running'),
+        ];
+        $operations = [
+            "setPageSize" => 1,
+        ];
 
-        );
-
-        $messagestr = '';
+        $messageToShow = '';
         $runningSchedules = $scheduler->getScheduleCollection($filters, $operations);
         if ($this->_klevuHelperManager->getConfigHelper()->isExternalCronActive()) {
-            $messagestr .= "Disabled";
-        } else if ($runningSchedules->getSize()) {
+            $messageToShow .= "Disabled";
+        } elseif ($runningSchedules->getSize()) {
             $url = $this->_urlInterface->getUrl("klevu_search/sync/clearcron");
 
-            $messagestr .= $runningSchedules->getFirstItem()->getData("executed_at") . " - Running - <a href='" . $url . "'>Reset Klevu Cron</a>";
+            $messageToShow .= $runningSchedules->getFirstItem()->getData("executed_at") . " - Running - <a href='"
+                . $url . "'>Reset Klevu Cron</a>";
         } else {
-            $filters = array(
+            $filters = [
                 "job_code" => $jobCode,
-                "status" => $scheduler->getStatusByCode('success')
-            );
-            $operations = array(
-                "setOrder" => array(
+                "status" => $scheduler->getStatusByCode('success'),
+            ];
+            $operations = [
+                "setOrder" => [
                     'finished_at',
-                    'desc'
-                ),
-                "setPageSize" => 1
+                    'desc',
+                ],
+                "setPageSize" => 1,
 
-            );
+            ];
             $doneSchedules = $scheduler->getScheduleCollection($filters, $operations);
             if ($doneSchedules->getSize()) {
-                $messagestr .= $doneSchedules->getFirstItem()->getData("finished_at") . ' - Completed';
+                $messageToShow .= $doneSchedules->getFirstItem()->getData("finished_at") . ' - Completed';
             }
         }
-        
-        return $messagestr;
+
+        return $messageToShow;
     }
 
     /**
@@ -197,22 +280,25 @@ class Sync extends AbstractModel
     }
 
     /**
-     * Remove the cron which is in running state
+     * Remove the cron, which is in running state
      *
      * @param string|null $jobCode
+     *
      * @return void
      */
     public function clearKlevuCron($jobCode = null)
     {
-        if (is_null($jobCode)) {
-            if ($this->getJobCode()) $jobCode = $this->getJobCode();
+        if (null === $jobCode) {
+            if ($this->getJobCode()) {
+                $jobCode = $this->getJobCode();
+            }
             $jobCode = $this->getDefaultJobCode();
         }
         $scheduler = $this->getScheduler();
-        $filters = array(
+        $filters = [
             "job_code" => $jobCode,
-            "status" => $scheduler->getStatusByCode('running')
-        );
+            "status" => $scheduler->getStatusByCode('running'),
+        ];
         $runningSchedules = $scheduler->getScheduleCollection($filters);
         if ($runningSchedules->getSize()) {
             foreach ($runningSchedules as $record) {
@@ -220,25 +306,26 @@ class Sync extends AbstractModel
             }
         }
     }
-	
-	/**
-     * Remove lock file
+
+    /**
+     * Remove a lock file
      *
      * @param string|null $filename
-     * @return void
+     *
+     * @return string
+     * @throws FileSystemException
      */
     public function clearKlevuLockFile($filename = null)
     {
-		$fname = $this->directoryList->getPath(DirectoryList::VAR_DIR)."/".$filename;
-		if(is_writable($fname)) {
-			if(!unlink($fname)) {
-			  return "Error deleting $filename";
-			} else {
-			  return "Deleted $filename";
-			}
-		} else {
-			return "permissions denied for $filename";
-		}
+        $fullFileName = $this->directoryList->getPath(DirectoryList::VAR_DIR) . "/" . $filename;
+        if (!$this->fileDriver->isWritable($fullFileName)) {
+            return sprintf("Permissions denied for lock file (%s) deletion. ", $filename);
+        }
+        if (!$this->fileDriver->deleteFile($fullFileName)) {
+            return sprintf("Error while deleting lock file (%s) deleted. ", $filename);
+        } else {
+            return sprintf("Lock file (%s) deleted. ", $filename);
+        }
     }
 
     /**
@@ -251,10 +338,11 @@ class Sync extends AbstractModel
     {
         if (!$this->isBelowMemoryLimit()) {
             $this->log(LoggerConstants::ZEND_LOG_INFO, "Memory limit reached. Stopped and rescheduled.");
-            $cron_status = $this->_klevuHelperManager->getConfigHelper()->isExternalCronEnabled();
-            if ($cron_status) {
+            $cronStatus = $this->_klevuHelperManager->getConfigHelper()->isExternalCronEnabled();
+            if ($cronStatus) {
                 $this->schedule();
             }
+
             return true;
         }
 
@@ -268,24 +356,31 @@ class Sync extends AbstractModel
      */
     protected function isBelowMemoryLimit()
     {
-        $php_memory_limit = ini_get('memory_limit');
+        $memoryLimit = ini_get('memory_limit');
         $usage = memory_get_usage(true);
 
-        if ($php_memory_limit < 0) {
-            $this->log(LoggerConstants::ZEND_LOG_DEBUG, sprintf(
-                "Memory usage: %s of %s.",
-                $this->_klevuHelperManager->getDataHelper()->bytesToHumanReadable($usage),
-                $php_memory_limit
-            ));
+        if ($memoryLimit < 0) {
+            $this->log(
+                LoggerConstants::ZEND_LOG_DEBUG,
+                sprintf(
+                    "Memory usage: %s of %s.",
+                    $this->_klevuHelperManager->getDataHelper()->bytesToHumanReadable($usage),
+                    $memoryLimit
+                )
+            );
+
             return true;
         }
-        $limit = $this->_klevuHelperManager->getDataHelper()->humanReadableToBytes($php_memory_limit);
+        $limit = $this->_klevuHelperManager->getDataHelper()->humanReadableToBytes($memoryLimit);
 
-        $this->log(LoggerConstants::ZEND_LOG_DEBUG, sprintf(
-            "Memory usage: %s of %s.",
-            $this->_klevuHelperManager->getDataHelper()->bytesToHumanReadable($usage),
-            $this->_klevuHelperManager->getDataHelper()->bytesToHumanReadable($limit)
-        ));
+        $this->log(
+            LoggerConstants::ZEND_LOG_DEBUG,
+            sprintf(
+                "Memory usage: %s of %s.",
+                $this->_klevuHelperManager->getDataHelper()->bytesToHumanReadable($usage),
+                $this->_klevuHelperManager->getDataHelper()->bytesToHumanReadable($limit)
+            )
+        );
 
         if ($usage / $limit > static::MEMORY_LIMIT) {
             return false;
@@ -304,14 +399,17 @@ class Sync extends AbstractModel
      */
     public function log($level, $message)
     {
-        $this->_klevuHelperManager->getDataHelper()->log($level, sprintf("[%s] %s", $this->getJobCode(), $message));
+        $this->_klevuHelperManager->getDataHelper()->log(
+            $level,
+            sprintf("[%s] %s", $this->getJobCode(), $message)
+        );
 
         return $this;
     }
 
     /**
      * Run a sync from cron at the specified time. Checks that a cron is not already
-     * scheduled to run in the 15 minute interval before or after the given time first.
+     * scheduled to run in the 15-minute interval before or after the given time first.
      *
      *
      * @return $this
@@ -319,36 +417,74 @@ class Sync extends AbstractModel
     public function schedule()
     {
         $this->_klevuSchedulerInterface->scheduleNow($this->getJobCode());
+
         return $this;
     }
 
-    //TODO: replace these functions with actions to also select data
-    public function getCategoryToDelete($storeId = null){
+    /**
+     * @param mixed $storeId
+     *
+     * @return mixed
+     */
+    public function getCategoryToDelete($storeId = null)
+    {
         return $this->_klevuCategoryInterface->categoryDelete($storeId);
     }
-    public function getCategoryToUpdate($storeId = null){
+
+    /**
+     * @param mixed $storeId
+     *
+     * @return bool|mixed
+     */
+    public function getCategoryToUpdate($storeId = null)
+    {
         return $this->_klevuCategoryInterface->categoryUpdate($storeId);
     }
-    public function getCategoryToAdd($storeId = null){
+
+    /**
+     * @param mixed $storeId
+     *
+     * @return bool|mixed
+     */
+    public function getCategoryToAdd($storeId = null)
+    {
         return $this->_klevuCategoryInterface->categoryAdd($storeId);
     }
-	
-	// Get registry variable
-	public function getRegistry(){
-		return $this->_registry;
-	}
-	
-	public function getHelper() {
-		return $this->_klevuHelperManager;
-	}
 
-	public function setSessionVariable($key,$value){
-		$objectManager = \Magento\Framework\App\ObjectManager::getInstance();
-		$objectManager->get('Magento\Framework\Session\SessionManagerInterface')->setData($key, $value);
-	}
+    /**
+     * @return Magento_Registry
+     */
+    public function getRegistry()
+    {
+        return $this->_registry;
+    }
 
-	public function getSessionVariable($key){
-		$objectManager = \Magento\Framework\App\ObjectManager::getInstance();
-		return $objectManager->get('Magento\Framework\Session\SessionManagerInterface')->getData($key);
-	}
+    /**
+     * @return KlevuHelperManager
+     */
+    public function getHelper()
+    {
+        return $this->_klevuHelperManager;
+    }
+
+    /**
+     * @param string $key
+     * @param mixed $value
+     *
+     * @return void
+     */
+    public function setSessionVariable($key, $value)
+    {
+        $this->sessionManager->setData($key, $value);
+    }
+
+    /**
+     * @param string $key
+     *
+     * @return mixed
+     */
+    public function getSessionVariable($key)
+    {
+        return $this->sessionManager->getData($key);
+    }
 }

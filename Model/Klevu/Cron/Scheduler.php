@@ -28,8 +28,8 @@ class Scheduler extends AbstractModel implements SchedulerInterface
         TimezoneInterface $timezone,
         Magento_ScheduleFactory $scheduleFactory,
         KlevuHelperManager $klevuHelperManager,
-        AbstractResource $resource = null,
-        AbstractDb $resourceCollection = null,
+        ?AbstractResource $resource = null,
+        ?AbstractDb $resourceCollection = null,
         array $data = []
     )
     {
