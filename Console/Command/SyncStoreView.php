@@ -104,9 +104,9 @@ class SyncStoreView extends Command
         StoreManagerInterface $storeInterface,
         DirectoryList $directoryList,
         LoggerInterface $logger,
-        StoreScopeResolverInterface $storeScopeResolver = null,
+        ?StoreScopeResolverInterface $storeScopeResolver = null,
         $klevuLoggerFQCN = null,
-        FilesystemDriverInterface $fileDriver = null
+        ?FilesystemDriverInterface $fileDriver = null
     ) {
         $this->appState = $appState;
         $this->storeInterface = $storeInterface;

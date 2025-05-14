@@ -32,7 +32,7 @@ class CustomerIdProvider implements CustomerIdProviderInterface
      */
     public function __construct(
         EncryptorInterface $encryptor,
-        DeploymentConfig $deploymentConfig = null
+        ?DeploymentConfig $deploymentConfig = null
     ) {
         $this->encryptor = $encryptor;
         $deploymentConfig = $deploymentConfig ?: ObjectManager::getInstance()->get(DeploymentConfig::class);

@@ -43,8 +43,8 @@ class Klevu extends AbstractDb
     public function __construct(
         Context $context,
         $connectionName = null,
-        GetBatchSizeInterface $getBatchSize = null,
-        LoggerInterface $logger = null
+        ?GetBatchSizeInterface $getBatchSize = null,
+        ?LoggerInterface $logger = null
     ) {
         parent::__construct($context, $connectionName);
         $objectManager = ObjectManager::getInstance();

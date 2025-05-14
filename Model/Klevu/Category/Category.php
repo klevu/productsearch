@@ -64,8 +64,8 @@ class Category extends AbstractModel implements CategoryInterface
         KlevuHelperManager $klevuHelperManager,
         KlevuFactory $klevuFactory,
         Magento_Category_Flat_State $flatState,
-        AbstractResource $resource = null,
-        AbstractDb $resourceCollection = null,
+        ?AbstractResource $resource = null,
+        ?AbstractDb $resourceCollection = null,
         array $data = []
     )
     {

@@ -88,10 +88,10 @@ class MagentoProductSyncRepository implements MagentoProductSyncRepositoryInterf
         ScopeConfigInterface $scopeConfig,
         KlevuProductResourceModel $productResourceModel,
         KlevuProductCollection $productCollection,
-        OptionProvider $optionProvider = null,
-        JoinParentVisibilityToSelectInterface $joinParentVisibilityToSelectService = null,
-        JoinParentStatusToSelectInterface $joinParentStatusToSelectService = null,
-        AddParentProductStockToCollectionInterface $addParentProductStockToCollection = null
+        ?OptionProvider $optionProvider = null,
+        ?JoinParentVisibilityToSelectInterface $joinParentVisibilityToSelectService = null,
+        ?JoinParentStatusToSelectInterface $joinParentStatusToSelectService = null,
+        ?AddParentProductStockToCollectionInterface $addParentProductStockToCollection = null
     ) {
         $this->klevuProductIndividual = $klevuProductIndividual;
         $this->klevuProductParent = $klevuProductParent;

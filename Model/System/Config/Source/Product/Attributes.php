@@ -78,8 +78,8 @@ class Attributes extends BackendHelper
      */
     public function __construct(
         EavConfig $eavConfig, // never used, left in place for backward compatibility
-        ReservedAttributeCodesProviderInterface $reservedAttributeCodesProvider = null,
-        ProductAttributeCollectionProviderInterface $productAttributeCollectionProvider = null
+        ?ReservedAttributeCodesProviderInterface $reservedAttributeCodesProvider = null,
+        ?ProductAttributeCollectionProviderInterface $productAttributeCollectionProvider = null
     ) {
         // __construct should call parent, however we are extending the wrong class.
         // Not calling parent construct is fine in this case.

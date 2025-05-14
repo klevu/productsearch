@@ -24,8 +24,8 @@ class OutdatedLockFile extends Template
     public function __construct(
         Context $context,
         array $data = [],
-        ConfigHelper $configHelper = null,
-        BackendHelper $backendHelper = null
+        ?ConfigHelper $configHelper = null,
+        ?BackendHelper $backendHelper = null
     ) {
         $this->configHelper = $configHelper ?: ObjectManager::getInstance()->get(ConfigHelper::class);
         $this->backendHelper = $backendHelper ?: ObjectManager::getInstance()->get(BackendHelper::class);

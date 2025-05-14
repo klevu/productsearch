@@ -37,8 +37,8 @@ class LockFile extends Template
     public function __construct(
         Context $context,
         array $data = [],
-        DirectoryList $directoryList = null,
-        IoInterface $fileSystemIo = null
+        ?DirectoryList $directoryList = null,
+        ?IoInterface $fileSystemIo = null
     ) {
         $this->directoryList = $directoryList ?: ObjectManager::getInstance()->get(DirectoryList::class);
         $this->fileSystemIo = $fileSystemIo ?: ObjectManager::getInstance()->get(FileSystemIo::class);

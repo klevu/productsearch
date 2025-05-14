@@ -43,8 +43,8 @@ class Collection
     public function __construct(
         ProductCollectionFactory $productCollectionFactory,
         GetBatchSize $getBatchSize,
-        StockStatusFactory $stockStatusFactory = null,
-        LoggerInterface $logger = null
+        ?StockStatusFactory $stockStatusFactory = null,
+        ?LoggerInterface $logger = null
     ) {
         $this->productCollectionFactory = $productCollectionFactory;
         $this->getBatchSize = $getBatchSize;

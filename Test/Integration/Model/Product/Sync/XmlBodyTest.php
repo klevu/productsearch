@@ -690,7 +690,7 @@ class XmlBodyTest extends TestCase
             ->getMock();
 
         $this->clientMock->method('send')
-            ->willReturnCallback(function (Request $request = null) {
+            ->willReturnCallback(function (?Request $request = null) {
                 return $this->objectManager->create('Zend\Http\Response');
             });
 
@@ -774,7 +774,7 @@ class XmlBodyTest extends TestCase
      * Loads product creation scripts because annotations use a relative path
      *  from integration tests root
      */
-    public static function loadProductFixturesActual(array $CREATE_SKUS = null)
+    public static function loadProductFixturesActual(?array $CREATE_SKUS = null)
     {
         include __DIR__ . '/_files/productFixturesXmlBody.php';
     }

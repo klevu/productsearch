@@ -42,9 +42,9 @@ class Button extends Template
     public function __construct(
         Context $context,
         array $data = [],
-        GetBearerTokenInterface $getBearerToken = null,
-        SerializerInterface $serializer = null,
-        ConfigRegistryInterface $configRegistry = null
+        ?GetBearerTokenInterface $getBearerToken = null,
+        ?SerializerInterface $serializer = null,
+        ?ConfigRegistryInterface $configRegistry = null
     ) {
         parent::__construct($context, $data);
 

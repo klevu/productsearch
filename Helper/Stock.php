@@ -25,7 +25,7 @@ class Stock extends AbstractHelper
      */
     public function __construct(
         StockRegistryInterface $stockRegistryInterface,
-        StockServiceInterface $stockService = null
+        ?StockServiceInterface $stockService = null
     ) {
         // There is no need for this class to extend AbstractHelper. It is left in place for backwards compatibility.
         // parent::__construct call is not required.

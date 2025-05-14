@@ -41,10 +41,10 @@ class Logdownload extends AbstractLogDownload
         Zip $zip,
         FileFactory $fileFactory,
         Klevu_HelperData $klevuHelperData,
-        LoggerInterface $logger = null,
-        FileIo $fileIo = null,
-        StoreScopeResolverInterface $storeScopeResolver = null,
-        LogFileNameProviderInterface $logFileNameProvider = null,
+        ?LoggerInterface $logger = null,
+        ?FileIo $fileIo = null,
+        ?StoreScopeResolverInterface $storeScopeResolver = null,
+        ?LogFileNameProviderInterface $logFileNameProvider = null,
         $maxFileSize = null
     ) {
         parent::__construct(

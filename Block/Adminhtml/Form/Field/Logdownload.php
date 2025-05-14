@@ -34,9 +34,9 @@ class Logdownload extends LogDownloadButton
         DirectoryList $directoryList,
         Klevu_HelperData $klevuHelperData,
         array $data = [],
-        FileIo $fileIo = null,
-        KlevuLoggerInterface $logger = null,
-        LogFileNameProviderInterface $logFileNameProvider = null,
+        ?FileIo $fileIo = null,
+        ?KlevuLoggerInterface $logger = null,
+        ?LogFileNameProviderInterface $logFileNameProvider = null,
         $destinationUrl = 'klevu_search/download/logdownload',
         $buttonLabel = 'Download Klevu Search Log'
     ) {

@@ -45,8 +45,8 @@ class Trigger extends Value
         TypeListInterface $cacheTypeList,
         SearchHelper $searchHelperData,
         KlevuModelTrigger $klevuModelTrigger,
-        AbstractResource $resource = null,
-        AbstractDb $resourceCollection = null,
+        ?AbstractResource $resource = null,
+        ?AbstractDb $resourceCollection = null,
         array $data = []
     ) {
         parent::__construct($context, $registry, $config, $cacheTypeList, $resource, $resourceCollection, $data);

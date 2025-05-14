@@ -31,7 +31,7 @@ class Frequency implements OptionSourceInterface {
      * Frequency constructor.
      * @param array|null $options
      */
-	public function __construct(array $options = null)
+	public function __construct(?array $options = null)
     {
 	    if (null !== $options) {
 	        $this->options = [];

@@ -73,10 +73,10 @@ class Stock implements StockServiceInterface
         StockRegistryInterface $stockRegistryInterface,
         StockItemCriteriaInterfaceFactory $stockItemCriteriaInterfaceFactory,
         StockItemRepositoryInterface $stockItemRepository,
-        GetStockStatusByIdInterface $getStockStatusById = null,
-        MagentoStockHelper $magentoStockHelper = null,
-        GetCompositeProductStockStatusInterface $getCompositeProductStockStatus = null,
-        GetStockIdForWebsiteInterface $getStockIdForWebsite = null
+        ?GetStockStatusByIdInterface $getStockStatusById = null,
+        ?MagentoStockHelper $magentoStockHelper = null,
+        ?GetCompositeProductStockStatusInterface $getCompositeProductStockStatus = null,
+        ?GetStockIdForWebsiteInterface $getStockIdForWebsite = null
     ) {
         $this->_stockRegistryInterface = $stockRegistryInterface;
         $this->stockItemCriteriaInterfaceFactory = $stockItemCriteriaInterfaceFactory;

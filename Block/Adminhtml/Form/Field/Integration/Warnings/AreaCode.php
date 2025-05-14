@@ -26,7 +26,7 @@ class AreaCode extends Template
     public function __construct(
         Context $context,
         array $data = [],
-        DirectoryList $directoryList = null
+        ?DirectoryList $directoryList = null
     ) {
         $this->directoryList = $directoryList ?: ObjectManager::getInstance()->get(DirectoryList::class);
 

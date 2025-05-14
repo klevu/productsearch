@@ -36,8 +36,8 @@ class SetCloudSearchV2UrlConfigValueObserver implements ObserverInterface
 
     public function __construct(
         ConfigWriterInterface $configWriter,
-        ScopeConfigInterface $scopeConfig = null,
-        ReinitableConfigInterface $reinitableConfig = null
+        ?ScopeConfigInterface $scopeConfig = null,
+        ?ReinitableConfigInterface $reinitableConfig = null
     ) {
         $this->configWriter = $configWriter;
         $this->scopeConfig = $scopeConfig ?: ObjectManager::getInstance()->get(ScopeConfigInterface::class);

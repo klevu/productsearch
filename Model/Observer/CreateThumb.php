@@ -80,7 +80,7 @@ class CreateThumb implements ObserverInterface
         Filesystem $magentoFrameworkFilesystem,
         Klevu_HelperManager $klevuHelperManager,
         StoreManager $storeModelStoreManager,
-        FilesystemDriverInterface $fileDriver = null
+        ?FilesystemDriverInterface $fileDriver = null
     ) {
         $this->_directoryList = $directoryList;
         $this->_magentoFrameworkFilesystem = $magentoFrameworkFilesystem;

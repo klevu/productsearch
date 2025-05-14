@@ -109,7 +109,7 @@ class Runexternaly extends \Magento\Framework\App\Action\Action
         DirectoryList $directoryList,
         IndexerFactory $indexerFactory,
         IndexerCollectionFactory $indexerCollectionFactory,
-        FileSystemDriverInterface $fileSystemDriver = null
+        ?FileSystemDriverInterface $fileSystemDriver = null
     ) {
         parent::__construct($context);
         $this->_cacheTypeList = $cacheTypeList;

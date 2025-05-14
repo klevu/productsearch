@@ -75,18 +75,18 @@ class Product extends DataObject implements ProductInterface
     /**
      * @param Context $context
      * @param array $data
-     * @param GetReviewCountInterface $getRatingsCount
-     * @param GetAverageRatingInterface $getAverageRating
-     * @param ConvertRatingToStarsInterface $convertRatingToStars
-     * @param ProductCollectionFactory $productCollectionFactory
+     * @param GetReviewCountInterface|null $getRatingsCount
+     * @param GetAverageRatingInterface|null $getAverageRating
+     * @param ConvertRatingToStarsInterface|null $convertRatingToStars
+     * @param ProductCollectionFactory|null $productCollectionFactory
      */
     public function __construct(
         Context $context,
         array $data = [],
-        GetReviewCountInterface $getRatingsCount = null,
-        GetAverageRatingInterface $getAverageRating = null,
-        ConvertRatingToStarsInterface $convertRatingToStars = null,
-        ProductCollectionFactory $productCollectionFactory = null
+        ?GetReviewCountInterface $getRatingsCount = null,
+        ?GetAverageRatingInterface $getAverageRating = null,
+        ?ConvertRatingToStarsInterface $convertRatingToStars = null,
+        ?ProductCollectionFactory $productCollectionFactory = null
     ) {
         $this->_storeModelStoreManagerInterface = $context->getStoreManagerInterface();
         $this->_searchHelperData = $context->getHelperManager()->getDataHelper();

@@ -114,8 +114,8 @@ class Price extends AbstractHelper
         PriceCurrencyInterface $priceCurrency,
         RuleFactory $resourceRuleFactory,
         KlevuStockHelper $stockHelper,
-        StoreManagerInterface $storeManager = null,
-        LoggerInterface $logger = null
+        ?StoreManagerInterface $storeManager = null,
+        ?LoggerInterface $logger = null
     ) {
         $this->_searchHelperConfig = $searchHelperConfig;
         $this->_searchHelperData = $searchHelperData;

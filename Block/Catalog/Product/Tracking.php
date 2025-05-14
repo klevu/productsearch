@@ -43,7 +43,7 @@ class Tracking extends TemplateBase
         ProductBlockContext $context,
         KlevuConfig $klevuConfig,
         array $data = [],
-        Klevu_HelperData $searchHelperData = null
+        ?Klevu_HelperData $searchHelperData = null
     ) {
         $this->_coreRegistry = $context->getRegistry();
         $this->_klevuConfig = $klevuConfig;

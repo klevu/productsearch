@@ -115,6 +115,7 @@ class UpdateRatingsAttributes implements UpdateRatingsAttributesInterface
                     $rating[RatingDataMapper::RATING_PRODUCT_ID]
                 ),
                 [
+                    'message' => $exception->getMessage(),
                     'rating' => $rating,
                 ]
             );

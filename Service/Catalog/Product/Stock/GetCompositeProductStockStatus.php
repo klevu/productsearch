@@ -49,8 +49,8 @@ class GetCompositeProductStockStatus implements GetCompositeProductStockStatusIn
         LoggerInterface $logger,
         StockItemCriteriaInterfaceFactory $stockItemCriteriaFactory,
         StockItemRepositoryInterface $stockItemRepository,
-        StockStatusCriteriaInterfaceFactory $stockStatusCriteriaFactory = null,
-        StockStatusRepositoryInterface $stockStatusRepository = null
+        ?StockStatusCriteriaInterfaceFactory $stockStatusCriteriaFactory = null,
+        ?StockStatusRepositoryInterface $stockStatusRepository = null
     ) {
         $this->logger = $logger;
         $this->stockItemCriteriaFactory = $stockItemCriteriaFactory;

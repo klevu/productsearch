@@ -66,8 +66,8 @@ class DefaultDataProvider implements OrderItemDataProviderInterface
     public function __construct(
         PriceCurrencyInterface $priceCurrency,
         SearchHelper $searchHelper,
-        StoreManagerInterface $storeManager = null,
-        LoggerInterface $logger = null
+        ?StoreManagerInterface $storeManager = null,
+        ?LoggerInterface $logger = null
     ) {
         $this->priceCurrency = $priceCurrency;
         $this->searchHelper = $searchHelper;

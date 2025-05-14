@@ -38,12 +38,12 @@ class UpdateLastSyncDate implements ObserverInterface
     /**
      * @param MagentoProductActionsInterface $magentoProductActions
      * @param Klevu_SearchHelperData $searchHelperData
-     * @param ProductCommonUpdater $productCommonUpdater
+     * @param ProductCommonUpdater|null $productCommonUpdater
      */
     public function __construct(
         MagentoProductActionsInterface $magentoProductActions,
         Klevu_SearchHelperData         $searchHelperData,
-        ProductCommonUpdater           $productCommonUpdater = null
+        ?ProductCommonUpdater          $productCommonUpdater = null
     )
     {
         $this->magentoProductActions = $magentoProductActions;

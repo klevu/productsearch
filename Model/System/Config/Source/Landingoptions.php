@@ -25,7 +25,7 @@ class Landingoptions
     /**
      * @param GetFeaturesInterface|null $getFeatures
      */
-    public function __construct(GetFeaturesInterface $getFeatures = null)
+    public function __construct(?GetFeaturesInterface $getFeatures = null)
     {
         $this->getFeatures = $getFeatures ?: ObjectManager::getInstance()->get(GetFeaturesInterface::class);
     }

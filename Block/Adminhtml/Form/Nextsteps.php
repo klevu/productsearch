@@ -46,7 +46,7 @@ class Nextsteps extends Fieldset
         IntegrationStatusInterface $integrationStatus,
         StoreManagerInterface $storeManager,
         array $data = [],
-        ConfigRegistryInterface $configRegistry = null
+        ?ConfigRegistryInterface $configRegistry = null
     ) {
         parent::__construct($context, $authSession, $jsHelper, $data);
         $this->integrationStatus = $integrationStatus;

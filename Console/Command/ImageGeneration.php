@@ -107,7 +107,7 @@ class ImageGeneration extends Command
         DirectoryList $directoryList,
         LoggerInterface $logger,
         DescriptorHelper $descriptorHelper,
-        FilesystemDriverInterface $fileDriver = null
+        ?FilesystemDriverInterface $fileDriver = null
     ) {
         $this->appState = $appState;
         $this->_magentoCollectionFactory = $magentoCollectionFactory;

@@ -82,7 +82,7 @@ class Image extends AbstractHelper
         RequireJs $requireJs,
         DirectoryList $directoryList,
         ProductMetadataInterface $productMetadataInterface,
-        FileIo $fileIo = null
+        ?FileIo $fileIo = null
     ) {
         $this->_storeModelStoreManagerInterface = $storeModelStoreManagerInterface;
         $this->_searchHelperConfig = $searchHelperConfig;

@@ -34,9 +34,9 @@ class Logclear extends LogClearButton
         Klevu_HelperData $klevuHelperData,
         DirectoryList $directoryList,
         array $data = [],
-        KlevuLoggerInterface $logger = null,
-        FileIo $fileIo = null,
-        LogFileNameProviderInterface $logFileNameProvider = null,
+        ?KlevuLoggerInterface $logger = null,
+        ?FileIo $fileIo = null,
+        ?LogFileNameProviderInterface $logFileNameProvider = null,
         $destinationUrl = 'klevu_search/download/logclear',
         $buttonLabel = 'Rename Klevu Search Log'
     ) {
