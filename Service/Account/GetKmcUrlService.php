@@ -50,7 +50,7 @@ class GetKmcUrlService implements GetKmcUrlServiceInterface
         ScopeConfigInterface $scopeConfig,
         RequestInterface $request,
         LoggerInterface $logger,
-        ?ConfigRegistryInterface $configRegistry = null,
+        ?ConfigRegistryInterface $configRegistry = null
     ) {
         $this->configSource = $configSource;
         $this->scopeConfig = $scopeConfig;
