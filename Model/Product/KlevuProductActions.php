@@ -55,6 +55,9 @@ class KlevuProductActions extends DataObject implements KlevuProductActionsInter
      */
     protected $_storeModelStoreManagerInterface;
 
+    const CHUNK_SIZE_DEFAULT    = 50;
+    const CHUNK_SIZE_MAX = 500;
+
     /**
      * @param Klevu_Context $context
      */
@@ -105,31 +108,34 @@ class KlevuProductActions extends DataObject implements KlevuProductActionsInter
         if ($response->isSuccess()) {
             $this->addData([
                 'store' => $store,
-                'session_id' => $response->getSessionId()
+                'session_id' => $response->getSessionId(),
             ]);
             $this->_searchModelSession->setKlevuSessionId($response->getSessionId());
 
             return true;
         }
-        $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_ERR, sprintf(
-            "Failed to start a session for %s (%s): %s",
-            $store->getWebsite()->getName(),
-            $store->getName(),
-            $response->getMessage()
-        ));
-        if ($response instanceof EmptyResponse) {
-            $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_ERR, sprintf(
-                "Product Sync failed for %s (%s): Could not contact Klevu.",
-                $store->getWebsite()->getName(),
-                $store->getName()
-            ));
-        } else {
-            $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_ERR, sprintf(
-                "Product Sync failed for %s (%s): %s",
+        $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_ERR,
+            sprintf(
+                "Failed to start a session for %s (%s): %s",
                 $store->getWebsite()->getName(),
                 $store->getName(),
                 $response->getMessage()
             ));
+        if ($response instanceof EmptyResponse) {
+            $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_ERR,
+                sprintf(
+                    "Product Sync failed for %s (%s): Could not contact Klevu.",
+                    $store->getWebsite()->getName(),
+                    $store->getName()
+                ));
+        } else {
+            $this->_searchHelperData->log(LoggerConstants::ZEND_LOG_ERR,
+                sprintf(
+                    "Product Sync failed for %s (%s): %s",
+                    $store->getWebsite()->getName(),
+                    $store->getName(),
+                    $response->getMessage()
+                ));
         }
 
         return false;
@@ -162,7 +168,9 @@ class KlevuProductActions extends DataObject implements KlevuProductActionsInter
             return sprintf(
                 "%d product%s failed (%s)",
                 $skipped_count,
-                ($skipped_count > 1) ? "s" : "",
+                ($skipped_count > 1)
+                    ? "s"
+                    : "",
                 implode(", ", $skipped_records["messages"])
             );
         }
@@ -206,63 +214,93 @@ class KlevuProductActions extends DataObject implements KlevuProductActionsInter
     }
 
     /**
-     * Update success processing , separated for easier override
+     * Update success processing, separated for easier override
      *
      * @param array $data
      * @param EmptyResponse $response
+     * @param bool|string $batchStartTime
      *
-     * @return bool|string
-     * @throws NoSuchEntityException
+     * @return bool|string True on success; error summary string if any records skipped
+     * @throws \Throwable Rethrows DB exceptions after rollback
      */
-    public function executeUpdateProductsSuccess(array $data, $response)
+    public function executeUpdateProductsSuccess(array $data, $response, $batchStartTime = null)
     {
-        $connection = $this->_frameworkModelResource->getConnection("core_write");
-        $regestry = $this->_klevuSyncModel->getRegistry();
-        $regestry->unregister("numberOfRecord_update");
-        $regestry->register("numberOfRecord_update", count($data));
-        $skipped_record_ids = [];
-        if ($skipped_records = $response->getSkippedRecords()) {
-            $skipped_record_ids = array_flip($skipped_records["index"]);
-        }
+        $connection = $this->_frameworkModelResource->getConnection('core_write');
+        $skippedIndexMap = $this->getSkippedIndexMapFromResponse($response);
+        $batchStartTime = $this->resolveBatchStartTime($batchStartTime);
 
-        $where = [];
+        $storeId = (int)$this->_storeModelStoreManagerInterface->getStore()->getId();
+        $pairs   = [];
+
         $iMaxCount = count($data);
         for ($i = 0; $i < $iMaxCount; $i++) {
-            if (isset($skipped_record_ids[$i]) || !isset($data[$i]['id'])) {
+            if (isset($skippedIndexMap[$i])) {
                 continue;
             }
+            if (!isset($data[$i]['id'])) {
+                continue;
+            }
+
             $ids = $this->_searchHelperData->getMagentoProductId($data[$i]['id']);
             if (!empty($ids)) {
-                $where[] = sprintf(
-                    "(%s AND %s AND %s)",
-                    $connection->quoteInto("product_id = ?", $ids['product_id']),
-                    $connection->quoteInto("parent_id = ?", $ids['parent_id']),
-                    $connection->quoteInto("type = ?", "products")
-                );
+                $pairs[] = [
+                    (int)(isset($ids['product_id']) ? $ids['product_id'] : 0),
+                    (int)(isset($ids['parent_id']) ? $ids['parent_id'] : 0),
+                ];
             }
         }
 
-        if (!empty($where)) {
-            $where = sprintf(
-                "(%s) AND (%s)",
-                $connection->quoteInto("store_id = ?", $this->_storeModelStoreManagerInterface->getStore()->getId()),
-                implode(" OR ", $where)
-            );
+        $registry = $this->_klevuSyncModel->getRegistry();
+        $registry->unregister('numberOfRecord_update');
+        $registry->register('numberOfRecord_update', count($pairs));
 
-            $this->_frameworkModelResource->getConnection("core_write")->update(
-                $this->_frameworkModelResource->getTableName('klevu_product_sync'),
-                ['last_synced_at' => $this->_searchHelperCompat->now()],
-                $where
-            );
+        if (!empty($pairs)) {
+            $table = $this->_frameworkModelResource->getTableName('klevu_product_sync');
+            $type  = 'products';
+            $chunkSize = $this->_searchHelperConfig->getChunkSize(true, $storeId);
+            $connection->beginTransaction();
+            try {
+                foreach (array_chunk($pairs, $chunkSize) as $chunk) {
+                    $orParts = [];
+                    $binds   = [];
+                    $binds[] = $storeId;
+                    $binds[] = $type;
+
+                    foreach ($chunk as $pp) {
+                        $orParts[] = '(product_id = ? AND parent_id = ?)';
+                        $binds[]   = $pp[0]; // product_id
+                        $binds[]   = $pp[1]; // parent_id
+                    }
+
+                    $whereSql = 'store_id = ? AND type = ? AND (' . implode(' OR ', $orParts) . ')';
+                    $sql = "UPDATE $table SET last_synced_at = ? WHERE $whereSql";
+                    array_unshift($binds, $batchStartTime);
+
+                    $connection->query($sql, $binds);
+                }
+                $connection->commit();
+            } catch (\Throwable $e) {
+                $connection->rollBack();
+                $this->_searchHelperData->log(
+                    LoggerConstants::ZEND_LOG_ERR,
+                    sprintf(
+                        'Product updates sent to Klevu but Magento table operation failed in %s: %s',
+                        __METHOD__,
+                        $e->getMessage()
+                    )
+                );
+                throw $e;
+            }
         }
 
-        $skipped_count = count($skipped_record_ids);
-        if ($skipped_count > 0) {
+        $skippedCount = count($skippedIndexMap);
+        if ($skippedCount > 0) {
+            $messages = $this->getSkippedMessagesFromResponse($response);
             return sprintf(
-                "%d product%s failed (%s)",
-                $skipped_count,
-                ($skipped_count > 1) ? "s" : "",
-                implode(", ", $skipped_records["messages"])
+                '%d product%s failed (%s)',
+                $skippedCount,
+                ($skippedCount > 1) ? 's' : '',
+                $messages
             );
         }
 
@@ -270,67 +308,168 @@ class KlevuProductActions extends DataObject implements KlevuProductActionsInter
     }
 
     /**
-     * Add success processing , separated for easier override
      *
      * @param array $data
      * @param Response $response
+     * @param string|null $batchStartTime
      *
-     * @return bool|string
-     * @throws NoSuchEntityException
+     * @return bool|string True on success; error summary string if any records skipped
+     * @throws \Throwable Rethrows DB exceptions after rollback
      */
-    public function executeAddProductsSuccess(array $data, $response)
-    {
-        $skipped_record_ids = [];
-        if ($skipped_records = $response->getSkippedRecords()) {
-            $skipped_record_ids = array_flip($skipped_records["index"]);
-        }
-        $sync_time = $this->_searchHelperCompat->now();
-        $this->_klevuSyncModel->getRegistry()->unregister("numberOfRecord_add");
-        $this->_klevuSyncModel->getRegistry()->register("numberOfRecord_add", count($data));
-        foreach ($data as $i => &$record) {
-            if (isset($skipped_record_ids[$i])) {
-                unset($data[$i]);
+    public function executeAddProductsSuccess(
+        array $data,
+        $response,
+        $batchStartTime = null
+    ) {
+        $skippedIndexMap = $this->getSkippedIndexMapFromResponse($response);
+        $batchStartTime = $this->resolveBatchStartTime($batchStartTime);
+
+        $storeId = (int)$this->_storeModelStoreManagerInterface->getStore()->getId();
+        $rows = [];
+        foreach ($data as $i => $item) {
+            if (isset($skippedIndexMap[$i])) {
                 continue;
             }
-            $ids = $this->_searchHelperData->getMagentoProductId($data[$i]['id']);
-
-            $record = [
-                $ids["product_id"],
-                $ids["parent_id"],
-                $this->_storeModelStoreManagerInterface->getStore()->getId(),
-                $sync_time,
-                "products"
+            $ids = $this->_searchHelperData->getMagentoProductId($item['id']);
+            $rows[] = [
+                (int)($ids['product_id'] ?? 0),
+                (int)($ids['parent_id'] ?? 0),
+                $storeId,
+                $batchStartTime,
+                'products',
             ];
         }
 
-        if (!empty($data)) {
-            foreach ($data as $key => $value) {
-                $write = $this->_frameworkModelResource->getConnection("core_write");
-                $query = "replace into " . $this->_frameworkModelResource->getTableName('klevu_product_sync')
-                    . "(product_id, parent_id, store_id, last_synced_at, type) values "
-                    . "(:product_id, :parent_id, :store_id, :last_synced_at, :type)";
+        $registry = $this->_klevuSyncModel->getRegistry();
+        $registry->unregister('numberOfRecord_add');
+        $registry->register('numberOfRecord_add', count($rows));
 
-                $binds = [
-                    'product_id' => $value[0],
-                    'parent_id' => $value[1],
-                    'store_id' => $value[2],
-                    'last_synced_at' => $value[3],
-                    'type' => $value[4]
-                ];
-                $write->query($query, $binds);
+        if (!empty($rows)) {
+            $connection = $this->_frameworkModelResource->getConnection('core_write');
+            $table = $this->_frameworkModelResource->getTableName('klevu_product_sync');
+
+            $chunkSize = $this->_searchHelperConfig->getChunkSize(false, $storeId);
+            $connection->beginTransaction();
+            try {
+                foreach (array_chunk($rows, $chunkSize) as $chunkRow) {
+                    $placeholders = implode(
+                        ',',
+                        array_fill(0, count($chunkRow), '(?, ?, ?, ?, ?)')
+                    );
+                    $sql = "REPLACE INTO $table (product_id, parent_id, store_id, last_synced_at, type) VALUES $placeholders";
+
+                    $binds = [];
+                    foreach ($chunkRow as $column) {
+                        array_push($binds, $column[0], $column[1], $column[2], $column[3], $column[4]);
+                    }
+
+                    $connection->query($sql, $binds);
+                }
+                $connection->commit();
+            } catch (\Throwable $e) {
+                $connection->rollBack();
+                $this->_searchHelperData->log(
+                    LoggerConstants::ZEND_LOG_ERR,
+                    sprintf(
+                        'Product addition sent to Klevu but Magento table operation failed in %s: %s',
+                        __METHOD__,
+                        $e->getMessage()
+                    )
+                );
+                throw $e;
             }
         }
 
-        $skipped_count = count($skipped_record_ids);
-        if ($skipped_count > 0) {
+        $skippedCount = count($skippedIndexMap);
+        if ($skippedCount > 0) {
+            $messages = $this->getSkippedMessagesFromResponse($response);
             return sprintf(
-                "%d product%s failed (%s)",
-                $skipped_count,
-                ($skipped_count > 1) ? "s" : "",
-                implode(", ", $skipped_records["messages"])
+                '%d product%s failed (%s)',
+                $skippedCount,
+                ($skippedCount > 1) ? 's' : '',
+                $messages
             );
         }
-
         return true;
+    }
+
+    /**
+     * Extract skipped index map from API response.
+     *
+     * @param Response $response
+     *
+     * @return array
+     */
+    private function getSkippedIndexMapFromResponse(Response $response)
+    {
+        $skippedIndexMap = [];
+        $skippedRecords  = method_exists($response, 'getSkippedRecords')
+            ? (array)$response->getSkippedRecords()
+            : [];
+
+        if (!empty($skippedRecords['index']) && is_array($skippedRecords['index'])) {
+            $skippedIndexMap = array_flip($skippedRecords['index']);
+        }
+
+        return $skippedIndexMap;
+    }
+
+    /**
+     * Normalize and validate batch start time.
+     *
+     * @param ?string $batchStartTime
+     *
+     * @return string
+     */
+    private function resolveBatchStartTime(?string $batchStartTime = null)
+    {
+        $nowStr   = $this->_searchHelperCompat->now();
+        $candidate = ($batchStartTime !== null) ? $batchStartTime : $nowStr;
+
+        if (false === strtotime($candidate)) {
+            $this->_searchHelperData->log(
+                LoggerConstants::ZEND_LOG_ERR,
+                sprintf(
+                    "Invalid batch start time (%s) passed to %s",
+                    (string)$candidate,
+                    __METHOD__
+                )
+            );
+            return $nowStr;
+        }
+
+        try {
+            $dt = new \DateTimeImmutable($candidate);
+            return $dt->format('Y-m-d H:i:s');
+        } catch (\Throwable $e) {
+            $this->_searchHelperData->log(
+                LoggerConstants::ZEND_LOG_ERR,
+                sprintf(
+                    "Failed to normalise batch start time (%s) in %s: %s",
+                    (string)$candidate,
+                    __METHOD__,
+                    $e->getMessage()
+                )
+            );
+            return $nowStr;
+        }
+    }
+
+    /**
+     * @param Response $response
+     *
+     * @return string
+     */
+    private function getSkippedMessagesFromResponse(Response $response)
+    {
+        $skippedRecords  = method_exists($response, 'getSkippedRecords')
+            ? (array)$response->getSkippedRecords()
+            : [];
+
+        if (!empty($skippedRecords['messages']) && is_array($skippedRecords['messages'])) {
+            return implode(', ', $skippedRecords['messages']);
+        }
+
+        return 'No messages';
     }
 }

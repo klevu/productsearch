@@ -573,6 +573,7 @@
     <type name="Klevu\Search\Model\Product\LoadAttribute">
         <arguments>
             <argument name="reservedAttributeCodesProvider" xsi:type="object">Klevu\Search\Provider\Sync\Catalog\Product\ReservedAttributeCodesProvider</argument>
+            <argument name="logger" xsi:type="object">Klevu\Search\Logger\Logger\Search</argument>
         </arguments>
     </type>
 

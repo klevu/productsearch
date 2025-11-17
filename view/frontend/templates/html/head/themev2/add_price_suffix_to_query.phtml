@@ -189,7 +189,7 @@ $landingScriptString = '';
 <?php if (strlen($quickSearchScriptString) || strlen($landingScriptString)): ?>
     <?php $scriptString = $quickSearchScriptString . PHP_EOL . $landingScriptString; ?>
 
-    <?= $secureRenderer->renderTag(
+    <?= /* @noEscape */ $secureRenderer->renderTag(
         'script',
         [
             'type' => 'text/javascript',

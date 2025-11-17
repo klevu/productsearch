@@ -4,8 +4,11 @@
     <td colspan="3">
         <div class="message">
             <div>
-                <?= /** @noEscape */ __('%1 To integrate with your Klevu account %2, please use the %1 Integration %2 section in the left hand menu under "Klevu".',
-                    '<strong>', '</strong>') ?>
+                <?= /** @noEscape */ __(
+                    '%1 To integrate with your Klevu account %2, please use the %1 Integration %2 section in the left hand menu under "Klevu".',
+                    '<strong>',
+                    '</strong>'
+                ) ?>
             </div>
             <div>
                 <?= $block->escapeHtml(

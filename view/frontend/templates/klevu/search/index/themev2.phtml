@@ -7,7 +7,7 @@ $contentMinHeight = $block->getContentMinHeight();
 ?>
 
 <?php if ($contentMinHeight): ?>
-    <?= $secureRenderer->renderTag(
+    <?= /* @noEscape */ $secureRenderer->renderTag(
             'style',
         [
                 'type' => 'text/css',

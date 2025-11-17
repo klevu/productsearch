@@ -1,24 +1,24 @@
 <?php /** @var \Klevu\Search\Block\Adminhtml\Form\Field\Sync\Button $block */ ?>
-<button id="<?php echo $block->getDataUsingMethod('html_id') ?>" class="scalable" type="button">
-    <span><?php echo $block->escapeHtml(__($block->getDataUsingMethod('button_label'))); ?></span>
+<button id="<?= /** @noEscape */ $block->getDataUsingMethod('html_id') ?>" class="scalable" type="button">
+    <span><?= $block->escapeHtml(__($block->getDataUsingMethod('button_label'))); ?></span>
 </button>
 
 <script type="text/javascript">
     require(["prototype"], function () {
-        $("<?php echo $block->getHtmlId() ?>").observe("click", function () {
+        $("<?= /** @noEscape */ $block->getHtmlId() ?>").observe("click", function () {
             if (document.getElementById('klevu_integration_next_steps_sync')) {
-                new Ajax.Request("<?php echo $block->escapeUrl($block->getAjaxUrl()) ?>", {
+                new Ajax.Request("<?= $block->escapeUrl($block->getAjaxUrl()) ?>", {
                     method: 'POST',
                     onComplete: function (data) {
-                        if (parseInt(<?php echo $block->escapeHtml($block->getSyncOptions()?: '')?>) === 1) {
-                            window.open("<?php echo $block->escapeUrl($block->getSyncUrlForStore()); ?>", "_blank");
+                        if (parseInt(<?= $block->escapeHtml($block->getSyncOptions()?: '')?>) === 1) {
+                            window.open("<?= $block->escapeUrl($block->getSyncUrlForStore()); ?>", "_blank");
                         } else {
-                            setLocation("<?php echo $block->escapeUrl($block->getDataUsingMethod('destination_url')) ?>");
+                            setLocation("<?= $block->escapeUrl($block->getDataUsingMethod('destination_url')) ?>");
                         }
                     }
                 });
             } else {
-                setLocation("<?php echo $block->escapeUrl($block->getDataUsingMethod('destination_url')) ?>");
+                setLocation("<?= $block->escapeUrl($block->getDataUsingMethod('destination_url')) ?>");
             }
         });
     });

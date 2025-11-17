@@ -547,7 +547,7 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
      */
     public function updateProducts(array $data)
     {
-
+        $batchStartTime = date('Y-m-d H:i:s');
         $total = count($data);
 
         $dataToSend = $this->_loadAttribute->addProductSyncData($data);
@@ -562,7 +562,11 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
                 'records' => $data
             ]);
         if ($response->isSuccess()) {
-            return $this->_klevuProductAction->executeUpdateProductsSuccess($data, $response);
+            return $this->_klevuProductAction->executeUpdateProductsSuccess(
+                $data,
+                $response,
+                $batchStartTime
+            );
         }
 
         return sprintf(
@@ -585,6 +589,7 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
      */
     public function addProducts(array $data)
     {
+        $batchStartTime = date('Y-m-d H:i:s');
         $total = count($data);
         $dataToSend = $this->_loadAttribute->addProductSyncData($data);
         if (!empty($dataToSend) && is_numeric($dataToSend)) {
@@ -598,7 +603,11 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
                 'records' => $data
             ]);
         if ($response->isSuccess()) {
-            return $this->_klevuProductAction->executeAddProductsSuccess($data, $response);
+            return $this->_klevuProductAction->executeAddProductsSuccess(
+                $data,
+                $response,
+                $batchStartTime
+            );
         }
 
         return sprintf(

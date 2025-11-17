@@ -14,15 +14,15 @@ $indexersMessage = $block->isShowIndexerMessage();
 <?php if ($key !== $rest_from_db): ?>
     <div class="message warning" id="kl_invalid_hash_key">
         <span>
-            <?= __('Hash key found invalid for requested store.') ?>
+            <?= /* @noEscape */ __('Hash key found invalid for requested store.') ?>
         </span>
     </div>
 <?php else: ?>
     <?php if ($indexersMessage): ?>
         <div class="message warning" id="kl_indexers_message">
             <span>
-                <?= __('Magento Indexers are found invalid for the Magento Store.') ?>
-                <?= __(
+                <?= /* @noEscape */ __('Magento Indexers are found invalid for the Magento Store.') ?>
+                <?= /* @noEscape */ __(
                     'Please rebuild %1 Magento Indexers %2 and Click on %1 Sync Updates Only for This Store %2 again..',
                     '<strong>',
                     '</strong>'
@@ -32,22 +32,22 @@ $indexersMessage = $block->isShowIndexerMessage();
     <?php endif; ?>
     <div class="message warning" id="kl_close_warning_before" style="display:block">
         <span>
-            <?= __('Please don\'t close this tab when the data is being synchronized.') ?>
+            <?= /* @noEscape */ __('Please don\'t close this tab when the data is being synchronized.') ?>
         </span>
     </div>
     <div class="message success" id="kl_close_warning_after" style="display:none">
         <span>
-            <?= __('Data Synchronization has been finished. You can close this tab now.') ?>&nbsp;
-            <a title="<?= __('By clicking on link, it will close tab') ?>"
+            <?= /* @noEscape */ __('Data Synchronization has been finished. You can close this tab now.') ?>&nbsp;
+            <a title="<?= /* @noEscape */ __('By clicking on link, it will close tab') ?>"
                href="#"
                onclick="window.close(); return false;">
-                <?= __('Click to close tab') ?>
+                <?= /* @noEscape */ __('Click to close tab') ?>
             </a>
         </span>
     </div>
     <div id="info_message">
         <span id="loader" style="display:none">
-            <?= __('Please wait...') ?>
+            <?= /* @noEscape */ __('Please wait...') ?>
         </span>
     </div>
 
@@ -109,7 +109,7 @@ $indexersMessage = $block->isShowIndexerMessage();
     callAjaxRecurrsively()
     ";
     ?>
-    <?= $secureRenderer->renderTag(
+    <?= /* @noEscape */ $secureRenderer->renderTag(
         'script',
         ['type' => 'text/javascript'],
         $scriptString,

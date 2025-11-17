@@ -1,11 +1,11 @@
 <?php /** @var \Klevu\Search\Block\Adminhtml\Form\Field\Sync\Button $block */ ?>
-<button id="<?php echo $block->getHtmlId() ?>" class="scalable" type="button">
-    <span><?php echo __($block->getButtonLabel()) ?></span>
+<button id="<?= /** @noEscape */ $block->getHtmlId() ?>" class="scalable" type="button">
+    <span><?= /** @noEscape */ __($block->getButtonLabel()) ?></span>
 </button>
 <script type="text/javascript">
 require(["prototype"], function(){
-	$("<?php echo $block->getHtmlId() ?>").observe("click", function () {
-		window.open('<?php echo $block->getDestinationUrl() ?>','_blank');
-	});
+    $("<?= /** @noEscape */ $block->getHtmlId() ?>").observe("click", function () {
+        window.open('<?= /** @noEscape */ $block->getDestinationUrl() ?>','_blank');
+    });
 });
 </script>

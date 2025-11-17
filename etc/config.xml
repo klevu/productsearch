@@ -53,6 +53,8 @@
                 <lazyload_js_search_landing>0</lazyload_js_search_landing>
                 <content_min_height_srlp/>
                 <use_magento_currency_format>0</use_magento_currency_format>
+                <chunk_add>50</chunk_add>
+                <chunk_update>50</chunk_update>
             </developer>
             <searchlanding>
                 <landenabled>2</landenabled>

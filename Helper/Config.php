@@ -8,6 +8,7 @@ use Klevu\Search\Helper\Data as SearchHelper;
 use Klevu\Search\Model\Attribute\Rating;
 use Klevu\Search\Model\Attribute\ReviewCount;
 use Klevu\Search\Model\Api\Action\Features as ApiGetFeatures;
+use Klevu\Search\Model\Product\KlevuProductActions;
 use Klevu\Search\Model\System\Config\Source\Frequency;
 use Klevu\Search\Model\System\Config\Source\Landingoptions;
 use Klevu\Search\Model\System\Config\Source\Taxoptions;
@@ -111,6 +112,8 @@ class Config extends AbstractHelper
     const XML_PATH_LAZYLOAD_SEARCH_LANDING = 'klevu_search/developer/lazyload_js_search_landing';
     const XML_PATH_SRLP_CONTENT_MIN_HEIGHT = 'klevu_search/developer/content_min_height_srlp';
     const XML_PATH_USE_MAGENTO_CURRENCY_FORMAT = 'klevu_search/developer/use_magento_currency_format';
+    const XML_PATH_CHUNK_UPDATE = 'klevu_search/developer/chunk_update';
+    const XML_PATH_CHUNK_ADD = 'klevu_search/developer/chunk_add';
 
     /**
      * @var RequestInterface
@@ -1013,6 +1016,29 @@ class Config extends AbstractHelper
             ScopeInterface::SCOPE_STORE,
             $store
         ) ?: ApiHelper::ENDPOINT_DEFAULT_HOSTNAME;
+    }
+
+    /**
+     * @param bool $isUpdate
+     * @param null $storeId
+     *
+     * @return int
+     */
+    public function getChunkSize(bool $isUpdate = false, $storeId = null)
+    {
+        $configPath = $isUpdate
+            ? static::XML_PATH_CHUNK_UPDATE
+            : static::XML_PATH_CHUNK_ADD;
+
+        $chunkSize = (int)$this->_appConfigScopeConfigInterface->getValue(
+            $configPath,
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        );
+        if ($chunkSize <= 0 || $chunkSize > KlevuProductActions::CHUNK_SIZE_MAX) {
+            return KlevuProductActions::CHUNK_SIZE_DEFAULT;
+        }
+        return $chunkSize;
     }
 
     /**

@@ -9,6 +9,8 @@ use Klevu\Search\Model\Product\LoadAttribute;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\DB\Adapter\AdapterInterface as DBAdapterInterface;
 use Magento\Framework\DB\Select;
+use Magento\Store\Model\StoreManagerInterface;
+use Magento\TestFramework\App\Config;
 use Magento\TestFramework\ObjectManager;
 use PHPUnit\Framework\TestCase;
 
@@ -18,6 +20,14 @@ class LoadAttributeTest extends TestCase
      * @var ObjectManager
      */
     private $objectManager;
+    /**
+     * @var Config
+     */
+    private $config;
+    /**
+     * @var StoreManagerInterface
+     */
+    private $storeManager;
 
     /**
      * @return void
@@ -26,6 +36,8 @@ class LoadAttributeTest extends TestCase
     private function setUpPhp5()
     {
         $this->objectManager = ObjectManager::getInstance();
+        $this->config = $this->objectManager->get(Config::class);
+        $this->storeManager = $this->objectManager->get(StoreManagerInterface::class);
     }
 
     /**
@@ -38,6 +50,18 @@ class LoadAttributeTest extends TestCase
     public function testGetAttributeMapReturnsValidArray()
     {
         $this->setUpPhp5();
+        $this->config->setValue(
+            'klevu_search/attributes/other',
+            'cost,meta_title,rating,rating_count,review_count',
+            'default',
+            null
+        );
+        $this->config->setValue(
+            'klevu_search/attributes/other',
+            'cost,meta_title,rating,rating_count,review_count',
+            'stores',
+            'default'
+        );
 
         $resourceConnectionFixture = [
             'color',
@@ -147,6 +171,95 @@ class LoadAttributeTest extends TestCase
     {
         $this->assertArrayHasKey('otherAttributeToIndex', $attributeMap);
         $this->assertEmpty(array_intersect(['rating_count'], $attributeMap['otherAttributeToIndex']));
+    }
+
+    /**
+     * @magentoDataFixture loadStoreFixtures
+     * @magentoConfigFixture default/klevu_search/attributes/other
+     * @magentoConfigFixture default_store klevu_search/attributes/other cost,meta_title
+     * @magentoConfigFixture es_es_store klevu_search/attributes/other page_layout,meta_description
+     */
+    public function testGetAttributeMapReturnsCorrectStoreValuesOnConsecutiveCalls()
+    {
+        $this->setUpPhp5();
+        self::loadStoreFixtures();
+
+        $this->config->setValue(
+            'klevu_search/attributes/other',
+            'cost,meta_title',
+            'stores',
+            'default'
+        );
+        $this->config->setValue(
+            'klevu_search/attributes/other',
+            'page_layout,meta_description',
+            'stores',
+            'es_es'
+        );
+
+        $resourceConnectionFixture = [
+            'color',
+            'size',
+            'rating',
+            'rating_count',
+            'review_count',
+        ];
+
+        /** @var LoadAttribute $loadAttribute */
+        $loadAttribute = $this->objectManager->create(LoadAttribute::class, [
+            'context' => $this->getContextMock($resourceConnectionFixture),
+        ]);
+
+        $reflectionMethod = new \ReflectionMethod(LoadAttribute::class, 'getAttributeMap');
+        $reflectionMethod->setAccessible(true);
+
+        $storeCodesToExpectedOtherAttributeToIndex = [
+            'default' => [
+                'cost',
+                'meta_title',
+            ],
+            'es_es' => [
+                'page_layout',
+                'meta_description',
+            ],
+        ];
+        foreach ($storeCodesToExpectedOtherAttributeToIndex as $storeCode => $expectedOtherAttributeToIndex) {
+            $this->storeManager->setCurrentStore($storeCode);
+
+            $attributeMap = $reflectionMethod->invoke($loadAttribute);
+
+            if (method_exists($this,'assertIsArray')) {
+                $this->assertIsArray($attributeMap);
+            } else {
+                $this->assertTrue(is_array($attributeMap), 'Attribute Map is array');
+            }
+            $this->assertNotEmpty($attributeMap);
+            $this->assertArrayHasKey('otherAttributeToIndex', $attributeMap);
+            $this->assertEquals(
+                $expectedOtherAttributeToIndex,
+                $attributeMap['otherAttributeToIndex'],
+            );
+        }
+
+        self::loadStoreFixturesRollback();
+    }
+
+    /**
+     * Loads store creation scripts because annotations use a relative path
+     *  from integration tests root
+     */
+    public static function loadStoreFixtures()
+    {
+        require __DIR__ . '/../../_files/storeFixtures.php';
+    }
+
+    /**
+     * Rolls back store creation scripts because annotations use a relative path
+     *  from integration tests root
+     */
+    public static function loadStoreFixturesRollback()
+    {
+        require __DIR__ . '/../../_files/storeFixtures_rollback.php';
     }
 
     /**
