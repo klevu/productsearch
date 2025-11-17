@@ -2,21 +2,21 @@
 <div class="content-header">
     <h3>Configure Attributes</h3>
 </div>
-<?php echo $block->getChildHtml('messages') ?>
-<form id="klevu_search_wizard_configure_attributes_form" action="<?php echo $block->getFormActionUrl() ?>" method="POST">
-    <input type="hidden" name="form_key" value="<?php echo $block->getFormKey() ?>" />
-    <p><?php echo __("Klevu Search uses most of the standard Magento product attributes for search. However, if you have any custom attributes that you want to be used in search or want to use any additional filters, such as color or size, you can map them below  by selecting the Klevu attribute you want to define and the Magento attribute that it should map to.") ?></p>
+<?= /** @noEscape */ $block->getChildHtml('messages') ?>
+<form id="klevu_search_wizard_configure_attributes_form" action="<?= /** @noEscape */ $block->getFormActionUrl() ?>" method="POST">
+    <input type="hidden" name="form_key" value="<?= /** @noEscape */ $block->getFormKey() ?>" />
+    <p><?= /** @noEscape */ __("Klevu Search uses most of the standard Magento product attributes for search. However, if you have any custom attributes that you want to be used in search or want to use any additional filters, such as color or size, you can map them below  by selecting the Klevu attribute you want to define and the Magento attribute that it should map to.") ?></p>
     <fieldset class="fieldset">
         <table cellspacing="0" class="form-list">
             <tbody>
                 <tr>
                     <td class="label"></td>
-                    <td class="value"><?php echo $block->getAttributeMappingsHtml() ?></td>
+                    <td class="value"><?= /** @noEscape */ $block->getAttributeMappingsHtml() ?></td>
                 </tr>
             </tbody>
         </table>
     </fieldset>
     <div class="button-set">
-        <button type="submit"><span><?php echo __("Continue") ?></span></button>
+        <button type="submit"><span><?= /** @noEscape */ __("Continue") ?></span></button>
     </div>
 </form>

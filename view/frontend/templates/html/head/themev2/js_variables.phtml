@@ -32,7 +32,7 @@ if ($klevuPriceFormatterConfigurationSerialized) {
     ";
 }
 ?>
-<?= $secureRenderer->renderTag(
+<?= /* @noEscape */ $secureRenderer->renderTag(
     'script',
     ['type' => 'text/javascript'],
     $scriptString,

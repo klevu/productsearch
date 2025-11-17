@@ -24,6 +24,7 @@ use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Model\AbstractModel;
 use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Model\StoreManagerInterface;
+use Psr\Log\LoggerInterface;
 
 class LoadAttribute extends AbstractModel implements LoadAttributeInterface
 {
@@ -94,6 +95,7 @@ class LoadAttribute extends AbstractModel implements LoadAttributeInterface
      * @param ProductCollectionFactory|null $productCollectionFactory
      * @param ReservedAttributeCodesProviderInterface|null $reservedAttributeCodesProvider
      * @param ProductRepositoryInterface|null $productRepository
+     * @param LoggerInterface|null $logger
      */
     public function __construct(
         KlevuContext $context,
@@ -103,7 +105,8 @@ class LoadAttribute extends AbstractModel implements LoadAttributeInterface
         ?StockServiceInterface $stockService = null,
         ?ProductCollectionFactory $productCollectionFactory = null,
         ?ReservedAttributeCodesProviderInterface $reservedAttributeCodesProvider = null,
-        ?ProductRepositoryInterface $productRepository = null
+        ?ProductRepositoryInterface $productRepository = null,
+        ?LoggerInterface $logger = null
     ) {
         $this->_storeModelStoreManagerInterface = $context->getStoreManagerInterface();
         $this->_frameworkModelResource = $context->getResourceConnection();
@@ -127,6 +130,7 @@ class LoadAttribute extends AbstractModel implements LoadAttributeInterface
         }
         $this->productRepository = $productRepository ?:
             $objectManager->get(ProductRepositoryInterface::class);
+        $this->_logger = $logger ?: $objectManager->get(LoggerInterface::class);
     }
 
     /**
@@ -539,52 +543,61 @@ class LoadAttribute extends AbstractModel implements LoadAttributeInterface
      */
     protected function getAttributeMap()
     {
-        if (!$this->hasData('attribute_map')) {
-            $attributeMap = [];
-            try {
-                $store = $this->_storeModelStoreManagerInterface->getStore();
-            } catch (NoSuchEntityException $e) {
-                $this->_logger->error($e->getMessage(), ['class' => __CLASS__, 'method' => __METHOD__]);
+        try {
+            $store = $this->_storeModelStoreManagerInterface->getStore();
+        } catch (NoSuchEntityException $e) {
+            $this->_logger->error($e->getMessage(), ['class' => __CLASS__, 'method' => __METHOD__]);
 
-                return $attributeMap;
-            }
-            $automaticAttributes = $this->getAutomaticAttributes();
-            $attributeMap = $this->prepareAttributeMap($attributeMap, $automaticAttributes);
-
-            // Add otherAttributeToIndex to $attribute_map.
-            $otherAttributeToIndex = $this->_searchHelperConfig->getOtherAttributesToIndex($store);
-
-            if (!empty($otherAttributeToIndex)) {
-                $attributeMap['otherAttributeToIndex'] = $otherAttributeToIndex;
-            }
-
-            $reservedAttributeCodes = $this->reservedAttributeCodesProvider
-                ? $this->reservedAttributeCodesProvider->execute()
-                : [];
-            if ($reservedAttributeCodes) {
-                if (isset($attributeMap['other']) && is_array($attributeMap['other'])) {
-                    $attributeMap['other'] = array_diff($attributeMap['other'], $reservedAttributeCodes);
-                }
-                if (isset($attributeMap['otherAttributeToIndex']) && is_array($attributeMap['otherAttributeToIndex'])) {
-                    $attributeMap['otherAttributeToIndex'] = array_diff(
-                        $attributeMap['otherAttributeToIndex'],
-                        $reservedAttributeCodes
-                    );
-                }
-            }
-
-            // Add boostingAttribute to $attribute_map.
-            $boosting_value = $this->_searchHelperConfig->getBoostingAttribute($store);
-            if (($boosting_value !== "use_boosting_rule") &&
-                ($boosting_attribute = $this->_searchHelperConfig->getBoostingAttribute($store)) &&
-                null !== $boosting_attribute
-            ) {
-                $attributeMap['boostingAttribute'][] = $boosting_attribute;
-            }
-            $this->setData('attribute_map', $attributeMap);
+            return [];
+        }
+        $storeCode = $store->getCode();
+        $cachedAttributeMap = $this->getData('attribute_map');
+        if (!is_array($cachedAttributeMap)) {
+            $cachedAttributeMap = [];
+        }
+        if (is_array($cachedAttributeMap[$storeCode] ?? null)) {
+            return $cachedAttributeMap[$storeCode];
         }
 
-        return $this->getData('attribute_map');
+        $automaticAttributes = $this->getAutomaticAttributes();
+        $attributeMap = $this->prepareAttributeMap([], $automaticAttributes);
+
+        // Add otherAttributeToIndex to $attribute_map.
+        $otherAttributeToIndex = $this->_searchHelperConfig->getOtherAttributesToIndex($store);
+
+        if (!empty($otherAttributeToIndex)) {
+            $attributeMap['otherAttributeToIndex'] = $otherAttributeToIndex;
+        }
+
+        $reservedAttributeCodes = $this->reservedAttributeCodesProvider
+            ? $this->reservedAttributeCodesProvider->execute()
+            : [];
+        if ($reservedAttributeCodes) {
+            if (isset($attributeMap['other']) && is_array($attributeMap['other'])) {
+                $attributeMap['other'] = array_diff($attributeMap['other'], $reservedAttributeCodes);
+            }
+            if (isset($attributeMap['otherAttributeToIndex']) && is_array($attributeMap['otherAttributeToIndex'])) {
+                $attributeMap['otherAttributeToIndex'] = array_diff(
+                    $attributeMap['otherAttributeToIndex'],
+                    $reservedAttributeCodes
+                );
+            }
+        }
+
+        // Add boostingAttribute to $attribute_map.
+        $boosting_value = $this->_searchHelperConfig->getBoostingAttribute($store);
+        if (
+            ($boosting_value !== "use_boosting_rule")
+            && ($boosting_attribute = $this->_searchHelperConfig->getBoostingAttribute($store))
+            && null !== $boosting_attribute
+        ) {
+            $attributeMap['boostingAttribute'][] = $boosting_attribute;
+        }
+
+        $cachedAttributeMap[$storeCode] = $attributeMap;
+        $this->setData('attribute_map', $cachedAttributeMap);
+
+        return $attributeMap;
     }
 
     /**

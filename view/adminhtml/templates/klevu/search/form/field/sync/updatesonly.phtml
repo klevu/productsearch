@@ -1,24 +1,24 @@
 <?php /** @var \Klevu\Search\Block\Adminhtml\Form\Field\Sync\UpdatesOnly $block */ ?>
-<button id="<?php echo $block->getHtmlId() ?>" class="scalable" type="button">
-    <span><?php echo __($block->getButtonLabel()); ?></span>
+<button id="<?= /** @noEscape */ $block->getHtmlId() ?>" class="scalable" type="button">
+    <span><?= /** @noEscape */ __($block->getButtonLabel()); ?></span>
 </button>
 <script type="text/javascript">
     require(["prototype"], function(){
-        $("<?php echo $block->getHtmlId() ?>").observe("click", function () {
+        $("<?= /** @noEscape */ $block->getHtmlId() ?>").observe("click", function () {
             if(document.getElementById('klevu_search_product_sync_updatesonly_sync_btn')) {
-                var syncoptions = <?php echo $block->getSyncOptionId()?>;
-                new Ajax.Request("<?php echo $block->getUrl('klevu_search/savesyncoption/option'); ?>" + '?sync_options=' + syncoptions, {
+                var syncoptions = <?= /** @noEscape */ $block->getSyncOptionId()?>;
+                new Ajax.Request("<?= /** @noEscape */ $block->getUrl('klevu_search/savesyncoption/option'); ?>" + '?sync_options=' + syncoptions, {
                     method: 'POST',
                     onComplete: function(data) {
                         if(syncoptions) {
-                            window.open("<?php echo $block->getSyncUrlForStore(); ?>","_blank");
+                            window.open("<?= /** @noEscape */ $block->getSyncUrlForStore(); ?>","_blank");
                         } else {
-                            setLocation("<?php echo $block->getDestinationUrl() ?>");
+                            setLocation("<?= /** @noEscape */ $block->getDestinationUrl() ?>");
                         }
                     }
                 });
             } else {
-                setLocation("<?php echo $block->getDestinationUrl() ?>");
+                setLocation("<?= /** @noEscape */ $block->getDestinationUrl() ?>");
             }
         });
     });

@@ -43,21 +43,26 @@ interface KlevuProductActionsInterface
     public function getDeleteProductsSuccessSql(array $data, array $skipped_record_ids);
 
     /**
-     * Update success processing , separated for easier override
+     * Update success processing, separated for easier override
      *
      * @param array $data
      * @param Response $response
+     * @param bool|string $batchStartTime
+     *
+     * @return bool|string True on success; error summary string if any records skipped
+     * @throws \Throwable Rethrows DB exceptions after rollback
      */
-    public function executeUpdateProductsSuccess(array $data, $response);
+    public function executeUpdateProductsSuccess(array $data, $response, $batchStartTime = null);
 
     /**
-     * Add success processing , separated for easier override
+     * Add success processing, separated for easier override
      *
      * @param array $data
      * @param Response $response
+     * @param bool|string $batchStartTime
      *
-     * @return bool|string
-     * @throws NoSuchEntityException
+     * @return bool|string True on success; error summary string if any records skipped
+     * @throws \Throwable Rethrows DB exceptions after rollback
      */
-    public function executeAddProductsSuccess(array $data, $response);
+    public function executeAddProductsSuccess(array $data, $response, $batchStartTime = null);
 }

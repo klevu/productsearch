@@ -8,19 +8,19 @@
     <div>
         <strong><?= $block->escapeHtml(__('Smart Search:')) ?></strong>
     </div>
-    <div><?= $block->getSearchVersion() ?></div>
+    <div><?= /** @noEscape */ $block->getSearchVersion() ?></div>
 
     <?php if (!empty($block->getCatNavVersion())): ?>
         <div>
             <strong><?= $block->escapeHtml(__('Smart Category Merchandising:')) ?></strong>
         </div>
-        <div><?= $block->getCatNavVersion() ?></div>
+        <div><?= /** @noEscape */ $block->getCatNavVersion() ?></div>
     <?php endif; ?>
 
     <?php if (!empty($block->getRecsVersion())): ?>
         <div>
             <strong><?= $block->escapeHtml(__('Smart Recommendations:')) ?></strong>
         </div>
-        <div><?= $block->getRecsVersion() ?></div>
+        <div><?= /** @noEscape */ $block->getRecsVersion() ?></div>
     <?php endif; ?>
 </div>

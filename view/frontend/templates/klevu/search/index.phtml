@@ -10,11 +10,11 @@
 
 <div class="kuContainer" id="kuMainContainer">
     <div id="loader" style="text-align:center">
-        <img src="<?php echo $block->getViewFileUrl('Klevu_Search::images/klevu/ku-loader.gif'); ?>"
+        <img src="<?php /* @noEscape */ echo $block->getViewFileUrl('Klevu_Search::images/klevu/ku-loader.gif'); ?>"
              alt="Loading..."/>
     </div>
     <div class="kuNoRecordFound" id="kuNoRecordFound" style="display:none;">
-        <p><?php echo __('No matching products found.'); ?></p>
+        <p><?php /* @noEscape */ echo __('No matching products found.'); ?></p>
     </div>
     <div class="kuProListing" id="kuProListing" style="display: none;">
         <div class="kuFilters" id="kuFilters"></div><!-- End of kuFilters -->
@@ -31,10 +31,10 @@
                 <div class="kuSortHeader">
                     <div class="kuSortingOpt">
                         <div class="kuSortby">
-                            <label id="klevuSortLbl"><?php echo __('Sort by'); ?>:</label>
+                            <label id="klevuSortLbl"><?php /* @noEscape */ echo __('Sort by'); ?>:</label>
                             <?php $configurableSortByHtml = $block->getChildHtml('configurable_sortby'); ?>
                             <?php if (trim((string)$configurableSortByHtml)): ?>
-                                <?php /** @noEscape */ echo $configurableSortByHtml; ?>
+                                <?= /** @noEscape */ $configurableSortByHtml; ?>
                             <?php else: ?>
                                 <select name="kuSortby"
                                         id="kuSortby"
@@ -55,11 +55,11 @@
                             <?php endif; ?>
                         </div>
                         <div class="kuPerPage">
-                            <label id="klevuItemsPerPage"><?php echo __('Items per page'); ?>:</label>
+                            <label id="klevuItemsPerPage"><?= /* @noEscape */ __('Items per page'); ?>:</label>
                             <select onchange="klevu_changeItemsPerPage(this.value);" id="noOfRecords1">
                                 <?php if (!empty($per_page)): ?>
                                     <?php foreach ($per_page as $key => $value): ?>
-                                        <option> <?php echo $value; ?></option>
+                                        <option> <?php /* @noEscape */ echo $value; ?></option>
                                     <?php endforeach; ?>
                                 <?php endif; ?>
                             </select>
@@ -78,11 +78,11 @@
                 <div class="kuGridView" id="kuResultsView"></div><!-- End of klevuResults-->
                 <div class="kuBottomPagi">
                     <div class="kuPerPage">
-                        <label id="klevuItemsPerPageFooter"><?php echo __('Items per page'); ?>:</label>
+                        <label id="klevuItemsPerPageFooter"><?php /* @noEscape */ echo __('Items per page'); ?>:</label>
                         <select onchange="klevu_changeItemsPerPage(this.value);" id="noOfRecords2">
                             <?php if (!empty($per_page)): ?>
                                 <?php foreach ($per_page as $key => $value): ?>
-                                    <option><?php echo $value; ?></option>
+                                    <option><?php /* @noEscape */ echo $value; ?></option>
                                 <?php endforeach; ?>
                             <?php endif; ?>
                         </select>
@@ -96,7 +96,7 @@
                 <div class="kuSortHeader">
                     <div class="kuSortingOpt">
                         <div class="kuPerPage">
-                            <label id="klevuItemsPerPageCms"><?php echo __('Items per page'); ?>:</label>
+                            <label id="klevuItemsPerPageCms"><?php /* @noEscape */ echo __('Items per page'); ?>:</label>
                             <select onchange="klevu_changeCmsItemsPerPage(this.value);" id="noOfRecords3">
                                 <option>12</option>
                                 <option>24</option>
@@ -110,7 +110,7 @@
                 <div class="kuSortHeader">
                     <div class="kuSortingOpt">
                         <div class="kuPerPage">
-                            <label id="klevuItemsPerPageCmsFooter"><?php echo __('Items per page'); ?>:</label>
+                            <label id="klevuItemsPerPageCmsFooter"><?php /* @noEscape */ echo __('Items per page'); ?>:</label>
                             <select onchange="klevu_changeCmsItemsPerPage(this.value);" id="noOfRecords4">
                                 <option>12</option>
                                 <option>24</option>
@@ -128,7 +128,7 @@
     </div><!-- End of kuProListing -->
 </div><!-- End of klevu-container -->
 
-<input id="noOfRecords" type="hidden" name="noOfRecords" value="<?php echo $grid_per_page; ?>"/>
+<input id="noOfRecords" type="hidden" name="noOfRecords" value="<?php /* @noEscape */ echo $grid_per_page; ?>"/>
 <input type="hidden" name="startPos" id="startPos" value="0"/>
 <input type="hidden" name="totalResultsFound" id="totalResultsFound" value="0"/>
 <input type="hidden" name="searchedKeyword" id="searchedKeyword" value=""/>
@@ -140,7 +140,7 @@ $protocol = ($block->getRequest()->isSecure())
     : 'http://';
 $src = $protocol . $block->getJsUrl();
 ?>
-<?= $secureRenderer->renderTag(
+<?= /* @noEscape */ $secureRenderer->renderTag(
     'script',
     [
         'type' => 'text/javascript',
@@ -148,7 +148,7 @@ $src = $protocol . $block->getJsUrl();
     ]
 ) ?>
 
-<?= $secureRenderer->renderTag(
+<?= /* @noEscape */ $secureRenderer->renderTag(
     'script',
     ['type' => 'text/javascript'],
     'document.getElementById("searchedKeyword").value = klevu_getParamValue("q");',
@@ -183,7 +183,7 @@ $src = $protocol . $block->getJsUrl();
     }, 700);
     ";
     ?>
-    <?= $secureRenderer->renderTag(
+    <?= /* @noEscape */ $secureRenderer->renderTag(
         'script',
         ['type' => 'text/javascript'],
         $scriptString,

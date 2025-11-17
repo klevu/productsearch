@@ -1,21 +1,20 @@
-<?php /** @var \Klevu\Search\Block\Adminhtml\Form\Field\Sync\Button $this */ ?>
-<button id="<?php echo $this->getHtmlId() ?>" class="scalable" type="button">
-    <span><?php echo __($this->getButtonLabel()) ?></span>
+<?php /** @var \Klevu\Search\Block\Adminhtml\Form\Field\Sync\Button $block */ ?>
+<button id="<?= /** @noEscape */ $block->getHtmlId() ?>" class="scalable" type="button">
+    <span><?= /** @noEscape */ __($block->getButtonLabel()) ?></span>
 </button>
 <script type="text/javascript">
-    require(["prototype"], function(){
-        $("<?php echo $this->getHtmlId() ?>").observe("click", function () {
-            if(document.getElementById('klevu_search_developer_download_log_button')) {
-                new Ajax.Request("<?php echo $this->getDestinationUrl() ?>", {
+    require(["prototype"], function () {
+        $("<?= /** @noEscape */ $block->getHtmlId() ?>").observe("click", function () {
+            if (document.getElementById('klevu_search_developer_download_log_button')) {
+                new Ajax.Request("<?= /** @noEscape */ $block->getDestinationUrl() ?>", {
                     method: 'POST',
                     onComplete: function(data) {
-                        setLocation("<?php echo $this->getDestinationUrl() ?>");
+                        setLocation("<?= /** @noEscape */ $block->getDestinationUrl() ?>");
                     }
                 });
             } else {
-                setLocation("<?php echo $this->getDestinationUrl() ?>");
+                setLocation("<?= /** @noEscape */ $block->getDestinationUrl() ?>");
             }
-            
         });
     });
 </script>

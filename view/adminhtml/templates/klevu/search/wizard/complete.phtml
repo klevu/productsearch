@@ -1,41 +1,41 @@
 <?php /** @var \Magento\Framework\View\Element\Template $block */ ?>
-<?php echo $block->getLayout()->getMessagesBlock()->getGroupedHtml(); ?>
+<?= $block->getLayout()->getMessagesBlock()->getGroupedHtml(); ?>
 <div class="kuWizardSteps">
 <ol class="wizard-progress clearfix">
-	<li class="active-step">
-		<span class="step-name"><?php echo __("Register/Login");?></span>
-		<span class="visuallyhidden"><?php echo __("Step");?> </span><span class="step-num">&nbsp;</span>
-	</li>
-	<li class="active-step">
-		<span class="step-name"><?php echo __("Select Plan");?></span>
-		<span class="visuallyhidden"><?php echo __("Step");?> </span><span class="step-num">&nbsp;</span>
-	</li>
-	<li class="active-step">
-		<span class="step-name"><?php echo __("Configure Store");?></span>
-		<span class="visuallyhidden"><?php echo __("Step");?></span><span class="step-num">&nbsp;</span>
-	</li>
-	<li class="active-step">
-		<span class="step-name"><?php echo __("Finish & Sync");?></span>
-		<span class="visuallyhidden"><?php echo __("Step");?> </span><span class="step-num">&nbsp;</span>
-	</li>
+    <li class="active-step">
+        <span class="step-name"><?= /** @noEscape */ __("Register/Login");?></span>
+        <span class="visuallyhidden"><?= /** @noEscape */ __("Step");?> </span><span class="step-num">&nbsp;</span>
+    </li>
+    <li class="active-step">
+        <span class="step-name"><?= /** @noEscape */ __("Select Plan");?></span>
+        <span class="visuallyhidden"><?= /** @noEscape */ __("Step");?> </span><span class="step-num">&nbsp;</span>
+    </li>
+    <li class="active-step">
+        <span class="step-name"><?= /** @noEscape */ __("Configure Store");?></span>
+        <span class="visuallyhidden"><?= /** @noEscape */ __("Step");?></span><span class="step-num">&nbsp;</span>
+    </li>
+    <li class="active-step">
+        <span class="step-name"><?= /** @noEscape */ __("Finish & Sync");?></span>
+        <span class="visuallyhidden"><?= /** @noEscape */ __("Step");?> </span><span class="step-num">&nbsp;</span>
+    </li>
 </ol>
 </div>
 
 <div class="kuFinishSyncInfo">
-	<h3><?php echo __('Please click the "Finish and Sync" button below to synchronise your products to Klevu.Sync will start in new tab');?></h3>
-	
-	<ul>
-		<li><?php echo __('Klevu Search will be automatically enabled on frontend after the first synchronisation completes.');?></li>
-		<li><?php echo __('Data will be automatically resynchronised periodically as well as when any information changes.');?></li>
-		<li><?php echo __('Make sure your CRON is setup.');?></li>
-	</ul>
-	
-	<br/>
-	<br/>
-	<div class="button-set">
-    <button id="sync-button" class="action-default primary"><span><?php echo __("Finish and Sync") ?></span></button><br/>
+    <h3><?= /** @noEscape */ __('Please click the "Finish and Sync" button below to synchronise your products to Klevu.Sync will start in new tab');?></h3>
+
+    <ul>
+        <li><?= /** @noEscape */ __('Klevu Search will be automatically enabled on frontend after the first synchronisation completes.');?></li>
+        <li><?= /** @noEscape */ __('Data will be automatically resynchronised periodically as well as when any information changes.');?></li>
+        <li><?= /** @noEscape */ __('Make sure your CRON is setup.');?></li>
+    </ul>
+
+    <br/>
+    <br/>
+    <div class="button-set">
+    <button id="sync-button" class="action-default primary"><span><?= /** @noEscape */ __("Finish and Sync") ?></span></button><br/>
 </div>
-<h4 class="kuCompleteWarning"><?php echo __('Sync will start in new tab.Please close the wizard when sync starts in new tab.');?></h4>
+<h4 class="kuCompleteWarning"><?= /** @noEscape */ __('Sync will start in new tab.Please close the wizard when sync starts in new tab.');?></h4>
 <script type="text/javascript">
 require([
     "jquery",
@@ -46,11 +46,8 @@ require([
     'Magento_Ui/js/modal/modal'
 ], function($, alert){
     $("#sync-button").on("click", function (e) {
-			window.open("<?php echo $block->getSyncUrlForStore(); ?>","_blank");
+            window.open("<?= /** @noEscape */ $block->getSyncUrlForStore(); ?>","_blank");
     });
 });
 </script>
 </div>
-
-
-

@@ -5,7 +5,7 @@
  */
 ?>
 
-<?= $secureRenderer->renderTag(
+<?= /* @noEscape */ $secureRenderer->renderTag(
     'link',
     [
         'type' => 'text/css',
@@ -15,7 +15,7 @@
     ]
 ) ?>
 
-<?= $secureRenderer->renderTag(
+<?= /* @noEscape */ $secureRenderer->renderTag(
     'link',
     [
         'type' => 'text/css',

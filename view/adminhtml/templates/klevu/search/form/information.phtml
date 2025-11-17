@@ -1,36 +1,36 @@
 <?php /** @var \Klevu\Search\Block\Adminhtml\Form\Information $block */ ?>
 <div class="kuInfo">
    <div class="kuInfo-fLeft">
-      <p><b><?php echo __("Installed Version:") ?></b> <?php echo $block->getVersion(); ?></br></p>
+      <p><b><?= /** @noEscape */ __("Installed Version:") ?></b> <?= /** @noEscape */ $block->getVersion(); ?></br></p>
       <?php $check_plan = $block->getFeatures();?>
-      <?php if(empty($check_plan["errors"]) && !empty($check_plan)) { ?> 
+      <?php if (empty($check_plan["errors"]) && !empty($check_plan)): ?>
         <p>
-         <?php if(!empty($check_plan['user_plan_for_store'])) {?>
-                <b><?php echo __("My Current Plan: ") ?></b>          
-                <?php echo ucfirst($check_plan['user_plan_for_store']); 
-         } ?> 
-         <?php if(!empty($check_plan['upgrade_label'])) { ?>
-             <button type='button' onClick=upgradeLink('<?php echo $check_plan["upgrade_url"]; ?>')><?php echo  $check_plan['upgrade_label']; ?></button>
-             &nbsp;&nbsp;<a href="#" onClick="compareplan();"><?php echo __("Compare Plans"); ?></a>
-         <?php } ?>  
+            <?php if (!empty($check_plan['user_plan_for_store'])): ?>
+                <b><?= /** @noEscape */ __("My Current Plan: ") ?></b>
+                <?= /** @noEscape */ ucfirst($check_plan['user_plan_for_store']); ?>
+            <?php endif; ?>
+            <?php if (!empty($check_plan['upgrade_label'])): ?>
+             <button type='button' onClick=upgradeLink('<?= /** @noEscape */ $check_plan["upgrade_url"]; ?>')><?= /** @noEscape */ $check_plan['upgrade_label']; ?></button>
+             &nbsp;&nbsp;<a href="#" onClick="compareplan();"><?= /** @noEscape */ __("Compare Plans"); ?></a>
+         <?php endif; ?>
         </p>
-      <?php } ?>
+      <?php endif; ?>
    </div>
    <div class="kuInfo-fRight">
       <ul>
          <li><b>Quick Links:</b></li>
-         <li><a target="_blank" href="https://help.klevu.com/support/solutions/articles/5000871252-integration-steps-for-magento-2"><?php echo __("Integration Steps");?></a></li>
-         <li><a target="_blank" href="https://help.klevu.com/support/solutions/folders/5000308570"><?php echo __("Migrating from Staging to Live");?></a></li>
-         <li><a target="_blank" href="https://help.klevu.com/support/solutions/articles/5000871369-how-to-upgrade-my-plan-"><?php echo __("How to upgrade plan?");?></a></li>
-         <li><a target="_blank" href="https://box.klevu.com/"><?php echo __("Klevu Merchant Center");?></a></li>
+         <li><a target="_blank" href="https://help.klevu.com/support/solutions/articles/5000871252-integration-steps-for-magento-2"><?= /** @noEscape */ __("Integration Steps");?></a></li>
+         <li><a target="_blank" href="https://help.klevu.com/support/solutions/folders/5000308570"><?= /** @noEscape */ __("Migrating from Staging to Live");?></a></li>
+         <li><a target="_blank" href="https://help.klevu.com/support/solutions/articles/5000871369-how-to-upgrade-my-plan-"><?= /** @noEscape */ __("How to upgrade plan?");?></a></li>
+         <li><a target="_blank" href="https://box.klevu.com/"><?= /** @noEscape */ __("Klevu Merchant Center");?></a></li>
       </ul>
    </div>
    <div class="kuInfoClear"></div>
 </div>
 <div>
-   <p><b><?php echo __("Prerequisites:") ?></b></br>
-      <?php echo __("1. Ensure cron is running (<a href='https://help.klevu.com/support/solutions/articles/5000871452-setup-external-cron-job' target='_blank'>Click here</a> for more information on setting up a cron)") ?></br>
-      <?php echo __("2. Indices are uptodate (System > Index Management)") ?></br>
-      <?php echo __("3. Products should be enabled and have the visibility set to catalog and search") ?>
+   <p><b><?= /** @noEscape */ __("Prerequisites:") ?></b></br>
+      <?= /** @noEscape */ __("1. Ensure cron is running (<a href='https://help.klevu.com/support/solutions/articles/5000871452-setup-external-cron-job' target='_blank'>Click here</a> for more information on setting up a cron)") ?></br>
+      <?= /** @noEscape */ __("2. Indices are uptodate (System > Index Management)") ?></br>
+      <?= /** @noEscape */ __("3. Products should be enabled and have the visibility set to catalog and search") ?>
    </p>
 </div>
