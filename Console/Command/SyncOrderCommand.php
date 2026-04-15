@@ -94,10 +94,10 @@ class SyncOrderCommand extends Command
         $this->setHelp('
 Send order records which have not yet been synced with Klevu for all enabled stores
     <comment>%command.full_name%</comment>
-    
+
 Send order records which have not yet been synced with Klevu for store with code "default"
     <comment>%command.full_name% --store default</comment>
-    
+
 Send order records which have not yet been synced with Klevu for stores with codes "default" and "new_store"
     <comment>%command.full_name% --store default --store new_store</comment>
         ');
