@@ -144,7 +144,7 @@ HELP
         parent::configure();
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         // See comments against methods for background. Ref: KS-7853
         $this->initLogger();
