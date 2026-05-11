@@ -153,7 +153,7 @@ HELP
      * @return bool|int
      * @throws \Magento\Framework\Exception\FileSystemException
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $logDir = $this->_directoryList->getPath(DirectoryList::VAR_DIR);
         $areacodeFile = $logDir . "/" . self::AREA_CODE_LOCK_FILE;

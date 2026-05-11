@@ -116,7 +116,7 @@ HELP
      * @return int
      * @deprecated Use Klevu Merchant Center (https://box.klevu.com/analytics) to create stores and manage your users.
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $output->writeln('');
         $output->writeln('<info>This feature has been depreciated from CLI.</info>');
