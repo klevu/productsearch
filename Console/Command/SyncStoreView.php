@@ -143,7 +143,7 @@ HELP
     /**
      * {@inheritdoc}
      */
-    protected function execute(InputInterface $input, OutputInterface $output): int
+    protected function execute(InputInterface $input, OutputInterface $output)
     {
         // See comments against methods for background. Ref: KS-7853
         $this->initLogger();
