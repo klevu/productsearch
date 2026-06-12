@@ -2,50 +2,60 @@
 
 namespace Klevu\Search\Model\Category;
 
-use Klevu\Search\Model\Context;
+use Klevu\Logger\Constants as LoggerConstants;
+use Klevu\Search\Helper\Compat as CompatHelper;
+use Klevu\Search\Helper\Config as ConfigHelper;
+use Klevu\Search\Helper\Data as SearchHelper;
+use Klevu\Search\Model\Api\Action\StartSession;
+use Klevu\Search\Model\Context as Klevu_Context;
+use Klevu\Search\Model\Session;
+use Klevu\Search\Model\Sync;
+use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\DataObject;
+use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Store\Model\StoreManagerInterface;
 
 class KlevuCategoryActions extends DataObject implements KlevuCategoryActionsInterface
 {
 
     /**
-     * @var Klevu\Search\Helper\Config
+     * @var ConfigHelper
      */
     protected $_searchHelperConfig;
     /**
-     * @var Klevu\Search\Helper\Data
+     * @var SearchHelper
      */
     protected $_searchHelperData;
     /**
-     * @var Klevu\Search\Model\Api\Action\StartSession
+     * @var StartSession
      */
     protected $_apiActionStartsession;
     /**
-     * @var Klevu\Search\Model\Session
+     * @var Session
      */
     protected $_searchModelSession;
     /**
-     * @var Klevu\Search\Model\Sync
+     * @var Sync
      */
     protected $_klevuSyncModel;
     /**
-     * @var Magento\Framework\App\ResourceConnection
+     * @var ResourceConnection
      */
     protected $_frameworkModelResource;
     /**
-     * @var Klevu\Search\Helper\Compat
+     * @var CompatHelper
      */
     protected $_searchHelperCompat;
     /**
-     * @var Magento\Store\Model\StoreManagerInterface
+     * @var StoreManagerInterface
      */
     protected $_storeModelStoreManagerInterface;
 
     /**
-     * @param Context $context
+     * @param Klevu_Context $context
      */
     public function __construct(
-        Context $context
+        Klevu_Context $context
     ) {
         $this->_searchHelperConfig = $context->getHelperManager()->getConfigHelper();
         $this->_searchHelperData = $context->getHelperManager()->getDataHelper();
@@ -55,6 +65,7 @@ class KlevuCategoryActions extends DataObject implements KlevuCategoryActionsInt
         $this->_frameworkModelResource = $context->getResourceConnection();
         $this->_searchHelperCompat = $context->getHelperManager()->getCompatHelper();
         $this->_storeModelStoreManagerInterface = $context->getStoreManagerInterface();
+        parent::__construct();
     }
 
     /**
@@ -105,6 +116,7 @@ class KlevuCategoryActions extends DataObject implements KlevuCategoryActionsInt
      * @param mixed $response
      *
      * @return string|true
+     * @throws NoSuchEntityException
      */
     public function executeUpdateCategorySuccess(array $data, $response)
     {
@@ -158,16 +170,19 @@ class KlevuCategoryActions extends DataObject implements KlevuCategoryActionsInt
      * @param mixed $response
      *
      * @return string|true
+     * @throws \Throwable
      */
     public function executeAddCategorySuccess(array $data, $response)
     {
-        $skipped_record_ids = [];
-        if ($skipped_records = $response->getSkippedRecords()) {
-            $skipped_record_ids = array_flip($skipped_records["index"]);
+        $skippedIds = [];
+        if ($skippedRecords = $response->getSkippedRecords()) {
+            $skippedIds = array_flip($skippedRecords["index"]);
         }
         $sync_time = $this->_searchHelperCompat->now();
+        $storeId = $this->_storeModelStoreManagerInterface->getStore()->getId();
+
         foreach ($data as $i => & $record) {
-            if (isset($skipped_record_ids[$i])) {
+            if (isset($skippedIds[$i])) {
                 unset($data[$i]);
                 continue;
             }
@@ -175,35 +190,59 @@ class KlevuCategoryActions extends DataObject implements KlevuCategoryActionsInt
             $record = [
                 $ids[$i][1],
                 0,
-                $this->_storeModelStoreManagerInterface->getStore()->getId(),
+                $storeId,
                 $sync_time,
                 "categories"
             ];
         }
+
         if (!empty($data)) {
-            foreach ($data as $key => $value) {
-                $write = $this->_frameworkModelResource->getConnection("core_write");
-                $query = "replace into " . $this->_frameworkModelResource->getTableName('klevu_product_sync')
-                    . "(product_id, parent_id, store_id, last_synced_at, type) values "
-                    . "(:product_id, :parent_id, :store_id, :last_synced_at, :type)";
-                $binds = [
-                    'product_id' => $value[0],
-                    'parent_id' => $value[1],
-                    'store_id' => $value[2],
-                    'last_synced_at' => $value[3],
-                    'type' => $value[4]
-                ];
-                $write->query($query, $binds);
+            $connection = $this->_frameworkModelResource->getConnection("core_write");
+            $table = $this->_frameworkModelResource->getTableName('klevu_product_sync');
+
+            $chunkSize = property_exists($this, '_searchHelperConfig')
+                ? $this->_searchHelperConfig->getChunkSize(false, $storeId)
+                : 500;
+
+            $connection->beginTransaction();
+            try {
+                foreach (array_chunk($data, $chunkSize) as $chunkRow) {
+                    $placeholders = implode(
+                        ',',
+                        array_fill(0, count($chunkRow), '(?, ?, ?, ?, ?)')
+                    );
+                    $sql = "REPLACE INTO $table (product_id, parent_id, store_id, last_synced_at, type) VALUES $placeholders";
+
+                    $binds = [];
+                    foreach ($chunkRow as $column) {
+                        array_push($binds, $column[0], $column[1], $column[2], $column[3], $column[4]);
+                    }
+
+                    $connection->query($sql, $binds);
+                }
+                $connection->commit();
+            } catch (\Throwable $e) {
+                $connection->rollBack();
+                $this->_searchHelperData->log(
+                    LoggerConstants::ZEND_LOG_ERR,
+                    sprintf(
+                        'Category addition sent to Klevu but Magento table operation failed in %s: %s',
+                        __METHOD__,
+                        $e->getMessage()
+                    )
+                );
+
+                throw $e;
             }
         }
 
-        $skipped_count = count($skipped_record_ids);
-        if ($skipped_count > 0) {
+        $skippedIdCount = count($skippedIds);
+        if ($skippedIdCount > 0) {
             return sprintf(
                 "%d category%s failed (%s)",
-                $skipped_count,
-                ($skipped_count > 1) ? "s" : "",
-                implode(", ", $skipped_records["messages"])
+                $skippedIdCount,
+                ($skippedIdCount > 1) ? "s" : "",
+                implode(", ", $skippedRecords["messages"])
             );
         } else {
             return true;
