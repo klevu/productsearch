@@ -147,14 +147,11 @@ class LoadAttribute extends AbstractModel implements LoadAttributeInterface
     {
         $product_ids = [];
         $parent_ids = [];
-        $product_stock_ids = []; //modification in config product stock management
         foreach ($products as $product) {
             $product_ids[] = $product['product_id'];
-            $product_stock_ids[$product['product_id']] = $product['parent_id'];
             if ((int)$product['parent_id'] !== 0) {
                 $product_ids[] = $product['parent_id'];
                 $parent_ids[] = $product['parent_id'];
-                $product_stock_ids[$product['parent_id']] = $product['parent_id'];
             }
         }
         $product_ids = array_unique($product_ids);
@@ -178,6 +175,14 @@ class LoadAttribute extends AbstractModel implements LoadAttributeInterface
 
         if ($isCollectionMethod) {
             $data = $this->loadProductDataCollection($product_ids);
+            if (null === $data) {
+                $this->_searchHelperData->log(
+                    LoggerConstants::ZEND_LOG_ERR,
+                    'Product collection could not be loaded.'
+                );
+
+                return $this;
+            }
         }
 
         // Get url product from database
@@ -332,7 +337,7 @@ class LoadAttribute extends AbstractModel implements LoadAttributeInterface
                 $rejectedProducts_data = [];
                 $r = 0;
                 foreach ($rejectedProducts as $rvalue) {
-                    $idData = $this->checkIdexitsInDb(
+                    $idData = $this->checkIdExistsInDb(
                         $store->getId(),
                         $rvalue["product_id"],
                         $rvalue["parent_id"]
@@ -384,7 +389,7 @@ class LoadAttribute extends AbstractModel implements LoadAttributeInterface
     }
 
     /**
-     * Process product data if wannt to add any extra information from third party module
+     * Process product data if you want to add any extra information from third party module
      *
      * @param array $product
      * @param MagentoProductInterface|null $parent
@@ -422,7 +427,7 @@ class LoadAttribute extends AbstractModel implements LoadAttributeInterface
     }
 
     /**
-     * Load product data uisng magento collection method
+     * Load product data using magento collection method
      *
      * @param array $productIds
      * @param int|null $storeId
@@ -586,8 +591,7 @@ class LoadAttribute extends AbstractModel implements LoadAttributeInterface
 
         // Add boostingAttribute to $attribute_map.
         $boosting_value = $this->_searchHelperConfig->getBoostingAttribute($store);
-        if (
-            ($boosting_value !== "use_boosting_rule")
+        if (($boosting_value !== "use_boosting_rule")
             && ($boosting_attribute = $this->_searchHelperConfig->getBoostingAttribute($store))
             && null !== $boosting_attribute
         ) {
@@ -682,7 +686,7 @@ class LoadAttribute extends AbstractModel implements LoadAttributeInterface
         );
         // Only if the attribute is filterable in search, i.e. attribute appears in search layered navigation.
         $select->where("ca.is_filterable_in_search = ?", "1");
-        // Make sure we exclude the attributes thar synced by default.
+        // Make sure we exclude the attributes that synced by default.
         $select->where("a.attribute_code NOT IN(?)", array_unique($attributes['magento_attribute']));
         $select->group(["attribute_code"]);
 
@@ -774,7 +778,7 @@ class LoadAttribute extends AbstractModel implements LoadAttributeInterface
     }
 
     /**
-     * Check product_id exits in klevu sync table.
+     * Check product_id exists in klevu sync table.
      *
      * @param string|int $store_id
      * @param string|int $product_id
@@ -782,7 +786,7 @@ class LoadAttribute extends AbstractModel implements LoadAttributeInterface
      *
      * @return KlevuProductSyncCollection
      */
-    protected function checkIdexitsInDb($store_id, $product_id, $parent_id)
+    protected function checkIdExistsInDb($store_id, $product_id, $parent_id)
     {
         $klevu = $this->_klevuFactory->create();
         /** @var KlevuProductSyncCollection $klevuCollection */
