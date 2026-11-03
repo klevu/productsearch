@@ -15,7 +15,8 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
- * @deprecated Use Klevu Merchant Center (https://box.klevu.com/analytics) to create stores and manage your users.
+ * @deprecated
+ * @see Use Klevu Merchant Center (https://box.klevu.com/analytics) to create stores and manage your users.
  */
 class UserCreation extends Command
 {
@@ -86,7 +87,8 @@ class UserCreation extends Command
 
     /**
      * @return void
-     * @deprecated Use Klevu Merchant Center (https://box.klevu.com/analytics) to create stores and manage your users.
+     * @deprecated
+     * @see Use Klevu Merchant Center (https://box.klevu.com/analytics) to create stores and manage your users.
      */
     protected function configure()
     {
@@ -94,7 +96,7 @@ class UserCreation extends Command
             PHP_EOL .
             '    ' .
             '<comment>' .
-            'Please use Klevu Merchant Center (https://box.klevu.com/analytics) to create stores and manage your users' .
+            'Please use Klevu Merchant Center (https://box.klevu.com/analytics) to create stores & manage your users' .
             '</comment>';
 
         $this->setName('klevu:debug:signup')
@@ -114,14 +116,17 @@ HELP
      * @param InputInterface $input
      * @param OutputInterface $output
      * @return int
-     * @deprecated Use Klevu Merchant Center (https://box.klevu.com/analytics) to create stores and manage your users.
+     * @deprecated
+     * @see Use Klevu Merchant Center (https://box.klevu.com/analytics) to create stores and manage your users.
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $output->writeln('');
         $output->writeln('<info>This feature has been depreciated from CLI.</info>');
         $output->writeln(
-            '<info>Please use Klevu Merchant Center (https://box.klevu.com/analytics) to create stores and manage your users.</info>'
+            '<info>'.
+            'Please use Klevu Merchant Center (https://box.klevu.com/analytics) to manage your users.'.
+            '</info>'
         );
         $output->writeln('');
 
@@ -130,7 +135,8 @@ HELP
 
     /**
      * @return array
-     * @deprecated Use Klevu Merchant Center (https://box.klevu.com/analytics) to create stores and manage your users.
+     * @deprecated
+     * @see Use Klevu Merchant Center (https://box.klevu.com/analytics) to create stores and manage your users.
      */
     public function getInputList()
     {

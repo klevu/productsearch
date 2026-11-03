@@ -39,6 +39,9 @@
             "checkoutdate": true,
             "send": true
         },
+        "index": {
+            "KLEVU_ORDER_SYNC_SEND": true
+        },
         "constraint": {
             "PRIMARY": true
         }

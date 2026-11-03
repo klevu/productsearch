@@ -94,10 +94,10 @@ class SyncOrderCommand extends Command
         $this->setHelp('
 Send order records which have not yet been synced with Klevu for all enabled stores
     <comment>%command.full_name%</comment>
-    
+
 Send order records which have not yet been synced with Klevu for store with code "default"
     <comment>%command.full_name% --store default</comment>
-    
+
 Send order records which have not yet been synced with Klevu for stores with codes "default" and "new_store"
     <comment>%command.full_name% --store default --store new_store</comment>
         ');
@@ -123,7 +123,9 @@ Send order records which have not yet been synced with Klevu for stores with cod
             $areaCodeLockFile = $this->directoryList->getPath(DirectoryList::VAR_DIR)
                 . DIRECTORY_SEPARATOR
                 . static::AREA_CODE_LOCK_FILE;
+            // phpcs:disable Magento2.Functions.DiscouragedFunction.Discouraged
             if (file_exists($areaCodeLockFile)) {
+                // phpcs:disable Magento2.Functions.DiscouragedFunction.Discouraged
                 unlink($areaCodeLockFile);
             }
 
@@ -132,6 +134,7 @@ Send order records which have not yet been synced with Klevu for stores with cod
             $existingAreaCode = $this->appState->getAreaCode();
 
             if ('frontend' !== $existingAreaCode) {
+                // phpcs:disable Magento2.Functions.DiscouragedFunction.DiscouragedWithAlternative
                 touch($areaCodeLockFile);
                 $this->logger->error($e->getMessage(), [
                     'method' => __METHOD__,
@@ -173,8 +176,12 @@ Send order records which have not yet been synced with Klevu for stores with cod
         if ($verbosity) {
             $output->writeln((string)__(
                 'Orders sync completed for %1 %2',
-                $storeCodes ? implode(', ', $storeCodes) : (string)__('all stores'),
-                __($return === Cli::RETURN_SUCCESS ? 'successfully' : 'with errors - please check logs for more details')
+                $storeCodes
+                    ? implode(', ', $storeCodes)
+                    : (string)__('all stores'),
+                __($return === Cli::RETURN_SUCCESS
+                    ? 'successfully'
+                    : 'with errors - please check logs for more details')
             ));
 
             if ($verbosity >= OutputInterface::VERBOSITY_VERBOSE) {

@@ -723,8 +723,16 @@
         </arguments>
     </type>
 
+    <type name="Klevu\Search\Model\Product\Sync">
+        <arguments>
+            <!-- Each sync model needs its own Model\Sync: they write their job code into it -->
+            <argument name="klevuSyncModel" xsi:type="object" shared="false">Klevu\Search\Model\Sync</argument>
+        </arguments>
+    </type>
+
     <type name="Klevu\Search\Model\Order\Sync">
         <arguments>
+            <argument name="klevuSyncModel" xsi:type="object" shared="false">Klevu\Search\Model\Sync</argument>
             <argument name="orderSyncItemDataConvertor" xsi:type="object">Klevu\Search\Service\Convertor\OrderSyncItemDataConvertor</argument>
             <argument name="fileDriver" xsi:type="object">Magento\Framework\Filesystem\Driver\File</argument>
         </arguments>

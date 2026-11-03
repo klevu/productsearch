@@ -54,8 +54,8 @@ class Scheduler extends AbstractModel implements SchedulerInterface
                 'status' => Magento_Schedule::STATUS_PENDING,
                 'job_code' => $jobCode,
                 'scheduled_at' => [
-                    "from" => $this->convertTimestampForMysql($this->_timezone->scopeTimeStamp() - (15 * 60)),
-                    "to" => $this->convertTimestampForMysql($this->_timezone->scopeTimeStamp() + (15 * 60))
+                    "from" => $this->convertTimestampForMysql($this->getCurrentTimestamp() - (15 * 60)),
+                    "to" => $this->convertTimestampForMysql($this->getCurrentTimestamp() + (15 * 60))
                 ]
 
             );
@@ -76,12 +76,24 @@ class Scheduler extends AbstractModel implements SchedulerInterface
     }
 
     /** Convert time for mysql use
+     * cron_schedule dates are stored and read as UTC by Magento_Cron
      * @param $timestamp
      * @return string
      */
     private function convertTimestampForMysql($timestamp)
     {
-        return date('Y-m-d H:i:s', $timestamp);
+        return gmdate('Y-m-d H:i:s', $timestamp);
+    }
+
+    /**
+     * Current UTC timestamp
+     * Do not use TimezoneInterface::scopeTimeStamp() here: it returns store local time shifted into
+     * a UTC timestamp, which puts cron_schedule rows hours in the past or future on non-UTC stores
+     * @return int
+     */
+    private function getCurrentTimestamp()
+    {
+        return time();
     }
 
     /**
@@ -144,8 +156,8 @@ class Scheduler extends AbstractModel implements SchedulerInterface
     {
         $operations = array(
             "setCronExpr" => "* * * * *",
-            "setCreatedAt" => $this->convertTimestampForMysql($this->_timezone->scopeTimeStamp()),
-            "setScheduledAt" => $this->convertTimestampForMysql($this->_timezone->scopeTimeStamp()),
+            "setCreatedAt" => $this->convertTimestampForMysql($this->getCurrentTimestamp()),
+            "setScheduledAt" => $this->convertTimestampForMysql($this->getCurrentTimestamp()),
             "setStatus" => Magento_Schedule::STATUS_PENDING
         );
         return $operations;
@@ -193,7 +205,7 @@ class Scheduler extends AbstractModel implements SchedulerInterface
         $filters = array(
             'status' => Magento_Schedule::STATUS_RUNNING,
             'job_code' => $jobCode,
-            'executed_at' => array("gteq" => $this->convertTimestampForMysql($this->_timezone->scopeTimeStamp() - (60 * 60)))
+            'executed_at' => array("gteq" => $this->convertTimestampForMysql($this->getCurrentTimestamp() - (60 * 60)))
         );
 
         $runningJobs = $this->getScheduleCollection($filters);
@@ -206,6 +218,6 @@ class Scheduler extends AbstractModel implements SchedulerInterface
      */
     public function getSchedulerTimeMysql()
     {
-        return $this->convertTimestampForMysql($this->_timezone->scopeTimeStamp());
+        return $this->convertTimestampForMysql($this->getCurrentTimestamp());
     }
 }
