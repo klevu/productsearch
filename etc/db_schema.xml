@@ -62,6 +62,9 @@
         <constraint xsi:type="primary" referenceId="PRIMARY">
             <column name="order_item_id" />
         </constraint>
+        <index referenceId="KLEVU_ORDER_SYNC_SEND" indexType="btree">
+            <column name="send"/>
+        </index>
     </table>
 
     <table name="klevu_product_sync_history" resource="default" engine="innodb" comment="Klevu Product Sync History">
