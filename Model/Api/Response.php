@@ -158,23 +158,20 @@ class Response extends DataObject
             }
             if ($response->getStatusCode() == 400) {
                 $storefromscope = $this->_searchHelperData->storeFromScopeId();
+                $subject = $storefromscope
+                    ? sprintf("%s (%s)", $storefromscope->getWebsite()->getName(), $storefromscope->getName())
+                    : "this store";
 
                 $datatest[] = [
                     'severity' => "1",
                     'title' => "Klevu : Product Sync failed",
                     'date_added' => date('Y-m-d H:i:s'),
-                    'description' => sprintf("Product Sync failed for %s (%s): %s",
-                        $storefromscope->getWebsite()->getName(),
-                        $storefromscope->getName(),
-                        $message),
+                    'description' => sprintf("Product Sync failed for %s: %s", $subject, $message),
                     'url' => "https://help.klevu.com/support/solutions/articles/5000871512-secure-base-urls/",
                 ];
                 $this->_messageManager->create()->parse($datatest);
 
-                $this->setMessage(sprintf("Product Sync failed for %s (%s): %s",
-                    $storefromscope->getWebsite()->getName(),
-                    $storefromscope->getName(),
-                    $message));
+                $this->setMessage(sprintf("Product Sync failed for %s: %s", $subject, $message));
             } else {
                 $this->setMessage(sprintf("Failed to connect to Klevu: %s", $message));
             }
