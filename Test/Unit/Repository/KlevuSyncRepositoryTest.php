@@ -24,13 +24,10 @@ class KlevuSyncRepositoryTest extends TestCase
         $this->setupPhp5();
         $maxProductId = random_int(1,99999999);
 
-        $mockKlevuSyncItemBuilder = $this->getMockBuilder(Klevu::class);
-        if (method_exists($mockKlevuSyncItemBuilder, 'addMethods')) {
-            $mockKlevuSyncItemBuilder->addMethods(['getId']);
-        } else {
-            $mockKlevuSyncItemBuilder->setMethods(['getId']);
-        }
-        $mockKlevuSyncItem = $mockKlevuSyncItemBuilder->disableOriginalConstructor()->getMock();
+        $mockKlevuSyncItem = $this->getMockBuilder(\Klevu\Search\Model\Klevu\Klevu::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['getId'])
+            ->getMock();
         $mockKlevuSyncItem->expects($this->once())
             ->method('getId')
             ->willReturn($maxProductId);
@@ -49,7 +46,10 @@ class KlevuSyncRepositoryTest extends TestCase
         $repo = $this->objectManager->getObject(KlevuSyncRepository::class, [
             'KlevuSyncCollectionFactory' => $mockKlevuCollectionFactory,
             'klevuResourceModel' => $mockKlevuResourceModel,
-            'logger' => $mockLogger
+            'logger' => $mockLogger,
+            'klevuFactory' => $this->createMock(\Klevu\Search\Model\Klevu\KlevuFactory::class),
+            'syncEntitySearchResultsFactory' =>
+                $this->createMock(\Klevu\Search\Model\Klevu\SyncEntitySearchResultsFactory::class)
         ]);
 
         $result = $repo->getMaxSyncId($mockStore);
@@ -78,7 +78,10 @@ class KlevuSyncRepositoryTest extends TestCase
         $repo = $this->objectManager->getObject(KlevuSyncRepository::class, [
             'KlevuSyncCollectionFactory' => $mockKlevuCollectionFactory,
             'klevuResourceModel' => $mockKlevuResourceModel,
-            'logger' => $mockLogger
+            'logger' => $mockLogger,
+            'klevuFactory' => $this->createMock(\Klevu\Search\Model\Klevu\KlevuFactory::class),
+            'syncEntitySearchResultsFactory' =>
+                $this->createMock(\Klevu\Search\Model\Klevu\SyncEntitySearchResultsFactory::class)
         ]);
         $result = $repo->getProductIds($mockStore);
         if (method_exists($this, 'assertIsArray')) {
@@ -121,7 +124,10 @@ class KlevuSyncRepositoryTest extends TestCase
         $repo = $this->objectManager->getObject(KlevuSyncRepository::class, [
             'KlevuSyncCollectionFactory' => $mockKlevuCollectionFactory,
             'klevuResourceModel' => $mockKlevuResourceModel,
-            'logger' => $mockLogger
+            'logger' => $mockLogger,
+            'klevuFactory' => $this->createMock(\Klevu\Search\Model\Klevu\KlevuFactory::class),
+            'syncEntitySearchResultsFactory' =>
+                $this->createMock(\Klevu\Search\Model\Klevu\SyncEntitySearchResultsFactory::class)
         ]);
         $result = $repo->getProductIds($mockStore, [], 0, true);
 
@@ -198,7 +204,7 @@ class KlevuSyncRepositoryTest extends TestCase
         $mockKlevuResourceModel = $this->getMockBuilder(Klevu::class)
             ->disableOriginalConstructor()
             ->getMock();
-        $mockKlevuResourceModel->expects($this->any())
+        $mockKlevuResourceModel
             ->method('getBatchDataForCollection')
             ->willReturn(
                 [

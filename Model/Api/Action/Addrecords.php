@@ -213,7 +213,7 @@ class Addrecords extends Actionall
      *
      * @param array $parameters
      *
-     * @return array
+     * @return array|null
      */
     protected function validateRecords(&$parameters)
     {

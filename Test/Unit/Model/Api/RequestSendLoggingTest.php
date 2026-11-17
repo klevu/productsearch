@@ -23,6 +23,7 @@ class RequestSendLoggingTest extends TestCase
     /**
      * @dataProvider LogLevelsDataProvider
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('LogLevelsDataProvider')]
     public function testSendDoesNotStringifiesDataWhenLoggingLevelIsLessThanDebug($logLevel)
     {
         $mockRequest = $this->getPartialMockRequest($logLevel);
@@ -32,7 +33,7 @@ class RequestSendLoggingTest extends TestCase
     /**
      * @return array[]
      */
-    public function LogLevelsDataProvider()
+    public static function LogLevelsDataProvider()
     {
         return [
             [LoggerConstants::ZEND_LOG_EMERG],
@@ -66,16 +67,12 @@ class RequestSendLoggingTest extends TestCase
                 'searchHelperConfig' => $mockConfigHelper,
                 'apiResponseEmpty' => $mockRempty
             ]);
-        if (method_exists($mockRequestBuilder, 'onlyMethods')) {
-            $mockRequestBuilder->onlyMethods(['build', 'getEndpoint', 'getMethod', 'getResponseModel']);
-        } else {
-            $mockRequestBuilder->setMethods(['build', 'getEndpoint', 'getMethod', 'getResponseModel']);
-        }
+        $mockRequestBuilder->onlyMethods(['build', 'getEndpoint', 'getMethod', 'getResponseModel']);
         $mockRequest = $mockRequestBuilder->getMock();
         $mockRequest->expects($this->once())->method('build')->willReturn($mockClient);
-        $mockRequest->expects($this->any())->method('getEndpoint')->willReturn('some_string');
-        $mockRequest->expects($this->any())->method('getMethod')->willReturn('POST');
-        $mockRequest->expects($this->any())->method('getResponseModel')->willReturn($mockKlevuApiResponse);
+        $mockRequest->method('getEndpoint')->willReturn('some_string');
+        $mockRequest->method('getMethod')->willReturn('POST');
+        $mockRequest->method('getResponseModel')->willReturn($mockKlevuApiResponse);
 
         return $mockRequest;
     }
@@ -92,7 +89,7 @@ class RequestSendLoggingTest extends TestCase
             ->getMock();
 
         if ($logLevel === LoggerConstants::ZEND_LOG_DEBUG) {
-            $mockSearchHelper->expects($this->any())
+            $mockSearchHelper
                 ->method('log');
         } else {
             $mockSearchHelper->expects($this->never())
@@ -120,21 +117,17 @@ class RequestSendLoggingTest extends TestCase
     }
 
     /**
-     * @return \Laminas\Http\Client|\Zend\Http\Client|MockObject
+     * @return \Laminas\Http\Client|MockObject
      */
     private function getMockClient()
     {
-        $responseFqcn = class_exists('\Laminas\Http\Response')
-            ? \Laminas\Http\Response::class
-            : \Zend\Http\Response::class;
+        $responseFqcn = \Laminas\Http\Response::class;
 
         $mockClientResponse = $this->getMockBuilder($responseFqcn)
             ->disableOriginalConstructor()
             ->getMock();
 
-        $clientFqcn = class_exists('\Laminas\Http\Client')
-            ? \Laminas\Http\Client::class
-            : \Zend\Http\Client::class;
+        $clientFqcn = \Laminas\Http\Client::class;
         $mockClient = $this->getMockBuilder($clientFqcn)
             ->disableOriginalConstructor()
             ->getMock();

@@ -99,17 +99,16 @@ class MagentoProductSyncRepository implements MagentoProductSyncRepositoryInterf
         $this->productResourceModel = $productResourceModel;
         $this->productCollection = $productCollection;
 
-        $objectManager = ObjectManager::getInstance();
-        $this->optionProvider = $optionProvider ?: $objectManager->get(OptionProvider::class);
+        $this->optionProvider = $optionProvider ?: ObjectManager::getInstance()->get(OptionProvider::class);
         $this->joinParentVisibilityToSelectService = $joinParentVisibilityToSelectService
-            ?: $objectManager->get(JoinParentVisibilityToSelectInterface::class);
+            ?: ObjectManager::getInstance()->get(JoinParentVisibilityToSelectInterface::class);
         // Hardcoded FQCN as using virtualType - concrete class requires status parameter set via di.xml
         // phpcs:disable Magento2.PHP.LiteralNamespaces.LiteralClassUsage
         $this->joinParentStatusToSelectService = $joinParentStatusToSelectService
-            ?: $objectManager->get('\Klevu\Search\Service\Catalog\Product\JoinParentStatusToSelect\Enabled');
+            ?: ObjectManager::getInstance()->get('\Klevu\Search\Service\Catalog\Product\JoinParentStatusToSelect\Enabled');
         // phpcs:enable Magento2.PHP.LiteralNamespaces.LiteralClassUsage
         $this->addParentProductStockToCollection = $addParentProductStockToCollection
-            ?: $objectManager->get(AddParentProductStockToCollectionInterface::class);
+            ?: ObjectManager::getInstance()->get(AddParentProductStockToCollectionInterface::class);
     }
 
     /**

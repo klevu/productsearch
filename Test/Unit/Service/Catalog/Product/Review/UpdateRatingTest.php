@@ -682,8 +682,7 @@ class UpdateRatingTest extends TestCase
             $this->mockIsRatingCountAttrAvailable,
             $this->mockStoreManager,
             $this->mockDataProvider,
-            $this->mockUpdateRatings,
-            []
+            $this->mockUpdateRatings
         );
     }
 }

@@ -18,6 +18,11 @@ use \Magento\Catalog\Model\Category as Category_Model;
 class Product implements ProductInterface
 {
     /**
+     * @var \Magento\Catalog\Model\ResourceModel\Category|null
+     */
+    private $categoryResource;
+
+    /**
      * Klevu Search API Parameters
      * @var array
      */
@@ -108,8 +113,10 @@ class Product implements ProductInterface
         KlevuApiSearchtermtracking $apiActionSearchtermtracking,
         Magento_Request $magentoRequest,
         Magento_CategoryFactory $magentoCategoryFactory,
-        Category_Model $categoryModel
+        Category_Model $categoryModel,
+        ?\Magento\Catalog\Model\ResourceModel\Category $categoryResource = null
     ) {
+        $this->categoryResource = $categoryResource;
         $this->_searchHelperConfig = $searchHelperConfig;
         $this->_searchHelperData = $searchHelperData;
         $this->_apiActionIdsearch = $apiActionIdsearch;
@@ -220,7 +227,8 @@ class Product implements ProductInterface
                         unset($pathIds[0]);
                         unset($pathIds[1]);
                         foreach ($pathIds as $key => $value) {
-                            $catNames[] = $this->_categoryModel->load($value)->getName();
+                            $this->getCategoryResource()->load($this->_categoryModel, $value);
+                            $catNames[] = $this->_categoryModel->getName();
                         }
                         $allCategoryNames = implode(";", $catNames);
                     }
@@ -277,5 +285,16 @@ class Product implements ProductInterface
         }
 
         return [];
+    }
+    /**
+     * @return \Magento\Catalog\Model\ResourceModel\Category
+     */
+    private function getCategoryResource()
+    {
+        if ($this->categoryResource === null) {
+            $this->categoryResource = \Magento\Framework\App\ObjectManager::getInstance()->get(\Magento\Catalog\Model\ResourceModel\Category::class);
+        }
+
+        return $this->categoryResource;
     }
 }

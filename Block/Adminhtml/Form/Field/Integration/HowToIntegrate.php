@@ -20,10 +20,8 @@ class HowToIntegrate extends Fieldset
         $layout = $this->getLayout();
         $block = $layout->createBlock(
             Integration::class,
-            'klevu_search_information_how_to_integrate'
-        );
-        $block->setTemplate(
-            'Klevu_Search::klevu/search/form/field/integration/howtointegrate.phtml'
+            'klevu_search_information_how_to_integrate',
+            ['data' => ['template' => 'Klevu_Search::klevu/search/form/field/integration/howtointegrate.phtml']]
         );
 
         return $block->toHtml();

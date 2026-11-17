@@ -21,10 +21,8 @@ class Confirmation extends Fieldset
         $layout = $this->getLayout();
         $block = $layout->createBlock(
             Button::class,
-            'klevu_integration_confirm'
-        );
-        $block->setTemplate(
-            'Klevu_Search::klevu/search/form/field/integration/confirm.phtml'
+            'klevu_integration_confirm',
+            ['data' => ['template' => 'Klevu_Search::klevu/search/form/field/integration/confirm.phtml']]
         );
 
         return $block->toHtml();

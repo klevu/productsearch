@@ -119,6 +119,7 @@ Send order records which have not yet been synced with Klevu for stores with cod
             $startMemory = memory_get_usage(true);
         }
 
+        $areaCodeLockFile = null;
         try {
             $areaCodeLockFile = $this->directoryList->getPath(DirectoryList::VAR_DIR)
                 . DIRECTORY_SEPARATOR
@@ -135,7 +136,9 @@ Send order records which have not yet been synced with Klevu for stores with cod
 
             if ('frontend' !== $existingAreaCode) {
                 // phpcs:disable Magento2.Functions.DiscouragedFunction.DiscouragedWithAlternative
-                touch($areaCodeLockFile);
+                if ($areaCodeLockFile !== null) {
+                    touch($areaCodeLockFile);
+                }
                 $this->logger->error($e->getMessage(), [
                     'method' => __METHOD__,
                     'existingAreaCode' => $existingAreaCode,

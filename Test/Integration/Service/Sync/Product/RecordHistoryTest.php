@@ -194,7 +194,7 @@ class RecordHistoryTest extends TestCase
     /**
      * @param string $action
      *
-     * @return int
+     * @return int|null
      */
     private function mapAction($action)
     {

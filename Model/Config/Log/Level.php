@@ -14,7 +14,7 @@ class Level extends \Magento\Framework\Config\Data
      */
     public function getValue()
     {
-        $value = $this->getData('value');
+        $value = $this->get('value');
 
         return ($value != null) ? (int)$value : LoggerConstants::ZEND_LOG_WARN;
     }

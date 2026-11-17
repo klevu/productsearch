@@ -103,6 +103,7 @@ class MagentoRatingDataProviderTest extends TestCase
     /**
      * @dataProvider InvalidSumAndCountValuesDataProvider
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('InvalidSumAndCountValuesDataProvider')]
     public function testReturnsNullValuesIfCountOrSumAreMissing($sum, $count)
     {
         $this->setupPhp5();
@@ -171,6 +172,7 @@ class MagentoRatingDataProviderTest extends TestCase
     /**
      * @dataProvider ValidSumAndCountValuesDataProvider
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('ValidSumAndCountValuesDataProvider')]
     public function testReturnsValuesIfCountOrSumAreValidButUnexpected($sum, $count)
     {
         $this->setupPhp5();
@@ -305,7 +307,7 @@ class MagentoRatingDataProviderTest extends TestCase
     /**
      * @return array[]
      */
-    public function InvalidSumAndCountValuesDataProvider()
+    public static function InvalidSumAndCountValuesDataProvider()
     {
         return [
             ['100', '0'],
@@ -328,7 +330,7 @@ class MagentoRatingDataProviderTest extends TestCase
     /**
      * @return array[]
      */
-    public function ValidSumAndCountValuesDataProvider()
+    public static function ValidSumAndCountValuesDataProvider()
     {
         return [
             ['0', '100'],

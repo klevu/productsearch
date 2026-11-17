@@ -118,6 +118,7 @@ class ImageTest extends TestCase
     /**
      * @dataProvider testThumbImageObject_DoesKeepTransparency_ForOtherImageTypes_dataProvider
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('testThumbImageObject_DoesKeepTransparency_ForOtherImageTypes_dataProvider')]
     public function testThumbImageObject_DoesKeepTransparency_ForOtherImageTypes($mimeType, $imageResized)
     {
         $this->setUpPhp5();
@@ -145,7 +146,7 @@ class ImageTest extends TestCase
         $imageHelper->thumbImageObj($imageUrl, $imageResized, $width, $height);
     }
 
-    public function testThumbImageObject_DoesKeepTransparency_ForOtherImageTypes_dataProvider()
+    public static function testThumbImageObject_DoesKeepTransparency_ForOtherImageTypes_dataProvider()
     {
         return [
             ['image/png', 'image/path.png'],
@@ -156,6 +157,7 @@ class ImageTest extends TestCase
     /**
      * @dataProvider testGetMediaUrl_dataProvider
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('testGetMediaUrl_dataProvider')]
     public function testGetMediaUrl($baseUrl, $expected, $isPubPathRequired)
     {
         $this->setUpPhp5();
@@ -194,7 +196,7 @@ class ImageTest extends TestCase
         $this->assertSame($expected, $actual);
     }
 
-    public function testGetMediaUrl_dataProvider()
+    public static function testGetMediaUrl_dataProvider()
     {
         return [
             [
@@ -278,6 +280,7 @@ class ImageTest extends TestCase
     /**
      * @dataProvider testGetImagePath_WhenThumbnailNotCreated_dataProvider
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('testGetImagePath_WhenThumbnailNotCreated_dataProvider')]
     public function testGetImagePath_WhenThumbnailNotCreated($imagePath, $expected)
     {
         $this->setUpPhp5();
@@ -328,7 +331,7 @@ class ImageTest extends TestCase
         $this->assertSame($expected, $actual);
     }
 
-    public function testGetImagePath_WhenThumbnailNotCreated_dataProvider()
+    public static function testGetImagePath_WhenThumbnailNotCreated_dataProvider()
     {
         return [
             ['test.png', 'magento.test/media/catalog/product/test.png'],
@@ -341,6 +344,7 @@ class ImageTest extends TestCase
     /**
      * @dataProvider testGetImagePath_WhenThumbnailExists_dataProvider
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('testGetImagePath_WhenThumbnailExists_dataProvider')]
     public function testGetImagePath_WhenThumbnailExists($imagePath, $expected)
     {
         $this->setUpPhp5();
@@ -394,7 +398,7 @@ class ImageTest extends TestCase
         $this->assertSame($expected, $actual);
     }
 
-    public function testGetImagePath_WhenThumbnailExists_dataProvider()
+    public static function testGetImagePath_WhenThumbnailExists_dataProvider()
     {
         return [
             ['test.png', 'magento.test/media/klevu_images/350X300/test.png'],
@@ -451,7 +455,8 @@ class ImageTest extends TestCase
             $this->mockRequireJs,
             $this->mockDirectoryList,
             $this->mockProductMetadata,
-            $this->mockFileIo
+            $this->mockFileIo,
+            $this->createMock(\Magento\Catalog\Model\Product\Gallery\ReadHandler::class)
         );
     }
 

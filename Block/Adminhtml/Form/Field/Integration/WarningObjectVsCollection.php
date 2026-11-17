@@ -20,10 +20,8 @@ class WarningObjectVsCollection extends Fieldset
         $layout = $this->getLayout();
         $block = $layout->createBlock(
             ObjectVsCollection::class,
-            'klevu_search_information_object_vs_collection_warning'
-        );
-        $block->setTemplate(
-            'Klevu_Search::klevu/search/form/field/integration/warnings/objectvscollection.phtml'
+            'klevu_search_information_object_vs_collection_warning',
+            ['data' => ['template' => 'Klevu_Search::klevu/search/form/field/integration/warnings/objectvscollection.phtml']]
         );
 
         return $block->toHtml();

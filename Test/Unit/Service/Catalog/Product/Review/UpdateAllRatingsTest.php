@@ -106,6 +106,7 @@ class UpdateAllRatingsTest extends TestCase
     /**
      * @dataProvider invalidStoreDataProvider
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('invalidStoreDataProvider')]
     public function testThrowsExceptionIfStoreParamInvalid($store)
     {
         $this->setUpPhp5();
@@ -120,6 +121,7 @@ class UpdateAllRatingsTest extends TestCase
     /**
      * @dataProvider invalidStoreDataProvider_Negative
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('invalidStoreDataProvider_Negative')]
     public function testThrowsExceptionIfStoreParamInvalid_Negative($store)
     {
         $this->setUpPhp5();
@@ -131,10 +133,22 @@ class UpdateAllRatingsTest extends TestCase
         $updateAllRatings->execute($store);
     }
 
+    public function testThrowsExceptionIfStoreParamIsStoreObject()
+    {
+        $this->setUpPhp5();
+        $store = $this->createMock(StoreInterface::class);
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Store param must be an integer');
+
+        $updateAllRatings = $this->instantiateUpdateAllRatings();
+        $updateAllRatings->execute($store);
+    }
+
     /**
      * @return array
      */
-    public function invalidStoreDataProvider()
+    public static function invalidStoreDataProvider()
     {
         return [
             ['string'],
@@ -144,14 +158,13 @@ class UpdateAllRatingsTest extends TestCase
             [[1, 2, 3]],
             [json_decode(json_encode([1, 2, 3]))],
             [-1.23],
-            [$this->getMockBuilder(StoreInterface::class)->getMock()]
         ];
     }
 
     /**
      * @return array
      */
-    public function invalidStoreDataProvider_Negative()
+    public static function invalidStoreDataProvider_Negative()
     {
         return [
             [-1],

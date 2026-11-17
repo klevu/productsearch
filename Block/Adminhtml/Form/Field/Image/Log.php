@@ -53,8 +53,8 @@ class Log extends \Magento\Config\Block\System\Config\Form\Field
     /**
      * Button label for send log if Klevu_Search.log file exists
      *
-     * @return string
-     * @throws Exception
+     * @return string|\Magento\Framework\Phrase|null
+     * @throws \Exception
      */
     private function getButtonLabel()
     {
@@ -72,6 +72,8 @@ class Log extends \Magento\Config\Block\System\Config\Form\Field
         } catch (\Exception $e) {
             $_searchHelper->log(LoggerConstants::ZEND_LOG_CRIT, sprintf("Exception thrown in %s::%s - %s", __CLASS__, __METHOD__, $e->getMessage()));
         }
+
+        return null;
     }
 }
 

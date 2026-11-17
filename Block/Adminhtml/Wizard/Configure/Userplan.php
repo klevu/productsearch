@@ -9,6 +9,16 @@ use Magento\Framework\Exception\NoSuchEntityException;
 
 class Userplan extends \Magento\Backend\Block\Template
 {
+    /**
+     * @var Klevu_Plans
+     */
+    protected $_klevuPlans;
+
+    /**
+     * @var Klevu_Config
+     */
+    protected $_klevuConfig;
+
 
     public function __construct(
         Template_Context $context,

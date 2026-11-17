@@ -41,7 +41,7 @@ class RemoveFieldIfFeatureUnavailableTest extends TestCase
         );
 
         /** @var Field $field */
-        $field = $this->objectManager->getObject(Field::class);
+        $field = $this->createMock(Field::class);
         $element = $this->getElementMock('klevu_search_unmapped_field');
 
         $this->assertFalse(
@@ -71,7 +71,7 @@ class RemoveFieldIfFeatureUnavailableTest extends TestCase
         );
 
         /** @var Field $field */
-        $field = $this->objectManager->getObject(Field::class);
+        $field = $this->createMock(Field::class);
         $element = $this->getElementMock('klevu_search_test_field');
 
         $this->assertFalse(
@@ -101,7 +101,7 @@ class RemoveFieldIfFeatureUnavailableTest extends TestCase
         );
 
         /** @var Field $field */
-        $field = $this->objectManager->getObject(Field::class);
+        $field = $this->createMock(Field::class);
         $element = $this->getElementMock('klevu_search_test_field');
 
         $this->assertTrue(
@@ -131,7 +131,7 @@ class RemoveFieldIfFeatureUnavailableTest extends TestCase
         );
 
         /** @var Field $field */
-        $field = $this->objectManager->getObject(Field::class);
+        $field = $this->createMock(Field::class);
         $element = $this->getElementMock('klevu_search_test_field');
 
         $result = $removeFieldIfFeatureUnavailable->beforeRender($field, $element);
@@ -161,7 +161,7 @@ class RemoveFieldIfFeatureUnavailableTest extends TestCase
         );
 
         /** @var Field $field */
-        $field = $this->objectManager->getObject(Field::class);
+        $field = $this->createMock(Field::class);
         $resultFixture = '<td>
 <input type="text" name="test_field" value="foo" />
 </td>';

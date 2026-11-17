@@ -17,6 +17,11 @@ class Result extends \Magento\Framework\View\Element\Template
      */
     protected $_catalogLayer;
 
+    /**
+     * @var KlevuConfig
+     */
+    protected $_klevuConfig;
+
     const KLEVU_PRESERVE_LAYOUT = 1;
 
     /**
@@ -37,7 +42,7 @@ class Result extends \Magento\Framework\View\Element\Template
     }
 
     /**
-     * @return $this
+     * @return $this|null
      * @throws \Magento\Framework\Exception\LocalizedException
      * @throws \Magento\Framework\Exception\NoSuchEntityException
      */

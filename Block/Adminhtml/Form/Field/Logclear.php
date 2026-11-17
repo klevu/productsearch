@@ -17,6 +17,12 @@ use Magento\Framework\Filesystem\Io\File as FileIo;
 class Logclear extends LogClearButton
 {
     /**
+     * @var Klevu_HelperData
+     */
+    private $klevuHelperData;
+
+
+    /**
      * Logclear constructor.
      * @param Template_Context $context
      * @param Klevu_HelperData $klevuHelperData
@@ -40,6 +46,7 @@ class Logclear extends LogClearButton
         $destinationUrl = 'klevu_search/download/logclear',
         $buttonLabel = 'Rename Klevu Search Log'
     ) {
+        $this->klevuHelperData = $klevuHelperData;
         parent::__construct(
             $context,
             $logger ?: ObjectManager::getInstance()->get(KlevuLoggerInterface::class),

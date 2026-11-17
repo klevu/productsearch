@@ -81,15 +81,14 @@ class Stock implements StockServiceInterface
         $this->_stockRegistryInterface = $stockRegistryInterface;
         $this->stockItemCriteriaInterfaceFactory = $stockItemCriteriaInterfaceFactory;
         $this->stockItemRepository = $stockItemRepository;
-        $objectManager = ObjectManager::getInstance();
         $this->getStockStatusById = $getStockStatusById
-            ?: $objectManager->get(GetStockStatusByIdInterface::class);
+            ?: ObjectManager::getInstance()->get(GetStockStatusByIdInterface::class);
         $this->magentoStockHelper = $magentoStockHelper
-            ?: $objectManager->get(MagentoStockHelper::class);
+            ?: ObjectManager::getInstance()->get(MagentoStockHelper::class);
         $this->getCompositeProductStockStatus = $getCompositeProductStockStatus
-            ?: $objectManager->get(GetCompositeProductStockStatusInterface::class);
+            ?: ObjectManager::getInstance()->get(GetCompositeProductStockStatusInterface::class);
         $this->getStockIdForWebsite = $getStockIdForWebsite
-            ?: $objectManager->get(GetStockIdForWebsiteInterface::class);
+            ?: ObjectManager::getInstance()->get(GetStockIdForWebsiteInterface::class);
     }
 
     /**

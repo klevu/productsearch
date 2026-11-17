@@ -20,6 +20,17 @@ use Psr\Log\LoggerInterface;
 
 class Logclear extends AbstractLogClear
 {
+    /**
+     * @var Klevu_HelperData
+     */
+    private $klevuHelperData;
+
+    /**
+     * @var TimezoneInterface
+     */
+    private $timezone;
+
+
     const ADMIN_RESOURCE = Klevu_HelperConfig::ADMIN_RESOURCE_CONFIG;
 
     /**
@@ -47,6 +58,8 @@ class Logclear extends AbstractLogClear
         ?LogFileNameProviderInterface $logFileNameProvider = null,
         ?ArchiveLogFileServiceInterface $archiveLogFileService = null
     ) {
+        $this->klevuHelperData = $klevuHelperData;
+        $this->timezone = $timezone;
         parent::__construct(
             $context,
             $logger ?: ObjectManager::getInstance()->get(LoggerInterface::class),

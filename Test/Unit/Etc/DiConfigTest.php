@@ -14,6 +14,7 @@ class DiConfigTest extends TestCase
     /**
      * @dataProvider syncClassesDataProvider
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('syncClassesDataProvider')]
     public function testSyncModelIsNotSharedWithOtherSyncs($type)
     {
         $xpath = new \DOMXPath($this->loadDiConfig());
@@ -33,7 +34,7 @@ class DiConfigTest extends TestCase
     /**
      * @return array[]
      */
-    public function syncClassesDataProvider()
+    public static function syncClassesDataProvider()
     {
         return [
             ['Klevu\Search\Model\Product\Sync'],

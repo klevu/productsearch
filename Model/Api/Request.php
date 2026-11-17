@@ -56,9 +56,7 @@ class Request extends \Magento\Framework\DataObject
 
     public function _construct()
     {
-        parent::_construct();
-
-        $this->method = \Zend\Http\Client::GET;
+        $this->method = \Laminas\Http\Request::METHOD_GET;
         $this->headers = [];
         $this->response_model = $this->_modelApiResponse;
     }
@@ -187,7 +185,7 @@ class Request extends \Magento\Framework\DataObject
         }
         try {
             $raw_response = $raw_request->send();
-        } catch (\Zend\Http\Client\Exception $e) {
+        } catch (\Laminas\Http\Client\Exception\ExceptionInterface $e) {
             // Return an empty response
             $this->_searchHelperData->log(
                 LoggerConstants::ZEND_LOG_ERR,
@@ -239,11 +237,11 @@ class Request extends \Magento\Framework\DataObject
     /**
      * Build the HTTP request to be sent.
      *
-     * @return \Zend\Http\Client
+     * @return \Laminas\Http\Client
      */
     protected function build()
     {
-        $client = ObjectManager::getInstance()->get('Zend\Http\Client');
+        $client = ObjectManager::getInstance()->get('Laminas\Http\Client');
         if (!empty($this->getHeaders())) {
             $client
                 ->setUri($this->getEndpoint())

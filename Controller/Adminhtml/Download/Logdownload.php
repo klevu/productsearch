@@ -18,6 +18,17 @@ use Psr\Log\LoggerInterface;
 
 class Logdownload extends AbstractLogDownload
 {
+    /**
+     * @var Klevu_HelperData
+     */
+    private $klevuHelperData;
+
+    /**
+     * @var TimezoneInterface
+     */
+    private $timezone;
+
+
     use ArgumentValidationTrait;
 
     /**
@@ -47,6 +58,8 @@ class Logdownload extends AbstractLogDownload
         ?LogFileNameProviderInterface $logFileNameProvider = null,
         $maxFileSize = null
     ) {
+        $this->klevuHelperData = $klevuHelperData;
+        $this->timezone = $timezone;
         parent::__construct(
             $context,
             $logger ?: ObjectManager::getInstance()->get(LoggerInterface::class),

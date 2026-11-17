@@ -52,9 +52,6 @@ class UpdateLastSyncCategory implements ObserverInterface
         try {
             //getId adding as array
             $category_ids[] = $observer->getEvent()->getCategory()->getId();
-            if (empty($category_ids)) {
-                return;
-            }
             $this->_magentoProductActionsInterface->markRecordIntoQueue($category_ids, 'categories');
 
             //getAllIds will return array

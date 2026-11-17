@@ -61,7 +61,7 @@ abstract class AbstractTestCase extends TestCase
         ];
         $this->objectManager = Bootstrap::getObjectManager();
 
-        $this->locatorMock = $this->getMockForAbstractClass(LocatorInterface::class);
+        $this->locatorMock = $this->createMock(LocatorInterface::class);
         $this->locatorMock->method('getStore')->willReturn(
             $this->objectManager->get(StoreInterface::class)
         );

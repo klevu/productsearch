@@ -38,6 +38,7 @@ class ConvertRatingToStatsTest extends TestCase
     /**
      * @dataProvider ratingZeroDataProvider
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('ratingZeroDataProvider')]
     public function testReturnsZeroWhenRatingIsZero($rating)
     {
         $convertRatingToStars = $this->instantiateConvertRatingToStarsService();
@@ -49,6 +50,7 @@ class ConvertRatingToStatsTest extends TestCase
     /**
      * @dataProvider InvalidRatingDataProvider
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('InvalidRatingDataProvider')]
     public function testThrowsExceptionWhenInvalidRatingProvided($rating)
     {
         $this->expectException(InvalidRatingTypeException::class);
@@ -61,6 +63,7 @@ class ConvertRatingToStatsTest extends TestCase
     /**
      * @dataProvider InvalidRatingOutOfDataProvider
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('InvalidRatingOutOfDataProvider')]
     public function testDefaultValueIsUsedWhenInvalidRatingOutOfProvided($ratingOutOf)
     {
         $convertRatingToStars = $this->instantiateConvertRatingToStarsService($ratingOutOf);
@@ -72,6 +75,7 @@ class ConvertRatingToStatsTest extends TestCase
     /**
      * @dataProvider InvalidMaxStarsDataProvider
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('InvalidMaxStarsDataProvider')]
     public function testDefaultValueIsUsedWhenInvalidMaxNumberOfStarsProvided($maxStars)
     {
         $convertRatingToStars = $this->instantiateConvertRatingToStarsService(100, $maxStars);
@@ -83,6 +87,7 @@ class ConvertRatingToStatsTest extends TestCase
     /**
      * @dataProvider InvalidPrecisionDataProvider
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('InvalidPrecisionDataProvider')]
     public function testDefaultValueIsUsedWhenInvalidPrecisionProvided($precision)
     {
         $convertRatingToStars = $this->instantiateConvertRatingToStarsService(100, 5, $precision);
@@ -95,7 +100,7 @@ class ConvertRatingToStatsTest extends TestCase
     /**
      * @return array
      */
-    public function ratingZeroDataProvider()
+    public static function ratingZeroDataProvider()
     {
         return [
             [0],
@@ -110,7 +115,7 @@ class ConvertRatingToStatsTest extends TestCase
     /**
      * @return array
      */
-    public function InvalidRatingDataProvider()
+    public static function InvalidRatingDataProvider()
     {
         return [
             [null],
@@ -131,7 +136,7 @@ class ConvertRatingToStatsTest extends TestCase
     /**
      * @return array
      */
-    public function InvalidRatingOutOfDataProvider()
+    public static function InvalidRatingOutOfDataProvider()
     {
         return [
             ['0.00'],
@@ -154,7 +159,7 @@ class ConvertRatingToStatsTest extends TestCase
     /**
      * @return array
      */
-    public function InvalidMaxStarsDataProvider()
+    public static function InvalidMaxStarsDataProvider()
     {
         return [
             ['0.00'],
@@ -177,7 +182,7 @@ class ConvertRatingToStatsTest extends TestCase
     /**
      * @return array
      */
-    public function InvalidPrecisionDataProvider()
+    public static function InvalidPrecisionDataProvider()
     {
         return [
             [1.2],

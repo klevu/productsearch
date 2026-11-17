@@ -32,7 +32,8 @@ class GetKmcUrlServiceTest extends TestCase
             $mockConfigSource,
             $mockScopeConfig,
             $MockRequest,
-            $mockLogger
+            $mockLogger,
+            $this->createMock(\Klevu\Registry\Api\ConfigRegistryInterface::class)
         );
     }
 }

@@ -27,6 +27,16 @@ use Magento\Config\Model\ResourceModel\Config\Data\Collection;
 
 class Data extends AbstractHelper
 {
+    /**
+     * @var \Magento\Directory\Model\ResourceModel\Currency|null
+     */
+    private $currencyResource;
+
+    /**
+     * @var \Magento\Eav\Model\ResourceModel\Entity\Attribute\CollectionFactory|null
+     */
+    private $attributeCollectionFactory;
+
     const LOG_FILE = "Klevu_Search.log";
     const PRESERVE_LAYOUT_LOG_FILE = "Klevu_Search_Preserve_Layout.log";
     const ID_SEPARATOR = "-";
@@ -156,8 +166,12 @@ class Data extends AbstractHelper
         ConfigDataCollection $configDataCollection,
         ?ConvertLogLevelServiceInterface $convertLogLevelService = null,
         ?LoggerInterface $searchLogger = null,
-        ?LoggerInterface $preserveLayoutLogger = null
+        ?LoggerInterface $preserveLayoutLogger = null,
+        ?\Magento\Eav\Model\ResourceModel\Entity\Attribute\CollectionFactory $attributeCollectionFactory = null,
+        ?\Magento\Directory\Model\ResourceModel\Currency $currencyResource = null
     ) {
+        $this->currencyResource = $currencyResource;
+        $this->attributeCollectionFactory = $attributeCollectionFactory;
         $this->_storeModelStoreManagerInterface = $storeModelStoreManagerInterface;
         $this->_backendModelUrl = $backendModelUrl;
         $this->_searchHelperConfig = $searchHelperConfig;
@@ -195,7 +209,7 @@ class Data extends AbstractHelper
      *
      * @param int|StoreInterface $store
      *
-     * @return string
+     * @return string|null
      * @throws NoSuchEntityException
      */
     public function getStoreLanguage($store = null)
@@ -212,7 +226,7 @@ class Data extends AbstractHelper
      *
      * @param int|StoreInterface $store
      *
-     * @return string
+     * @return string|null
      * @throws NoSuchEntityException
      */
     public function getStoreTimeZone($store = null)
@@ -459,7 +473,7 @@ class Data extends AbstractHelper
     {
         $entityType = $this->_modelEntityType->loadByCode("catalog_category");
         $entityTypeId = $entityType->getId();
-        $attributeCollection = $this->_modelEntityAttribute->getCollection();
+        $attributeCollection = $this->getAttributeCollectionFactory()->create();
         if (!$attributeCollection) {
             return '';
         }
@@ -479,7 +493,7 @@ class Data extends AbstractHelper
     {
         $entityType = $this->_modelEntityType->loadByCode("catalog_product");
         $entityTypeId = $entityType->getId();
-        $attributeCollection = $this->_modelEntityAttribute->getCollection();
+        $attributeCollection = $this->getAttributeCollectionFactory()->create();
         if (!$attributeCollection) {
             return '';
         }
@@ -497,7 +511,7 @@ class Data extends AbstractHelper
     {
         $entityType = $this->_modelEntityType->loadByCode("catalog_category");
         $entityTypeId = $entityType->getId();
-        $attributeCollection = $this->_modelEntityAttribute->getCollection();
+        $attributeCollection = $this->getAttributeCollectionFactory()->create();
         if (!$attributeCollection) {
             return '';
         }
@@ -575,8 +589,7 @@ class Data extends AbstractHelper
             return null;
         }
         $availableCurrencies = $store->getAvailableCurrencyCodes();
-        $currency = $this->_currencyFactory->create();
-        $currencyResource = $currency->getResource();
+        $currencyResource = $this->getCurrencyResource();
         $currencyRates = $currencyResource->getCurrencyRates($baseCurrencyCode, array_values($availableCurrencies));
         if (count($availableCurrencies) <= 1 && in_array($baseCurrencyCode, $availableCurrencies, true)) {
             return null;
@@ -633,5 +646,27 @@ class Data extends AbstractHelper
         }
 
         return $this->_storeModelStoreManagerInterface->getStore((int)$cofigData[0]['scope_id']);
+    }
+    /**
+     * @return \Magento\Eav\Model\ResourceModel\Entity\Attribute\CollectionFactory
+     */
+    private function getAttributeCollectionFactory()
+    {
+        if ($this->attributeCollectionFactory === null) {
+            $this->attributeCollectionFactory = \Magento\Framework\App\ObjectManager::getInstance()->get(\Magento\Eav\Model\ResourceModel\Entity\Attribute\CollectionFactory::class);
+        }
+
+        return $this->attributeCollectionFactory;
+    }
+    /**
+     * @return \Magento\Directory\Model\ResourceModel\Currency
+     */
+    private function getCurrencyResource()
+    {
+        if ($this->currencyResource === null) {
+            $this->currencyResource = \Magento\Framework\App\ObjectManager::getInstance()->get(\Magento\Directory\Model\ResourceModel\Currency::class);
+        }
+
+        return $this->currencyResource;
     }
 }

@@ -19,10 +19,8 @@ class AuthKeys extends Fieldset
         $layout = $this->getLayout();
         $block = $layout->createBlock(
             Field\Integration\AuthKeys::class,
-            'klevu_integration_auth_keys_view'
-        );
-        $block->setTemplate(
-            'Klevu_Search::klevu/search/form/field/integration/auth_keys.phtml'
+            'klevu_integration_auth_keys_view',
+            ['data' => ['template' => 'Klevu_Search::klevu/search/form/field/integration/auth_keys.phtml']]
         );
         
         return $block->toHtml();

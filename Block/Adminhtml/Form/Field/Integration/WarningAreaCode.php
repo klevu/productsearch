@@ -20,10 +20,8 @@ class WarningAreaCode extends Fieldset
         $layout = $this->getLayout();
         $block = $layout->createBlock(
             AreaCode::class,
-            'klevu_search_information_area_code_warning'
-        );
-        $block->setTemplate(
-            'Klevu_Search::klevu/search/form/field/integration/warnings/areacode.phtml'
+            'klevu_search_information_area_code_warning',
+            ['data' => ['template' => 'Klevu_Search::klevu/search/form/field/integration/warnings/areacode.phtml']]
         );
 
         return $block->toHtml();

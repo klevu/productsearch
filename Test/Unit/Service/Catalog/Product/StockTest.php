@@ -38,6 +38,7 @@ class StockTest extends TestCase
     /**
      * @dataProvider InStockProductIdsDataProvider
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('InStockProductIdsDataProvider')]
     public function testGetKlevuStockStatusReturnsYesStringWhenParentAndChildInStock($parentId, $productId)
     {
         $this->setupPhp5();
@@ -58,6 +59,7 @@ class StockTest extends TestCase
     /**
      * @dataProvider OutOfStockProductIdsDataProvider
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('OutOfStockProductIdsDataProvider')]
     public function testGetKlevuStockStatusReturnsNoStringWhenParentInStockAndChildOutOfStock($parentId, $productId)
     {
         $this->setupPhp5();
@@ -74,6 +76,7 @@ class StockTest extends TestCase
     /**
      * @dataProvider InStockProductIdsDataProvider
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('InStockProductIdsDataProvider')]
     public function testIsInStockReturnsTrueWhenParentAndChildInStock($parentId, $productId)
     {
         $this->setupPhp5();
@@ -94,6 +97,7 @@ class StockTest extends TestCase
     /**
      * @dataProvider OutOfStockProductIdsDataProvider
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('OutOfStockProductIdsDataProvider')]
     public function testIsInStockReturnsFalseWhenParentInStockAndChildOutOfStock($parentId, $productId)
     {
         $this->setupPhp5();
@@ -139,7 +143,8 @@ class StockTest extends TestCase
             $mockStockItemRepository,
             $this->mockGetStockStatusById,
             $this->mockMagentoStockHelper,
-            $this->mockGetCompositeProductStockStatus
+            $this->mockGetCompositeProductStockStatus,
+            $this->createMock(\Klevu\Search\Api\Service\Catalog\Product\GetStockIdForWebsiteInterface::class)
         );
 
         $stockService->preloadKlevuStockStatus([$mockProduct1->getId(), $mockProduct2->getId()]);
@@ -177,7 +182,8 @@ class StockTest extends TestCase
             $mockStockItemRepository,
             $this->mockGetStockStatusById,
             $this->mockMagentoStockHelper,
-            $this->mockGetCompositeProductStockStatus
+            $this->mockGetCompositeProductStockStatus,
+            $this->createMock(\Klevu\Search\Api\Service\Catalog\Product\GetStockIdForWebsiteInterface::class)
         );
 
         $stockService->preloadKlevuStockStatus([$mockProduct1->getId(), $mockProduct2->getId()]);
@@ -190,7 +196,7 @@ class StockTest extends TestCase
     /**
      * @return array[]
      */
-    public function InStockProductIdsDataProvider()
+    public static function InStockProductIdsDataProvider()
     {
         return [
             ['10', '20'],
@@ -201,7 +207,7 @@ class StockTest extends TestCase
     /**
      * @return array[]
      */
-    public function OutOfStockProductIdsDataProvider()
+    public static function OutOfStockProductIdsDataProvider()
     {
         return [
             ['10', '30'],
@@ -224,7 +230,8 @@ class StockTest extends TestCase
             $mockStockItemRepository,
             $this->mockGetStockStatusById,
             $this->mockMagentoStockHelper,
-            $this->mockGetCompositeProductStockStatus
+            $this->mockGetCompositeProductStockStatus,
+            $this->createMock(\Klevu\Search\Api\Service\Catalog\Product\GetStockIdForWebsiteInterface::class)
         );
     }
 
@@ -308,7 +315,7 @@ class StockTest extends TestCase
         $mockStockRegistry = $this->getMockBuilder(StockRegistryInterface::class)
             ->disableOriginalConstructor()
             ->getMock();
-        $mockStockRegistry->expects($this->any())
+        $mockStockRegistry
             ->method('getStockStatus')
             ->willReturnMap([
                 ['10', '1', $mockStockInterfaceInStock],

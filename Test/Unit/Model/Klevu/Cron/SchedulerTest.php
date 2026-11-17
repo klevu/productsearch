@@ -72,6 +72,7 @@ class SchedulerTest extends TestCase
     /**
      * @dataProvider storeTimezoneOffsetsDataProvider
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('storeTimezoneOffsetsDataProvider')]
     public function testScheduleNowCreatesScheduleAtCurrentUtcTime($storeOffsetSeconds)
     {
         $this->setStoreOffset($storeOffsetSeconds);
@@ -91,6 +92,7 @@ class SchedulerTest extends TestCase
     /**
      * @dataProvider storeTimezoneOffsetsDataProvider
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('storeTimezoneOffsetsDataProvider')]
     public function testScheduleNowChecksForPendingDuplicatesAroundCurrentUtcTime($storeOffsetSeconds)
     {
         $this->setStoreOffset($storeOffsetSeconds);
@@ -121,6 +123,7 @@ class SchedulerTest extends TestCase
     /**
      * @dataProvider storeTimezoneOffsetsDataProvider
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('storeTimezoneOffsetsDataProvider')]
     public function testIsRunningLooksBackOneHourFromCurrentUtcTime($storeOffsetSeconds)
     {
         $this->setStoreOffset($storeOffsetSeconds);
@@ -135,6 +138,7 @@ class SchedulerTest extends TestCase
     /**
      * @dataProvider storeTimezoneOffsetsDataProvider
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('storeTimezoneOffsetsDataProvider')]
     public function testGetSchedulerTimeMysqlReturnsCurrentUtcTime($storeOffsetSeconds)
     {
         $this->setStoreOffset($storeOffsetSeconds);
@@ -147,7 +151,7 @@ class SchedulerTest extends TestCase
      *
      * @return array[]
      */
-    public function storeTimezoneOffsetsDataProvider()
+    public static function storeTimezoneOffsetsDataProvider()
     {
         return [
             'UTC' => [0],
@@ -248,9 +252,9 @@ class SchedulerTest extends TestCase
             ->getMock();
         $mockConfigHelper->method('isExternalCronEnabled')->willReturn(true);
 
-        $mockHelperManager = $this->getMockBuilder(HelperManager::class)
+        $mockHelperManager = $this->getMockBuilder(HelperManagerStub::class)
             ->disableOriginalConstructor()
-            ->addMethods(['getConfigHelper'])
+            ->onlyMethods(['getConfigHelper'])
             ->getMock();
         $mockHelperManager->method('getConfigHelper')->willReturn($mockConfigHelper);
 

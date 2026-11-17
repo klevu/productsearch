@@ -96,7 +96,7 @@ class PageOutputTest extends AbstractControllerTestCase
                 'Klevu Lang JS variable defined before core library include'
             );
         } else {
-            $this->assertRegExp(
+            $this->assertMatchesRegularExpression(
                 '#var klevu_lang.*js\.klevu\.com&\#x2F;core&\#x2F;v2&\#x2F;klevu\.js#s',
                 $responseBody,
                 'Klevu Lang JS variable defined before core library include'
@@ -293,7 +293,7 @@ class PageOutputTest extends AbstractControllerTestCase
                 'Klevu Lang JS variable defined before core library include'
             );
         } else {
-            $this->assertRegExp(
+            $this->assertMatchesRegularExpression(
                 '#var klevu_lang.*js\.klevu\.com&\#x2F;core&\#x2F;v2&\#x2F;klevu\.js#s',
                 $responseBody,
                 'Klevu Lang JS variable defined before core library include'

@@ -71,8 +71,8 @@ class CheckoutCartOutputTest extends AbstractControllerTestCase
             $this->assertMatchesRegularExpression('#klevu_page_meta\s*=#', $responseBody);
             $this->assertMatchesRegularExpression('#"pageType"\s*:\s*"cart"#', $responseBody);
         } else {
-            $this->assertRegExp('#klevu_page_meta\s*=#', $responseBody);
-            $this->assertRegExp('#"pageType"\s*:\s*"cart"#', $responseBody);
+            $this->assertMatchesRegularExpression('#klevu_page_meta\s*=#', $responseBody);
+            $this->assertMatchesRegularExpression('#"pageType"\s*:\s*"cart"#', $responseBody);
         }
 
         $this->tearDownPhp5();
@@ -143,14 +143,15 @@ class CheckoutCartOutputTest extends AbstractControllerTestCase
 
         $quote->collectTotals();
         /** @noinspection PhpDeprecationInspection */
-        $quote->save();
+        $this->objectManager->get(\Magento\Quote\Model\ResourceModel\Quote::class)->save($quote);
 
         /** @var QuoteIdMask $quoteIdMask */
         $quoteIdMask = $this->objectManager->create(QuoteIdMaskFactory::class)->create();
         $quoteIdMask->setDataUsingMethod('quote_id', $quote->getId());
         $quoteIdMask->setDataChanges(true);
         /** @noinspection PhpDeprecationInspection */
-        $quoteIdMask->save();
+        $this->objectManager->get(\Magento\Quote\Model\ResourceModel\Quote\QuoteIdMask::class)
+            ->save($quoteIdMask);
 
         return $quote;
     }

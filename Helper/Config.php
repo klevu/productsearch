@@ -41,6 +41,11 @@ use Magento\Tax\Model\Config as MagentoTaxConfig;
 
 class Config extends AbstractHelper
 {
+    /**
+     * @var \Magento\Store\Model\ResourceModel\Store|null
+     */
+    private $storeResource;
+
     const XML_PATH_EXTENSION_ENABLED = "klevu_search/general/enabled";
     const XML_PATH_TAX_ENABLED = "tax/display/typeinsearch";
     const XML_PATH_SECUREURL_ENABLED = "klevu_search/secureurl_setting/enabled";
@@ -194,8 +199,10 @@ class Config extends AbstractHelper
         ?AppState $appState = null,
         ?SerializerInterface $serializer = null,
         ?ConfigResourceFactory $configResourceFactory = null,
-        ?Context $context = null
+        ?Context $context = null,
+        ?\Magento\Store\Model\ResourceModel\Store $storeResource = null
     ) {
+        $this->storeResource = $storeResource;
         $this->_appConfigScopeConfigInterface = $appConfigScopeConfigInterface;
         $this->_magentoFrameworkUrlInterface = $magentoFrameworkUrlInterface;
         $this->_storeModelStoreManagerInterface = $storeModelStoreManagerInterface;
@@ -204,12 +211,11 @@ class Config extends AbstractHelper
         $this->_modelConfigData = $modelConfigData;
         $this->_frameworkModelResource = $frameworkModelResource;
         $this->_versionReader = $versionReader;
-        $objectManager = ObjectManager::getInstance();
-        $this->appState = $appState ?: $objectManager->get(AppState::class);
-        $this->serializer = $serializer ?: $objectManager->get(SerializerInterface::class);
-        $configResourceFactory = $configResourceFactory ?: $objectManager->get(ConfigResourceFactory::class);
+        $this->appState = $appState ?: ObjectManager::getInstance()->get(AppState::class);
+        $this->serializer = $serializer ?: ObjectManager::getInstance()->get(SerializerInterface::class);
+        $configResourceFactory = $configResourceFactory ?: ObjectManager::getInstance()->get(ConfigResourceFactory::class);
         $this->configResource = $configResourceFactory->create();
-        parent::__construct($context ?: $objectManager->get(Context::class));
+        parent::__construct($context ?: ObjectManager::getInstance()->get(Context::class));
     }
 
     /**
@@ -1247,7 +1253,7 @@ class Config extends AbstractHelper
     /**
      * @param string $elementId
      *
-     * @return array
+     * @return array|null
      * @deprecated
      * @see \Klevu\Search\Service\Account\GetFeatures::execute
      *
@@ -1265,7 +1271,8 @@ class Config extends AbstractHelper
                 $checkStr = explode("_", $elementId);
                 $disable_features = explode(",", $features['disabled']);
                 $code = $this->_frameworkAppRequestInterface->getParam('store');// store level
-                $store = $this->_frameworkModelStore->load($code);
+                $store = $this->_frameworkModelStore;
+                $this->getStoreResource()->load($store, $code, is_numeric($code) ? null : 'code');
 
                 if (in_array("preserves_layout", $disable_features, true) &&
                     $this->_frameworkAppRequestInterface->getParam('section') === "klevu_search"
@@ -1536,7 +1543,8 @@ class Config extends AbstractHelper
             $code = (string)$this->_frameworkAppRequestInterface->getParam('store');
             if ($code !== '') { // store level
                 if (!$this->_klevu_features_response) {
-                    $store = $this->_frameworkModelStore->load($code);
+                    $store = $this->_frameworkModelStore;
+                    $this->getStoreResource()->load($store, $code, is_numeric($code) ? null : 'code');
                     $store_id = $store->getId();
                     $restapi = $this->getRestApiKey($store_id);
                     if (!empty($restapi)) {
@@ -1929,5 +1937,16 @@ class Config extends AbstractHelper
         );
 
         return $imageAdapter ?: ImageAdapterInterface::ADAPTER_GD2;
+    }
+    /**
+     * @return \Magento\Store\Model\ResourceModel\Store
+     */
+    private function getStoreResource()
+    {
+        if ($this->storeResource === null) {
+            $this->storeResource = \Magento\Framework\App\ObjectManager::getInstance()->get(\Magento\Store\Model\ResourceModel\Store::class);
+        }
+
+        return $this->storeResource;
     }
 }

@@ -19,10 +19,8 @@ class QuickLinks extends Fieldset
         $layout = $this->getLayout();
         $block = $layout->createBlock(
             Instructions\QuickLinks::class,
-            'klevu_search_information_quick_links'
-        );
-        $block->setTemplate(
-            'Klevu_Search::klevu/search/form/field/integration/quicklinks.phtml'
+            'klevu_search_information_quick_links',
+            ['data' => ['template' => 'Klevu_Search::klevu/search/form/field/integration/quicklinks.phtml']]
         );
 
         return $block->toHtml();

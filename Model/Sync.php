@@ -166,7 +166,7 @@ class Sync extends AbstractModel
             $this->_shell->execute(
                 $this->_phpPath . ' %s ' . $command,
                 [
-                    BP . '/bin/magento',
+                    $this->directoryList->getRoot() . '/bin/magento',
                 ]
             );
 

@@ -20,10 +20,8 @@ class WarningOrdersSameIp extends Fieldset
         $layout = $this->getLayout();
         $block = $layout->createBlock(
             OrdersSameIp::class,
-            'klevu_search_information_multiple_orders_same_ip'
-        );
-        $block->setTemplate(
-            'Klevu_Search::klevu/search/form/field/integration/warnings/multipleorderssameip.phtml'
+            'klevu_search_information_multiple_orders_same_ip',
+            ['data' => ['template' => 'Klevu_Search::klevu/search/form/field/integration/warnings/multipleorderssameip.phtml']]
         );
 
         return $block->toHtml();

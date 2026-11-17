@@ -96,9 +96,8 @@ class RatingsUpdate implements ObserverInterface
         $this->_modelEntityAttribute = $modelEntityAttribute;
         $this->_modelProductAction = $modelProductAction;
 
-        $objectManager = ObjectManager::getInstance();
-        $this->updateRating = $updateRating ?: $objectManager->get(UpdateRatingInterface::class);
-        $this->productRepository = $productRepository ?: $objectManager->get(ProductRepositoryInterface::class);
+        $this->updateRating = $updateRating ?: ObjectManager::getInstance()->get(UpdateRatingInterface::class);
+        $this->productRepository = $productRepository ?: ObjectManager::getInstance()->get(ProductRepositoryInterface::class);
     }
 
     /**

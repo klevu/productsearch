@@ -31,7 +31,8 @@ class SessionIdProviderTest extends TestCase
 
         return new SessionIdProvider(
             $mockEncryptor,
-            $mockSessionManager
+            $mockSessionManager,
+            $this->createMock(\Magento\Framework\App\DeploymentConfig::class)
         );
     }
 }

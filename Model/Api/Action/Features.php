@@ -17,6 +17,11 @@ use Magento\Store\Model\StoreManagerInterface;
 
 class Features extends Actionall
 {
+    /**
+     * @var \Magento\Store\Model\ResourceModel\Store|null
+     */
+    private $storeResource;
+
     const ENDPOINT = "/uti/getFeaturesAndUpgradeLink";
     const METHOD = "POST";
     const DEFAULT_REQUEST_MODEL = ApiPostRequest::class;
@@ -61,8 +66,10 @@ class Features extends Actionall
         SearchHelper $searchHelperData,
         Store $frameworkModelStore,
         $requestModel = null,
-        $responseModel = null
+        $responseModel = null,
+        ?\Magento\Store\Model\ResourceModel\Store $storeResource = null
     ) {
+        $this->storeResource = $storeResource;
         $this->_apiResponseInvalid = $apiResponseInvalid;
         $this->_searchHelperApi = $searchHelperApi;
         $this->_searchHelperConfig = $searchHelperConfig;
@@ -110,7 +117,8 @@ class Features extends Actionall
             return $this->_apiResponseInvalid->setErrors($validation_result);
         }
         $storeParam = isset($parameters['store']) ? $parameters['store'] : null;
-        $store = $this->_frameworkModelStore->load($storeParam);
+        $store = $this->_frameworkModelStore;
+        $this->getStoreResource()->load($store, $storeParam, is_numeric($storeParam) ? null : 'code');
 
         $endpoint = $this->buildEndpoint(
             isset($parameters['endpoint']) ? $parameters['endpoint'] : static::ENDPOINT,
@@ -143,5 +151,16 @@ class Features extends Actionall
             . rtrim(preg_replace('#^https?://#', '', $hostname), '/')
             . '/'
             . ltrim($endpoint, '/');
+    }
+    /**
+     * @return \Magento\Store\Model\ResourceModel\Store
+     */
+    private function getStoreResource()
+    {
+        if ($this->storeResource === null) {
+            $this->storeResource = \Magento\Framework\App\ObjectManager::getInstance()->get(\Magento\Store\Model\ResourceModel\Store::class);
+        }
+
+        return $this->storeResource;
     }
 }

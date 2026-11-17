@@ -57,7 +57,7 @@ class Compat extends \Magento\Framework\App\Helper\AbstractHelper
     public function now($withoutTime = false)
     {
         if (method_exists("Magento\Framework\Date", "now")) {
-            return \Magento\Framework\Date::now($withoutTime);
+            return call_user_func(["Magento\\Framework\\Date", "now"], $withoutTime);
         } else {
             $format = ($withoutTime) ? "Y-m-d" : "Y-m-d H:i:s";
             return date($format);

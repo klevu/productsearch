@@ -573,7 +573,7 @@ class Sync extends AbstractModel
      * @param string $order_email
      * @param string $checkout_date timestamp
      *
-     * @return bool|string
+     * @return bool|string|null
      */
     protected function sync($item, $sess_id, $ip_address, $order_date, $order_email, $checkout_date)
     {

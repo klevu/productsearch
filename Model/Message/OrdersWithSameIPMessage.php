@@ -11,6 +11,11 @@ use Magento\Framework\UrlInterface;
 
 class OrdersWithSameIPMessage implements MessageInterface
 {
+    /**
+     * @var UrlInterface
+     */
+    private $urlBuilder;
+
     const MESSAGE_ID = 'KLEVU_ORDERS_WITH_SAME_IPS';
 
     /**
@@ -27,6 +32,7 @@ class OrdersWithSameIPMessage implements MessageInterface
         KlevuHelperConfig $searchHelperConfig,
         OrdersWithSameIPCollection $ordersWithSameIPCollection
     ) {
+        $this->urlBuilder = $urlBuilder;
         $this->searchHelperConfig = $searchHelperConfig;
         $this->ordersWithSameIPCollection = $ordersWithSameIPCollection;
     }

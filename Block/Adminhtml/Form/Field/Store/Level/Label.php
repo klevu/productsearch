@@ -7,6 +7,11 @@ use \Magento\Backend\Block\Template\Context as Template_Context;
 
 class Label extends \Magento\Config\Block\System\Config\Form\Field
 {
+    /**
+     * @var Klevu_HelperConfig
+     */
+    protected $_klevuHelperConfig;
+
 	private $_context;
 	
 	public function __construct(

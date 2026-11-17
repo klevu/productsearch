@@ -19,10 +19,8 @@ class Versions extends Fieldset
         $layout = $this->getLayout();
         $block = $layout->createBlock(
             Instructions\Versions::class,
-            'klevu_search_information_versions'
-        );
-        $block->setTemplate(
-            'Klevu_Search::klevu/search/form/field/integration/versions.phtml'
+            'klevu_search_information_versions',
+            ['data' => ['template' => 'Klevu_Search::klevu/search/form/field/integration/versions.phtml']]
         );
 
         return $block->toHtml();

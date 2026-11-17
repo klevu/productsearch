@@ -82,7 +82,8 @@ class Image extends AbstractHelper
         RequireJs $requireJs,
         DirectoryList $directoryList,
         ProductMetadataInterface $productMetadataInterface,
-        ?FileIo $fileIo = null
+        ?FileIo $fileIo = null,
+        ?ReadHandler $galleryReadHandler = null
     ) {
         $this->_storeModelStoreManagerInterface = $storeModelStoreManagerInterface;
         $this->_searchHelperConfig = $searchHelperConfig;
@@ -91,9 +92,8 @@ class Image extends AbstractHelper
         $this->_requireJs = $requireJs;
         $this->_directoryList = $directoryList;
         $this->_productMetadataInterface = $productMetadataInterface;
-        $objectManager = ObjectManager::getInstance();
-        $this->_galleryReadHandler = $objectManager->get(ReadHandler::class);
-        $this->fileIo = $fileIo ?: $objectManager->get(FileIo::class);
+        $this->_galleryReadHandler = $galleryReadHandler ?: ObjectManager::getInstance()->get(ReadHandler::class);
+        $this->fileIo = $fileIo ?: ObjectManager::getInstance()->get(FileIo::class);
     }
 
     /**

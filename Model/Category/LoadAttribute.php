@@ -10,6 +10,11 @@ use Magento\Framework\UrlInterface;
 class LoadAttribute extends MagentoCategoryActions implements LoadAttributeInterface
 {
     /**
+     * @var \Magento\Catalog\Model\ResourceModel\Category\CollectionFactory|null
+     */
+    private $categoryCollectionFactory;
+
+    /**
      * @var ResourceConnection
      */
     protected $_klevuSync;
@@ -20,7 +25,7 @@ class LoadAttribute extends MagentoCategoryActions implements LoadAttributeInter
     /**
      * @var Category
      */
-    protected Category $_catalogModelCategory;
+    protected $_catalogModelCategory;
 
     /**
      * @param Klevu_Context $context
@@ -28,8 +33,10 @@ class LoadAttribute extends MagentoCategoryActions implements LoadAttributeInter
      */
     public function __construct(
         Klevu_Context $context,
-        Category $catalogModelCategory
+        Category $catalogModelCategory,
+        ?\Magento\Catalog\Model\ResourceModel\Category\CollectionFactory $categoryCollectionFactory = null
     ) {
+        $this->categoryCollectionFactory = $categoryCollectionFactory;
         $this->_storeModelStoreManagerInterface = $context->getStoreManagerInterface();
         $this->_frameworkModelResource = $context->getResourceConnection();
         $this->_searchHelperConfig = $context->getHelperManager()->getConfigHelper();
@@ -101,7 +108,7 @@ class LoadAttribute extends MagentoCategoryActions implements LoadAttributeInter
      */
     public function loadCategoryCollection($storeId, $categoryIds)
     {
-        return $this->_catalogModelCategory->getCollection()
+        return $this->getCategoryCollectionFactory()->create()
             ->setStoreId($storeId)
             ->addAttributeToSelect("*")->addFieldToFilter(
                 'entity_id',
@@ -109,5 +116,16 @@ class LoadAttribute extends MagentoCategoryActions implements LoadAttributeInter
                     'in' => $categoryIds,
                 ]
             );
+    }
+    /**
+     * @return \Magento\Catalog\Model\ResourceModel\Category\CollectionFactory
+     */
+    private function getCategoryCollectionFactory()
+    {
+        if ($this->categoryCollectionFactory === null) {
+            $this->categoryCollectionFactory = \Magento\Framework\App\ObjectManager::getInstance()->get(\Magento\Catalog\Model\ResourceModel\Category\CollectionFactory::class);
+        }
+
+        return $this->categoryCollectionFactory;
     }
 }

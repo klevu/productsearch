@@ -40,6 +40,7 @@ class GetAccountDetailsApiBehaviourTest extends TestCase
     /**
      * @dataProvider  missingApiKeysDataProvider
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('missingApiKeysDataProvider')]
     public function testReturns400IfHeadersNotSpecified($restApiKey, $jsApiKey)
     {
         $this->setUpPhp5();
@@ -60,6 +61,7 @@ class GetAccountDetailsApiBehaviourTest extends TestCase
     /**
      * @dataProvider invalidApiKeysDataProvider
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('invalidApiKeysDataProvider')]
     public function testReturns401ErrorWhenHeaderValuesAreInvalid($restApiKey, $jsApiKey)
     {
         $this->setUpPhp5();
@@ -128,31 +130,33 @@ class GetAccountDetailsApiBehaviourTest extends TestCase
     /**
      * @return array
      */
-    public function invalidApiKeysDataProvider()
+    public static function invalidApiKeysDataProvider()
     {
-        $this->setUpPhp5();
+        $restApiKey = isset($_ENV['KLEVU_REST_API_KEY']) ? $_ENV['KLEVU_REST_API_KEY'] : null;
+        $jsApiKey = isset($_ENV['KLEVU_JS_API_KEY']) ? $_ENV['KLEVU_JS_API_KEY'] : null;
 
         return [
-            [$this->restApiKey, 'some-string'],
-            [$this->restApiKey, 12873617824],
-            ['this is not a valid key *&Y*&@', $this->jsApiKey],
-            [1234, $this->jsApiKey],
-            [$this->jsApiKey, $this->restApiKey],
+            [$restApiKey, 'some-string'],
+            [$restApiKey, 12873617824],
+            ['this is not a valid key *&Y*&@', $jsApiKey],
+            [1234, $jsApiKey],
+            [$jsApiKey, $restApiKey],
         ];
     }
 
     /**
      * @return array
      */
-    public function missingApiKeysDataProvider()
+    public static function missingApiKeysDataProvider()
     {
-        $this->setUpPhp5();
+        $restApiKey = isset($_ENV['KLEVU_REST_API_KEY']) ? $_ENV['KLEVU_REST_API_KEY'] : null;
+        $jsApiKey = isset($_ENV['KLEVU_JS_API_KEY']) ? $_ENV['KLEVU_JS_API_KEY'] : null;
 
         return [
-            [$this->restApiKey, null],
-            [$this->restApiKey, ''],
-            [null, $this->jsApiKey],
-            ['', $this->jsApiKey],
+            [$restApiKey, null],
+            [$restApiKey, ''],
+            [null, $jsApiKey],
+            ['', $jsApiKey],
             [null, null]
         ];
     }

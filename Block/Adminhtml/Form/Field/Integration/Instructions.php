@@ -47,10 +47,8 @@ class Instructions extends Fieldset
         $layout = $this->getLayout();
         $block = $layout->createBlock(
             Integration::class,
-            'klevu_search_information_api_key_integration_instructions'
-        );
-        $block->setTemplate(
-            'Klevu_Search::klevu/search/form/field/integration/instructions.phtml'
+            'klevu_search_information_api_key_integration_instructions',
+            ['data' => ['template' => 'Klevu_Search::klevu/search/form/field/integration/instructions.phtml']]
         );
 
         return $block->toHtml();

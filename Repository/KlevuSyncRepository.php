@@ -71,11 +71,10 @@ class KlevuSyncRepository implements KlevuSyncRepositoryInterface
         $this->KlevuSyncCollectionFactory = $KlevuSyncCollectionFactory;
         $this->klevuResourceModel = $klevuResourceModel;
         $this->logger = $logger;
-        $objectManager = ObjectManager::getInstance();
         $this->klevuFactory = $klevuFactory ?:
-            $objectManager->get(KlevuFactory::class);
+            ObjectManager::getInstance()->get(KlevuFactory::class);
         $this->syncEntitySearchResultsFactory = $syncEntitySearchResultsFactory ?:
-            $objectManager->get(SyncEntitySearchResultsFactory::class);
+            ObjectManager::getInstance()->get(SyncEntitySearchResultsFactory::class);
     }
 
     /**

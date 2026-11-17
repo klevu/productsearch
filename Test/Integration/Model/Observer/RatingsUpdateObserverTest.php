@@ -254,10 +254,8 @@ class RatingsUpdateObserverTest extends TestCase
         $store1 = $this->getStore('klevu_test_store_1');
         $store2 = $this->getStore('klevu_test_store_2');
 
-        /** @var Rating $ratingModel */
-        $ratingModel = $this->objectManager->create(Rating::class);
         /** @var RatingCollection $ratingCollection */
-        $ratingCollection = $ratingModel->getCollection()
+        $ratingCollection = $this->objectManager->get(RatingCollectionFactory::class)->create()
             ->setPageSize(3)
             ->setCurPage(1);
         // activate each rating for each store
@@ -274,7 +272,7 @@ class RatingsUpdateObserverTest extends TestCase
                 ]
             )));
             $rating->setIsActive(1);
-            $rating->save();
+            $this->objectManager->get(\Magento\Review\Model\ResourceModel\Rating::class)->save($rating);
         }
 
         foreach ($reviewsData as $reviewData) {
@@ -292,7 +290,8 @@ class RatingsUpdateObserverTest extends TestCase
                 $reviewData['storeId']
             )->setStores(
                 $reviewData['stores']
-            )->save();
+            );
+            $this->objectManager->get(\Magento\Review\Model\ResourceModel\Review::class)->save($review);
 
             foreach ($ratingCollection as $rating) {
                 if (!isset($reviewData['rating'][$rating->getId()])) {
@@ -319,7 +318,7 @@ class RatingsUpdateObserverTest extends TestCase
     private function deleteReview(array $reviews)
     {
         foreach ($reviews as $review) {
-            $review->delete();
+            $this->objectManager->get(\Magento\Review\Model\ResourceModel\Review::class)->delete($review);
         }
     }
 

@@ -100,7 +100,7 @@ class All extends Action
             $website = $store->getWebsite();
         } catch (NoSuchEntityException $e) {
             $this->messageManager->addErrorMessage(__("Selected store could not be found!"));
-            $this->_redirect($this->_redirect->getRefererUrl());
+            return $this->_redirect($this->_redirect->getRefererUrl());
         }
 
         if ($this->_searchHelperConfig->isProductSyncEnabled((int)$store->getId())) {

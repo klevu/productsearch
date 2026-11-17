@@ -29,6 +29,11 @@ use Psr\Log\LoggerInterface;
 class LoadAttribute extends AbstractModel implements LoadAttributeInterface
 {
     /**
+     * @var \Klevu\Search\Model\Klevu\ResourceModel\Klevu\CollectionFactory|null
+     */
+    private $klevuCollectionFactory;
+
+    /**
      * @var StoreManagerInterface
      */
     protected $_storeModelStoreManagerInterface;
@@ -106,8 +111,10 @@ class LoadAttribute extends AbstractModel implements LoadAttributeInterface
         ?ProductCollectionFactory $productCollectionFactory = null,
         ?ReservedAttributeCodesProviderInterface $reservedAttributeCodesProvider = null,
         ?ProductRepositoryInterface $productRepository = null,
-        ?LoggerInterface $logger = null
+        ?LoggerInterface $logger = null,
+        ?\Klevu\Search\Model\Klevu\ResourceModel\Klevu\CollectionFactory $klevuCollectionFactory = null
     ) {
+        $this->klevuCollectionFactory = $klevuCollectionFactory;
         $this->_storeModelStoreManagerInterface = $context->getStoreManagerInterface();
         $this->_frameworkModelResource = $context->getResourceConnection();
         $this->_productData = $productdata;
@@ -790,7 +797,7 @@ class LoadAttribute extends AbstractModel implements LoadAttributeInterface
     {
         $klevu = $this->_klevuFactory->create();
         /** @var KlevuProductSyncCollection $klevuCollection */
-        $klevuCollection = $klevu->getCollection();
+        $klevuCollection = $this->getKlevuCollectionFactory()->create();
         $klevuCollection->addFieldToFilter($klevu->getKlevuField('type'), $klevu->getKlevuType('product'));
         $klevuCollection->addFieldToFilter($klevu->getKlevuField('product_id'), $product_id);
         $klevuCollection->addFieldToFilter($klevu->getKlevuField('parent_id'), $parent_id);
@@ -1046,5 +1053,16 @@ class LoadAttribute extends AbstractModel implements LoadAttributeInterface
         }
 
         return $attributeData;
+    }
+    /**
+     * @return \Klevu\Search\Model\Klevu\ResourceModel\Klevu\CollectionFactory
+     */
+    private function getKlevuCollectionFactory()
+    {
+        if ($this->klevuCollectionFactory === null) {
+            $this->klevuCollectionFactory = \Magento\Framework\App\ObjectManager::getInstance()->get(\Klevu\Search\Model\Klevu\ResourceModel\Klevu\CollectionFactory::class);
+        }
+
+        return $this->klevuCollectionFactory;
     }
 }

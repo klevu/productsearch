@@ -20,10 +20,8 @@ class Introduction extends Fieldset
         $layout = $this->getLayout();
         $block = $layout->createBlock(
             Template::class,
-            'klevu_integration_next_steps_introduction'
-        );
-        $block->setTemplate(
-            'Klevu_Search::klevu/search/form/field/integration/next_steps/introduction.phtml'
+            'klevu_integration_next_steps_introduction',
+            ['data' => ['template' => 'Klevu_Search::klevu/search/form/field/integration/next_steps/introduction.phtml']]
         );
 
         return $block->toHtml();

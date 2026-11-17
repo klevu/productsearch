@@ -20,10 +20,8 @@ class Endpoints extends Fieldset
         $layout = $this->getLayout();
         $block = $layout->createBlock(
             Button::class,
-            'klevu_integration_endpoints'
-        );
-        $block->setTemplate(
-            'Klevu_Search::klevu/search/form/field/integration/endpoints.phtml'
+            'klevu_integration_endpoints',
+            ['data' => ['template' => 'Klevu_Search::klevu/search/form/field/integration/endpoints.phtml']]
         );
 
         return $block->toHtml();
