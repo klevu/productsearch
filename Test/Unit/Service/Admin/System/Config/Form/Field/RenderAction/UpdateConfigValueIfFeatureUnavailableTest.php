@@ -39,15 +39,20 @@ class UpdateConfigValueIfFeatureUnavailableTest extends TestCase
     {
         $this->setupPhp5();
 
+        $expectedWarnings = [
+            'Invalid field update config "missing_element_id", element_id key must be a non-empty string',
+            'Invalid field update config "missing_feature", feature key must be a non-empty string',
+            'Invalid field update config "missing_value", value key must be present',
+            'Invalid field update config "invalid_allowed_values", allowed_values must be array',
+        ];
         $loggerMock = $this->getLoggerMock();
         $loggerMock->expects($this->exactly(4))
             ->method('warning')
-            ->withConsecutive(
-                ['Invalid field update config "missing_element_id", element_id key must be a non-empty string'],
-                ['Invalid field update config "missing_feature", feature key must be a non-empty string'],
-                ['Invalid field update config "missing_value", value key must be present'],
-                ['Invalid field update config "invalid_allowed_values", allowed_values must be array']
-            );
+            ->with($this->callback(function ($message) use (&$expectedWarnings) {
+                $this->assertSame(array_shift($expectedWarnings), $message);
+
+                return true;
+            }));
         $requestMock = $this->getRequestMock();
         $requestMock->method('getParam')
             ->with('store')

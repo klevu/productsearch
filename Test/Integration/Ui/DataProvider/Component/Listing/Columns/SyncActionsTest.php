@@ -146,11 +146,7 @@ class SyncActionsTest extends TestCase
         foreach ($callbacks as $key => $expectedCallback) {
             $this->assertArrayHasKey($key, $callback);
             $currentCallback = $callback[$key];
-            if (method_exists($this, 'isArray')) {
-                $this->isArray($currentCallback);
-            } else {
-                $this->assertTrue(is_array($currentCallback), 'Is Array');
-            }
+            $this->assertIsArray($currentCallback);
             $this->assertArrayHasKey('provider', $currentCallback);
             $this->assertArrayHasKey('target', $currentCallback);
             $this->assertSame($expectedCallback['provider'], $currentCallback['provider']);
