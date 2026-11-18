@@ -25,7 +25,8 @@ class CustomerIdProviderTest extends TestCase
             ->getMock();
 
         return new CustomerIdProvider(
-            $mockEncryptor
+            $mockEncryptor,
+            $this->createMock(\Magento\Framework\App\DeploymentConfig::class)
         );
     }
 }

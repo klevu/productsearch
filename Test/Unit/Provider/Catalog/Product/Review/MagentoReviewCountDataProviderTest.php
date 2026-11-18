@@ -57,6 +57,7 @@ class MagentoReviewCountDataProviderTest extends TestCase
     /**
      * @dataProvider incorrectProductIdDataProvider
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('incorrectProductIdDataProvider')]
     public function testHandlesIncorrectValuesForProductId($productId)
     {
         $this->setupPhp5();
@@ -74,7 +75,7 @@ class MagentoReviewCountDataProviderTest extends TestCase
     /**
      * @return array
      */
-    public function incorrectProductIdDataProvider()
+    public static function incorrectProductIdDataProvider()
     {
         return [
             ['product_id'],

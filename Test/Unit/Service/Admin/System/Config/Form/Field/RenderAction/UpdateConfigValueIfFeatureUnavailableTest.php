@@ -39,15 +39,20 @@ class UpdateConfigValueIfFeatureUnavailableTest extends TestCase
     {
         $this->setupPhp5();
 
+        $expectedWarnings = [
+            'Invalid field update config "missing_element_id", element_id key must be a non-empty string',
+            'Invalid field update config "missing_feature", feature key must be a non-empty string',
+            'Invalid field update config "missing_value", value key must be present',
+            'Invalid field update config "invalid_allowed_values", allowed_values must be array',
+        ];
         $loggerMock = $this->getLoggerMock();
         $loggerMock->expects($this->exactly(4))
             ->method('warning')
-            ->withConsecutive(
-                ['Invalid field update config "missing_element_id", element_id key must be a non-empty string'],
-                ['Invalid field update config "missing_feature", feature key must be a non-empty string'],
-                ['Invalid field update config "missing_value", value key must be present'],
-                ['Invalid field update config "invalid_allowed_values", allowed_values must be array']
-            );
+            ->with($this->callback(function ($message) use (&$expectedWarnings) {
+                $this->assertSame(array_shift($expectedWarnings), $message);
+
+                return true;
+            }));
         $requestMock = $this->getRequestMock();
         $requestMock->method('getParam')
             ->with('store')
@@ -96,7 +101,7 @@ class UpdateConfigValueIfFeatureUnavailableTest extends TestCase
         );
 
         /** @var Field $field */
-        $field = $this->objectManager->getObject(Field::class);
+        $field = $this->createMock(Field::class);
         $element = $this->getElementMock('klevu_search_unmapped_field');
 
         $this->assertFalse(
@@ -143,7 +148,7 @@ class UpdateConfigValueIfFeatureUnavailableTest extends TestCase
         );
 
         /** @var Field $field */
-        $field = $this->objectManager->getObject(Field::class);
+        $field = $this->createMock(Field::class);
         $element = $this->getElementMock('klevu_search_unmapped_field');
 
         $this->assertFalse(
@@ -190,7 +195,7 @@ class UpdateConfigValueIfFeatureUnavailableTest extends TestCase
         );
 
         /** @var Field $field */
-        $field = $this->objectManager->getObject(Field::class);
+        $field = $this->createMock(Field::class);
         $element = $this->getElementMock('klevu_search_test_field');
 
         $this->assertFalse(
@@ -237,7 +242,7 @@ class UpdateConfigValueIfFeatureUnavailableTest extends TestCase
         );
 
         /** @var Field $field */
-        $field = $this->objectManager->getObject(Field::class);
+        $field = $this->createMock(Field::class);
         $element = $this->getElementMock('klevu_search_test_field');
 
         $this->assertTrue(
@@ -290,7 +295,7 @@ class UpdateConfigValueIfFeatureUnavailableTest extends TestCase
         );
 
         /** @var Field $field */
-        $field = $this->objectManager->getObject(Field::class);
+        $field = $this->createMock(Field::class);
         $element = $this->getElementMock('klevu_search_test_field');
         $element->setData('value', '2');
 
@@ -348,7 +353,7 @@ class UpdateConfigValueIfFeatureUnavailableTest extends TestCase
         );
 
         /** @var Field $field */
-        $field = $this->objectManager->getObject(Field::class);
+        $field = $this->createMock(Field::class);
         $element = $this->getElementMock('klevu_search_test_field');
         $element->setData('value', '2');
 
@@ -414,7 +419,7 @@ class UpdateConfigValueIfFeatureUnavailableTest extends TestCase
         );
 
         /** @var Field $field */
-        $field = $this->objectManager->getObject(Field::class);
+        $field = $this->createMock(Field::class);
         $element = $this->getElementMock('klevu_search_test_field');
         $element->setData('value', '2');
 
@@ -478,7 +483,7 @@ class UpdateConfigValueIfFeatureUnavailableTest extends TestCase
         );
 
         /** @var Field $field */
-        $field = $this->objectManager->getObject(Field::class);
+        $field = $this->createMock(Field::class);
         $element = $this->getElementMock('klevu_search_test_field');
         $element->setData('value', '0');
 
@@ -542,7 +547,7 @@ class UpdateConfigValueIfFeatureUnavailableTest extends TestCase
         );
 
         /** @var Field $field */
-        $field = $this->objectManager->getObject(Field::class);
+        $field = $this->createMock(Field::class);
         $element = $this->getElementMock('klevu_search_test_field');
         $element->setData('value', '1');
 
@@ -608,7 +613,7 @@ class UpdateConfigValueIfFeatureUnavailableTest extends TestCase
         );
 
         /** @var Field $field */
-        $field = $this->objectManager->getObject(Field::class);
+        $field = $this->createMock(Field::class);
         $element = $this->getElementMock('klevu_search_test_field');
         $element->setData('value', '2');
         $element->setData('field_config', ['config_path' => 'klevu/some_other/config_path']);
@@ -658,7 +663,7 @@ class UpdateConfigValueIfFeatureUnavailableTest extends TestCase
         );
 
         /** @var Field $field */
-        $field = $this->objectManager->getObject(Field::class);
+        $field = $this->createMock(Field::class);
         $resultFixture = ' Foo;&Bar ' . PHP_EOL;
         $element = $this->getElementMock('klevu_search_test_field');
 
@@ -773,7 +778,7 @@ class UpdateConfigValueIfFeatureUnavailableTest extends TestCase
 
         $containerMock = $this->getMockBuilder(Fieldset::class)
             ->disableOriginalConstructor()
-            ->setMethods(['getHtmlId'])
+            ->onlyMethods(['getHtmlId'])
             ->getMock();
         $containerMock->method('getHtmlId')
             ->willReturn($path . '_' . $groupId);
@@ -785,7 +790,7 @@ class UpdateConfigValueIfFeatureUnavailableTest extends TestCase
         /** @var TextElement $element */
         $elementMock = $this->getMockBuilder(TextElement::class)
             ->disableOriginalConstructor()
-            ->setMethods(['getHtmlId'])
+            ->onlyMethods(['getHtmlId'])
             ->getMock();
         $elementMock->method('getHtmlId')
             ->willReturn($htmlId);

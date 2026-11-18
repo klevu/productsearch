@@ -33,6 +33,16 @@ use Psr\Log\LoggerInterface;
 class Price extends AbstractHelper
 {
     /**
+     * @var \Magento\Customer\Model\GroupFactory|null
+     */
+    private $customerGroupFactory;
+
+    /**
+     * @var \Magento\Customer\Model\ResourceModel\Group|null
+     */
+    private $customerGroupResource;
+
+    /**
      * @var PriceCurrencyInterface
      */
     protected $priceCurrency;
@@ -115,8 +125,12 @@ class Price extends AbstractHelper
         RuleFactory $resourceRuleFactory,
         KlevuStockHelper $stockHelper,
         ?StoreManagerInterface $storeManager = null,
-        ?LoggerInterface $logger = null
+        ?LoggerInterface $logger = null,
+        ?\Magento\Customer\Model\ResourceModel\Group $customerGroupResource = null,
+        ?\Magento\Customer\Model\GroupFactory $customerGroupFactory = null
     ) {
+        $this->customerGroupFactory = $customerGroupFactory;
+        $this->customerGroupResource = $customerGroupResource;
         $this->_searchHelperConfig = $searchHelperConfig;
         $this->_searchHelperData = $searchHelperData;
         $this->_localeDate = $localeDate;
@@ -442,7 +456,8 @@ class Price extends AbstractHelper
                 if ($store->getWebsiteId() == $groupPrice['website_id'] || $groupPrice['website_id'] == 0) {
                     if ($groupPrice['price_qty'] == 1) {
                         $groupPriceKey = $groupPrice['cust_group'];
-                        $customerGroup = $this->_customerModelGroup->load($groupPrice['cust_group']);
+                        $customerGroup = $this->getCustomerGroupFactory()->create();
+                        $this->getCustomerGroupResource()->load($customerGroup, $groupPrice['cust_group']);
                         $groupname = $customerGroup->getCustomerGroupCode();
                         $result['label'] = $groupname;
                         $result['values'] = $groupPrice['website_price'];
@@ -643,5 +658,27 @@ class Price extends AbstractHelper
         $storeId = ($store instanceof StoreInterface) ? $store->getId() : $store;
 
         return $product->getId() . '::' . $parentId . '::' . $storeId;
+    }
+    /**
+     * @return \Magento\Customer\Model\ResourceModel\Group
+     */
+    private function getCustomerGroupResource()
+    {
+        if ($this->customerGroupResource === null) {
+            $this->customerGroupResource = \Magento\Framework\App\ObjectManager::getInstance()->get(\Magento\Customer\Model\ResourceModel\Group::class);
+        }
+
+        return $this->customerGroupResource;
+    }
+    /**
+     * @return \Magento\Customer\Model\GroupFactory
+     */
+    private function getCustomerGroupFactory()
+    {
+        if ($this->customerGroupFactory === null) {
+            $this->customerGroupFactory = \Magento\Framework\App\ObjectManager::getInstance()->get(\Magento\Customer\Model\GroupFactory::class);
+        }
+
+        return $this->customerGroupFactory;
     }
 }

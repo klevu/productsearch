@@ -68,7 +68,7 @@ class Syncstoreview extends Action
      */
     private $_storeManager;
     /**
-     * @var ContentInterface
+     * @var ContentInterface|null
      */
     private $_klevuSyncContent;
     /**
@@ -89,7 +89,7 @@ class Syncstoreview extends Action
      * @param Data $searchHelperData
      * @param Klevu_ModelSync $modelSync
      * @param StoreManagerInterface $storeInterface
-     * @param ContentInterface $modelSyncContent
+     * @param ContentInterface|null $modelSyncContent
      */
     public function __construct(
         Context $context,
@@ -104,7 +104,7 @@ class Syncstoreview extends Action
         Data $searchHelperData,
         Klevu_ModelSync $modelSync,
         StoreManagerInterface $storeInterface,
-        ContentInterface $modelSyncContent
+        $modelSyncContent = null
     ) {
         parent::__construct($context);
         $this->_cacheTypeList = $cacheTypeList;
@@ -152,7 +152,12 @@ class Syncstoreview extends Action
                     $website->getName(),
                     $store->getName()
                 ));
-                $this->_klevuSyncContent->syncCmsData($store);
+                if (!$this->_klevuSyncContent && interface_exists(ContentInterface::class)) {
+                    $this->_klevuSyncContent = $this->_objectManager->get(ContentInterface::class);
+                }
+                if ($this->_klevuSyncContent) {
+                    $this->_klevuSyncContent->syncCmsData($store);
+                }
                 $this->_klevuSyncModel->setSessionVariable("limit", 500);
                 $this->_klevuSyncModel->getRegistry()->unregister("numberOfRecord_add");
                 $this->_klevuSyncModel->getRegistry()->unregister("numberOfRecord_delete");

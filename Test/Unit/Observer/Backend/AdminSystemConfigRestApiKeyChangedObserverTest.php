@@ -64,6 +64,7 @@ class AdminSystemConfigRestApiKeyChangedObserverTest extends TestCase
     /**
      * @dataProvider changedPathsDataProvider
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('changedPathsDataProvider')]
     public function testResetsLastSyncDateIfRestApiUpdated($xmlFieldPath)
     {
         $this->setupPhp5();
@@ -97,7 +98,7 @@ class AdminSystemConfigRestApiKeyChangedObserverTest extends TestCase
         $observer->execute($mockEvent);
     }
 
-    public function changedPathsDataProvider()
+    public static function changedPathsDataProvider()
     {
         return [
             [ConfigHelper::XML_PATH_REST_API_KEY]
@@ -113,7 +114,8 @@ class AdminSystemConfigRestApiKeyChangedObserverTest extends TestCase
             $this->mockStoreManager,
             $this->mockConfigWriter,
             $this->mockLogger,
-            $this->mockReinitableConfig
+            $this->mockReinitableConfig,
+            $this->createMock(\Klevu\Registry\Api\ConfigRegistryInterface::class)
         );
     }
 

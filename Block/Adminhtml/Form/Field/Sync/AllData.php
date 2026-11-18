@@ -11,6 +11,12 @@ use Klevu\Search\Model\Sync as Klevu_Sync;
 class AllData extends \Magento\Config\Block\System\Config\Form\Field
 {
     /**
+     * @var Klevu_Sync
+     */
+    protected $_klevuSync;
+
+
+    /**
      * Store manager
      *
      * @var \Magento\Store\Model\StoreManagerInterface

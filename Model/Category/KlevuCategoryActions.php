@@ -6,7 +6,7 @@ use Klevu\Logger\Constants as LoggerConstants;
 use Klevu\Search\Helper\Compat as CompatHelper;
 use Klevu\Search\Helper\Config as ConfigHelper;
 use Klevu\Search\Helper\Data as SearchHelper;
-use Klevu\Search\Model\Api\Action\StartSession;
+use Klevu\Search\Model\Api\Action\Startsession;
 use Klevu\Search\Model\Context as Klevu_Context;
 use Klevu\Search\Model\Session;
 use Klevu\Search\Model\Sync;
@@ -27,7 +27,7 @@ class KlevuCategoryActions extends DataObject implements KlevuCategoryActionsInt
      */
     protected $_searchHelperData;
     /**
-     * @var StartSession
+     * @var Startsession
      */
     protected $_apiActionStartsession;
     /**
@@ -59,7 +59,7 @@ class KlevuCategoryActions extends DataObject implements KlevuCategoryActionsInt
     ) {
         $this->_searchHelperConfig = $context->getHelperManager()->getConfigHelper();
         $this->_searchHelperData = $context->getHelperManager()->getDataHelper();
-        $this->_apiActionStartsession = $context->getStartSession();
+        $this->_apiActionStartsession = $context->getStartsession();
         $this->_searchModelSession = $context->getBackendSession();
         $this->_klevuSyncModel = $context->getSync();
         $this->_frameworkModelResource = $context->getResourceConnection();

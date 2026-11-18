@@ -22,6 +22,7 @@ class StockTest extends TestCase
     /**
      * @dataProvider InStockProductIdsDataProvider
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('InStockProductIdsDataProvider')]
     public function testGetKlevuStockStatusReturnsYesStringWhenParentAndChildInStock($parentId, $productId)
     {
         $this->setupPhp5();
@@ -45,6 +46,7 @@ class StockTest extends TestCase
     /**
      * @dataProvider OutOfStockProductIdsDataProvider
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('OutOfStockProductIdsDataProvider')]
     public function testGetKlevuStockStatusReturnsNoStringWhenParentInStockAndChildOutOfStock($parentId, $productId)
     {
         $this->setupPhp5();
@@ -68,7 +70,7 @@ class StockTest extends TestCase
     /**
      * @return array[]
      */
-    public function InStockProductIdsDataProvider()
+    public static function InStockProductIdsDataProvider()
     {
         return [
             ['10', '20'],
@@ -79,7 +81,7 @@ class StockTest extends TestCase
     /**
      * @return array[]
      */
-    public function OutOfStockProductIdsDataProvider()
+    public static function OutOfStockProductIdsDataProvider()
     {
         return [
             ['10', '30'],
@@ -118,14 +120,14 @@ class StockTest extends TestCase
         $mockStore = $this->getMockBuilder(StoreInterface::class)
             ->disableOriginalConstructor()
             ->getMock();
-        $mockStore->expects($this->any())
+        $mockStore
             ->method('getWebsiteId')
             ->willReturn('1');
 
         $mockProduct = $this->getMockBuilder(Product::class)
             ->disableOriginalConstructor()
             ->getMock();
-        $mockProduct->expects($this->any())
+        $mockProduct
             ->method('getId')
             ->willReturn($productId);
 

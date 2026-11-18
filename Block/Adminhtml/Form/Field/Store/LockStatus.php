@@ -6,6 +6,12 @@ use Klevu\Search\Model\Sync as Klevu_Sync;
 
 class LockStatus extends \Magento\Config\Block\System\Config\Form\Field
 {
+    /**
+     * @var Klevu_Sync
+     */
+    protected $_klevuSync;
+
+
     public function __construct(
         Template_Context $context,
         Klevu_Sync $klevuSync,

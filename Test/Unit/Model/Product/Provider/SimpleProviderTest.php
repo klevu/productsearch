@@ -123,7 +123,7 @@ class SimpleProviderTest extends TestCase
         if (method_exists($this, 'expectException')) {
             $this->expectException(\InvalidArgumentException::class);
         } else {
-            $this->setExpectedException(\InvalidArgumentException::class);
+            $this->expectException(\InvalidArgumentException::class);
         }
         if (method_exists($this, 'expectExceptionMessage')) {
             $this->expectExceptionMessage('Incorrect ProductTypeId grouped provided while fetching childIds');
@@ -206,7 +206,7 @@ class SimpleProviderTest extends TestCase
         if (method_exists($this, 'expectException')) {
             $this->expectException(\InvalidArgumentException::class);
         } else {
-            $this->setExpectedException(\InvalidArgumentException::class);
+            $this->expectException(\InvalidArgumentException::class);
         }
         if (method_exists($this, 'expectExceptionMessage')) {
             $this->expectExceptionMessage('Incorrect ProductTypeId grouped provided while fetching parentIds');
@@ -257,7 +257,7 @@ class SimpleProviderTest extends TestCase
             ->disableOriginalConstructor()
             ->getMock();
 
-        $providerMock->expects($this->any())
+        $providerMock
             ->method('getChildIds')
             ->willReturnCallback(
                 static function (ProductInterface $product) use ($childIdsReturnValues) {
@@ -266,7 +266,7 @@ class SimpleProviderTest extends TestCase
                         : [];
                 }
             );
-        $providerMock->expects($this->any())
+        $providerMock
             ->method('getParentIds')
             ->willReturnCallback(
                 static function (ProductInterface $product) use ($parentIdsReturnValues) {
@@ -330,10 +330,10 @@ class SimpleProviderTest extends TestCase
             ->disableOriginalConstructor()
             ->getMock();
 
-        $productMock->expects($this->any())
+        $productMock
             ->method('getSku')
             ->willReturn($sku);
-        $productMock->expects($this->any())
+        $productMock
             ->method('getTypeId')
             ->willReturn($typeId);
 

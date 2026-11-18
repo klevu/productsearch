@@ -10,6 +10,11 @@ namespace Klevu\Search\Block\Adminhtml\Wizard\Config;
 class Button extends \Magento\Config\Block\System\Config\Form\Field
 {
     /**
+     * @var \Magento\Store\Model\StoreManagerInterface
+     */
+    protected $_storeModelStoreManagerInterface;
+
+    /**
      * @var \Klevu\Search\Helper\Config
      */
     protected $_searchHelperConfig;

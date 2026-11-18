@@ -67,8 +67,8 @@ class CategoryPageOutputTest extends AbstractControllerTestCase
             $this->assertMatchesRegularExpression('#klevu_page_meta\s*=#', $responseBody);
             $this->assertMatchesRegularExpression('#"pageType"\s*:\s*"category"#', $responseBody);
         } else {
-            $this->assertRegExp('#klevu_page_meta\s*=#', $responseBody);
-            $this->assertRegExp('#"pageType"\s*:\s*"category"#', $responseBody);
+            $this->assertMatchesRegularExpression('#klevu_page_meta\s*=#', $responseBody);
+            $this->assertMatchesRegularExpression('#"pageType"\s*:\s*"category"#', $responseBody);
         }
     }
 

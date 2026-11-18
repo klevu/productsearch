@@ -17,6 +17,12 @@ use Magento\Framework\Filesystem\Io\File as FileIo;
 class Logdownload extends LogDownloadButton
 {
     /**
+     * @var Klevu_HelperData
+     */
+    private $klevuHelperData;
+
+
+    /**
      * Logdownload constructor.
      * @param Template_Context $context
      * @param DirectoryList $directoryList
@@ -40,6 +46,7 @@ class Logdownload extends LogDownloadButton
         $destinationUrl = 'klevu_search/download/logdownload',
         $buttonLabel = 'Download Klevu Search Log'
     ) {
+        $this->klevuHelperData = $klevuHelperData;
         parent::__construct(
             $context,
             $logger ?: ObjectManager::getInstance()->get(KlevuLoggerInterface::class),

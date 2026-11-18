@@ -19,10 +19,8 @@ class Prerequisites extends Fieldset
         $layout = $this->getLayout();
         $block = $layout->createBlock(
             Instructions\Prerequisites::class,
-            'klevu_search_information_prerequisites'
-        );
-        $block->setTemplate(
-            'Klevu_Search::klevu/search/form/field/integration/prerequisites.phtml'
+            'klevu_search_information_prerequisites',
+            ['data' => ['template' => 'Klevu_Search::klevu/search/form/field/integration/prerequisites.phtml']]
         );
 
         return $block->toHtml();

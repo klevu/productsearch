@@ -240,19 +240,10 @@ class RatingsUpdateTest extends TestCase
      */
     private function getMockReview()
     {
-        $mockReviewBuilder = $this->getMockBuilder(Review::class);
-        if (method_exists($mockReviewBuilder, 'addMethods')) {
-            $mockReviewBuilder->addMethods(['getStatusId', 'getEntityPkValue']);
-        } else {
-            $mockReviewBuilder->setMethods(['getStatusId', 'getData', 'getEntityPkValue']);
-        }
-        if (method_exists($mockReviewBuilder, 'onlyMethods')) {
-            $mockReviewBuilder->onlyMethods(['getData']);
-        } else {
-            $mockReviewBuilder->setMethods(['getStatusId', 'getData', 'getEntityPkValue']);
-        }
-
-        return $mockReviewBuilder->disableOriginalConstructor()->getMock();
+        return $this->getMockBuilder(ReviewStub::class)
+            ->onlyMethods(['getStatusId', 'getData', 'getEntityPkValue'])
+            ->disableOriginalConstructor()
+            ->getMock();
     }
 
     /**

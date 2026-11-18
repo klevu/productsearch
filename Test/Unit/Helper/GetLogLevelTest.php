@@ -148,6 +148,7 @@ class GetLogLevelTest extends TestCase
     /**
      * @dataProvider incorrectDbValues
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('incorrectDbValues')]
     public function testReturnsDefaultIfConfigValueNotNumeric($dbValue)
     {
         $this->setupPhp5();
@@ -250,14 +251,15 @@ class GetLogLevelTest extends TestCase
             $this->mockVersionReader,
             $this->mockState,
             $this->mockSerializer,
-            $mockConfigResourceFactory
+            $mockConfigResourceFactory,
+            $this->createMock(\Magento\Framework\App\Helper\Context::class)
         );
     }
 
     /**
      * @return array
      */
-    public function incorrectDbValues()
+    public static function incorrectDbValues()
     {
         return [
             [\Psr\Log\LogLevel::DEBUG],

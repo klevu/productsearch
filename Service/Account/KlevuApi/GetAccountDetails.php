@@ -120,7 +120,7 @@ class GetAccountDetails implements GetAccountDetailsInterface
      * @param $responseBody
      * @param $errorCode
      *
-     * @return void
+     * @return never
      * @throws InvalidApiResponseException
      */
     private function handleFailure($responseBody, $errorCode)

@@ -37,6 +37,11 @@ use Psr\Log\LoggerInterface;
 class Sync extends AbstractModel
 {
     /**
+     * @var \Magento\Framework\App\RequestInterface
+     */
+    private $frameworkAppRequestInterface;
+
+    /**
      * It has been determined during development that Product Sync uses around
      * 120kB of memory for each product it syncs, or around 10MB of memory for
      * each 100 product page.
@@ -167,6 +172,7 @@ class Sync extends AbstractModel
         ?GetRecordsPerPageInterface $getRecordsPerPage = null,
         ?StoreScopeResolverInterface $storeScopeResolver = null
     ) {
+        $this->frameworkAppRequestInterface = $frameworkAppRequestInterface;
         parent::__construct($context, $registry, $resource, $resourceCollection, $data);
         $this->_magentoProductActions = $magentoProductActions;
         $this->_klevuProductActions = $klevuProductActions;

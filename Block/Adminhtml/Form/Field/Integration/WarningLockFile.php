@@ -20,10 +20,8 @@ class WarningLockFile extends Fieldset
         $layout = $this->getLayout();
         $block = $layout->createBlock(
             LockFile::class,
-            'klevu_search_information_lock_file_warning'
-        );
-        $block->setTemplate(
-            'Klevu_Search::klevu/search/form/field/integration/warnings/lockfile.phtml'
+            'klevu_search_information_lock_file_warning',
+            ['data' => ['template' => 'Klevu_Search::klevu/search/form/field/integration/warnings/lockfile.phtml']]
         );
 
         return $block->toHtml();

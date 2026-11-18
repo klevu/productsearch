@@ -17,6 +17,11 @@ use PHPUnit\Framework\TestCase;
 class FeaturesTest extends TestCase
 {
     /**
+     * @var \Magento\Store\Model\ResourceModel\Store|MockObject
+     */
+    private $mockStoreResource;
+
+    /**
      * @var InvalidApiResponse|MockObject
      */
     private $mockApiResponseInvalid;
@@ -52,12 +57,13 @@ class FeaturesTest extends TestCase
     /**
      * @dataProvider invalidParametersDataProvider
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('invalidParametersDataProvider')]
     public function testApiIsNotCalledIfParametersAreNotValid($parameters)
     {
         $this->setupPhp5();
 
         $this->mockApiResponseInvalid->expects($this->once())->method('setErrors');
-        $this->mockStore->expects($this->never())->method('load');
+        $this->mockStoreResource->expects($this->never())->method('load');
 
         $featuresApi = $this->instantiateApiActionFeatures();
         $featuresApi->execute($parameters);
@@ -66,7 +72,7 @@ class FeaturesTest extends TestCase
     /**
      * @return array
      */
-    public function invalidParametersDataProvider()
+    public static function invalidParametersDataProvider()
     {
         return [
             [''],
@@ -82,10 +88,6 @@ class FeaturesTest extends TestCase
 
     public function testApiIsCalledUsingDefaultStoreIfNoneProvided()
     {
-        $this->markTestIncomplete(
-            'Can not be mocked correctly due to incorrect usage of object manager in Klevu\Search\Model\Api\Actionall'
-        );
-
         $this->setupPhp5();
 
         $parameters = [
@@ -96,22 +98,9 @@ class FeaturesTest extends TestCase
         $this->mockConfigHelper->method('getHostname')->willReturn('klevu.com');
         $this->mockConfigHelper->method('getTiresUrl')->willReturn('tires.com');
 
-        $this->mockStore->expects($this->once())->method('load');
-
-        $this->mockResponse->expects($this->once())->method('setRawResponse')->willReturn($this->mockResponse);
+        $this->mockStoreResource->expects($this->once())->method('load')->with($this->mockStore, null);
 
         $this->mockRequest->expects($this->once())->method('send')->willReturn($this->mockResponse);
-
-        $this->mockObjectManager->method('get')->willReturnCallback(function($class) {
-            switch ($class) {
-                case Features::DEFAULT_REQUEST_MODEL:
-                    return $this->mockRequest;
-                case Features::DEFAULT_RESPONSE_MODEL:
-                    return $this->mockResponse;
-                default:
-                    return null;
-            }
-        });
 
         $featuresApi = $this->instantiateApiActionFeatures();
         $featuresApi->execute($parameters);
@@ -123,13 +112,10 @@ class FeaturesTest extends TestCase
      */
     private function setupPhp5()
     {
-        $mockApiResponseInvalidBuilder = $this->getMockBuilder(InvalidApiResponse::class);
-        if (method_exists($mockApiResponseInvalidBuilder, 'addMethods')) {
-            $mockApiResponseInvalidBuilder->addMethods(['setErrors']);
-        } else {
-            $mockApiResponseInvalidBuilder->setMethods(['setErrors']);
-        }
-        $this->mockApiResponseInvalid = $mockApiResponseInvalidBuilder->disableOriginalConstructor()->getMock();
+        $this->mockApiResponseInvalid = $this->getMockBuilder(InvalidResponseStub::class)
+            ->onlyMethods(['setErrors'])
+            ->disableOriginalConstructor()
+            ->getMock();
 
         $this->mockApiHelper = $this->getMockBuilder(ApiHelper::class)
             ->disableOriginalConstructor()
@@ -146,6 +132,8 @@ class FeaturesTest extends TestCase
         $this->mockStoreManager = $this->getMockBuilder(StoreManagerInterface::class)
             ->disableOriginalConstructor()
             ->getMock();
+
+        $this->mockStoreResource = $this->createMock(\Magento\Store\Model\ResourceModel\Store::class);
 
         $this->mockStore = $this->getMockBuilder(Store::class)
             ->disableOriginalConstructor()
@@ -165,13 +153,20 @@ class FeaturesTest extends TestCase
      */
     private function instantiateApiActionFeatures()
     {
-        return new Features(
+        $features = new Features(
             $this->mockApiResponseInvalid,
             $this->mockApiHelper,
             $this->mockConfigHelper,
             $this->mockStoreManager,
             $this->mockSearchHelper,
-            $this->mockStore
+            $this->mockStore,
+            null,
+            null,
+            $this->mockStoreResource
         );
+        $features->setRequest($this->mockRequest);
+        $features->setResponse($this->mockResponse);
+
+        return $features;
     }
 }

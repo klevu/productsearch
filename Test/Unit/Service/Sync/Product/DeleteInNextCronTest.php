@@ -39,6 +39,7 @@ class DeleteInNextCronTest extends TestCase
     /**
      * @dataProvider storeIdsDataProvider
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('storeIdsDataProvider')]
     public function testAddsSyncTableEntryForEachStore($storeIds)
     {
         $this->setUpPhp5();
@@ -118,7 +119,7 @@ class DeleteInNextCronTest extends TestCase
     /**
      * @return array
      */
-    public function storeIdsDataProvider()
+    public static function storeIdsDataProvider()
     {
         return [
             [[1]],

@@ -65,18 +65,10 @@ class SyncActionsTest extends TestCase
         $actions = $syncAction->prepareDataSource($dataSource);
 
         $this->assertArrayHasKey('data', $actions);
-        if (method_exists($this, 'isArray')) {
-            $this->isArray($actions['data']);
-        } else {
-            $this->assertTrue(is_array($actions['data']), 'Is Array');
-        }
+        $this->assertIsArray($actions['data']);
         $data = $actions['data'];
         $this->assertArrayHasKey('items', $data);
-        if (method_exists($this, 'isArray')) {
-            $this->isArray($data['items']);
-        } else {
-            $this->assertTrue(is_array($data['items']), 'Is Array');
-        }
+        $this->assertIsArray($data['items']);
         $items = $data['items'];
         $itemKeys = array_keys($items);
         $firstItem = $items[$itemKeys[0]];
@@ -115,37 +107,21 @@ class SyncActionsTest extends TestCase
         $actions = $syncAction->prepareDataSource($dataSource);
 
         $this->assertArrayHasKey('data', $actions);
-        if (method_exists($this, 'isArray')) {
-            $this->isArray($actions['data']);
-        } else {
-            $this->assertTrue(is_array($actions['data']), 'Is Array');
-        }
+        $this->assertIsArray($actions['data']);
         $data = $actions['data'];
         $this->assertArrayHasKey('items', $data);
-        if (method_exists($this, 'isArray')) {
-            $this->isArray($data['items']);
-        } else {
-            $this->assertTrue(is_array($data['items']), 'Is Array');
-        }
+        $this->assertIsArray($data['items']);
         $items = $data['items'];
         $itemKeys = array_keys($items);
         $firstItem = $items[$itemKeys[0]];
         $this->assertArrayHasKey('actions', $firstItem);
-        if (method_exists($this, 'isArray')) {
-            $this->isArray($firstItem['actions']);
-        } else {
-            $this->assertTrue(is_array($firstItem['actions']), 'Is Array');
-        }
+        $this->assertIsArray($firstItem['actions']);
         $actions = $firstItem['actions'];
         $this->assertArrayHasKey('history', $actions);
         $this->assertArrayNotHasKey('sync', $actions);
         $this->assertArrayNotHasKey('schedule', $actions);
 
-        if (method_exists($this, 'isArray')) {
-            $this->isArray($actions['history']);
-        } else {
-            $this->assertTrue(is_array($actions['history']), 'Is Array');
-        }
+        $this->assertIsArray($actions['history']);
         $history = $actions['history'];
         $this->assertArrayHasKey('callback', $history);
         $callback = $history['callback'];
@@ -170,11 +146,7 @@ class SyncActionsTest extends TestCase
         foreach ($callbacks as $key => $expectedCallback) {
             $this->assertArrayHasKey($key, $callback);
             $currentCallback = $callback[$key];
-            if (method_exists($this, 'isArray')) {
-                $this->isArray($currentCallback);
-            } else {
-                $this->assertTrue(is_array($currentCallback), 'Is Array');
-            }
+            $this->assertIsArray($currentCallback);
             $this->assertArrayHasKey('provider', $currentCallback);
             $this->assertArrayHasKey('target', $currentCallback);
             $this->assertSame($expectedCallback['provider'], $currentCallback['provider']);
@@ -214,27 +186,15 @@ class SyncActionsTest extends TestCase
         $actions = $syncAction->prepareDataSource($dataSource);
 
         $this->assertArrayHasKey('data', $actions);
-        if (method_exists($this, 'isArray')) {
-            $this->isArray($actions['data']);
-        } else {
-            $this->assertTrue(is_array($actions['data']), 'Is Array');
-        }
+        $this->assertIsArray($actions['data']);
         $data = $actions['data'];
         $this->assertArrayHasKey('items', $data);
-        if (method_exists($this, 'isArray')) {
-            $this->isArray($data['items']);
-        } else {
-            $this->assertTrue(is_array($data['items']), 'Is Array');
-        }
+        $this->assertIsArray($data['items']);
         $items = $data['items'];
         $itemKeys = array_keys($items);
         $firstItem = $items[$itemKeys[0]];
         $this->assertArrayHasKey('actions', $firstItem);
-        if (method_exists($this, 'isArray')) {
-            $this->isArray($firstItem['actions']);
-        } else {
-            $this->assertTrue(is_array($firstItem['actions']), 'Is Array');
-        }
+        $this->assertIsArray($firstItem['actions']);
         $actions = $firstItem['actions'];
         $this->assertArrayHasKey('history', $actions);
         $this->assertArrayHasKey('sync', $actions);

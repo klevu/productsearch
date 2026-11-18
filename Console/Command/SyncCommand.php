@@ -279,7 +279,7 @@ HELP
                 $this->_shell->execute(
                     $phpPath . ' %s klevu:syncstore:storecode ' . implode(",", $storeList),
                     [
-                        BP . '/bin/magento'
+                        $this->directoryList->getRoot() . '/bin/magento'
                     ]
                 );
                 $output->writeln('<info>   Completed for store code(s): ' . implode(",", $storeList) . '</info>');

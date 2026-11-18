@@ -4,7 +4,7 @@ namespace Klevu\Search\Model\Api\Request;
 
 use Klevu\Search\Model\Api\Request;
 use Magento\Framework\App\ObjectManager;
-use Zend\Http\Client;
+use Laminas\Http\Client;
 
 class Xml extends Request
 {

@@ -84,8 +84,8 @@ class ProductPageOutputTest extends AbstractControllerTestCase
             $this->assertMatchesRegularExpression('#klevu_page_meta\s*=#', $responseBody);
             $this->assertMatchesRegularExpression('#"pageType"\s*:\s*"pdp"#', $responseBody);
         } else {
-            $this->assertRegExp('#klevu_page_meta\s*=#', $responseBody);
-            $this->assertRegExp('#"pageType"\s*:\s*"pdp"#', $responseBody);
+            $this->assertMatchesRegularExpression('#klevu_page_meta\s*=#', $responseBody);
+            $this->assertMatchesRegularExpression('#"pageType"\s*:\s*"pdp"#', $responseBody);
         }
     }
 

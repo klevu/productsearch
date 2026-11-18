@@ -34,6 +34,7 @@ class TrackingTest extends TestCase
 
         /** @var Tracking $trackingBlock */
         $trackingBlock = $this->objectManager->getObject(Tracking::class, [
+            'searchHelperData' => $this->createMock(\Klevu\Search\Helper\Data::class),
             'context' => $this->getContextMock(
                 $this->getCoreRegistryMock([['product', $productMock]])
             ),
@@ -92,7 +93,7 @@ class TrackingTest extends TestCase
             ->disableOriginalConstructor()
             ->getMock();
 
-        $contextMock->expects($this->any())
+        $contextMock
             ->method('getRegistry')
             ->willReturn($registryMock);
 
@@ -126,7 +127,7 @@ class TrackingTest extends TestCase
             ->disableOriginalConstructor()
             ->getMock();
 
-        $coreRegistryMock->expects($this->any())
+        $coreRegistryMock
             ->method('registry')
             ->willReturnMap($returnMap);
 
@@ -176,13 +177,13 @@ class TrackingTest extends TestCase
             ->disableOriginalConstructor()
             ->getMock();
 
-        $productMock->expects($this->any())
+        $productMock
             ->method('getID')
             ->willReturn($id);
-        $productMock->expects($this->any())
+        $productMock
             ->method('getName')
             ->willReturn($name);
-        $productMock->expects($this->any())
+        $productMock
             ->method('getProductUrl')
             ->willReturn($productUrl);
 

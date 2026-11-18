@@ -44,7 +44,7 @@ class SyncTest extends AbstractControllerTestCase
         if (method_exists($this, 'assertDoesNotMatchRegularExpression')) {
             $this->assertDoesNotMatchRegularExpression("#\s*callAjaxRecurrsively\(\);\s*#m", $responseBody);
         } else {
-            $this->assertNotRegExp("#\s*callAjaxRecurrsively\(\);\s*#m", $responseBody);
+            $this->assertDoesNotMatchRegularExpression("#\s*callAjaxRecurrsively\(\);\s*#m", $responseBody);
         }
 
         if (method_exists($this, 'assertStringNotContainsString')) {
@@ -87,7 +87,7 @@ class SyncTest extends AbstractControllerTestCase
         if (method_exists($this, 'assertMatchesRegularExpression')) {
             $this->assertMatchesRegularExpression("#\s*callAjaxRecurrsively\(\);\s*#m", $responseBody);
         } else {
-            $this->assertRegExp("#\s*callAjaxRecurrsively\(\);\s*#m", $responseBody);
+            $this->assertMatchesRegularExpression("#\s*callAjaxRecurrsively\(\);\s*#m", $responseBody);
         }
 
         if (method_exists($this, 'assertStringNotContainsString')) {
@@ -130,7 +130,7 @@ class SyncTest extends AbstractControllerTestCase
         if (method_exists($this, 'assertDoesNotMatchRegularExpression')) {
             $this->assertDoesNotMatchRegularExpression("#\s*callAjaxRecurrsively\(\);\s*#m", $responseBody);
         } else {
-            $this->assertNotRegExp("#\s*callAjaxRecurrsively\(\);\s*#m", $responseBody);
+            $this->assertDoesNotMatchRegularExpression("#\s*callAjaxRecurrsively\(\);\s*#m", $responseBody);
         }
 
         if (method_exists($this, 'assertStringNotContainsString')) {
@@ -173,7 +173,7 @@ class SyncTest extends AbstractControllerTestCase
         if (method_exists($this, 'assertDoesNotMatchRegularExpression')) {
             $this->assertDoesNotMatchRegularExpression("#callAjaxRecurrsively\(\);#m", $responseBody);
         } else {
-            $this->assertNotRegExp("#callAjaxRecurrsively\(\);#m", $responseBody);
+            $this->assertDoesNotMatchRegularExpression("#callAjaxRecurrsively\(\);#m", $responseBody);
         }
 
         if (method_exists($this, 'assertStringNotContainsString')) {
@@ -253,7 +253,7 @@ class SyncTest extends AbstractControllerTestCase
         if (method_exists($this, 'assertDoesNotMatchRegularExpression')) {
             $this->assertDoesNotMatchRegularExpression("#\s*callAjaxRecurrsively\(\);\s*#m", $responseBody);
         } else {
-            $this->assertNotRegExp("#\s*callAjaxRecurrsively\(\);\s*#m", $responseBody);
+            $this->assertDoesNotMatchRegularExpression("#\s*callAjaxRecurrsively\(\);\s*#m", $responseBody);
         }
 
         if (method_exists($this, 'assertStringNotContainsString')) {

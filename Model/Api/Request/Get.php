@@ -22,14 +22,14 @@ class Get extends \Klevu\Search\Model\Api\Request
     /**
      * Add GET parameters to the request, force GET method.
      *
-     * @return \Zend\Http\Client
+     * @return \Laminas\Http\Client
      */
     protected function build()
     {
         $client = parent::build();
 
         $client
-            ->setMethod(\Zend\Http\Request::METHOD_GET)
+            ->setMethod(\Laminas\Http\Request::METHOD_GET)
             ->setParameterGet($this->getData());
 
         return $client;

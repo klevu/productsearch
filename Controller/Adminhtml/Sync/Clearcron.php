@@ -63,6 +63,6 @@ class Clearcron extends \Magento\Backend\App\Action
     {
         $this->_modelSync->clearKlevuCron();
         $this->messageManager->addSuccessMessage(__("Running Klevu product Sync entry cleared from cron_schedule table."));
-        $this->_redirect($this->_redirect->getRefererUrl());
+        return $this->_redirect($this->_redirect->getRefererUrl());
     }
 }

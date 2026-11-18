@@ -43,6 +43,11 @@ use Magento\Store\Model\StoreManagerInterface;
 
 class MagentoProductActions extends AbstractModel implements MagentoProductActionsInterface
 {
+    /**
+     * @var \Magento\Config\Model\ResourceModel\Config\Data\CollectionFactory|null
+     */
+    private $configCollectionFactory;
+
     const PARENT_ID_WHEN_NOT_VISIBLE = '0';
     const MAX_ITERATIONS = 100000;
     const MAX_ACTIONED_ITERATIONS = self::MAX_ITERATIONS;
@@ -197,8 +202,10 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
         array $data = [],
         ?KlevuSyncRepositoryInterface $klevuSyncRepository = null,
         ?MagentoProductSyncRepositoryInterface $magentoProductRepository = null,
-        ?UpdateAllRatingsInterface $updateAllRatings = null
+        ?UpdateAllRatingsInterface $updateAllRatings = null,
+        ?\Magento\Config\Model\ResourceModel\Config\Data\CollectionFactory $configCollectionFactory = null
     ) {
+        $this->configCollectionFactory = $configCollectionFactory;
         parent::__construct($mcontext, $registry, $resource, $resourceCollection, $data);
         $this->_klevuHelperManager = $klevuHelperManager;
         $this->_ProductMetadataInterface = $context->getKlevuProductMeta();
@@ -748,7 +755,7 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
      */
     public function sheduleCronExteranally($restApi)
     {
-        $configs = $this->_modelConfigData->getCollection();
+        $configs = $this->getConfigCollectionFactory()->create();
         $configs->addFieldToFilter('value', ["like" => "%$restApi%"]);
         $configs->load();
         $data = $configs->getData();
@@ -812,7 +819,7 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
     /**
      * if special to price date expire then make that product for update
      *
-     * @return $this
+     * @return void
      */
     public function markProductForUpdate()
     {
@@ -1139,5 +1146,16 @@ class MagentoProductActions extends AbstractModel implements MagentoProductActio
         }
 
         return $productsIds;
+    }
+    /**
+     * @return \Magento\Config\Model\ResourceModel\Config\Data\CollectionFactory
+     */
+    private function getConfigCollectionFactory()
+    {
+        if ($this->configCollectionFactory === null) {
+            $this->configCollectionFactory = \Magento\Framework\App\ObjectManager::getInstance()->get(\Magento\Config\Model\ResourceModel\Config\Data\CollectionFactory::class);
+        }
+
+        return $this->configCollectionFactory;
     }
 }

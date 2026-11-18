@@ -49,7 +49,7 @@ class RemovePreserveLayoutFromCommentTest extends TestCase
         );
 
         /** @var Field $field */
-        $field = $this->objectManager->getObject(Field::class);
+        $field = $this->createMock(Field::class);
         $element = $this->getElementMock('klevu_search_unmapped_field');
 
         $this->assertFalse(
@@ -79,7 +79,7 @@ class RemovePreserveLayoutFromCommentTest extends TestCase
         );
 
         /** @var Field $field */
-        $field = $this->objectManager->getObject(Field::class);
+        $field = $this->createMock(Field::class);
         $element = $this->getElementMock('klevu_search_test_field');
 
         $this->assertFalse(
@@ -109,7 +109,7 @@ class RemovePreserveLayoutFromCommentTest extends TestCase
         );
 
         /** @var Field $field */
-        $field = $this->objectManager->getObject(Field::class);
+        $field = $this->createMock(Field::class);
         $element = $this->getElementMock('klevu_search_test_field');
 
         $this->assertTrue(
@@ -139,7 +139,7 @@ class RemovePreserveLayoutFromCommentTest extends TestCase
         );
 
         /** @var Field $field */
-        $field = $this->objectManager->getObject(Field::class);
+        $field = $this->createMock(Field::class);
         $element = $this->getElementMock('klevu_search_test_field');
         $element->setData('comment', '
 This is a test comment.
@@ -182,7 +182,7 @@ In fact !', $element->getData('comment'));
         );
 
         /** @var Field $field */
-        $field = $this->objectManager->getObject(Field::class);
+        $field = $this->createMock(Field::class);
         $resultFixture = ' Foo;&Bar ' . PHP_EOL;
         $element = $this->getElementMock('klevu_search_test_field');
 
@@ -233,7 +233,7 @@ In fact !', $element->getData('comment'));
         /** @var TextElement $element */
         $elementMock = $this->getMockBuilder(TextElement::class)
             ->disableOriginalConstructor()
-            ->setMethods(['getHtmlId'])
+            ->onlyMethods(['getHtmlId'])
             ->getMock();
         $elementMock->method('getHtmlId')
             ->willReturn($htmlId);

@@ -259,8 +259,7 @@ class MagentoProductsWithRatingAttributeDataProvider implements ProductsWithRati
             $connection->quote((int)$attribute->getId()),
             $tableAlias,
             $linkField,
-            $linkField,
-            $tableAlias
+            $linkField
         );
         if (null !== $storeId) {
             $joinClause .= sprintf(

@@ -67,12 +67,15 @@ class UpdateInNextCronTest extends TestCase
         $storeIds = [1];
         $tableName = 'klevu_product_sync';
 
+        $expectedConditions = [
+            ['row_id IN (?)', $rowIds],
+            [' AND `store_id` IN (?)', $storeIds],
+        ];
         $this->mockConnection->expects($this->exactly(2))
             ->method('quoteInto')
-            ->withConsecutive(
-                ['row_id IN (?)', $rowIds],
-                [' AND `store_id` IN (?)', $storeIds]
-            );
+            ->willReturnCallback(function ($condition, $values) use (&$expectedConditions) {
+                $this->assertSame(array_shift($expectedConditions), [$condition, $values]);
+            });
 
         $this->mockConnection->expects($this->once())
             ->method('update')

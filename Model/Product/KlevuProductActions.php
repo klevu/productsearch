@@ -204,8 +204,7 @@ class KlevuProductActions extends DataObject implements KlevuProductActionsInter
             $or_where[] = sprintf(
                 "(%s AND %s)",
                 $connection->quoteInto("k.product_id = ?", $data[$i]['product_id']),
-                $connection->quoteInto("k.parent_id = ?", $data[$i]['parent_id']),
-                $connection->quoteInto("k.type = ?", "products")
+                $connection->quoteInto("k.parent_id = ?", $data[$i]['parent_id'])
             );
         }
         $select->where(implode(" OR ", $or_where));

@@ -37,6 +37,11 @@ use Magento\Tax\Model\Config as TaxConfig;
 class Taxdata extends AbstractHelper
 {
     /**
+     * @var Registry
+     */
+    private $coreRegistry;
+
+    /**
      * Currently selected store ID if applicable
      *
      * @var int
@@ -152,6 +157,7 @@ class Taxdata extends AbstractHelper
         AddressInterfaceFactory $addressFactory,
         RegionInterfaceFactory $regionFactory
     ) {
+        $this->coreRegistry = $coreRegistry;
         $this->_storeManager = $storeManager;
         $this->_taxClassKeyFactory = $taxClassKeyFactory;
         $this->_taxConfig = $taxConfig;

@@ -18,7 +18,6 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Klevu\Content\Model\ContentInterface as KlevuContent;
 
 class SyncStoreView extends Command
 {
@@ -71,7 +70,7 @@ class SyncStoreView extends Command
     protected $sync;
 
     /**
-     * @var KlevuContent
+     * @var object|null
      */
     protected $cmsSync;
 
@@ -266,7 +265,10 @@ HELP
 
                         $file = $logDir . "/" . $value . "_" . self::LOCK_FILE;
                         $this->sync = ObjectManager::getInstance()->get(Sync::class);
-                        $this->cmsSync = ObjectManager::getInstance()->get(KlevuContent::class);
+                        $contentType = 'Klevu\\Content\\Model\\ContentInterface';
+                        $this->cmsSync = interface_exists($contentType)
+                            ? ObjectManager::getInstance()->get($contentType)
+                            : null;
 
                         if ($this->fileDriver->isExists($file)) {
                             $lockFileError = sprintf(
@@ -305,16 +307,18 @@ HELP
                                 $output->writeln("<info>".$productSyncEnd . "</info>");
                                 $output->writeln('');
 
-                                $cmsSyncStart = "CMS Sync started for store code : " . $oneStore->getCode();
-                                $this->logger->info($cmsSyncStart);
-                                $output->writeln("<info>".$cmsSyncStart . "</info>");
+                                if ($this->cmsSync !== null) {
+                                    $cmsSyncStart = "CMS Sync started for store code : " . $oneStore->getCode();
+                                    $this->logger->info($cmsSyncStart);
+                                    $output->writeln("<info>".$cmsSyncStart . "</info>");
 
-                                $this->cmsSync->syncCmsData($oneStore);
+                                    $this->cmsSync->syncCmsData($oneStore);
 
-                                $cmsSyncEnd = "CMS Sync completed for store code : " . $oneStore->getCode();
-                                $this->logger->info($cmsSyncEnd);
-                                $output->writeln("<info>".$cmsSyncEnd . "</info>");
-                                $output->writeln('');
+                                    $cmsSyncEnd = "CMS Sync completed for store code : " . $oneStore->getCode();
+                                    $this->logger->info($cmsSyncEnd);
+                                    $output->writeln("<info>".$cmsSyncEnd . "</info>");
+                                    $output->writeln('');
+                                }
                                 $syncSuccess[] = $oneStore->getCode();
                             }
 

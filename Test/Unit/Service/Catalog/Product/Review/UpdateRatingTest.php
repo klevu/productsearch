@@ -257,11 +257,7 @@ class UpdateRatingTest extends TestCase
             ->method('setCurrentStoreByCode');
         $this->mockStoreScopeResolver->expects($this->exactly(3))
             ->method('setCurrentStoreById')
-            ->withConsecutive(
-                [3],
-                [5],
-                [8]
-            );
+            ->with($this->consecutiveValues([3, 5, 8]));
 
         $ratingDataFixtures = [
             3 => [
@@ -288,11 +284,8 @@ class UpdateRatingTest extends TestCase
         ];
         $this->mockDataProvider->expects($this->exactly(3))
             ->method('getData')
-            ->withConsecutive(
-                [42, 3],
-                [42, 5],
-                [42, 8]
-            )->willReturnCallback(static function ($productId, $storeId) use ($ratingDataFixtures) {
+            ->with(42, $this->consecutiveValues([3, 5, 8]))
+            ->willReturnCallback(static function ($productId, $storeId) use ($ratingDataFixtures) {
                 return isset($ratingDataFixtures[$storeId])
                     ? $ratingDataFixtures[$storeId]
                     : null;
@@ -300,17 +293,11 @@ class UpdateRatingTest extends TestCase
 
         $this->mockUpdateRatings->expects($this->exactly(3))
             ->method('execute')
-            ->withConsecutive(
-                [
-                    [$ratingDataFixtures[3]],
-                ],
-                [
-                    [$ratingDataFixtures[5]],
-                ],
-                [
-                    [$ratingDataFixtures[8]],
-                ]
-            );
+            ->with($this->consecutiveValues([
+                [$ratingDataFixtures[3]],
+                [$ratingDataFixtures[5]],
+                [$ratingDataFixtures[8]],
+            ]));
 
         $this->mockLogger->expects($this->never())->method('emergency');
         $this->mockLogger->expects($this->never())->method('critical');
@@ -428,9 +415,7 @@ class UpdateRatingTest extends TestCase
             ->method('setCurrentStoreByCode');
         $this->mockStoreScopeResolver->expects($this->once())
             ->method('setCurrentStoreById')
-            ->withConsecutive(
-                [8]
-            );
+            ->with(8);
 
         $ratingDataFixtures = [
             3 => [
@@ -457,9 +442,8 @@ class UpdateRatingTest extends TestCase
         ];
         $this->mockDataProvider->expects($this->once())
             ->method('getData')
-            ->withConsecutive(
-                [42, 8]
-            )->willReturnCallback(static function ($productId, $storeId) use ($ratingDataFixtures) {
+            ->with(42, 8)
+            ->willReturnCallback(static function ($productId, $storeId) use ($ratingDataFixtures) {
                 return isset($ratingDataFixtures[$storeId])
                     ? $ratingDataFixtures[$storeId]
                     : null;
@@ -467,11 +451,7 @@ class UpdateRatingTest extends TestCase
 
         $this->mockUpdateRatings->expects($this->once())
             ->method('execute')
-            ->withConsecutive(
-                [
-                    [$ratingDataFixtures[8]],
-                ]
-            );
+            ->with([$ratingDataFixtures[8]]);
 
         $this->mockLogger->expects($this->never())->method('emergency');
         $this->mockLogger->expects($this->never())->method('critical');
@@ -539,10 +519,7 @@ class UpdateRatingTest extends TestCase
             ->method('setCurrentStoreByCode');
         $this->mockStoreScopeResolver->expects($this->exactly(2))
             ->method('setCurrentStoreById')
-            ->withConsecutive(
-                [0],
-                [1]
-            );
+            ->with($this->consecutiveValues([0, 1]));
 
         $ratingDataFixtures = [
             0 => [
@@ -563,10 +540,7 @@ class UpdateRatingTest extends TestCase
 
         $this->mockDataProvider->expects($this->exactly(2))
             ->method('getData')
-            ->withConsecutive(
-                [1, 0],
-                [1, 1]
-            )
+            ->with(1, $this->consecutiveValues([0, 1]))
             ->willReturnCallback(static function ($productId, $storeId) use ($ratingDataFixtures) {
                 return isset($ratingDataFixtures[$storeId])
                     ? $ratingDataFixtures[$storeId]
@@ -575,14 +549,10 @@ class UpdateRatingTest extends TestCase
 
         $this->mockUpdateRatings->expects($this->exactly(2))
             ->method('execute')
-            ->withConsecutive(
-                [
-                    [$ratingDataFixtures[0]],
-                ],
-                [
-                    [$ratingDataFixtures[1]],
-                ]
-            );
+            ->with($this->consecutiveValues([
+                [$ratingDataFixtures[0]],
+                [$ratingDataFixtures[1]],
+            ]));
 
         $this->mockLogger->expects($this->never())->method('emergency');
         $this->mockLogger->expects($this->never())->method('critical');
@@ -671,6 +641,19 @@ class UpdateRatingTest extends TestCase
     }
 
     /**
+     * @param array $expectedValues
+     * @return \PHPUnit\Framework\Constraint\Callback
+     */
+    private function consecutiveValues(array $expectedValues)
+    {
+        return $this->callback(function ($value) use (&$expectedValues) {
+            $this->assertEquals(array_shift($expectedValues), $value);
+
+            return true;
+        });
+    }
+
+    /**
      * @return UpdateRating
      */
     private function instantiateUpdateRating()
@@ -682,8 +665,7 @@ class UpdateRatingTest extends TestCase
             $this->mockIsRatingCountAttrAvailable,
             $this->mockStoreManager,
             $this->mockDataProvider,
-            $this->mockUpdateRatings,
-            []
+            $this->mockUpdateRatings
         );
     }
 }

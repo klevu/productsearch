@@ -41,7 +41,7 @@ class DisableFieldIfFeatureUnavailableTest extends TestCase
         );
 
         /** @var Field $field */
-        $field = $this->objectManager->getObject(Field::class);
+        $field = $this->createMock(Field::class);
         $element = $this->getElementMock('klevu_search_unmapped_field');
 
         $this->assertFalse(
@@ -71,7 +71,7 @@ class DisableFieldIfFeatureUnavailableTest extends TestCase
         );
 
         /** @var Field $field */
-        $field = $this->objectManager->getObject(Field::class);
+        $field = $this->createMock(Field::class);
         $element = $this->getElementMock('klevu_search_test_field');
 
         $this->assertFalse(
@@ -101,7 +101,7 @@ class DisableFieldIfFeatureUnavailableTest extends TestCase
         );
 
         /** @var Field $field */
-        $field = $this->objectManager->getObject(Field::class);
+        $field = $this->createMock(Field::class);
         $element = $this->getElementMock('klevu_search_test_field');
 
         $this->assertTrue(
@@ -134,7 +134,7 @@ class DisableFieldIfFeatureUnavailableTest extends TestCase
         );
 
         /** @var Field $field */
-        $field = $this->objectManager->getObject(Field::class);
+        $field = $this->createMock(Field::class);
         $element = $this->getElementMock('klevu_search_unmapped_field');
         $element->addData([
             'label' => 'Field Label',
@@ -183,7 +183,7 @@ class DisableFieldIfFeatureUnavailableTest extends TestCase
         );
 
         /** @var Field $field */
-        $field = $this->objectManager->getObject(Field::class);
+        $field = $this->createMock(Field::class);
         $resultFixture = ' Foo;&Bar ' . PHP_EOL;
         $element = $this->getElementMock('klevu_search_unmapped_field');
 
@@ -248,7 +248,7 @@ class DisableFieldIfFeatureUnavailableTest extends TestCase
         /** @var TextElement $element */
         $elementMock = $this->getMockBuilder(TextElement::class)
             ->disableOriginalConstructor()
-            ->setMethods(['getHtmlId'])
+            ->onlyMethods(['getHtmlId'])
             ->getMock();
         $elementMock->method('getHtmlId')
             ->willReturn($htmlId);

@@ -52,9 +52,6 @@ class UpdateLastSyncCategoryBefore implements ObserverInterface
         try {
             //getId adding as array
             $category_ids[] = $observer->getEvent()->getCategory()->getId();
-            if (empty($category_ids)) {
-                return;
-            }
             // we are only interested in invalidating products before they are removed because of anchor change, for this we compare the anchor values
             // this is done before the save to be able to get the full list of original products before the link is removed
             $originalAnchor  = boolval($observer->getEvent()->getCategory()->getOrigData('is_anchor'));

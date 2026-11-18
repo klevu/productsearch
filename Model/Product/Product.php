@@ -28,6 +28,16 @@ use Magento\Store\Model\StoreManagerInterface;
 class Product extends DataObject implements ProductInterface
 {
     /**
+     * @var \Magento\Catalog\Model\ResourceModel\Product|null
+     */
+    private $productResource;
+
+    /**
+     * @var \Magento\Customer\Model\ResourceModel\Group|null
+     */
+    private $customerGroupResource;
+
+    /**
      * @var StoreManagerInterface
      */
     protected $_storeModelStoreManagerInterface;
@@ -86,8 +96,12 @@ class Product extends DataObject implements ProductInterface
         ?GetReviewCountInterface $getRatingsCount = null,
         ?GetAverageRatingInterface $getAverageRating = null,
         ?ConvertRatingToStarsInterface $convertRatingToStars = null,
-        ?ProductCollectionFactory $productCollectionFactory = null
+        ?ProductCollectionFactory $productCollectionFactory = null,
+        ?\Magento\Customer\Model\ResourceModel\Group $customerGroupResource = null,
+        ?\Magento\Catalog\Model\ResourceModel\Product $productResource = null
     ) {
+        $this->productResource = $productResource;
+        $this->customerGroupResource = $customerGroupResource;
         $this->_storeModelStoreManagerInterface = $context->getStoreManagerInterface();
         $this->_searchHelperData = $context->getHelperManager()->getDataHelper();
         $this->_imageHelper = $context->getHelperManager()->getImageHelper();
@@ -1013,7 +1027,8 @@ class Product extends DataObject implements ProductInterface
                 (int)$groupPrice['price_qty'] === 1
             ) {
                 $groupPriceKey = $groupPrice['cust_group'];
-                $customerGroup = $this->_customerModelGroup->load($groupPrice['cust_group']);
+                $customerGroup = $this->_customerModelGroup;
+                $this->getCustomerGroupResource()->load($customerGroup, $groupPrice['cust_group']);
                 $groupName = $customerGroup->getCustomerGroupCode();
                 $result['label'] = $groupName;
                 $result['values'] = $this->_priceHelper->calculateTaxPrice(
@@ -1043,7 +1058,7 @@ class Product extends DataObject implements ProductInterface
         $otherPrices = $proData->getData(TierPrice::PRICE_CODE);
         if (null === $otherPrices) {
             /** @var \Magento\Catalog\Model\ResourceModel\Product $productResource */
-            $productResource = $proData->getResource();
+            $productResource = $this->getProductResource();
             try {
                 $attribute = $productResource->getAttribute(TierPrice::PRICE_CODE);
                 if ($attribute) {
@@ -1110,5 +1125,27 @@ class Product extends DataObject implements ProductInterface
         }, $otherPrices));
 
         return implode(';', $result);
+    }
+    /**
+     * @return \Magento\Customer\Model\ResourceModel\Group
+     */
+    private function getCustomerGroupResource()
+    {
+        if ($this->customerGroupResource === null) {
+            $this->customerGroupResource = \Magento\Framework\App\ObjectManager::getInstance()->get(\Magento\Customer\Model\ResourceModel\Group::class);
+        }
+
+        return $this->customerGroupResource;
+    }
+    /**
+     * @return \Magento\Catalog\Model\ResourceModel\Product
+     */
+    private function getProductResource()
+    {
+        if ($this->productResource === null) {
+            $this->productResource = \Magento\Framework\App\ObjectManager::getInstance()->get(\Magento\Catalog\Model\ResourceModel\Product::class);
+        }
+
+        return $this->productResource;
     }
 }

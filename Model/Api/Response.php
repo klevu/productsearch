@@ -54,8 +54,6 @@ class Response extends DataObject
      */
     public function _construct()
     {
-        parent::_construct();
-
         $this->successful = false;
     }
 

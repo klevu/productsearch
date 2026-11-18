@@ -19,6 +19,16 @@ use Exception;
 
 class Category extends AbstractModel implements CategoryInterface
 {
+    /**
+     * @var \Magento\Catalog\Model\ResourceModel\Category\CollectionFactory|null
+     */
+    private $categoryCollectionFactory;
+
+    /**
+     * @var \Klevu\Search\Model\Klevu\ResourceModel\Klevu\CollectionFactory|null
+     */
+    private $klevuCollectionFactory;
+
 
     protected $_klevuHelperManager;
     /**
@@ -66,9 +76,13 @@ class Category extends AbstractModel implements CategoryInterface
         Magento_Category_Flat_State $flatState,
         ?AbstractResource $resource = null,
         ?AbstractDb $resourceCollection = null,
-        array $data = []
+        array $data = [],
+        ?\Klevu\Search\Model\Klevu\ResourceModel\Klevu\CollectionFactory $klevuCollectionFactory = null,
+        ?\Magento\Catalog\Model\ResourceModel\Category\CollectionFactory $categoryCollectionFactory = null
     )
     {
+        $this->categoryCollectionFactory = $categoryCollectionFactory;
+        $this->klevuCollectionFactory = $klevuCollectionFactory;
         parent::__construct($context, $registry, $resource, $resourceCollection, $data);
         $this->_klevuHelperManager = $klevuHelperManager;
         $this->_categoryFactory = $categoryFactory;
@@ -177,7 +191,7 @@ class Category extends AbstractModel implements CategoryInterface
         $storeId = $this->_storeManager->getStore()->getId();
 
         $klevu = $this->_klevuFactory->create();
-        $klevuCollection = $klevu->getCollection()
+        $klevuCollection = $this->getKlevuCollectionFactory()->create()
             ->addFieldToFilter($klevu->getKlevuField('type'), $klevu->getKlevuType('category'))
             ->addFieldToFilter($klevu->getKlevuField('store_id'), $storeId);
         if (count($categoryToRemove) > 0) {
@@ -220,7 +234,7 @@ class Category extends AbstractModel implements CategoryInterface
 
         $klevu = $this->_klevuFactory->create();
 
-        $klevuCollection = $klevu->getCollection()
+        $klevuCollection = $this->getKlevuCollectionFactory()->create()
             ->addFieldToFilter($klevu->getKlevuField('type'), $klevu->getKlevuType('category'))
             ->addFieldToFilter($klevu->getKlevuField('store_id'), $storeId)
             ->join(
@@ -258,7 +272,7 @@ class Category extends AbstractModel implements CategoryInterface
 
             $klevu = $this->_klevuFactory->create();
 
-            $klevuCollection = $klevu->getCollection()
+            $klevuCollection = $this->getKlevuCollectionFactory()->create()
                 ->addFieldToFilter($klevu->getKlevuField('type'), $klevu->getKlevuType('category'))
                 ->addFieldToFilter($klevu->getKlevuField('store_id'), $storeId)
                 ->load();
@@ -296,7 +310,7 @@ class Category extends AbstractModel implements CategoryInterface
             foreach ($nodes as $node) {
                 $nodeIds[$node->getEntityId()] = $node->getId();
             }
-            $collectionCategory = $this->_categoryFactory->create()->getCollection()
+            $collectionCategory = $this->getCategoryCollectionFactory()->create()
                 ->addAttributeToSelect('is_active')
                 ->addAttributeToSelect('is_exclude_cat')
                 ->addIdFilter($nodeIds)
@@ -334,4 +348,26 @@ class Category extends AbstractModel implements CategoryInterface
 
 
 
+    /**
+     * @return \Klevu\Search\Model\Klevu\ResourceModel\Klevu\CollectionFactory
+     */
+    private function getKlevuCollectionFactory()
+    {
+        if ($this->klevuCollectionFactory === null) {
+            $this->klevuCollectionFactory = \Magento\Framework\App\ObjectManager::getInstance()->get(\Klevu\Search\Model\Klevu\ResourceModel\Klevu\CollectionFactory::class);
+        }
+
+        return $this->klevuCollectionFactory;
+    }
+    /**
+     * @return \Magento\Catalog\Model\ResourceModel\Category\CollectionFactory
+     */
+    private function getCategoryCollectionFactory()
+    {
+        if ($this->categoryCollectionFactory === null) {
+            $this->categoryCollectionFactory = \Magento\Framework\App\ObjectManager::getInstance()->get(\Magento\Catalog\Model\ResourceModel\Category\CollectionFactory::class);
+        }
+
+        return $this->categoryCollectionFactory;
+    }
 }

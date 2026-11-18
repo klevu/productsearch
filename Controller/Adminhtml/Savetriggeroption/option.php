@@ -29,5 +29,7 @@ class option extends \Magento\Backend\App\Action
     public function execute() {
         $trigger_options = $this->getRequest()->getParam("trigger_options");
         $this->_searchHelperConfig->saveTriggerOptions($trigger_options);
+
+        return $this->getResponse();
     }
 }

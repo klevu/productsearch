@@ -24,6 +24,11 @@ use Magento\Store\Model\ScopeInterface;
 
 class Api extends AbstractHelper
 {
+    /**
+     * @var \Magento\Framework\Escaper|null
+     */
+    private $escaper;
+
     const ENDPOINT_PROTOCOL = 'https://';
     const ENDPOINT_DEFAULT_HOSTNAME = 'box.klevu.com';
     const ENDPOINT_DEFAULT_API_URL = 'api.ksearchnet.com';
@@ -109,8 +114,10 @@ class Api extends AbstractHelper
         ConfigHelper $searchHelperConfig,
         ApiActionCheckuserdetail $apiActionCheckuserdetail,
         ProductMetadataInterface $productMetadataInterface,
-        KlevuSession $searchModelSession
+        KlevuSession $searchModelSession,
+        ?\Magento\Framework\Escaper $escaper = null
     ) {
+        $this->escaper = $escaper;
         $this->_backendModelSession = $backendModelSession;
         $this->_appConfigScopeConfigInterface = $appConfigScopeConfigInterface;
         $this->_apiActionAdduser = $apiActionAdduser;
@@ -384,7 +391,7 @@ class Api extends AbstractHelper
             foreach ($data as $timezone) {
                 $options[] = [
                     "label" => __($timezone),
-                    "value" => $this->escapeHtml($timezone),
+                    "value" => $this->getEscaper()->escapeHtml($timezone),
                 ];
             }
 
@@ -401,5 +408,16 @@ class Api extends AbstractHelper
     public function getVersion()
     {
         return $this->_searchHelperConfig->getModuleInfo();
+    }
+    /**
+     * @return \Magento\Framework\Escaper
+     */
+    private function getEscaper()
+    {
+        if ($this->escaper === null) {
+            $this->escaper = \Magento\Framework\App\ObjectManager::getInstance()->get(\Magento\Framework\Escaper::class);
+        }
+
+        return $this->escaper;
     }
 }

@@ -797,14 +797,14 @@ class XmlBodyTest extends TestCase
      * @param string $needle
      * @param string $haystack
      * @param string $message
-     * @return null
+     * @return void
      */
     private function assertStringContainsStringBackCompat($needle, $haystack, $message = '')
     {
         if (method_exists($this, 'assertStringContainsString')) {
-            return $this->assertStringContainsString($needle, $haystack, $message);
+            $this->assertStringContainsString($needle, $haystack, $message);
         } else {
-            return $this->assertContains($needle, $haystack, $message);
+            $this->assertContains($needle, $haystack, $message);
         }
     }
 

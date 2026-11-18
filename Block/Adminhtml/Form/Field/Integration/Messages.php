@@ -24,10 +24,8 @@ class Messages extends Fieldset
         $layout = $this->getLayout();
         $block = $layout->createBlock(
             Template::class,
-            'klevu_integration_messages'
-        );
-        $block->setTemplate(
-            'Klevu_Search::klevu/search/form/field/integration/messages.phtml'
+            'klevu_integration_messages',
+            ['data' => ['template' => 'Klevu_Search::klevu/search/form/field/integration/messages.phtml']]
         );
 
         return $block->toHtml();

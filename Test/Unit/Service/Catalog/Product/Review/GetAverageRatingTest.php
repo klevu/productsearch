@@ -386,6 +386,7 @@ class GetAverageRatingTest extends TestCase
     /**
      * @dataProvider noneNumericRatingsAttributeDataProvider
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('noneNumericRatingsAttributeDataProvider')]
     public function testHandlesIncorrectTypeDataForRatingAttributes($ratingData)
     {
         $this->setupPhp5();
@@ -436,6 +437,7 @@ class GetAverageRatingTest extends TestCase
     /**
      * @dataProvider noneNumericRatingsAttributeDataProvider
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('noneNumericRatingsAttributeDataProvider')]
     public function testHandlesIncorrectTypeDataForRatingCountAttributes($ratingData)
     {
         $this->setupPhp5();
@@ -489,6 +491,7 @@ class GetAverageRatingTest extends TestCase
     /**
      * @dataProvider negativeRatingsAttributeDataProvider
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('negativeRatingsAttributeDataProvider')]
     public function testHandlesNegativeValuesForRatingAttributes($ratingData)
     {
         $this->setupPhp5();
@@ -541,6 +544,7 @@ class GetAverageRatingTest extends TestCase
     /**
      * @dataProvider negativeRatingsAttributeDataProvider
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('negativeRatingsAttributeDataProvider')]
     public function testHandlesNegativeValuesForRatingCountAttributes($ratingData)
     {
         $this->setupPhp5();
@@ -593,7 +597,7 @@ class GetAverageRatingTest extends TestCase
     /**
      * @return array
      */
-    public function noneNumericRatingsAttributeDataProvider()
+    public static function noneNumericRatingsAttributeDataProvider()
     {
         return [
             ['string'],
@@ -611,7 +615,7 @@ class GetAverageRatingTest extends TestCase
     /**
      * @return array
      */
-    public function negativeRatingsAttributeDataProvider()
+    public static function negativeRatingsAttributeDataProvider()
     {
         return [
             [-10],

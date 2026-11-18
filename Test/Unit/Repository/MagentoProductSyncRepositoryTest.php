@@ -215,6 +215,9 @@ class MagentoProductSyncRepositoryTest extends TestCase
             'optionProvider' => $classes['mockOptionProvider'],
             'joinParentVisibilityToSelectService' => $classes['mockJoinParentVisibilityToSelectService'],
             'joinParentStatusToSelectService' => $classes['mockJoinParentStatusToSelectService'],
+            'addParentProductStockToCollection' => $this->createMock(
+                \Klevu\Search\Api\Service\Catalog\Product\AddParentProductStockToCollectionInterface::class
+            ),
         ]);
     }
 

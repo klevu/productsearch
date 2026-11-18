@@ -17,6 +17,11 @@ use Magento\Framework\Registry;
 class Trigger extends Value
 {
     /**
+     * @var \Magento\Framework\Model\ResourceModel\Db\AbstractDb|null
+     */
+    private $configResource;
+
+    /**
      * @var searchHelper
      */
     private $searchHelperData;
@@ -47,8 +52,12 @@ class Trigger extends Value
         KlevuModelTrigger $klevuModelTrigger,
         ?AbstractResource $resource = null,
         ?AbstractDb $resourceCollection = null,
-        array $data = []
+        array $data = [],
+        ?\Magento\Config\Model\ResourceModel\Config\Data $configResource = null
     ) {
+        $this->configResource = $configResource ?: (
+            $resource instanceof \Magento\Framework\Model\ResourceModel\Db\AbstractDb ? $resource : null
+        );
         parent::__construct($context, $registry, $config, $cacheTypeList, $resource, $resourceCollection, $data);
         $this->searchHelperData = $searchHelperData;
         $this->klevuModelTrigger = $klevuModelTrigger;
@@ -65,7 +74,7 @@ class Trigger extends Value
      */
     public function afterSave()
     {
-        $this->_getResource()->addCommitCallback([$this, 'processValue']);
+        $this->getConfigResource()->addCommitCallback([$this, 'processValue']);
 
         return parent::afterSave();
     }
@@ -100,5 +109,16 @@ class Trigger extends Value
                 )
             );
         }
+    }
+    /**
+     * @return \Magento\Framework\Model\ResourceModel\Db\AbstractDb
+     */
+    private function getConfigResource()
+    {
+        if ($this->configResource === null) {
+            $this->configResource = \Magento\Framework\App\ObjectManager::getInstance()->get(\Magento\Config\Model\ResourceModel\Config\Data::class);
+        }
+
+        return $this->configResource;
     }
 }

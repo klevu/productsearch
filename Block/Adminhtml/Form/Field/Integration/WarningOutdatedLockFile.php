@@ -20,10 +20,8 @@ class WarningOutdatedLockFile extends Fieldset
         $layout = $this->getLayout();
         $block = $layout->createBlock(
             OutdatedLockFile::class,
-            'klevu_search_information_outdated_lock_file_warning'
-        );
-        $block->setTemplate(
-            'Klevu_Search::klevu/search/form/field/integration/warnings/outdatedlockfile.phtml'
+            'klevu_search_information_outdated_lock_file_warning',
+            ['data' => ['template' => 'Klevu_Search::klevu/search/form/field/integration/warnings/outdatedlockfile.phtml']]
         );
 
         return $block->toHtml();

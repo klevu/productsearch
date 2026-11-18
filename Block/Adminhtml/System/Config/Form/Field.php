@@ -11,6 +11,17 @@ use Klevu\Search\Model\Klevu\HelperManager as Klevu_HelperManager;
  */
 class Field extends \Magento\Config\Block\System\Config\Form\Field
 {
+    /**
+     * @var Klevu_HelperManager
+     */
+    protected $_klevuHelperManager;
+
+    /**
+     * @var Template_Context
+     */
+    protected $_context;
+
+
     public function __construct(
         Template_Context $context,
         Klevu_HelperManager $klevuHelperManager,

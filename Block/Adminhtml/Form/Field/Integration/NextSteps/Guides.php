@@ -20,10 +20,8 @@ class Guides extends Fieldset
         $layout = $this->getLayout();
         $block = $layout->createBlock(
             Template::class,
-            'klevu_integration_next_steps_guides'
-        );
-        $block->setTemplate(
-            'Klevu_Search::klevu/search/form/field/integration/next_steps/guides.phtml'
+            'klevu_integration_next_steps_guides',
+            ['data' => ['template' => 'Klevu_Search::klevu/search/form/field/integration/next_steps/guides.phtml']]
         );
 
         return $block->toHtml();
